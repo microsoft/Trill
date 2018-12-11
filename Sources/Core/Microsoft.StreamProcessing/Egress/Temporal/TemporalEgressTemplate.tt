@@ -1,0 +1,117 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+
+[DataContract]
+internal sealed class <#= className #> : EgressBoundary<<#= inputKey #>, <#= TPayload #>, <#= egress #>>
+{
+    [Obsolete("Used only by serialization. Do not call directly.")]
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IObserver<<#= egress #>> observer,
+        QueryContainer container)
+        : base(observer, container)
+    { }
+
+    public override void OnNext(StreamMessage<<#= inputKey #>, <#= TPayload #>> batch)
+    {
+<#  if (!string.IsNullOrEmpty(partitionString))
+    { #>
+        var colkey = batch.key.col;
+<#  } #>
+        var col_bv = batch.bitvector.col;
+        var col_vsync = batch.vsync.col;
+        var col_vother = batch.vother.col;
+
+        for (int i = 0; i < batch.Count; i++)
+        {
+            if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0<# if (ingressType == "StreamEvent") { #> && col_vother[i] >= 0<# } #>)
+                    continue;
+<# if (ingressType == "StreamEvent")
+    { #>
+            else if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+            {
+                this.observer.OnNext(<#= partitionString #>StreamEvent.CreatePunctuation<<#= genericArguments #>>(<#= partitionKeyArgument #>col_vsync[i]));
+                continue;
+            }
+<#      if (partitionString == "Partitioned")
+        { #>
+            else if (col_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
+            {
+                this.observer.OnNext(PartitionedStreamEvent.CreateLowWatermark<TKey, TPayload>(col_vsync[i]));
+                continue;
+            }
+<#      }
+    } #>
+                 <#= TPayload #> payload;
+<#  if (!isColumnar)
+    { #>
+            payload = batch.payload.col[i];
+<#  }
+    else
+    { #>
+            var generatedBatch = (<#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>) batch;
+<#      if (payloadRepresentation.RepresentationFor.CanContainNull())
+        { #>
+            if ((generatedBatch._nullnessvector.col[i >> 6] & (1L << (i & 0x3f)))!=0) { payload = null; goto PayloadAssigned; }
+<#      }
+        if (payloadRepresentation.noFields)
+        { #>
+            payload = generatedBatch.payload.col[i];
+<#      }
+        else
+        { #>
+            var innerPayload = new <#= TPayload #>();
+<#          foreach (var f in this.fields)
+            { #>
+            if (generatedBatch.<#= f.Name #> != null)
+<#              if (f.OptimizeString())
+                { #>
+                innerPayload.<#= f.OriginalName #> = generatedBatch.<#= f.Name #>[i];
+<#              }
+                else
+                { #>
+                innerPayload.<#= f.OriginalName #> = generatedBatch.<#= f.Name #>.col[i];
+<#              }
+            } #>
+            payload = innerPayload;
+<#      }
+        if (payloadRepresentation.RepresentationFor.CanContainNull())
+        { #>
+        PayloadAssigned:
+<#      }
+    }
+
+    switch (ingressType)
+    {
+        case "StartEdge": #>
+            if (col_vother[i] == StreamEvent.InfinitySyncTime)
+                this.observer.OnNext(<#= startEdgeFunction("col_vsync[i]", "payload") #>);
+            else
+                throw new StreamProcessingException("The query has encountered either an end edge or an interval, while the egress point expects only start edges.");
+<#          break;
+        case "Interval": #>
+            this.observer.OnNext(<#= intervalFunction("col_vsync[i]", "col_vother[i]", "payload") #>);
+<#          break;
+        default: #>
+            this.observer.OnNext(new <#= partitionString #>StreamEvent<<#= genericArguments #>>(<#= partitionKeyArgument #>col_vsync[i], col_vother[i], col_vother[i] >= 0 ? batch[i] : default(<#= TPayload #>)));
+<#          break;
+    } #>
+        }
+        batch.Free();
+    }
+
+    public override int CurrentlyBufferedOutputCount => 0;
+
+    public override int CurrentlyBufferedInputCount => 0;
+}

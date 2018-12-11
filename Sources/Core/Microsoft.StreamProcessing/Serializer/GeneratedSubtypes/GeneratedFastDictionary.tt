@@ -1,0 +1,27 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+[DataContract]
+public sealed class <#= this.classname #><TKey, TValue> : FastDictionary<#= this.dictType #><TKey, TValue>
+{
+    private static Func<TKey, TKey, bool> equalsFunc;
+    private static Func<TKey, int> getHashCodeFunc;
+    private static int defaultSize = 10;
+
+    public <#= this.classname #>() : base(defaultSize, equalsFunc ?? EqualityComparerExpression<TKey>.DefaultEqualsFunction, getHashCodeFunc ?? EqualityComparerExpression<TKey>.DefaultGetHashCodeFunction) { }
+
+    public static void Initialize(Func<TKey, TKey, bool> equals, Func<TKey, int> getHashCode, int size = 10) {
+        equalsFunc = equals;
+        getHashCodeFunc = getHashCode;
+        defaultSize = size;
+    }
+}

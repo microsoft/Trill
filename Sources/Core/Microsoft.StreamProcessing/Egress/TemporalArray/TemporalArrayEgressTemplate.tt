@@ -1,0 +1,102 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing.Internal;
+
+[DataContract]
+internal sealed class <#= partitionString #><#= ingressType #>EgressPipe : EgressBoundary<<#= inputKey #>, <#= TPayload #>>, IDisposable
+{
+    private readonly IObserver<ArraySegment<<#= egress #>>> observer;
+    private readonly Func<<#= egress #>[]> generator;
+    [DataMember]
+    private <#= egress #>[] array;
+    [DataMember]
+    private int arrayLength;
+    [DataMember]
+    private int populationCount = 0;
+
+    [Obsolete("Used only by serialization. Do not call directly.")]
+    public <#= partitionString #><#= ingressType #>EgressPipe() { }
+
+    public <#= partitionString #><#= ingressType #>EgressPipe(
+        Func<<#= egress #>[]> generator,
+        IObserver<ArraySegment<<#= egress #>>> observer)
+        : base()
+    {
+        this.generator = generator;
+        this.array = this.generator();
+        this.arrayLength = this.array.Length;
+        this.observer = observer;
+    }
+
+    public void Dispose()
+    {
+        if (this.populationCount > 0) this.observer.OnNext(new ArraySegment<<#= egress #>>(this.array, 0, this.populationCount));
+        this.populationCount = 0;
+        this.array = null;
+        this.arrayLength = 0;
+    }
+
+    public override void OnNext(StreamMessage<<#= inputKey #>, <#= TPayload #>> batch)
+    {
+<#  if (!string.IsNullOrEmpty(partitionString))
+    { #>
+        var colkey = batch.key.col;
+<#  } #>
+        var col_bv = batch.bitvector.col;
+        var col_vsync = batch.vsync.col;
+        var col_vother = batch.vother.col;
+
+        for (int i = 0; i < batch.Count; i++)
+        {
+            if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0<# if (ingressType == "StreamEvent") { #> && col_vother[i] >= 0<# } #>)
+                continue;
+<#      if (ingressType == "StreamEvent")
+        { #>
+            else if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                this.array[this.populationCount++] = <#= partitionString #>StreamEvent.CreatePunctuation<<#= genericArguments #>>(<#= partitionKeyArgument #>col_vsync[i]);
+<#          if (partitionString == "Partitioned")
+            { #>
+            else if (col_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
+                this.array[this.populationCount++] = PartitionedStreamEvent.CreateLowWatermark<TKey, TPayload>(batch.Timestamp);
+<#          }
+        }
+    switch (ingressType)
+    {
+        case "StartEdge": #>
+            else if (col_vother[i] == StreamEvent.InfinitySyncTime)
+            {
+                this.array[this.populationCount++] = this.constructor(<#= partitionKeyArgument #>col_vsync[i], batch[i]);
+            }
+            else throw new StreamProcessingException("The query has encountered either an end edge or an interval, while the egress point expects only start edges.");
+<#          break;
+        case "Interval": #>
+            else this.array[this.populationCount++] = this.constructor(<#= partitionKeyArgument #>col_vsync[i], col_vother[i], batch[i]);
+<#          break;
+        default: #>
+            else this.array[this.populationCount++] = new <#= partitionString #>StreamEvent<<#= genericArguments #>>(<#= partitionKeyArgument #>col_vsync[i], col_vother[i], batch[i]);
+<#          break;
+    } #>
+
+            if (this.populationCount == this.arrayLength)
+            {
+                this.observer.OnNext(new ArraySegment<<#= egress #>>(this.array, 0, this.arrayLength));
+                this.populationCount = 0;
+                this.array = this.generator();
+                this.arrayLength = this.array.Length;
+            }
+        }
+        batch.Free();
+    }
+
+    public override int CurrentlyBufferedOutputCount => this.populationCount;
+
+    public override int CurrentlyBufferedInputCount => 0;
+}

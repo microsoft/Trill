@@ -1,0 +1,226 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{F88FBCF8-C33B-4089-8998-19E9CF901B99}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>SimpleTesting</RootNamespace>
+    <AssemblyName>SimpleTesting</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TestProjectType>UnitTest</TestProjectType>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>4.0</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>;DEBUG;TRACE;CODE_ANALYSIS;BINARYMERGE;COLUMNAR;BITVECTOR;MULTICORE_GA</DefineConstants>
+    <DocumentationFile>F:\dev\Trill\Sources\Test\..\..\bintest\x64\Debug\SimpleTesting.xml</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>1591</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>;TRACE;BINARYMERGE;COLUMNAR;BITVECTOR;MULTICORE_GA</DefineConstants>
+    <DocumentationFile>F:\dev\Trill\Sources\Test\..\..\bintest\x64\Release\SimpleTesting.xml</DocumentationFile>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>1591</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AdHocTests.cs" />
+    <Compile Include="AdjustColumns.cs">
+      <DependentUpon>AdjustColumns.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Include="AfaTests.cs" />
+    <Compile Include="CheckpointRestoreTests.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CheckpointRestoreTests.tt</DependentUpon>
+    </Compile>
+    <Compile Include="GroupStreamableTests.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GroupStreamableTests.tt</DependentUpon>
+    </Compile>
+    <Compile Include="DisorderedIngressAndEgressTests.cs">
+      <DependentUpon>DisorderedIngressAndEgressTests.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="IngressAndEgressTests.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IngressAndEgressTests.tt</DependentUpon>
+    </Compile>
+    <Compile Include="JoinTests.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>JoinTests.tt</DependentUpon>
+    </Compile>
+    <Compile Include="LeftOuterJoinTests.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LeftOuterJoinTests.tt</DependentUpon>
+    </Compile>
+    <Compile Include="MultiStringTests.cs" />
+    <Compile Include="PartitionedIngressAndEgressConceptDemos.cs" />
+    <Compile Include="FlushPolicyTestMatrixBase.cs" />
+    <Compile Include="PartitionedIngressAndEgressTestMatrixBases.cs" />
+    <Compile Include="FlushPolicyTests.cs">
+      <DependentUpon>FlushPolicyTests.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="PartitionedIngressAndEgressTestsDisordered.cs">
+      <DependentUpon>PartitionedIngressAndEgressTestsDisordered.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="PartitionedIngressAndEgressTestsOrdered.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PartitionedIngressAndEgressTestsOrdered.tt</DependentUpon>
+    </Compile>
+    <Compile Include="PartitionedLaggingCleanupTests.cs" />
+    <Compile Include="PartitionedStreamTests.cs" />
+    <Compile Include="PivotUnpivot.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PivotUnpivot.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="ReorderPolicyTests.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ReorderPolicyTests.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ShuffleStreamableTests.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ShuffleStreamableTests.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SimpleTests.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SimpleTests.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SnapshotTests.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SnapshotTests.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SurrogateTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="DisorderedIngressAndEgressTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DisorderedIngressAndEgressTests.cs</LastGenOutput>
+    </Content>
+    <None Include="..\app.config">
+      <Link>app.config</Link>
+    </None>
+    <None Include="PartitionedIngressAndEgressTestsOrdered.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>PartitionedIngressAndEgressTestsOrdered.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Microsoft.StreamProcessing\Microsoft.StreamProcessing.csproj">
+      <Project>{29810b58-a929-4127-83df-5004d94c8641}</Project>
+      <Name>Microsoft.StreamProcessing</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AdjustColumns.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AdjustColumns.cs</LastGenOutput>
+    </Content>
+    <Content Include="CheckpointRestoreTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>CheckpointRestoreTests.cs</LastGenOutput>
+    </Content>
+    <Content Include="GroupStreamableTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GroupStreamableTests.cs</LastGenOutput>
+    </Content>
+    <Content Include="IngressAndEgressTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>IngressAndEgressTests.cs</LastGenOutput>
+    </Content>
+    <Content Include="JoinTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JoinTests.cs</LastGenOutput>
+    </Content>
+    <Content Include="LeftOuterJoinTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>LeftOuterJoinTests.cs</LastGenOutput>
+    </Content>
+    <None Include="FlushPolicyTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FlushPolicyTests.cs</LastGenOutput>
+    </None>
+    <None Include="PartitionedIngressAndEgressTestsDisordered.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>PartitionedIngressAndEgressTestsDisordered.cs</LastGenOutput>
+    </None>
+    <Content Include="PivotUnpivot.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>PivotUnpivot.cs</LastGenOutput>
+    </Content>
+    <Content Include="ReorderPolicyTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ReorderPolicyTests.cs</LastGenOutput>
+    </Content>
+    <Content Include="ShuffleStreamableTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ShuffleStreamableTests.cs</LastGenOutput>
+    </Content>
+    <Content Include="SimpleTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SimpleTests.cs</LastGenOutput>
+    </Content>
+    <Content Include="SnapshotTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SnapshotTests.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Reactive.Linq">
+      <Version>4.1.2</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive.PlatformServices">
+      <Version>4.1.2</Version>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

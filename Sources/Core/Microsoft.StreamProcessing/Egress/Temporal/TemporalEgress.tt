@@ -1,0 +1,207 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Linq.Expressions;
+
+namespace Microsoft.StreamProcessing
+{
+    /// <summary>
+    /// Streamable extension methods.
+    /// </summary>
+    public static partial class Streamable
+    {
+<#
+    foreach (string partitionString in new string[] { string.Empty, "Partitioned" })
+    foreach (string egressType in new string[] { "StreamEvent", "StartEdge", "Interval" })
+    {
+        string genericArguments = string.IsNullOrEmpty(partitionString) ? "TPayload" : "TKey, TPayload";
+        string argumentSuffix = (egressType != "StreamEvent") ? ", TResult" : string.Empty;
+        string egress = (egressType != "StreamEvent")
+            ? "TResult"
+            : partitionString + "StreamEvent<" + genericArguments + ">";
+        string partitionFunctionTypeArgument = !string.IsNullOrEmpty(partitionString) ? "TKey, " : string.Empty;
+        string singleConstructor = egressType == "StartEdge"
+            ? "Expression<Func<" + partitionFunctionTypeArgument + "long, TPayload, TResult>>"
+            : "Expression<Func<" + partitionFunctionTypeArgument + "long, long, TPayload, TResult>>";
+        string infixName = egressType == "StreamEvent" ? egressType : "Temporal";
+        string inputKey = string.IsNullOrEmpty(partitionString) ? "Empty" : "PartitionKey<TKey>";
+        string constructorParameters = null;
+        switch (egressType)
+        {
+            case "StartEdge":
+            case "Interval":
+                constructorParameters = "constructor, ";
+                break;
+            default:
+                constructorParameters = string.Empty;
+                break;
+        }
+
+    foreach (var hasContainer in new [] { false, true })
+    {
+        string methodName = (hasContainer ? "Register" : "To")
+                          + (hasContainer ? (egressType == "StreamEvent" ? string.Empty : "Temporal") : (egressType == "StreamEvent" ? "StreamEvent" : "Temporal"))
+                          + (hasContainer ? "Output" : "Observable");
+#>
+        /// <summary>
+        /// Exports a streamable as an observable of events. Produces events that are sync time ordered.
+<# if (egressType == "StartEdge") { #>
+        /// Expects only start-edge events in the stream, and constructs user-defined payloads as a result.
+<# }
+   if (egressType == "Interval") { #>
+        /// Expects only start-edge and interval events in the stream, and constructs user-defined payloads as a result.
+<# } #>
+        /// </summary>
+<# if (!string.IsNullOrEmpty(partitionString)) { #>
+        /// <typeparam name="TKey"></typeparam>
+<# } #>
+        /// <typeparam name="TPayload"></typeparam>
+<# if (egressType != "StreamEvent") { #>
+        /// <typeparam name="TResult"></typeparam>
+<# }
+   if (hasContainer) { #>
+        /// <param name="container">The query container to which an egress point is being added.</param>
+        /// <param name="identifier">A string that can uniquely identify the point of egress in the query.</param>
+<# } #>
+        /// <param name="stream"></param>
+<# if (egressType == "StartEdge") { #>
+        /// <param name="constructor">Method description that constructs result data from the start time and the payload of each event.</param>
+<# }
+   if (egressType.StartsWith("Interval")) { #>
+        /// <param name="constructor">Method description that constructs result data from the start time, end time, and the payload of each event.</param>
+<# }
+   if (egressType == "StreamEvent") { #>
+        /// <param name="reshapingPolicy">Policy that specifies whether and how events are reshaped at egress. Default passes events through unmodified.</param>
+<# } #>
+        /// <returns></returns>
+        public static IObservable<<#= egress #>> <#= methodName #><<#= genericArguments #><#= argumentSuffix #>>(
+<# if (hasContainer) { #>
+            this QueryContainer container,
+<# } #>
+            <# if (!hasContainer) { #>this <# } #>IStreamable<<#= inputKey #>, TPayload> stream,
+<# switch (egressType) {
+       case "StartEdge":
+       case "Interval": #>
+            <#= singleConstructor #> constructor<#
+            break;
+   }
+   if (egressType == "StreamEvent") { #>
+            ReshapingPolicy reshapingPolicy = ReshapingPolicy.None<# } #><# if (hasContainer) { #>,
+            string identifier = null<# } #>)
+        {
+            Invariant.IsNotNull(stream, nameof(stream));
+
+            return stream.To<#= infixName #>Observable(
+                <#= constructorParameters #><#= hasContainer ? "container" : "null" #>, <# if (hasContainer) { #>identifier ?? <# } #>Guid.NewGuid().ToString()<# if (egressType == "StreamEvent") { #>, reshapingPolicy<# } #>);
+        }
+
+<# } #>
+        internal static IObservable<<#= egress #>> To<#= infixName #>Observable<<#= genericArguments #><#= argumentSuffix #>>(
+            this IStreamable<<#= inputKey #>, TPayload> stream,
+<# switch (egressType) {
+       case "StartEdge":
+       case "Interval": #>
+            <#= singleConstructor #> constructor,
+<#         break;
+   } #>
+            QueryContainer container,
+            string identifier<# if (egressType == "StreamEvent") { #>,
+            ReshapingPolicy reshapingPolicy<# } #>)
+        {
+            Invariant.IsNotNull(stream, nameof(stream));
+
+            if (stream is IFusibleStreamable<<#= inputKey #>, TPayload> f && f.CanFuseEgressObservable)
+            {
+<# // There are some situations that do not support fusing even if the input module does
+   switch (egressType) {
+       case "StreamEvent": #>
+                if (reshapingPolicy == ReshapingPolicy.None)
+                {
+<#         if (string.IsNullOrEmpty(partitionString)) { #>
+                    return f.FuseEgressObservable((s, e, p, k) => new StreamEvent<TPayload>(s, e, p), container, identifier);
+<#         } else { #>
+                    return f.FuseEgressObservable((s, e, p, k) => new PartitionedStreamEvent<TKey, TPayload>(k.Key, s, e, p), container, identifier);
+<#         } #>
+                }
+<#         break;
+       case "StartEdge": #>
+                if (stream.Properties.IsStartEdgeOnly)
+                {
+<#         if (string.IsNullOrEmpty(partitionString)) { #>
+                    return f.FuseEgressObservable(Expression.Lambda<Func<long, long, TPayload, Empty, TResult>>(constructor.Body, constructor.Parameters[0], Expression.Parameter(typeof(long)), constructor.Parameters[1], Expression.Parameter(typeof(Empty))), container, identifier);
+<#         } else { #>
+                    Expression<Func<PartitionKey<TKey>, TKey>> lower = (o) => o.Key;
+                    var newBody = constructor.ReplaceParametersInBody(lower.Body);
+                    var newFunc = Expression.Lambda<Func<long, long, TPayload, PartitionKey<TKey>, TResult>>(
+                        newBody,
+                        constructor.Parameters[1],
+                        Expression.Parameter(typeof(long)),
+                        constructor.Parameters[2],
+                        lower.Parameters[0]);
+                    return f.FuseEgressObservable(newFunc, container, identifier);
+<#         } #>
+                }
+<#         break;
+       case "Interval":
+           if (string.IsNullOrEmpty(partitionString)) { #>
+                // Optimization for the case where the user is going to drop the temporal aspects
+                // or constant duration tells us that we only have intervals
+                if (stream.Properties.IsConstantDuration
+                    || (typeof(TPayload) == typeof(TResult)
+                    && constructor.Body.NodeType == ExpressionType.Parameter
+                    && constructor.Body.Equals(constructor.Parameters[2])))
+                    return f.FuseEgressObservable(Expression.Lambda<Func<long, long, TPayload, Empty, TResult>>(constructor.Body, constructor.Parameters[0], constructor.Parameters[1], constructor.Parameters[2], Expression.Parameter(typeof(Empty))), container, identifier);
+
+<#         } else { #>
+                if (stream.Properties.IsConstantDuration)
+                {
+                    Expression<Func<PartitionKey<TKey>, TKey>> lower = (o) => o.Key;
+                    var newBody = ParameterSubstituter.Replace(constructor.Parameters[0], lower.Body, constructor.Body);
+                    var newFunc = Expression.Lambda<Func<long, long, TPayload, PartitionKey<TKey>, TResult>>(
+                        newBody,
+                        constructor.Parameters[1],
+                        constructor.Parameters[2],
+                        constructor.Parameters[3],
+                        lower.Parameters[0]);
+                    return f.FuseEgressObservable(newFunc, container, identifier);
+                }
+<#         }
+           break;
+   } #>
+            }
+
+<# // Non-StreamEvent methods do not use reshaping policy at all
+   switch (egressType) {
+       case "StreamEvent": #>
+            return (reshapingPolicy == ReshapingPolicy.None)
+                ? new <#= partitionString #><#= egressType #>Observable<<#= genericArguments #><#= argumentSuffix #>>(stream, <#= constructorParameters #>container, identifier)
+                : new <#= partitionString #><#= egressType #>Observable<<#= genericArguments #><#= argumentSuffix #>>(stream.ToEndEdgeFreeStream(), <#= constructorParameters #>container, identifier);
+<#         break;
+       case "StartEdge": #>
+            return new <#= partitionString #><#= egressType #>Observable<<#= genericArguments #><#= argumentSuffix #>>(stream, <#= constructorParameters #>container, identifier);
+<#         break;
+       case "Interval":
+           if (string.IsNullOrEmpty(partitionString)) { #>
+            // Optimization for the case where the user is going to drop the temporal aspects
+            if (typeof(TPayload) == typeof(TResult)
+                && constructor.Body.NodeType == ExpressionType.Parameter
+                && constructor.Body.Equals(constructor.Parameters[2]))
+                return new ReactiveObservable<TPayload>(stream, container, identifier) as IObservable<TResult>;
+
+<# } #>
+            return new <#= partitionString #><#= egressType #>Observable<<#= genericArguments #><#= argumentSuffix #>>(stream.ToEndEdgeFreeStream(), <#= constructorParameters #>container, identifier);
+<#         break;
+   } #>
+        }
+
+<# } #>
+    }
+}

@@ -1,0 +1,272 @@
+﻿<#@ template language="C#" inherits="CommonUnaryTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Threading;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// TKey: <#= TKey #>
+// TPayload: <#= TPayload #>
+
+[DataContract]
+internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>>
+{
+    private readonly MemoryPool<<#= TKey #>, <#= TPayload #>> pool;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+
+    [SchemaSerialization]
+    private readonly long limit;
+
+    private StreamMessage<<#= TKey #>, <#= TPayload #>> genericOutputBatch;
+    [DataMember]
+    private <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> output;
+
+    [DataMember]
+    private long lastSyncTime = long.MinValue;
+    [DataMember]
+    private SortedDictionary<long, MultiSet<ActiveEvent>> syncTimeMap = new SortedDictionary<long, MultiSet<ActiveEvent>>();
+
+    <#= staticCtor #>
+
+    [Obsolete("Used only by serialization. Do not call directly.")]
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TPayload #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator,
+        long limit)
+        : base(stream, observer)
+    {
+        this.limit = limit;
+        pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TPayload #>>(true /*stream.Properties.IsColumnar*/);
+        this.queryPlanGenerator = queryPlanGenerator;
+        GetOutputBatch();
+    }
+
+    private void GetOutputBatch()
+    {
+        pool.Get(out genericOutputBatch);
+        genericOutputBatch.Allocate();
+        output = (<#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>)genericOutputBatch;
+<# foreach (var f in this.fields.Where(fld => fld.OptimizeString())) {  #>
+
+        output.<#= f.Name #>.Initialize();
+<# } #>
+   }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    private void ReachTime(long timestamp)
+    {
+        List<long> toDelete = new List<long>();
+        foreach (var kvp in syncTimeMap)
+        {
+            if (timestamp < kvp.Key + limit) break;
+
+            foreach (var ae in kvp.Value.GetEnumerable())
+            {
+                int ind = output.Count++;
+                output.vsync.col[ind] = kvp.Key + limit;
+                output.vother.col[ind] = kvp.Key;
+                output.key.col[ind] = ae.Key;
+                //output[ind] = ae.Payload;
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+
+                output.<#= f.Name #>.AddString(ae.<#= f.Name #>);
+<#       } else { #>
+                output.<#= f.Name #>.col[ind] = ae.<#= f.Name #>;
+<#       } #>
+<#     } #>
+                output.hash.col[ind] = ae.Hash;
+
+                if (output.Count == Config.DataBatchSize)
+                {
+                    output.Seal();
+                    this.Observer.OnNext(output);
+                    GetOutputBatch();
+                }
+            }
+
+            toDelete.Add(kvp.Key);
+        }
+
+        foreach (var l in toDelete) syncTimeMap.Remove(l);
+        lastSyncTime = timestamp;
+    }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> genericBatch)
+    {
+        var batch = genericBatch as <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>;
+        var count = batch.Count;
+
+        fixed (long* bv = batch.bitvector.col)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                {
+                    ReachTime(batch.vsync.col[i]);
+
+                    if (batch.vother.col[i] == StreamEvent.InfinitySyncTime)
+                    {
+                        // For start events, we copy directly to the output batch
+                        // and add them to the list of events that may need to be clipped
+                        int ind = output.Count++;
+                        var sync = batch.vsync.col[i];
+                        output.vsync.col[ind] = sync;
+                        output.vother.col[ind] = StreamEvent.InfinitySyncTime;
+                        output.key.col[ind] = batch.key.col[i];
+                        //output[ind] = batch[i];
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+                        output.<#= f.Name #>.AddString(batch.<#= f.Name #>[i]);
+<#       } else { #>
+                        output.<#= f.Name #>.col[ind] = batch.<#= f.Name #>.col[i];
+<#       } #>
+<#     } #>
+                        output.hash.col[ind] = batch.hash.col[i];
+
+                        if (output.Count == Config.DataBatchSize) FlushContents();
+
+                        MultiSet<ActiveEvent> multiSet;
+                        if (!syncTimeMap.TryGetValue(sync, out multiSet))
+                        {
+                            multiSet = new MultiSet<ActiveEvent>();
+                            syncTimeMap.Add(sync, multiSet);
+                        }
+                        var activeEvent = new ActiveEvent();
+                        activeEvent.Populate(batch.key.col[i], batch, i, batch.hash.col[i]);
+                        multiSet.Add(activeEvent);
+                    }
+                    else if (batch.vother.col[i] > batch.vsync.col[i])
+                    {
+                        // For intervals, we clip the limit and copy to the output batch
+                        int ind = output.Count++;
+                        output.vsync.col[ind] = batch.vsync.col[i];
+                        output.vother.col[ind] = Math.Min(batch.vother.col[i], batch.vsync.col[i] + limit);
+                        output.key.col[ind] = batch.key.col[i];
+                        //output[ind] = batch[i];
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+                        output.<#= f.Name #>.AddString(batch.<#= f.Name #>[i]);
+<#       } else { #>
+                        output.<#= f.Name #>.col[ind] = batch.<#= f.Name #>.col[i];
+<#       } #>
+<#     } #>
+                        output.hash.col[ind] = batch.hash.col[i];
+
+                        if (output.Count == Config.DataBatchSize) FlushContents();
+                    }
+                    else
+                    {
+                        var sync = batch.vsync.col[i];
+                        var other = batch.vother.col[i];
+
+                        // For end edges, if the delta is greater than the limit, then ignore,
+                        // otherwise copy directly over
+                        if (other + limit <= sync) continue;
+
+                        var payload = batch[i];
+                        int ind = output.Count++;
+                        output.vsync.col[ind] = sync;
+                        output.vother.col[ind] = other;
+                        output.key.col[ind] = batch.key.col[i];
+                        //output[ind] = payload;
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+                        output.<#= f.Name #>.AddString(batch.<#= f.Name #>[i]);
+<#       } else { #>
+                        output.<#= f.Name #>.col[ind] = batch.<#= f.Name #>.col[i];
+<#       } #>
+<#     } #>
+                        output.hash.col[ind] = batch.hash.col[i];
+
+                        if (output.Count == Config.DataBatchSize) FlushContents();
+
+                        // Remove the corresponding start edge from the waiting list
+                        var activeEvent = new ActiveEvent();
+                        activeEvent.Populate(batch.key.col[i], batch, i, batch.hash.col[i]);
+                        syncTimeMap[other].Remove(activeEvent);
+                        if (syncTimeMap[other].IsEmpty) syncTimeMap.Remove(other);
+                    }
+                }
+                else if (batch.vother.col[i] == StreamEvent.PunctuationOtherTime)
+                {
+                    ReachTime(batch.vsync.col[i]);
+
+                    int ind = output.Count++;
+                    output.vsync.col[ind] = batch.vsync.col[i];
+                    output.vother.col[ind] = StreamEvent.PunctuationOtherTime;
+                    output.key.col[ind] = default;
+                    output[ind] = default;
+                    output.hash.col[ind] = batch.hash.col[i];
+                    output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
+
+                    if (output.Count == Config.DataBatchSize) FlushContents();
+                }
+            }
+        }
+        batch.Free();
+    }
+
+    protected override void FlushContents()
+    {
+        if (output.Count == 0) return;
+        output.Seal();
+        this.Observer.OnNext(output);
+        GetOutputBatch();
+    }
+
+    protected override void DisposeState() => this.output.Free();
+
+    public override int CurrentlyBufferedOutputCount => output.Count;
+
+    public override int CurrentlyBufferedInputCount => syncTimeMap.Values.Select(o => (int)o.Count).Sum();
+
+    [DataContract]
+    private struct ActiveEvent
+    {
+<# foreach (var f in this.fields) { #>
+        [DataMember]
+        public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.Name #>;
+<# } #>
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public int Hash;
+
+        public void Populate(<#= TKey #> key, <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> batch, int index, int hash)
+        {
+            this.Key = key;
+            //this.Payload = payload;
+<# foreach (var f in this.fields) { #>
+            this.<#= f.Name #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+<# } #>
+            this.Hash = hash;
+        }
+
+        public override string ToString()
+        {
+            return "Key='" + Key + "', Payload='"; // + Payload;
+        }
+    }
+}

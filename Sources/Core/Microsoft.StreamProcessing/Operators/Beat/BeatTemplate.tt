@@ -1,0 +1,612 @@
+﻿<#@ template language="C#" inherits="CommonUnaryTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Reflection" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Threading;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// TKey: <#= TKey #>
+// TPayload: <#= TPayload #>
+
+[DataContract]
+internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>>
+{
+    private readonly MemoryPool<<#= TKey #>, <#= TPayload #>> pool;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+
+    [SchemaSerialization]
+    private readonly long offset;
+    [SchemaSerialization]
+    private readonly long period;
+
+    private StreamMessage<<#= TKey #>, <#= TPayload #>> genericOutputBatch;
+    [DataMember]
+    private <#= BatchGeneratedFrom_TKey_TPayload #> output;
+
+    [DataMember]
+    private FastMap<ActiveInterval> intervals = new FastMap<ActiveInterval>();
+    [DataMember]
+    private FastMap<ActiveEdge> edges = new FastMap<ActiveEdge>();
+    [DataMember]
+    private long currBeatTime = long.MinValue;
+    [DataMember]
+    private long lastTime = long.MinValue;
+    [DataMember]
+    private int batchIter;
+
+    <#= staticCtor #>
+
+    [Obsolete("Used only by serialization. Do not call directly.")]
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TPayload #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator,
+        long offset,
+        long period)
+        : base(stream, observer)
+    {
+        this.offset = offset;
+        this.period = period;
+        this.queryPlanGenerator = queryPlanGenerator;
+
+        this.pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TPayload #>>(true /*stream.Properties.IsColumnar*/);
+        GetOutputBatch();
+    }
+
+    private void GetOutputBatch()
+    {
+        pool.Get(out genericOutputBatch);
+        genericOutputBatch.Allocate();
+        output = (<#= BatchGeneratedFrom_TKey_TPayload #>)genericOutputBatch;
+<# foreach (var f in this.fields.Where(fld => fld.OptimizeString())) {  #>
+
+        output.<#= f.Name #>.Initialize();
+<# } #>
+   }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> genericBatch)
+    {
+        var batch = genericBatch as <#= BatchGeneratedFrom_TKey_TPayload #>;
+
+        batchIter = batch.iter;
+        <#= TKey #>[] sourceKey = batch.key.col;
+        fixed (int* sourceHash = batch.hash.col)
+        fixed (long* sourceBitVector = batch.bitvector.col)
+        fixed (long* sourceVSync = batch.vsync.col)
+        fixed (long* sourceVOther = batch.vother.col)
+        {
+            int count = batch.Count;
+            int* sourceHashPtr = sourceHash;
+            long* sourceVSyncPtr = sourceVSync;
+            long* sourceVOtherPtr = sourceVOther;
+            for (int row = 0; row < count; row++)
+            {
+                if ((sourceBitVector[row >> 6] & (1L << (row & 0x3f))) == 0 || *sourceVOtherPtr == long.MinValue)
+                {
+                    long startTime = *sourceVSyncPtr;
+                    long endTime = *sourceVOtherPtr;
+                    int hash = *sourceHashPtr;
+
+                    AdvanceTime(startTime);
+
+                    bool isPunctuation = endTime == long.MinValue;
+                    bool isInsert = startTime < endTime;
+                    bool isStartEdge = isInsert && endTime == StreamEvent.InfinitySyncTime;
+                    bool isEndEdge = !isInsert;
+                    if (isPunctuation)
+                    {
+                        AddToBatch(startTime, long.MinValue, ref sourceKey[row], ref sourcePayload[row], hash);
+                    }
+                    else if (isStartEdge)
+                    {
+                        // Add starting edge { vSync = startTime, vOther = StreamEvent.InfinitySyncTime }.
+                        AddToBatch(
+                            startTime,
+                            StreamEvent.InfinitySyncTime,
+                            ref sourceKey[row],
+                            /* ref sourcePayload[row], */
+                            batch, row,
+                            hash);
+
+                        // Add to active edges list to handle repeat at beats (and waiting for closing edge).
+                        int index = edges.Insert(hash);
+                        edges.Values[index].Populate(batch, row);
+                    }
+                    else if (isEndEdge)
+                    {
+                        bool notCurrentlyOnBeat = startTime != currBeatTime;
+                        long edgeStartTime = endTime;
+                        long edgeEndTime = startTime;
+                        if (notCurrentlyOnBeat)
+                        {
+                            // Edges are only open if not on a beat.
+                            long lastBeatTime = currBeatTime - period;
+                            bool edgeStartedBeforeLastBeat = edgeStartTime < lastBeatTime;
+
+                            if (edgeStartedBeforeLastBeat)
+                            {
+                                // Add closing edge { vSync = edgeEndTime, vOther = lastBeatTime }.
+                                AddToBatch(
+                                    edgeEndTime,
+                                    lastBeatTime,
+                                    ref sourceKey[row],
+                                    /* ref sourcePayload[row], */
+                                    batch, row,
+                                    hash);
+                            }
+                            else
+                            {
+                                // Add closing edge { vSync = edgeEndTime, vOther = edgeStartTime }.
+                                AddToBatch(
+                                    edgeEndTime,
+                                    edgeStartTime,
+                                    ref sourceKey[row],
+                                    /* ref sourcePayload[row], */
+                                    batch, row,
+                                    hash);
+                            }
+                        }
+
+                        // Remove from active edges list.
+                        var edgesTraversal = edges.Find(hash);
+                        int index;
+                        while (edgesTraversal.Next(out index))
+                        {
+                            var edge = edges.Values[index];
+                            if (AreSame(edgeStartTime, ref sourceKey[row], /*ref sourcePayload[row] */ batch, row, edge))
+                            {
+                                edgesTraversal.Remove();
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        long nextBeatTime = startTime == currBeatTime ? currBeatTime + period : currBeatTime;
+                        bool isLastBeatForInterval = endTime <= nextBeatTime;
+
+                        if (isLastBeatForInterval)
+                        {
+                            // Add interval { vSync = startTime, vOther = endTime }.
+                            AddToBatch(startTime, endTime, ref sourceKey[row], /* ref sourcePayload[row] */ batch, row, hash);
+
+                            // No need to add to active list as interval ends <= nextBeatTime.
+                        }
+                        else
+                        {
+                            // Add interval { vSync = startTime, vOther = nextBeatTime }.
+                            AddToBatch(startTime, nextBeatTime, ref sourceKey[row], /* ref sourcePayload[row] */ batch, row, hash);
+
+                            // Add to active list to handle repeat at beats.
+                            int index = intervals.Insert(hash);
+                            intervals.Values[index].Populate(batch, row);
+                        }
+                    }
+                }
+
+                // Advance pointers.
+                sourceHashPtr++;
+                sourceVSyncPtr++;
+                sourceVOtherPtr++;
+            }
+        }
+
+        batch.Free();
+    }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    protected override void DisposeState() => this.output.Free();
+
+    public override int CurrentlyBufferedOutputCount => output.Count;
+
+    public override int CurrentlyBufferedInputCount => edges.Count + intervals.Count;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AdvanceTime(long time)
+    {
+        if (time == lastTime || time < currBeatTime)
+        {
+            // Time has not changed or has not yet reached beat.
+            return;
+        }
+
+        if (time >= StreamEvent.InfinitySyncTime)
+        {
+            // If advancing time to infinity, verify no open edges.
+            if (!edges.IsEmpty)
+            {
+                throw new InvalidOperationException("Cannot advance time to infinity if unclosed open edges");
+            }
+        }
+
+        if (edges.IsEmpty && intervals.IsEmpty)
+        {
+            // No elements to track, so just advance time to next beat.
+            currBeatTime = FindNextBeatGreaterThanOrEqualTo(time);
+            lastTime = time;
+            return;
+        }
+
+        // currTime must be >= currBeatTime AND lastTime must be <= currBeatTime, so we have definitely
+        // reached or surpassed a beat.
+        if (lastTime < currBeatTime)
+        {
+            // This is the first time reaching the time currBeatTime, so handle reaching a beat.
+            ReachBeat(currBeatTime);
+
+            if (edges.IsEmpty && intervals.IsEmpty)
+            {
+                // No elements to track, so just advance time to next beat.
+                currBeatTime = FindNextBeatGreaterThanOrEqualTo(time);
+                lastTime = time;
+                return;
+            }
+        }
+
+        // By this point, we have definitely reached currBeatTime although may or may not have surpassed it.
+        while (time >= currBeatTime + period)
+        {
+            // We are guaranteed there are no events within (currBeatTime, currBeatTime + period) because
+            // lastTime must be <= currBeatTime and time is >= currBeatTime + period. Note there could have
+            // been edges at currBeatTime or edges to still come at currBeatTime + period, however.
+
+            // Regardless, we can optimize edges to output as intervals for (currBeatTime, currBeatTime + period).
+            LeaveBeatContinuousToNext(currBeatTime);
+            currBeatTime += period;
+            ReachBeatContinuousFromLast(currBeatTime);
+
+            if (edges.IsEmpty && intervals.IsEmpty)
+            {
+                // No elements to track, so just advance time to next beat.
+                currBeatTime = FindNextBeatGreaterThanOrEqualTo(time);
+                lastTime = time;
+                return;
+            }
+        }
+
+        // By this point, the loop guarantees that: currBeatTime <= time < currBeatTime + period
+        if (time > currBeatTime)
+        {
+            // time has passed the beat at currBeatTime, so handle the beat.
+            LeaveBeat(currBeatTime);
+            currBeatTime += period;
+        }
+
+        // By this point, time must be <= currBeatTime.
+        lastTime = time;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ReachBeat(long beatTime)
+    {
+        long lastBeatTime = beatTime - period;
+        long nextBeatTime = beatTime + period;
+
+        // Close all active edges.
+        var edgeTraverser = edges.Traverse();
+        int index;
+        int hash;
+        while (edgeTraverser.Next(out index, out hash))
+        {
+            long edgeStartTime = edges.Values[index].Start;
+            bool edgeStartedBeforeLastBeat = edgeStartTime < lastBeatTime;
+
+            if (edgeStartedBeforeLastBeat)
+            {
+                // Add closing edge { vSync = beatTime, vOther = lastBeatTime }.
+                AddToBatch(beatTime, lastBeatTime, edges.Values[index].Key, edges.Values[index], hash);
+            }
+            else
+            {
+                // Add closing edge { vSync = beatTime, vOther = edge.Start }.
+                AddToBatch(beatTime, edgeStartTime, edges.Values[index].Key, edges.Values[index], hash);
+            }
+        }
+
+        // Add all active intervals.
+        var intervalTraverser = intervals.Traverse();
+        while (intervalTraverser.Next(out index, out hash))
+        {
+            long intervalEndTime = intervals.Values[index].End;
+            bool isLastBeatForInterval = intervalEndTime <= nextBeatTime;
+
+            if (isLastBeatForInterval)
+            {
+                // Add interval { vSync = beatTime, vOther = interval.End }.
+                var interval = intervals.Values[index];
+                AddToBatch(beatTime, intervalEndTime, intervals.Values[index].Key, interval, hash);
+
+                // Remove from active list as no longer need to output.
+                intervalTraverser.Remove();
+            }
+            else
+            {
+                // Add interval { vSync = beatTime, vOther = nextBeatTime }.
+                AddToBatch(beatTime, nextBeatTime, intervals.Values[index].Key, intervals.Values[index], hash);
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void LeaveBeat(long beatTime)
+    {
+        // Open all active edges (that weren't added during this beat).
+        var edgeTraverser = edges.Traverse();
+        int index;
+        int hash;
+        while (edgeTraverser.Next(out index, out hash))
+        {
+            bool edgeWasAddedPriorToBeat = edges.Values[index].Start < beatTime;
+
+            if (edgeWasAddedPriorToBeat)
+            {
+                // Add starting edge { vSync = beatTime, vOther = StreamEvent.InfinitySyncTime }.
+                AddToBatch(beatTime, StreamEvent.InfinitySyncTime, edges.Values[index].Key, edges.Values[index], hash);
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void LeaveBeatContinuousToNext(long beatTime)
+    {
+        long nextBeatTime = beatTime + period;
+
+        // Make intervals for all active edges (that weren't added during this beat).
+        var edgeTraverser = edges.Traverse();
+        int index;
+        int hash;
+        while (edgeTraverser.Next(out index, out hash))
+        {
+            bool edgeWasAddedPriorToBeat = edges.Values[index].Start < beatTime;
+
+            if (edgeWasAddedPriorToBeat)
+            {
+                // Add interval for edge { vSync = beatTime, vOther = nextBeatTime }.
+                AddToBatch(beatTime, nextBeatTime, edges.Values[index].Key, edges.Values[index], hash);
+            }
+            else
+            {
+                // Denote edges that were added at beat because they have already outputted a start edge.
+                edgeTraverser.MakeInvisible();
+            }
+        }
+
+        // Output corresponding end edges for all start edges.
+        var invisibleTraverser = edges.TraverseInvisible();
+        while (invisibleTraverser.Next(out index, out hash))
+        {
+            // Add closing edge { vSync = nextBeatTime, vOther = beatTime }.
+            AddToBatch(nextBeatTime, beatTime, edges.Values[index].Key, edges.Values[index], hash);
+            invisibleTraverser.MakeVisible();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ReachBeatContinuousFromLast(long beatTime)
+    {
+        long nextBeatTime = beatTime + period;
+
+        // Add all active intervals.
+        var intervalTraverser = intervals.Traverse();
+        int index;
+        int hash;
+        while (intervalTraverser.Next(out index, out hash))
+        {
+            long intervalEndTime = intervals.Values[index].End;
+            bool isLastBeatForInterval = intervalEndTime <= nextBeatTime;
+
+            if (isLastBeatForInterval)
+            {
+                // Add interval { vSync = beatTime, vOther = interval.End }.
+                var interval = intervals.Values[index];
+                AddToBatch(beatTime, intervalEndTime, intervals.Values[index].Key, interval, hash);
+
+                // Remove from active list as no longer need to output.
+                intervalTraverser.Remove();
+            }
+            else
+            {
+                // Add interval { vSync = beatTime, vOther = nextBeatTime }.
+                AddToBatch(beatTime, nextBeatTime, intervals.Values[index].Key, intervals.Values[index], hash);
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private long FindNextBeatGreaterThanOrEqualTo(long time)
+    {
+        long multiple = (time - offset + period - 1) / period;
+        return (multiple * period) + offset;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddToBatch(long start, long end, ref <#= TKey #> key, /* ref <#= TPayload #> payload */ <#= BatchGeneratedFrom_TKey_TPayload #> batch, int batchIndex, int hash)
+    {
+        int index = output.Count++;
+        output.vsync.col[index] = start;
+        output.vother.col[index] = end;
+        output.key.col[index] = key;
+        /* output.payload.col[index] = payload; */
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+
+        output.<#= f.Name #>.AddString(batch.<#= f.Name #>[batchIndex]);
+<#       } else { #>
+        output.<#= f.Name #>.col[index] = batch.<#= f.Name #>.col[batchIndex];
+<#       } #>
+<#     } #>
+
+        output.hash.col[index] = hash;
+
+        if (output.Count == Config.DataBatchSize)
+        {
+            output.iter = batchIter;
+            this.Observer.OnNext(output);
+            GetOutputBatch();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddToBatch(long start, long end, <#= TKey #> key, ActiveEdge edge, int hash)
+    {
+        int index = output.Count++;
+        output.vsync.col[index] = start;
+        output.vother.col[index] = end;
+        output.key.col[index] = key;
+        /* output.payload.col[index] = payload; */
+<#     foreach (var f in this.fields) {
+         var sourceName = "edge.Payload";
+         if (!noFields) sourceName += "." + f.OriginalName;
+#>
+<#       if (f.OptimizeString()) { #>
+
+        output.<#= f.Name #>.AddString(<#= sourceName #>);
+<#       } else { #>
+        output.<#= f.Name #>.col[index] = <#= sourceName #>;
+<#       } #>
+<#     } #>
+
+        output.hash.col[index] = hash;
+
+        if (output.Count == Config.DataBatchSize)
+        {
+            output.iter = batchIter;
+            this.Observer.OnNext(output);
+            GetOutputBatch();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddToBatch(long start, long end, <#= TKey #> key, ActiveInterval interval, int hash)
+    {
+        int index = output.Count++;
+        output.vsync.col[index] = start;
+        output.vother.col[index] = end;
+        output.key.col[index] = key;
+        /* output.payload.col[index] = payload; */
+<#     foreach (var f in this.fields) {
+         var sourceName = "interval.Payload";
+         if (!noFields) sourceName += "." + f.OriginalName;
+#>
+<#       if (f.OptimizeString()) { #>
+
+        output.<#= f.Name #>.AddString(<#= sourceName #>);
+<#       } else { #>
+        output.<#= f.Name #>.col[index] = <#= sourceName #>;
+<#       } #>
+<#     } #>
+
+        output.hash.col[index] = hash;
+
+        if (output.Count == Config.DataBatchSize)
+        {
+            output.iter = batchIter;
+            this.Observer.OnNext(output);
+            GetOutputBatch();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool AreSame(long start, ref <#= TKey #> key, <#= BatchGeneratedFrom_TKey_TPayload #> batch, int index, ActiveEdge active)
+    {
+        return start == active.Start && <#= keyComparer("key", "active.Key") #> && <#= payloadComparer("batch", "active.Payload") #>;
+    }
+
+    protected override void FlushContents()
+    {
+        if (output.Count == 0) return;
+        this.Observer.OnNext(output);
+        GetOutputBatch();
+    }
+
+<# if (!noFields && !this.payloadType.GetTypeInfo().IsValueType) { #>
+    [DataContract]
+    private struct <#= ActiveEventType #>
+    {
+        <# foreach (var f in this.fields) { #>
+        [DataMember]
+        public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.OriginalName #>;
+        <# } #>
+    }
+<# } #>
+
+    [DataContract]
+    private struct ActiveInterval
+    {
+        [DataMember]
+        public long End;
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public <#= ActiveEventType #> Payload;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Populate(<#= BatchGeneratedFrom_TKey_TPayload #> batch, int index)
+        {
+            End = batch.vother.col[index];
+            Key = batch.key.col[index];
+<# if (this.noFields) { #>
+            this.Payload = batch.payload.col[index];
+<# } else { #>
+<#     foreach (var f in this.fields) { #>
+            this.Payload.<#= f.OriginalName #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+<# } #>
+<# } #>
+        }
+
+        public override string ToString()
+        {
+            return "[End=" + End + ", Key='" + Key + "', Payload='" +  "']";
+        }
+    }
+
+    [DataContract]
+    private struct ActiveEdge
+    {
+        [DataMember]
+        public long Start;
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public <#= ActiveEventType #> Payload;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Populate(<#= BatchGeneratedFrom_TKey_TPayload #> batch, int index)
+        {
+            Start = batch.vsync.col[index];
+            Key = batch.key.col[index];
+<# if (this.noFields) { #>
+            this.Payload = batch.payload.col[index];
+<# } else { #>
+<#     foreach (var f in this.fields) { #>
+            this.Payload.<#= f.OriginalName #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+<# } #>
+<# } #>
+        }
+
+        public override string ToString()
+        {
+            return "[Start=" + Start + ", Key='" + Key + "', Payload='" + "']";
+        }
+    }
+}

@@ -1,0 +1,326 @@
+﻿// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+
+namespace Microsoft.StreamProcessing
+{
+    internal delegate int RefComparison<T>(ref T x, ref T y);
+
+    internal static class Utility
+    {
+        internal static readonly IDisposable EmptyDisposable = new NullDisposable();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static bool IsPowerOfTwo(long x) => (x > 0) && ((x & (x - 1)) == 0);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "x+1", Justification = "Reviewed.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "x-1", Justification = "Reviewed.")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static int Power2Ceil(int x)
+        {
+            x--;
+            x |= x >> 1;
+            x |= x >> 2;
+            x |= x >> 4;
+            x |= x >> 8;
+            x |= x >> 16;
+            x++;
+            return x;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static long SnapToLeftBoundary(this long value, long period, long offset = 0)
+            => period <= 1 ? value : value - ((value + period - (offset % period)) % period);
+
+        internal static IEnumerable<T> Yield<T>(this T element)
+        {
+            yield return element;
+        }
+
+        /// <summary>
+        /// Tries to get the first element in the given sorted dictionary.
+        /// </summary>
+        /// <typeparam name="TKey">The key type of the sorted dictionary.</typeparam>
+        /// <typeparam name="TValue">The value type of the sorted dictionary.</typeparam>
+        /// <param name="source">The sorted dictionary from which to attempt drawing an item.</param>
+        /// <param name="key">The key of the sorted dictionary item returned.</param>
+        /// <param name="value">The value of the sorted dictionary item returned.</param>
+        /// <returns>Whether a value was found in the sorted dictionary.</returns>
+        public static bool TryGetFirst<TKey, TValue>(this SortedDictionary<TKey, TValue> source, out TKey key, out TValue value)
+        {
+            // avoids boxing in LINQ to Objects First() call
+            foreach (KeyValuePair<TKey, TValue> pair in source)
+            {
+                key = pair.Key;
+                value = pair.Value;
+                return true;
+            }
+            key = default;
+            value = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get the first element in the given sorted set.
+        /// </summary>
+        /// <typeparam name="TKey">The key type of the sorted dictionary.</typeparam>
+        /// <param name="source">The sorted dictionary from which to attempt drawing an item.</param>
+        /// <param name="key">The key of the sorted dictionary item returned.</param>
+        /// <returns>Whether a value was found in the sorted dictionary.</returns>
+        public static bool TryGetFirst<TKey>(this SortedSet<TKey> source, out TKey key)
+        {
+            // avoids boxing in LINQ to Objects First() call
+            foreach (var entry in source)
+            {
+                key = entry;
+                return true;
+            }
+            key = default;
+            return false;
+        }
+
+        internal static IDisposable CreateDisposable(params IDisposable[] disposables) => new CompoundDisposable(disposables);
+
+        internal static Dictionary<TK, TV> Clone<TK, TV>(this Dictionary<TK, TV> source) => new Dictionary<TK, TV>(source);
+
+        /// <summary>
+        /// With a dictionary of lists, add a single element to a particular list. Create a new list if none exists at that key location.
+        /// </summary>
+        /// <typeparam name="TKey">The key type of the dictionary to which to add a value.</typeparam>
+        /// <typeparam name="TValue">The item type of the lists that serve as values in the dictionary.</typeparam>
+        /// <param name="dict">The dictionary of lists to which to add an item.</param>
+        /// <param name="key">The key of the list to which to add the new element.</param>
+        /// <param name="value">The value to add to the given list.</param>
+        public static void Add<TKey, TValue>(this IDictionary<TKey, List<TValue>> dict, TKey key, TValue value)
+        {
+            if (!dict.TryGetValue(key, out List<TValue> list))
+            {
+                list = new List<TValue>();
+                dict.Add(key, list);
+            }
+            list.Add(value);
+        }
+
+        internal static void QuickSort<T>(T[] keys, int left, int right, RefComparison<T> comparison)
+        {
+            do
+            {
+                int a = left;
+                int b = right;
+                int mid = a + ((b - a) >> 1);
+                SwapIfGreaterWithItems(keys, comparison, a, mid);
+                SwapIfGreaterWithItems(keys, comparison, a, b);
+                SwapIfGreaterWithItems(keys, comparison, mid, b);
+                T y = keys[mid];
+                do
+                {
+                    while (comparison(ref keys[a], ref y) < 0)
+                    {
+                        a++;
+                    }
+                    while (comparison(ref y, ref keys[b]) < 0)
+                    {
+                        b--;
+                    }
+                    if (a > b) break;
+                    if (a < b)
+                    {
+                        T local2 = keys[a];
+                        keys[a] = keys[b];
+                        keys[b] = local2;
+                    }
+                    a++;
+                    b--;
+                }
+                while (a <= b);
+                if ((b - left) <= (right - a))
+                {
+                    if (left < b) QuickSort(keys, left, b, comparison);
+                    left = a;
+                }
+                else
+                {
+                    if (a < right) QuickSort(keys, a, right, comparison);
+                    right = b;
+                }
+            }
+            while (left < right);
+        }
+
+        private static void SwapIfGreaterWithItems<T>(T[] keys, RefComparison<T> comparison, int a, int b)
+        {
+            if ((a != b) && (comparison(ref keys[a], ref keys[b]) > 0))
+            {
+                T local = keys[a];
+                keys[a] = keys[b];
+                keys[b] = local;
+            }
+        }
+
+        internal static Expression<Comparison<CompoundGroupKey<T1, T2>>>
+            CreateCompoundComparerPredicate<T1, T2>(Expression<Comparison<T1>> comparerOnT1, Expression<Comparison<T2>> comparerOnT2)
+        {
+            Contract.Requires(comparerOnT2 != null);
+
+            var e1 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e1");
+            var e2 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e2");
+            if ((comparerOnT1 == null) || typeof(T1) == typeof(Empty))
+            {
+                // (e1,e2) => comparerOnT2(e1.innerGroup, e2.innerGroup)
+                return Expression.Lambda<Comparison<CompoundGroupKey<T1, T2>>>(
+                        Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup")),
+                        new ParameterExpression[] { e1, e2 });
+            }
+            else
+            {
+                // (e1,e2) => comparerOnT1(e1.outerGroup, e2.outerGroup) != 0 ? (comparerOnT1(e1.outerGroup, e2.outerGroup)) : comparerOnT2(e1.innerGroup, e2.innerGroup)
+
+                return Expression.Lambda<Comparison<CompoundGroupKey<T1, T2>>>(
+                    Expression.Condition(
+                    Expression.NotEqual(
+                    Expression.Invoke(comparerOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
+                    Expression.Constant(0, typeof(int))),
+                    Expression.Invoke(comparerOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
+                    Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
+                    new ParameterExpression[] { e1, e2 });
+            }
+        }
+
+        internal static Expression<Comparison<T2>> CreateCompoundComparer<T1, T2>(Expression<Func<T2, T1>> selector, Expression<Comparison<T1>> comparer)
+        {
+            var newParam1 = Expression.Parameter(selector.Parameters[0].Type, selector.Parameters[0].Name + "_1");
+            var newParam2 = Expression.Parameter(selector.Parameters[0].Type, selector.Parameters[0].Name + "_2");
+            var copy1 = ParameterInliner.Inline(selector, newParam1);
+            var copy2 = ParameterInliner.Inline(selector, newParam2);
+            var result = ParameterInliner.Inline(comparer, copy1, copy2);
+            return Expression.Lambda<Comparison<T2>>(result, newParam1, newParam2);
+        }
+
+        internal static Expression<Func<CompoundGroupKey<T1, T2>, CompoundGroupKey<T1, T2>, bool>>
+            CreateCompoundEqualityPredicate<T1, T2>(Expression<Func<T1, T1, bool>> equalityOnT1, Expression<Func<T2, T2, bool>> equalityOnT2)
+        {
+            Contract.Requires(equalityOnT1 != null);
+            Contract.Requires(equalityOnT2 != null);
+
+            // (e1,e2) => equalityOnT1(e1.outerGroup, e2.outerGroup) && equalityOnT2(e1.innerGroup, e2.innerGroup)
+            var e1 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e1");
+            var e2 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e2");
+            return Expression.Lambda<Func<CompoundGroupKey<T1, T2>, CompoundGroupKey<T1, T2>, bool>>(
+                Expression.AndAlso(
+                    Expression.Invoke(equalityOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
+                    Expression.Invoke(equalityOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
+                    new ParameterExpression[] { e1, e2 });
+        }
+
+        internal static Expression<Func<CompoundGroupKey<T1, T2>, int>>
+            CreateCompoundHashPredicate<T1, T2>(Expression<Func<T1, int>> hashOnT1, Expression<Func<T2, int>> hashOnT2)
+        {
+            Contract.Requires(hashOnT1 != null);
+            Contract.Requires(hashOnT2 != null);
+
+            // (e1) => hashOnT1(e1.outerGroup) && hashOnT2(e1.innerGroup)
+            var e1 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e1");
+            return Expression.Lambda<Func<CompoundGroupKey<T1, T2>, int>>(
+                Expression.ExclusiveOr(
+                    Expression.Invoke(hashOnT1, Expression.Field(e1, "outerGroup")),
+                    Expression.Invoke(hashOnT2, Expression.Field(e1, "innerGroup"))),
+                    new ParameterExpression[] { e1 });
+        }
+
+        private sealed class CompoundDisposable : IDisposable
+        {
+            private readonly IDisposable[] disposables;
+
+            public CompoundDisposable(IDisposable[] disposables)
+            {
+                Contract.Requires(disposables != null);
+
+                this.disposables = disposables;
+            }
+
+            #region IDisposable Members
+
+            public void Dispose()
+            {
+                foreach (IDisposable disposable in this.disposables.Where(d => d != null))
+                {
+                    disposable.Dispose();
+                }
+            }
+
+            #endregion
+        }
+
+        private sealed class NullDisposable : IDisposable
+        {
+            public void Dispose() { }
+        }
+
+        internal static int GetSizeOf(this Type type)
+        {
+            if (type.IsPrimitive)
+            {
+                if (type == typeof(bool)) return sizeof(bool);
+                if (type == typeof(byte)) return sizeof(byte);
+                if (type == typeof(sbyte)) return sizeof(sbyte);
+                if (type == typeof(short)) return sizeof(ushort);
+                if (type == typeof(ushort)) return sizeof(ushort);
+                if (type == typeof(int)) return sizeof(int);
+                if (type == typeof(uint)) return sizeof(uint);
+                if (type == typeof(long)) return sizeof(long);
+                if (type == typeof(ulong)) return sizeof(ulong);
+                if (type == typeof(float)) return sizeof(float);
+                if (type == typeof(double)) return sizeof(double);
+                if (type == typeof(char)) return sizeof(char);
+                throw new InvalidOperationException("Above cases meant to be exhaustive, unknown primitive type " + type.FullName);
+            }
+
+            throw new InvalidOperationException("Only primitive types supported, unknown structural type " + type.FullName);
+        }
+    }
+
+    internal static class Invariant
+    {
+        public static T IsNotNull<T>(this T arg, string argName) where T : class
+        {
+            if (arg == null) throw new ArgumentNullException(argName);
+            return arg;
+        }
+
+        public static int IsPositive(this int arg, string argName)
+        {
+            if (arg <= 0) throw new ArgumentException("Value must be positive.", argName);
+            return arg;
+        }
+
+        public static long IsPositive(this long arg, string argName)
+        {
+            if (arg <= 0L) throw new ArgumentException("Value must be positive.", argName);
+            return arg;
+        }
+
+        public static int IsNonNegative(this int arg, string argName)
+        {
+            if (arg < 0) throw new ArgumentException("Value must be positive or 0.", argName);
+            return arg;
+        }
+
+        public static long IsNonNegative(this long arg, string argName)
+        {
+            if (arg < 0L) throw new ArgumentException("Value must be positive or 0.", argName);
+            return arg;
+        }
+
+        public static void IsTrue(bool assertion, string message)
+        {
+            if (!assertion) throw new ArgumentException(message);
+        }
+    }
+}

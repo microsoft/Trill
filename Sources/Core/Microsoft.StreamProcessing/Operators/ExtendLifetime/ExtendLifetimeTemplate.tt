@@ -1,0 +1,232 @@
+﻿<#@ template language="C#" inherits="ExtendLifetimeBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Threading;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+[DataContract]
+internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>>
+{
+    private readonly MemoryPool<<#= TKey #>, <#= TPayload #>> pool;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+
+    [SchemaSerialization]
+    private readonly long duration;
+
+    private StreamMessage<<#= TKey #>, <#= TPayload #>> genericOutputBatch;
+    [DataMember]
+    private <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> output;
+
+    [DataMember]
+    private long lastSyncTime = long.MinValue;
+    [DataMember]
+    private FastMap<ActiveEvent> endPointMap = new FastMap<ActiveEvent>();
+    [DataMember]
+    private EndPointHeap endPointHeap = new EndPointHeap();
+
+    <#= staticCtor #>
+
+    [Obsolete("Used only by serialization. Do not call directly.")]
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TPayload #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator,
+        long duration)
+        : base(stream, observer)
+    {
+        this.duration = duration;
+        this.queryPlanGenerator = queryPlanGenerator;
+        pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TPayload #>>(true /*stream.Properties.IsColumnar*/);
+        GetOutputBatch();
+    }
+
+    private void GetOutputBatch()
+    {
+        pool.Get(out genericOutputBatch);
+        genericOutputBatch.Allocate();
+        output = (<#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>)genericOutputBatch;
+<# foreach (var f in this.fields.Where(fld => fld.OptimizeString())) {  #>
+        output.<#= f.Name #>.Initialize();
+<# } #>
+   }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    private void ReachTime(long timestamp)
+    {
+        long endPointTime;
+        int index;
+        while (endPointHeap.TryGetNextInclusive(timestamp, out endPointTime, out index))
+        {
+            int ind = output.Count++;
+            output.vsync.col[ind] = endPointTime;
+            var evt = endPointMap.Values[index];
+            output.vother.col[ind] = evt.StartEdge;
+            output.key.col[ind] = evt.Key;
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+            output.<#= f.Name #>.AddString(evt.<#= f.Name #>);
+<#       } else { #>
+            output.<#= f.Name #>.col[ind] = evt.<#= f.Name #>;
+<#       } #>
+<#     } #>
+            output.hash.col[ind] = evt.Hash;
+
+            if (output.Count == Config.DataBatchSize)
+            {
+                output.Seal();
+                this.Observer.OnNext(output);
+                GetOutputBatch();
+            }
+
+            endPointMap.Remove(index);
+        }
+        lastSyncTime = timestamp;
+    }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> genericBatch)
+    {
+        var batch = genericBatch as <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>;
+        var count = batch.Count;
+
+        fixed (long* bv = batch.bitvector.col)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                {
+                    if (batch.vsync.col[i] > lastSyncTime) ReachTime(batch.vsync.col[i]);
+
+                    if (batch.vother.col[i] == StreamEvent.InfinitySyncTime) // For start events, copy directly across
+                    {
+                        int ind = output.Count++;
+                        output.vsync.col[ind] = batch.vsync.col[i];
+                        output.vother.col[ind] = StreamEvent.InfinitySyncTime;
+                        output.key.col[ind] = batch.key.col[i];
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+                        output.<#= f.Name #>.AddString(batch.<#= f.Name #>[i]);
+<#       } else { #>
+                        output.<#= f.Name #>.col[ind] = batch.<#= f.Name #>.col[i];
+<#       } #>
+<#     } #>
+                        output.hash.col[ind] = batch.hash.col[i];
+
+                        if (output.Count == Config.DataBatchSize)
+                        {
+                            output.Seal();
+                            this.Observer.OnNext(output);
+                            GetOutputBatch();
+                        }
+                    }
+                    else if (batch.vother.col[i] > batch.vsync.col[i]) // For intervals, just extend the duration
+                    {
+                        int ind = output.Count++;
+                        output.vsync.col[ind] = batch.vsync.col[i];
+                        output.vother.col[ind] = batch.vother.col[i] + duration;
+                        output.key.col[ind] = batch.key.col[i];
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+                        output.<#= f.Name #>.AddString(batch.<#= f.Name #>[i]);
+<#       } else { #>
+                        output.<#= f.Name #>.col[ind] = batch.<#= f.Name #>.col[i];
+<#       } #>
+<#     } #>
+                        output.hash.col[ind] = batch.hash.col[i];
+
+                        if (output.Count == Config.DataBatchSize)
+                        {
+                            output.Seal();
+                            this.Observer.OnNext(output);
+                            GetOutputBatch();
+                        }
+                    }
+                    else
+                    {
+                        int index = endPointMap.Insert(batch.hash.col[i]);
+                        endPointMap.Values[index].Populate(batch.key.col[i], batch, i, batch.vother.col[i], batch.hash.col[i]);
+                        endPointHeap.Insert(batch.vsync.col[i] + duration, index);
+                    }
+                }
+                else if (batch.vother.col[i] == StreamEvent.PunctuationOtherTime)
+                {
+                    ReachTime(batch.vsync.col[i]);
+
+                    int ind = output.Count++;
+                    output.vsync.col[ind] = batch.vsync.col[i];
+                    output.vother.col[ind] = StreamEvent.PunctuationOtherTime;
+                    output.key.col[ind] = default;
+                    output[ind] = default;
+                    output.hash.col[ind] = batch.hash.col[i];
+                    output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
+
+                    if (output.Count == Config.DataBatchSize) FlushContents();
+                }
+            }
+        }
+        batch.Free();
+    }
+
+    protected override void FlushContents()
+    {
+        if (output.Count == 0) return;
+        this.Observer.OnNext(output);
+        GetOutputBatch();
+    }
+
+    protected override void DisposeState() => output.Free();
+
+    public override int CurrentlyBufferedOutputCount => output.Count;
+
+    public override int CurrentlyBufferedInputCount => endPointMap.Count;
+
+    [DataContract]
+    private struct ActiveEvent
+    {
+<# foreach (var f in this.fields) { #>
+        [DataMember]
+        public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.Name #>;
+<# } #>
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public long StartEdge;
+        [DataMember]
+        public int Hash;
+
+        public void Populate(<#= TKey #> key, <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> batch, int index, long startEdge, int hash)
+        {
+            this.Key = key;
+            //this.Payload = payload;
+<# foreach (var f in this.fields) { #>
+            this.<#= f.Name #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+<# } #>
+            this.StartEdge = startEdge;
+            this.Hash = hash;
+        }
+
+        public override string ToString()
+        {
+            return "Key='" + Key + "', Payload='"; // + Payload;
+        }
+    }
+}

@@ -1,0 +1,70 @@
+﻿<#@ template language="C#" visibility="internal" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="Templates.tt" #>
+using System;
+using System.ComponentModel;
+using System.Runtime.Serialization;
+<#
+int maxSize = 16;
+#>
+
+namespace Microsoft.StreamProcessing.Internal
+{
+    internal static class StructTuple {
+<#
+    for (int count = 1; count <= maxSize; count++)
+    {
+#>
+        public static StructTuple<<#= IterateComma("T$", count) #>> Create<<#= IterateComma("T$", count) #>>(<#= IterateComma("T$ item$", count) #>)
+        {
+            return new StructTuple<<#= IterateComma("T$", count) #>>() { <#= IterateComma("Item$ = item$", count) #> };
+        }
+<# } #>
+    }
+
+<#
+    for (int count = 1; count <= maxSize; count++)
+    {
+#>
+    /// <summary>
+    /// A simple structure representing a tuple of <#= count #> items.
+    /// </summary>
+<# for (int i = 1; i <= count; i++) { #>
+    /// <typeparam name="T<#= i #>">Type of component <#= i #> of the tuple.</typeparam>
+<# } #>
+    [DataContract]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public struct StructTuple<<#= IterateComma("T$", count) #>> : IDisposable
+    {
+<# for (int i = 1; i <= count; i++) { #>
+        /// <summary>
+        /// Item number <#= i #> of the tuple object.
+        /// </summary>
+        [DataMember]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public T<#= i #> Item<#= i #>;
+<# } #>
+
+        /// <summary>
+        /// Prints a string representation of the StructTuple.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override string ToString() => new { <#= IterateComma("this.Item$", count) #> }.ToString();
+
+        /// <summary>
+        /// Disposes the struct by testing each constituent component for disposability.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void Dispose()
+        {
+<# for (int i = 1; i <= count; i++) { #>
+           (this.Item<#= i #> as IDisposable)?.Dispose();
+<# } #>
+        }
+    }
+
+<# } #>
+}

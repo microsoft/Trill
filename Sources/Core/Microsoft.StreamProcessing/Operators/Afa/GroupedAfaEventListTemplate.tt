@@ -1,0 +1,241 @@
+﻿<#@ template language="C#" visibility="internal" inherits="AfaTemplate" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// CompiledGroupedAfaPipe_EventList
+// TKey: <#= TKey #>
+// TPayload: <#= TPayload #>
+// TRegister: <#= TRegister #>
+// TAccumulator: <#= TAccumulator #>
+
+[DataContract]
+internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>
+{
+    <#= staticCtor #>
+
+    [DataMember]
+    protected FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>> activeStates;
+
+    protected FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>.FindTraverser activeFindTraverser;
+
+    [DataMember]
+    protected FastMap<SavedEventList<<#= TKey #>, <#= TPayload #>>> currentTimestampEventList;
+
+    protected FastMap<SavedEventList<<#= TKey #>, <#= TPayload #>>>.FindTraverser eventListTraverser;
+    protected FastMap<SavedEventList<<#= TKey #>, <#= TPayload #>>>.VisibleTraverser allEventListTraverser;
+
+    [DataMember]
+    protected long lastSyncTime;
+
+    private long[] dest_vsync;
+    private long[] dest_vother;
+    private <#= TKey #>[] destkey;
+    private int[] dest_hash;
+    private <#= resultBatchTypeName #> resultBatch;
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TRegister #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TRegister #>> observer,
+        object afa,
+        long MaxDuration)
+        : base(stream, observer, afa, MaxDuration, true)
+    {
+        activeStates = new FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>();
+        activeFindTraverser = new FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>.FindTraverser(activeStates);
+
+        currentTimestampEventList = new FastMap<SavedEventList<<#= TKey #>, <#= TPayload #>>>();
+        eventListTraverser = new FastMap<SavedEventList<<#= TKey #>, <#= TPayload #>>>.FindTraverser(currentTimestampEventList);
+        allEventListTraverser = new FastMap<SavedEventList<<#= TKey #>, <#= TPayload #>>>.VisibleTraverser(currentTimestampEventList);
+        lastSyncTime = -1;
+    }
+
+    public override int CurrentlyBufferedInputCount => activeStates.Count;
+
+    private void ProcessCurrentTimestamp()
+    {
+        int el_index, el_hash;
+        long synctime = lastSyncTime;
+
+        allEventListTraverser.currIndex = 0;
+
+        while (allEventListTraverser.Next(out el_index, out el_hash))
+        {
+            var currentList = currentTimestampEventList.Values[el_index];
+
+            /* (1) Process currently active states */
+            bool ended = true;
+            if (activeFindTraverser.Find(el_hash))
+            {
+                int index, orig_index;
+
+                while (activeFindTraverser.Next(out index))
+                {
+                    orig_index = index;
+
+                    var state = activeStates.Values[index];
+                    if (!(<#= keyEqualityComparer("state.key", "currentList.key") #>)) continue;
+
+                    if (state.PatternStartTimestamp + MaxDuration > synctime)
+                    {
+                        switch (state.state) {
+                            <# foreach (var sourceNodeInfo in this.currentlyActiveInfo) { #>
+
+                            case <#= sourceNodeInfo.Item1 #> :
+                                <# foreach (var edge in sourceNodeInfo.Item2) { #>
+
+                                if (<#= edge.Fence("synctime", "currentList.payloads", "state.register") #>) {
+                                    // assign new register value
+                                    <# UpdateRegisterValue(edge, "state.register", "synctime", "currentList.payloads", "state.register"); #>
+                                    // target nodes
+                                    <# foreach (var ns in edge.EpsilonReachableNodes) { #>
+
+                                    // target state: <#= ns #> (<#= isFinal[ns] ? "final" : "not final" #>)
+                                    <# IfFinalStateProduceOutput(36, ns, string.Empty, "synctime", "state.PatternStartTimestamp", "currentList.key", "el_hash"); #>
+                                    <# if (hasOutgoingArcs[ns]) { #>
+
+                                    // target node has outgoing edges
+                                    if (index == -1) index = activeStates.Insert(el_hash);
+                                    activeStates.Values[index].key = currentList.key;
+                                    activeStates.Values[index].state = <#= ns #>;
+                                    activeStates.Values[index].register = newReg;
+                                    activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+
+                                    index = -1;
+                                    ended = false;
+                                    <# } else { #>
+
+                                    // target node does not have any outgoing edges
+                                    <# } #>
+                                    <# } #>
+
+                                }
+                                <# } #>
+
+                                break;
+
+                            <# } #>
+
+                        }
+                    }
+                    if (index == orig_index) activeFindTraverser.Remove();
+                    if (IsDeterministic) break; // We are guaranteed to have only one active state
+                }
+            }
+
+            /* (2) Start new activations from the start state(s) */
+            <# if (!this.AllowOverlappingInstances) { #>
+
+            if (!ended) continue;
+            <# } #>
+
+            <# foreach (var sourceNodeInfo in this.newActivationInfo) { #>
+
+                // start node: <#= sourceNodeInfo.Item1 #>
+                <# foreach (var edge in sourceNodeInfo.Item2) { #>
+
+                if (<#= edge.Fence("synctime", "currentList.payloads", "defaultRegister") #>) {
+                    // initialize register
+                    <# UpdateRegisterValue(edge, "defaultRegister", "synctime", "currentList.payloads", "defaultRegister"); #>
+                    // target nodes
+                    <# foreach (var ns in edge.EpsilonReachableNodes) { #>
+
+                    // target state: <#= ns #> (<#= isFinal[ns] ? "final" : "not final" #>)
+                    <# IfFinalStateProduceOutput(52, ns, string.Empty, "synctime", "synctime", "currentList.key", "el_hash"); #>
+                    <# if (hasOutgoingArcs[ns]) { #>
+
+                    // target node has outgoing edges
+                    {
+                        var index = activeStates.Insert(el_hash);
+                        activeStates.Values[index].key = currentList.key;
+                        activeStates.Values[index].state = <#= ns #>;
+                        activeStates.Values[index].register = newReg;
+                        activeStates.Values[index].PatternStartTimestamp = synctime;
+                    }
+                    <# } else { #>
+
+                    // target node does not have any outgoing edges
+                    <# } #>
+                    <# } #>
+
+                }
+                <# } #>
+            <# } #>
+        }
+
+        currentTimestampEventList.Clear();
+    }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> batch)
+    {
+        dest_vsync = this.batch.vsync.col;
+        dest_vother = this.batch.vother.col;
+        destkey = this.batch.key.col;
+        dest_hash = this.batch.hash.col;
+
+        var count = batch.Count;
+
+        var srckey = batch.key.col;
+
+        fixed (long* src_bv = batch.bitvector.col, src_vsync = batch.vsync.col, src_vother = batch.vother.col)
+        {
+            fixed (int* src_hash = batch.hash.col)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0 || src_vother[i] < 0)
+                    {
+                        long synctime = src_vsync[i];
+
+                        if (synctime > lastSyncTime) // move time forward
+                        {
+                            ProcessCurrentTimestamp();
+                            lastSyncTime = synctime;
+                        }
+
+                        if (src_vother[i] < 0)
+                        {
+                            OnPunctuation(synctime);
+                            continue;
+                        }
+
+                        bool done = false;
+                        int index, hash;
+
+                        if (eventListTraverser.Find(src_hash[i]))
+                        {
+                            while (eventListTraverser.Next(out index))
+                            {
+                                var state = currentTimestampEventList.Values[index];
+
+                                if (<#= keyEqualityComparer("state.key", "srckey[i]") #>)
+                                {
+                                    state.payloads.Add(batch[i]);
+                                    done = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!done)
+                        {
+                            index = currentTimestampEventList.Insert(src_hash[i]);
+                            var list = new List<<#= TPayload #>>(10);
+                            list.Add(batch[i]);
+                            currentTimestampEventList.Values[index] = new SavedEventList<<#= TKey #>, <#= TPayload #>> { key = srckey[i], payloads = list };
+                        }
+                    }
+                }
+            }
+        }
+        batch.Free();
+    }
+}

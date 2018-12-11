@@ -1,0 +1,178 @@
+﻿<#@ template language="C#" inherits="CommonUnaryTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Reflection" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+<# if (this.keyType.Namespace != null) { #>
+using <#= this.keyType.Namespace #>;
+<# } #>
+<# if (this.payloadType.Namespace != null) { #>
+using <#= this.payloadType.Namespace #>;
+<# } #>
+
+<#
+    List<string> genericParamList = new List<string>();
+    var TKey = keyType.GetCSharpSourceSyntax(ref genericParamList);
+    var TPayload = payloadType.GetCSharpSourceSyntax(ref genericParamList);
+    var genericParameters = 0 < genericParamList.Count ? "<" + String.Join(",", genericParamList) + ">" : string.Empty;
+    var payloadIsAnon = payloadType.IsAnonymousType();
+#>
+
+[DataContract]
+internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>>
+{
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+    private readonly MemoryPool<<#= TKey #>, <#= TPayload #>> pool;
+
+<#
+    if (payloadIsAnon) {
+        foreach (var f in this.fields) {
+#>
+    private PropertyInfo <#= f.Name #>_Property = typeof(<#= TPayload #>).GetProperty("<#= f.Name #>");
+<#
+        }
+    }
+#>
+
+    <#= staticCtor #>
+
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TPayload #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        pool = new MemoryPool<<#= TKey #>, <#= TPayload #>>(false);
+        this.queryPlanGenerator = queryPlanGenerator;
+    }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> batch)
+    {
+        <#= BatchGeneratedFrom_TKey_TPayload #><#= genericParameters #> sourceBatch = batch as <#= BatchGeneratedFrom_TKey_TPayload #><#= genericParameters #>;
+
+        StreamMessage<<#= TKey #>, <#= TPayload #>> resultBatch; // Need this type to call Get with so the right subtype will be returned
+
+        this.pool.Get(out resultBatch);
+        resultBatch.CloneFromNoPayload(sourceBatch);
+        this.pool.GetPayload(out resultBatch.payload);
+
+        var count = sourceBatch.Count;
+
+        <# foreach (var f in this.fields) { #>
+
+        <# if (f.canBeFixed) { #>
+
+        fixed (<#= f.TypeName #>* src_<#= f.Name #> = sourceBatch.<#= f.Name #>.col)
+        {
+
+        <# } else { #>
+
+        <# if (f.OptimizeString()) { #>
+        var src_<#= f.Name #> = sourceBatch.<#= f.Name #>;
+        <# } else { #>
+        var src_<#= f.Name #> = sourceBatch.<#= f.Name #>.col;
+        <# } #>
+
+        <# } #>
+        <# } #>
+
+        fixed (long* bv = sourceBatch.bitvector.col)
+        {
+        var destpayload = resultBatch.payload.col;
+        {
+
+            <# if (this.rowMajor) { #>
+
+            for (int i = 0; i < count; i++)
+            {
+                if ((bv[i >> 6] & (1L << (i & 0x3f)))==0)
+                {
+
+                    <# if (payloadIsAnon) {
+                      var fieldArgs = this.fields.Select(f => string.Format(", src_{0}[i]", f.Name)).Aggregate((x, y) => x + y);
+                    #>
+
+                    destpayload[i] = (<#= TPayload #>)Activator.CreateInstance(typeof(<#= TPayload #>) <#= fieldArgs #> );
+                    <# } else { #>
+                    <# if (!payloadType.GetTypeInfo().IsValueType) { #>
+
+                    destpayload[i] = new <#= TPayload #>();
+                    <# } #>
+                    <# foreach (var f in this.fields) { #>
+
+                    <# if (this.noFields) { #>
+
+                    destpayload[i] = src_<#= f.Name #>[i];
+                    <# } else { #>
+
+                    destpayload[i].<#= f.OriginalName #> = src_<#= f.Name #>[i];
+                    <# } #>
+                    <# } #>
+                    <# } #>
+
+                }
+            }
+
+            <# } else { #>
+
+                <# if (payloadIsAnon) {
+                    var fieldArgs = this.fields.Select(f => string.Format(", src_{0}[i]", f.Name)).Aggregate((x, y) => x + y);
+                #>
+                destpayload[i] = (<#= TPayload #>)Activator.CreateInstance(typeof(<#= TPayload #>) <#= fieldArgs #> );
+                <# } else { #>
+                <# foreach (var f in this.fields) { #>
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        if ((bv[i >> 6] & (1L << (i & 0x3f)))==0)
+                        {
+                            destpayload[i].<#= f.OriginalName #> = src_<#= f.Name #>[i];
+                        }
+                    }
+                <# } #>
+                <# } #>
+
+            <# } #>
+
+        }
+        }
+
+        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        }
+        <# } #>
+
+        this.Observer.OnNext(resultBatch);
+
+        batch.Release();
+        batch.Return();
+    }
+
+    public override int CurrentlyBufferedOutputCount => 0;
+
+    public override int CurrentlyBufferedInputCount => 0;
+}

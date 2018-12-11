@@ -1,0 +1,224 @@
+﻿<#@ template language="C#" visibility="internal" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="../Aggregates/AggregateTemplates.tt" #>
+<#@ include file="../Utilities/Templates.tt" #>
+using System;
+using System.Linq.Expressions;
+using System.Numerics;
+using Microsoft.StreamProcessing.Aggregates;
+
+namespace Microsoft.StreamProcessing
+{
+    public partial class Window<TKey, TSource>
+    {
+<#
+    // Create sum aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive sum aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// </summary>
+        public IAggregate<TSource, <#= typeName #>, <#= typeName #>> Sum(Expression<Func<TSource, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new Sum<#= typeFriendlyName #>Aggregate();
+            return aggregate.Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create nullable versions of sum aggregates.
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive sum aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
+        /// no affect on the sum.
+        /// </summary>
+        public IAggregate<TSource, <#= typeName #>, <#= typeName #>> Sum(Expression<Func<TSource, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new Sum<#= typeFriendlyName #>Aggregate();
+            return aggregate.MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create sum squares aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive sum-squares aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// </summary>
+        public IAggregate<TSource, <#= typeName #>, <#= typeName #>> SumSquares(Expression<Func<TSource, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new SumSquare<#= typeFriendlyName #>Aggregate();
+            return aggregate.Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create nullable versions of sum squares aggregates.
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive sum-squares aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
+        /// no affect on the sum.
+        /// </summary>
+        public IAggregate<TSource, <#= typeName #>, <#= typeName #>> SumSquares(Expression<Func<TSource, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new SumSquare<#= typeFriendlyName #>Aggregate();
+            return aggregate.MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create product aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive product aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// </summary>
+        public IAggregate<TSource, <#= typeName #>, <#= typeName #>> Product(Expression<Func<TSource, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new Product<#= typeFriendlyName #>Aggregate();
+            return aggregate.Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create nullable versions of product aggregates.
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive sum aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
+        /// no affect on the sum.
+        /// </summary>
+        public IAggregate<TSource, <#= typeName #>, <#= typeName #>> Product(Expression<Func<TSource, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new Product<#= typeFriendlyName #>Aggregate();
+            return aggregate.MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create average aggregates (for non-nullable types).
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive average aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype.
+        /// </summary>
+        public IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>> Average(Expression<Func<TSource, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new Average<#= typeFriendlyName #>Aggregate();
+            return aggregate.Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create nullable versions of average aggregates.
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive average aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
+        /// </summary>
+        public IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>?> Average(Expression<Func<TSource, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new AverageNullable<#= typeFriendlyName #>Aggregate();
+            return aggregate.Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create average squares aggregates (for non-nullable types).
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive average-squares aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype.
+        /// </summary>
+        public IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>> AverageSquares(Expression<Func<TSource, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new AverageSquare<#= typeFriendlyName #>Aggregate();
+            return aggregate.Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create nullable versions of average aggregates.
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive average-squares aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
+        /// </summary>
+        public IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>?> AverageSquares(Expression<Func<TSource, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(selector, nameof(selector));
+            var aggregate = new AverageSquareNullable<#= typeFriendlyName #>Aggregate();
+            return aggregate.Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+#>
+    }
+}

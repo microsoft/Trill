@@ -1,0 +1,341 @@
+﻿<#@ template language="C#" visibility="internal" inherits="AfaTemplate" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// CompiledGroupedAfaPipe
+// TKey: <#= TKey #>
+// TPayload: <#= TPayload #>
+// TRegister: <#= TRegister #>
+// TAccumulator: <#= TAccumulator #>
+
+[DataContract]
+internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>
+{
+    [DataMember]
+    private FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>> activeStates;
+    [DataMember]
+    private FastDictionary<<#= TKey #>, byte> seenEvent;
+    [DataMember]
+    private FastMap<OutputEvent<<#= TKey #>, <#= TRegister #>>> tentativeOutput;
+    [DataMember]
+    private long lastSyncTime;
+
+    <#= staticCtor #>
+
+    public <#= className #>(
+        AfaStreamable<<#= TKey #>, <#= TRegister #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TRegister #>> observer,
+        object afa,
+        long MaxDuration)
+        : base(stream, observer, afa, MaxDuration, true)
+    {
+        activeStates = new FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>();
+
+        <# if (!this.isSyncTimeSimultaneityFree) { #>
+            var comparer = stream.Properties.KeyEqualityComparer;
+            var equalsFunc = comparer.GetEqualsExpr().Compile();
+            var getHashCodeFunc = comparer.GetGetHashCodeExpr().Compile();
+            seenEvent = comparer.CreateFastDictionaryGenerator<<#= TKey #>, byte>(10, equalsFunc, getHashCodeFunc, stream.Properties.QueryContainer).Invoke();
+
+            tentativeOutput = new FastMap<OutputEvent<<#= TKey #>, <#= TRegister #>>>();
+            lastSyncTime = -1;
+        <# } #>
+    }
+
+    public override int CurrentlyBufferedInputCount => activeStates.Count;
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> batch)
+    {
+        Stack<int> stack = new Stack<int>();
+        var activeFindTraverser = new FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>.FindTraverser(activeStates);
+        var tentativeFindTraverser = new FastMap<OutputEvent<<#= TKey #>, <#= TRegister #>>>.FindTraverser(tentativeOutput);
+        var tentativeVisibleTraverser = new FastMap<OutputEvent<<#= TKey #>, <#= TRegister #>>>.VisibleTraverser(tentativeOutput);
+
+        <#= sourceBatchTypeName #> sourceBatch = batch as <#= sourceBatchTypeName #>;
+        <#= resultBatchTypeName #> resultBatch = this.batch as <#= resultBatchTypeName #>;
+
+        if (this.batch == null)
+        {
+            this.pool.Get(out this.batch);
+            this.batch.Allocate();
+            this.batch.iter = 0;
+            iter = 0;
+            resultBatch = this.batch as <#= resultBatchTypeName #>;
+        }
+
+        var count = batch.Count;
+
+        var dest_vsync = this.batch.vsync.col;
+        var dest_vother = this.batch.vother.col;
+        var destkey = this.batch.key.col;
+        var dest_hash = this.batch.hash.col;
+
+        var srckey = batch.key.col;
+
+        <# foreach (var f in this.sourceFields) { #>
+
+        <#= BeginColumnPointerDeclaration(f, "sourceBatch") #>
+        <# } #>
+        <# foreach (var f in this.resultFields) { #>
+
+        <#= BeginColumnPointerDeclaration(f, "resultBatch") #>
+        <# } #>
+
+        fixed (long* src_bv = batch.bitvector.col, src_vsync = batch.vsync.col, src_vother = batch.vother.col)
+        {
+            fixed (int* src_hash = batch.hash.col)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                    {
+                        long synctime = src_vsync[i];
+
+                        <# if (!this.isSyncTimeSimultaneityFree) { #>
+                        {
+                            int index, hash;
+
+                            if (synctime > lastSyncTime) // move time forward
+                            {
+                                seenEvent.Clear();
+                                if (tentativeOutput.Count > 0)
+                                {
+                                    tentativeVisibleTraverser.currIndex = 0;
+
+                                    while (tentativeVisibleTraverser.Next(out index, out hash))
+                                    {
+                                        var elem = tentativeOutput.Values[index];
+
+                                        dest_vsync[iter] = lastSyncTime;
+                                        dest_vother[iter] = elem.other;
+                                        this.batch[iter] = elem.payload;
+                                        destkey[iter] = elem.key;
+                                        dest_hash[iter] = hash;
+                                        iter++;
+
+                                        if (iter == Config.DataBatchSize)
+                                        {
+                                            FlushContents();
+                                            resultBatch = this.batch as <#= resultBatchTypeName #>;
+                                            dest_vsync = this.batch.vsync.col;
+                                            dest_vother = this.batch.vother.col;
+                                            destkey = this.batch.key.col;
+                                            dest_hash = this.batch.hash.col;
+                                        }
+                                    }
+                                    tentativeOutput.Clear(); // Clear the tentative output list
+                                }
+                                lastSyncTime = synctime;
+                            }
+
+                            if (seenEvent.Lookup(srckey[i], out index)) // Incoming event is a simultaneous one
+                            {
+                                if (seenEvent.entries[index].value == 1) // Detecting first duplicate, need to adjust state
+                                {
+                                    seenEvent.entries[index].value = 2;
+
+                                    // Delete tentative output for that key
+                                    if (tentativeFindTraverser.Find(src_hash[i]))
+                                    {
+                                        while (tentativeFindTraverser.Next(out index))
+                                        {
+                                            if (<#= keyEqualityComparer("tentativeOutput.Values[index].key", "srckey[i]") #>)
+                                            {
+                                                tentativeFindTraverser.Remove();
+                                            }
+                                        }
+                                    }
+
+                                    // Delete active states for that key
+                                    if (activeFindTraverser.Find(src_hash[i]))
+                                    {
+                                        while (activeFindTraverser.Next(out index))
+                                        {
+                                            if (<#= keyEqualityComparer("activeStates.Values[index].key", "srckey[i]") #>)
+                                            {
+                                                activeFindTraverser.Remove();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Dont process this event
+                                continue;
+                            }
+                            else
+                            {
+                                seenEvent.Insert(ref index, srckey[i], 1);
+                            }
+                        }
+                        <# } #>
+
+                        /* (1) Process currently active states */
+
+                        bool ended = true;
+                        if (activeFindTraverser.Find(src_hash[i]))
+                        {
+                            int index, orig_index;
+
+                            while (activeFindTraverser.Next(out index))
+                            {
+                                orig_index = index;
+
+                                var state = activeStates.Values[index];
+                                if (!(<#= keyEqualityComparer("state.key", "srckey[i]") #>)) continue;
+
+                                if (state.PatternStartTimestamp + MaxDuration > synctime)
+                                {
+                                    switch (state.state) {
+                                        <# foreach (var sourceNodeInfo in this.currentlyActiveInfo) { #>
+
+                                        case <#= sourceNodeInfo.Item1 #> :
+                                            <# foreach (var edge in sourceNodeInfo.Item2) { #>
+
+                                            if (<#= edge.Fence("synctime", "batch[i]", "state.register") #>) {
+                                                // assign new register value
+                                                <# UpdateRegisterValue(edge, "state.register", "synctime", "batch[i]", "state.register"); #>
+                                                // target nodes
+                                                <# foreach (var ns in edge.EpsilonReachableNodes) { #>
+
+                                                // target state: <#= ns #> (<#= isFinal[ns] ? "final" : "not final" #>)
+                                                <# IfFinalStateProduceOutput(52, ns, "src_hash[i]", "synctime", "state.PatternStartTimestamp",  "srckey[i]", "src_hash[i]"); #>
+                                                <# if (hasOutgoingArcs[ns]) { #>
+
+                                                // target node has outgoing edges
+                                                if (index == -1) index = activeStates.Insert(src_hash[i]);
+                                                activeStates.Values[index].key = srckey[i];
+                                                activeStates.Values[index].state = <#= ns #>;
+                                                activeStates.Values[index].register = newReg;
+                                                activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+
+                                                index = -1;
+                                                ended = false;
+                                                <# } else { #>
+
+                                                // target node does not have any outgoing edges
+                                                <# } #>
+                                                <# } #>
+
+                                            }
+                                            <# } #>
+
+                                            break;
+
+                                        <# } #>
+
+                                    }
+
+                                }
+                                if (index == orig_index) activeFindTraverser.Remove();
+                            }
+                        }
+
+                        /* (2) Start new activations from the start state(s) */
+                        <# if (!this.AllowOverlappingInstances) { #>
+
+                        if (!ended) continue;
+                        <# } #>
+
+                        <# foreach (var sourceNodeInfo in this.newActivationInfo) { #>
+
+                            // start node: <#= sourceNodeInfo.Item1 #>
+                            <# foreach (var edge in sourceNodeInfo.Item2) { #>
+
+                            if (<#= edge.Fence("synctime", "batch[i]", "defaultRegister") #>) {
+                                // initialize register
+                                <# UpdateRegisterValue(edge, "defaultRegister", "synctime", "batch[i]", "defaultRegister"); #>
+                                // target nodes
+                                <# foreach (var ns in edge.EpsilonReachableNodes) { #>
+
+                                // target state: <#= ns #> (<#= isFinal[ns] ? "final" : "not final" #>)
+                                <# IfFinalStateProduceOutput(52, ns, "src_hash[i]", "synctime", "synctime", "srckey[i]", "src_hash[i]"); #>
+                                <# if (hasOutgoingArcs[ns]) { #>
+
+                                // target node has outgoing edges
+                                {
+                                    var index = activeStates.Insert(src_hash[i]);
+                                    activeStates.Values[index].key = srckey[i];
+                                    activeStates.Values[index].state = <#= ns #>;
+                                    activeStates.Values[index].register = newReg;
+                                    activeStates.Values[index].PatternStartTimestamp = synctime;
+                                }
+                                <# } else { #>
+
+                                // target node does not have any outgoing edges
+                                <# } #>
+                                <# } #>
+
+                            }
+                            <# } #>
+                        <# } #>
+
+                    }
+                    else if (src_vother[i] < 0)
+                    {
+<#  if (!this.isSyncTimeSimultaneityFree)
+{ #>
+                        long synctime = src_vsync[i];
+                        if (synctime > lastSyncTime) // move time forward
+                        {
+                            int index, hash;
+                            seenEvent.Clear();
+
+                            if (tentativeOutput.Count > 0)
+                            {
+                                tentativeVisibleTraverser.currIndex = 0;
+
+                                while (tentativeVisibleTraverser.Next(out index, out hash))
+                                {
+                                    var elem = tentativeOutput.Values[index];
+
+                                    this.batch.vsync.col[iter] = lastSyncTime;
+                                    this.batch.vother.col[iter] = elem.other;
+                                    this.batch[iter] = elem.payload;
+                                    this.batch.key.col[iter] = elem.key;
+                                    this.batch.hash.col[iter] = hash;
+                                    iter++;
+
+                                    if (iter == Config.DataBatchSize)
+                                    {
+                                        FlushContents();
+                                        resultBatch = this.batch as <#= resultBatchTypeName #>;
+                                    }
+
+                                }
+                                tentativeOutput.Clear(); // Clear the tentative output list
+                            }
+                            lastSyncTime = synctime;
+                        }
+<#  } #>
+                        OnPunctuation(synctime);
+                    }
+                }
+            }
+        }
+        <# foreach (var f in this.sourceFields) { #>
+            <#= EndColumnPointerDeclaration(f) #>
+        <# } #>
+        <# foreach (var f in this.resultFields) { #>
+
+        <#= EndColumnPointerDeclaration(f) #>
+        <# } #>
+
+        batch.Free();
+    }
+}

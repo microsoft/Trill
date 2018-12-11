@@ -1,0 +1,814 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+<#
+  var leftBatchTypeName = string.Format("{0}{1}",
+    Transformer.GetBatchClassName(keyType, leftType),
+    !String.IsNullOrWhiteSpace(TKeyTLeftGenericParameters) ? "<" + TKeyTLeftGenericParameters + ">" : string.Empty);
+  var rightBatchTypeName = string.Format("{0}{1}",
+    Transformer.GetBatchClassName(keyType, rightType),
+    !String.IsNullOrWhiteSpace(TKeyTRightGenericParameters) ? "<" + TKeyTRightGenericParameters + ">" : string.Empty);
+#>
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Threading;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// TKey: <#= TKey #>
+// TLeft: <#= TLeft #>
+// TRight: <#= TRight #>
+// TResult: <#= TResult #>
+
+[DataContract]
+internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= TKey #>, <#= TLeft #>, <#= TRight #>, <#= TResult #>>
+{
+    private const int DefaultCapacity = 64;
+    private readonly MemoryPool<<#= TKey #>, <#= TResult #>> pool;
+    private readonly Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator;
+
+    /* Comparer for ordering of join key - should eventually be a stream property */
+
+    private StreamMessage<<#= TKey #>, <#= TResult #>> genericOutputBatch;
+    [DataMember]
+    private <#= Transformer.GetBatchClassName(keyType, resultType) #><#= TKeyTResultGenericParameters #> output;
+
+    [DataMember]
+    private long nextLeftTime = long.MinValue;
+    [DataMember]
+    private long nextRightTime = long.MinValue;
+    [DataMember]
+    private <#= TKey #> nextLeftKey;
+    [DataMember]
+    private <#= TKey #> nextRightKey;
+    [DataMember]
+    private <#= TKey #> currentRightKey;
+    [DataMember]
+    private List<ActiveEventRight> currentRightList;
+    [DataMember]
+    private <#= TKey #> currentLeftKey;
+    [DataMember]
+    private List<ActiveEventLeft> currentLeftList;
+
+    <#= staticCtor #>
+
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TResult #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TResult #>> observer,
+        Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        currentLeftList = new List<ActiveEventLeft>();
+        currentRightList = new List<ActiveEventRight>();
+
+        pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TResult #>>(true /*stream.Properties.IsColumnar*/);
+        <#= getOutputBatch #>
+        output.Allocate();
+        this.queryPlanGenerator = queryPlanGenerator;
+    }
+
+    protected override void FlushContents()
+    {
+        if (output.Count == 0) return;
+        output.Seal();
+        this.Observer.OnNext(output);
+        <#= getOutputBatch #>
+        output.Allocate();
+    }
+
+    public override int CurrentlyBufferedOutputCount => output.Count;
+    public override int CurrentlyBufferedLeftInputCount => base.CurrentlyBufferedLeftInputCount + currentLeftList.Count;
+    public override int CurrentlyBufferedRightInputCount => base.CurrentlyBufferedRightInputCount + currentRightList.Count;
+
+    protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(left, right, this));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void DisposeState() => output.Free();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void ProcessBothBatches(StreamMessage<<#= TKey #>, <#= TLeft #>> leftBatch, StreamMessage<<#= TKey #>, <#= TRight #>> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
+    {
+        <#= leftBatchTypeName #> generatedLeftBatch = null;
+        <#= rightBatchTypeName #> generatedRightBatch = null;
+
+        leftBatchFree = rightBatchFree = true;
+        generatedLeftBatch = (<#= leftBatchTypeName #>) leftBatch;
+        if (!GoToVisibleRow(leftBatch))
+        {
+            leftBatchDone = true;
+            rightBatchDone = false;
+            return;
+        }
+
+        UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
+        nextLeftKey = leftBatch.key.col[leftBatch.iter];
+
+        generatedRightBatch = (<#= rightBatchTypeName #>) rightBatch;
+        if (!GoToVisibleRow(rightBatch))
+        {
+            leftBatchDone = false;
+            rightBatchDone = true;
+            return;
+        }
+
+        UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
+        nextRightKey = rightBatch.key.col[rightBatch.iter];
+
+        while (true)
+        {
+            bool leftPunctuation = leftBatch.vother.col[leftBatch.iter] == StreamEvent.PunctuationOtherTime;
+            bool rightPunctuation = rightBatch.vother.col[rightBatch.iter] == StreamEvent.PunctuationOtherTime;
+
+            int compare = (leftPunctuation || rightPunctuation) ? 0 : <#= joinKeyOrderComparer("nextLeftKey", "nextRightKey") #>;
+
+            if (compare == 0)
+            {
+                if (nextLeftTime <= nextRightTime)
+                {
+                    // process left
+                    if (leftPunctuation)
+                    {
+                        AddPunctuationToBatch(nextLeftTime);
+                    }
+                    else
+                    {
+                        #region ProcessLeftStartEdge
+                        /*
+                        ProcessLeftStartEdge(
+                            nextLeftTime,
+                            ref leftBatch.key.col[leftBatch.iter],
+                            leftBatch[leftBatch.iter],
+                            leftBatch.hash.col[leftBatch.iter], compare);
+                        */
+                        {
+
+
+                            if (currentRightList.Count > 0)
+                            {
+                                int compare2 = <#= joinKeyOrderComparer("nextLeftKey", "currentRightKey") #>;
+
+                                Contract.Assert(compare2 >= 0, "Unexpected comparison in sort-ordered join");
+
+                                if (compare2 == 0)
+                                {
+                                    // perform the join
+                                    for (int i = 0; i < currentRightList.Count; i++)
+                                    {
+                                        var t = currentRightList[i];
+                                        OutputStartEdge(nextLeftTime > t.Timestamp ? nextLeftTime : t.Timestamp, ref nextLeftKey, generatedLeftBatch, leftBatch.iter, t, leftBatch.hash.col[leftBatch.iter]);
+                                    }
+                                }
+                                else
+                                {
+                                    // clear the right array
+                                    currentRightList.Clear();
+                                }
+                            }
+
+                            if (compare >= 0)
+                            {
+                                // update the left array
+                                if ((currentLeftList.Count != 0) && (<#= joinKeyOrderComparer("nextLeftKey", "currentLeftKey") #> != 0))
+                                {
+                                    Contract.Assert(<#= joinKeyOrderComparer("nextLeftKey", "currentLeftKey") #> > 0);
+                                    currentLeftList.Clear();
+                                }
+                                currentLeftKey = nextLeftKey;
+                                var leftAE = new ActiveEventLeft();
+                                leftAE.Populate(ref nextLeftTime, generatedLeftBatch, leftBatch.iter);
+                                currentLeftList.Add(leftAE);
+                            }
+                        }
+                        #endregion
+                    }
+
+                    leftBatch.iter++;
+
+                    if (!GoToVisibleRow(leftBatch))
+                    {
+                        leftBatchDone = true;
+                        rightBatchDone = false;
+                        return;
+                    }
+
+                    nextLeftTime = leftBatch.vsync.col[leftBatch.iter];
+                    nextLeftKey = leftBatch.key.col[leftBatch.iter];
+                }
+                else
+                {
+                    // process right
+                    if (rightPunctuation)
+                    {
+                        AddPunctuationToBatch(nextRightTime);
+                    }
+                    else
+                    {
+                        #region ProcessRightStartEdge
+                            /* Inlined version of:
+                        ProcessRightStartEdge(
+                            nextRightTime,
+                            ref rightBatch.key.col[rightBatch.iter],
+                            rightBatch[rightBatch.iter],
+                            rightBatch.hash.col[rightBatch.iter], compare);
+                        */
+
+                        if (currentLeftList.Count > 0)
+                        {
+                            int compare2 = <#= joinKeyOrderComparer("nextRightKey", "currentLeftKey") #>;
+
+                            Contract.Assert(compare2 >= 0, "Unexpected comparison in sort-ordered join");
+
+                            if (compare2 == 0)
+                            {
+                                // perform the join
+                                for (int i = 0; i < currentLeftList.Count; i++)
+                                {
+                                    var t = currentLeftList[i];
+                                    #region OutputStartEdge
+                                    /* OutputStartEdge(nextRightTime > t.Timestamp ? nextRightTime : t.Timestamp,
+                                        ref nextRightKey, ref t.Payload, ref rightP, rightBatch.hash.col[rightBatch.iter]); */
+                                    int index = output.Count++;
+                                    output.vsync.col[index] = nextRightTime > t.Timestamp ? nextRightTime : t.Timestamp;
+                                    output.vother.col[index] = StreamEvent.InfinitySyncTime;
+                                    output.key.col[index] = nextRightKey;
+                                <#= this.leftMessageRepresentation.noFields
+                                        ? this.rightBatchSelector("t.payload", "generatedRightBatch", "rightBatch.iter")
+                                        : this.rightBatchSelector("t", "generatedRightBatch", "rightBatch.iter") #>
+                                    output.hash.col[index] = rightBatch.hash.col[rightBatch.iter];
+
+                                    if (output.Count == Config.DataBatchSize)
+                                    {
+                                        output.Seal();
+                                        this.Observer.OnNext(output);
+                                        <#= getOutputBatch #>
+                                        output.Allocate();
+                                    }
+
+                                    #endregion
+                                }
+                            }
+                            else
+                            {
+                                // clear the left array
+                                currentLeftList.Clear();
+                            }
+                        }
+
+
+                        if (compare <= 0)
+                        {
+                            // update the right array
+                            if ((currentRightList.Count != 0) && (<#= joinKeyOrderComparer("rightBatch.key.col[rightBatch.iter]", "currentRightKey") #> != 0))
+                            {
+                                Contract.Assert(<#= joinKeyOrderComparer("rightBatch.key.col[rightBatch.iter]", "currentRightKey") #> > 0);
+                                currentRightList.Clear();
+                            }
+                            currentRightKey = rightBatch.key.col[rightBatch.iter];
+                            var rightAE = new ActiveEventRight();
+                            rightAE.Populate(ref nextRightTime, generatedRightBatch, rightBatch.iter);
+                            currentRightList.Add(rightAE);
+                        }
+                        #endregion
+                    }
+
+                    rightBatch.iter++;
+
+                    #region GoToVisibleRow
+                    /* Inlined version of:
+                        if (!GoToVisibleRow(rightBatch))
+                        {
+                            leftBatchDone = false;
+                            rightBatchDone = true;
+                            return;
+                        }
+                    */
+                    while (rightBatch.iter < rightBatch.Count &&
+                        (rightBatch.bitvector.col[rightBatch.iter >> 6] & (1L << (rightBatch.iter & 0x3f))) != 0 &&
+                        rightBatch.vother.col[rightBatch.iter] >= 0)
+                    {
+                        rightBatch.iter++;
+                    }
+                    if (rightBatch.iter == rightBatch.Count)
+                    {
+                        leftBatchDone = false;
+                        rightBatchDone = true;
+                        return;
+                    }
+                    #endregion
+
+                    nextRightTime = rightBatch.vsync.col[rightBatch.iter];
+                    nextRightKey = rightBatch.key.col[rightBatch.iter];
+                }
+            }
+            else if (compare < 0)
+            {
+                // process left
+                #region ProcessLeftStartEdge
+                /* Inlined version of:
+                    ProcessLeftStartEdge(
+                        nextLeftTime,
+                        ref leftBatch.key.col[leftBatch.iter],
+                        leftBatch[leftBatch.iter],
+                        leftBatch.hash.col[leftBatch.iter], compare);
+                */
+                {
+
+
+                    if (currentRightList.Count > 0)
+                    {
+                        int compare2 = <#= joinKeyOrderComparer("nextLeftKey", "currentRightKey") #>;
+
+                        Contract.Assert(compare2 >= 0, "Unexpected comparison in sort-ordered join");
+
+                        if (compare2 == 0)
+                        {
+                            // perform the join
+                            for (int i = 0; i < currentRightList.Count; i++)
+                            {
+                                var t = currentRightList[i];
+                                OutputStartEdge(nextLeftTime > t.Timestamp ? nextLeftTime : t.Timestamp, ref nextLeftKey, generatedLeftBatch, leftBatch.iter, t, leftBatch.hash.col[leftBatch.iter]);
+                            }
+                        }
+                        else
+                        {
+                            // clear the right array
+                            currentRightList.Clear();
+                        }
+                    }
+                }
+                #endregion
+
+                leftBatch.iter++;
+
+                #region GoToVisibleRow
+                /* Inlined version of:
+                    if (!GoToVisibleRow(leftBatch))
+                    {
+                        leftBatchDone = true;
+                        rightBatchDone = false;
+                        return;
+                    }
+                */
+                while (leftBatch.iter < leftBatch.Count &&
+                    (leftBatch.bitvector.col[leftBatch.iter >> 6] & (1L << (leftBatch.iter & 0x3f))) != 0 &&
+                    leftBatch.vother.col[leftBatch.iter] >= 0)
+                {
+                    leftBatch.iter++;
+                }
+                if (leftBatch.iter == leftBatch.Count)
+                {
+                    leftBatchDone = true;
+                    rightBatchDone = false;
+                    return;
+                }
+                #endregion
+
+
+                #region UpdateNextLeftTime
+                nextLeftTime = leftBatch.vsync.col[leftBatch.iter];
+                #endregion
+
+                nextLeftKey = leftBatch.key.col[leftBatch.iter];
+
+            }
+            else // hot path if larger right side of join matches very few things on the left side
+            {
+                // process right
+                #region ProcessRightStartEdge
+                /* Inlined version of:
+                ProcessRightStartEdge(
+                    nextRightTime,
+                    ref rightBatch.key.col[rightBatch.iter],
+                    rightBatch.payload.col[rightBatch.iter],
+                    rightBatch.hash.col[rightBatch.iter], compare);
+                */
+                if (currentLeftList.Count > 0)
+                {
+                    int compare2 = <#= joinKeyOrderComparer("nextRightKey", "currentLeftKey") #>;
+
+                    Contract.Assert(compare2 >= 0, "Unexpected comparison in sort-ordered join");
+
+                    if (compare2 == 0)
+                    {
+                        // perform the join
+                        for (int i = 0; i < currentLeftList.Count; i++)
+                        {
+                            var t = currentLeftList[i];
+                            #region OutputStartEdge
+                            /* OutputStartEdge(nextRightTime > t.Timestamp ? nextRightTime : t.Timestamp,
+                                    ref nextRightKey, ref t.Payload, ref rightP, rightBatch.hash.col[rightBatch.iter]); */
+                            int index = output.Count++;
+                            output.vsync.col[index] = nextRightTime > t.Timestamp ? nextRightTime : t.Timestamp;
+                            output.vother.col[index] = StreamEvent.InfinitySyncTime;
+                            output.key.col[index] = nextRightKey;
+                            <#= this.leftMessageRepresentation.noFields
+                                    ? this.rightBatchSelector("t.payload", "generatedRightBatch", "rightBatch.iter")
+                                    : this.rightBatchSelector("t", "generatedRightBatch", "rightBatch.iter") #>
+                            output.hash.col[index] = rightBatch.hash.col[rightBatch.iter];
+
+                            if (output.Count == Config.DataBatchSize)
+                            {
+                                output.Seal();
+                                this.Observer.OnNext(output);
+                                <#= getOutputBatch #>
+                                output.Allocate();
+                            }
+
+                            #endregion
+                        }
+                    }
+                    else
+                    {
+                        // clear the left array
+                        currentLeftList.Clear();
+                    }
+                }
+
+                /*
+                    if (compare <= 0)
+                    {
+                        // update the right array
+                        if ((currentRightList.Count != 0) && (<#= joinKeyOrderComparer("rightBatch.key.col[rightBatch.iter]", "currentRightKey") #> != 0))
+                        {
+                            Contract.Assert(<#= joinKeyOrderComparer("rightBatch.key.col[rightBatch.iter]", "currentRightKey") #> > 0);
+                            currentRightList.Clear();
+                        }
+                        currentRightKey = rightBatch.key.col[rightBatch.iter];
+                        ActiveEvent<<#= TRight #>> rightAE = new ActiveEvent<<#= TRight #>>();
+                        rightAE.Populate(ref nextRightTime, ref rightBatch.payload.col[rightBatch.iter]);
+                        currentRightList.Add(rightAE);
+                    }
+                */
+                #endregion
+
+                rightBatch.iter++;
+
+                #region GoToVisibleRow
+                /* Inlined version of:
+                    if (!GoToVisibleRow(rightBatch))
+                    {
+                        leftBatchDone = false;
+                        rightBatchDone = true;
+                        return;
+                    }
+                */
+                while (rightBatch.iter < rightBatch.Count &&
+                    (rightBatch.bitvector.col[rightBatch.iter >> 6] & (1L << (rightBatch.iter & 0x3f))) != 0 &&
+                    rightBatch.vother.col[rightBatch.iter] >= 0)
+                {
+                    rightBatch.iter++;
+                }
+                if (rightBatch.iter == rightBatch.Count)
+                {
+                    leftBatchDone = false;
+                    rightBatchDone = true;
+                    return;
+                }
+                #endregion
+
+                #region UpdateNextRightTime
+                /* Inlined version of: UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]); */
+                nextRightTime = rightBatch.vsync.col[rightBatch.iter];
+                #endregion
+
+                nextRightKey = rightBatch.key.col[rightBatch.iter];
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void ProcessLeftBatch(StreamMessage<<#= TKey #>, <#= TLeft #>> batch, out bool isBatchDone, out bool isBatchFree)
+    {
+        isBatchFree = true;
+        while (true)
+        {
+            if (!GoToVisibleRow(batch))
+            {
+                isBatchDone = true;
+                return;
+            }
+
+            UpdateNextLeftTime(batch.vsync.col[batch.iter]);
+
+            if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+            {
+                if (nextLeftTime > nextRightTime)
+                {
+                    isBatchDone = false;
+                    return;
+                }
+
+                AddPunctuationToBatch(batch.vsync.col[batch.iter]);
+
+                batch.iter++;
+                continue;
+            }
+
+            nextLeftKey = batch.key.col[batch.iter];
+
+
+            int compare = <#= joinKeyOrderComparer("nextLeftKey", "nextRightKey") #>;
+            if ((compare == 0) && (nextLeftTime <= nextRightTime))
+            {
+                ProcessLeftStartEdge(
+                    nextLeftTime,
+                    ref batch.key.col[batch.iter],
+                    (<#= leftBatchTypeName #>)batch, batch.iter,
+                    batch.hash.col[batch.iter], compare);
+
+                batch.iter++;
+            }
+            else
+            {
+                isBatchDone = false;
+                return;
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void ProcessRightBatch(StreamMessage<<#= TKey #>, <#= TRight #>> batch, out bool isBatchDone, out bool isBatchFree)
+    {
+        isBatchFree = true;
+        while (true)
+        {
+            if (!GoToVisibleRow(batch))
+            {
+                isBatchDone = true;
+                return;
+            }
+
+            UpdateNextRightTime(batch.vsync.col[batch.iter]);
+
+            if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+            {
+                if (nextRightTime > nextLeftTime)
+                {
+                    isBatchDone = false;
+                    return;
+                }
+
+                AddPunctuationToBatch(batch.vsync.col[batch.iter]);
+
+                batch.iter++;
+                continue;
+            }
+
+            nextRightKey = batch.key.col[batch.iter];
+
+            int compare = <#= joinKeyOrderComparer("nextLeftKey", "nextRightKey") #>;
+            if ((compare == 0) && (nextRightTime <= nextLeftTime))
+            {
+                ProcessRightStartEdge(
+                    nextRightTime,
+                    ref batch.key.col[batch.iter],
+                    (<#= rightBatchTypeName #>)batch,batch.iter,
+                    batch.hash.col[batch.iter], compare);
+
+                batch.iter++;
+            }
+            else
+            {
+                isBatchDone = false;
+                return;
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool GoToVisibleRow<TPayload>(StreamMessage<<#= TKey #>, TPayload> batch)
+    {
+        while (batch.iter < batch.Count && (batch.bitvector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0 && batch.vother.col[batch.iter] >= 0)
+        {
+            batch.iter++;
+        }
+
+        if (batch.iter == batch.Count)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void UpdateNextLeftTime(long time)
+    {
+        nextLeftTime = time;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void UpdateNextRightTime(long time)
+    {
+        nextRightTime = time;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ProcessLeftStartEdge(long start, ref <#= TKey #> key, <#= leftBatchTypeName #> leftBatch, int leftIndex, int hash, int nextLeftRightCompareResult)
+    {
+        if (currentRightList.Count > 0)
+        {
+            int compare = <#= joinKeyOrderComparer("key", "currentRightKey") #>;
+
+            Contract.Assert(compare >= 0, "Unexpected comparison in sort-ordered join");
+
+            if (compare == 0)
+            {
+                // perform the join
+                for (int i = 0; i < currentRightList.Count; i++)
+                {
+                    var t = currentRightList[i];
+                    OutputStartEdge(start > t.Timestamp ? start : t.Timestamp, ref key, leftBatch, leftIndex, t, hash);
+                }
+            }
+            else
+            {
+                // clear the right array
+                currentRightList.Clear();
+            }
+        }
+
+        if (nextLeftRightCompareResult >= 0)
+        {
+            // update the left array
+            if ((currentLeftList.Count != 0) && (<#= joinKeyOrderComparer("key", "currentLeftKey") #> != 0))
+            {
+                Contract.Assert(<#= joinKeyOrderComparer("key", "currentLeftKey") #> > 0);
+                currentLeftList.Clear();
+            }
+            currentLeftKey = key;
+            var leftAE = new ActiveEventLeft();
+            leftAE.Populate(ref start, leftBatch, leftIndex);
+            currentLeftList.Add(leftAE);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ProcessRightStartEdge(long start, ref <#= TKey #> key, <#= rightBatchTypeName #> rightBatch, int rightIndex, int hash, int nextLeftRightCompareResult)
+    {
+        if (currentLeftList.Count > 0)
+        {
+            int compare = <#= joinKeyOrderComparer("key", "currentLeftKey") #>;
+
+            Contract.Assert(compare >= 0, "Unexpected comparison in sort-ordered join");
+
+            if (compare == 0)
+            {
+                // perform the join
+                for (int i = 0; i < currentLeftList.Count; i++)
+                {
+                    var t = currentLeftList[i];
+                    OutputStartEdge(start > t.Timestamp ? start : t.Timestamp, ref key, t, rightBatch, rightIndex, hash);
+                }
+            }
+            else
+            {
+                // clear the left array
+                currentLeftList.Clear();
+            }
+        }
+
+        if (nextLeftRightCompareResult <= 0)
+        {
+            // update the right array
+            if ((currentRightList.Count != 0) && (<#= joinKeyOrderComparer("key", "currentRightKey") #> != 0))
+            {
+                Contract.Assert(<#= joinKeyOrderComparer("key", "currentRightKey") #> > 0);
+                currentRightList.Clear();
+            }
+            currentRightKey = key;
+            var rightAE = new ActiveEventRight();
+            rightAE.Populate(ref start, rightBatch, rightIndex);
+            currentRightList.Add(rightAE);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddPunctuationToBatch(long start)
+    {
+        if (start > lastCTI)
+        {
+            lastCTI = start;
+
+            int index = output.Count++;
+            output.vsync.col[index] = start;
+            output.vother.col[index] = StreamEvent.PunctuationOtherTime;
+            output.key.col[index] = default;
+            output[index] = default;
+            output.hash.col[index] = 0;
+            output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+
+            if (output.Count == Config.DataBatchSize) FlushContents();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void OutputStartEdge(long start, ref <#= TKey #> key, ActiveEventLeft leftEvent, <#= rightBatchTypeName #> rightBatch, int rightIndex, int hash)
+    {
+        int index = output.Count++;
+        output.vsync.col[index] = start;
+        output.vother.col[index] = StreamEvent.InfinitySyncTime;
+        output.key.col[index] = key;
+<# if (this.leftMessageRepresentation.noFields) { #>
+        <#= rightBatchSelector("leftEvent.payload", "rightBatch", "rightIndex") #>
+<# } else { #>
+        <#= rightBatchSelector("leftEvent", "rightBatch", "rightIndex") #>
+<# } #>
+        output.hash.col[index] = hash;
+
+        if (output.Count == Config.DataBatchSize) FlushContents();
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void OutputStartEdge(long start, ref <#= TKey #> key, <#= leftBatchTypeName #> leftBatch, int leftIndex, ActiveEventRight rightEvent, int hash)
+    {
+        int index = output.Count++;
+        output.vsync.col[index] = start;
+        output.vother.col[index] = StreamEvent.InfinitySyncTime;
+        output.key.col[index] = key;
+<# if (this.rightMessageRepresentation.noFields) { #>
+        <#= leftBatchSelector("leftBatch", "leftIndex", "rightEvent.payload") #>
+<# } else { #>
+        <#= leftBatchSelector("leftBatch", "leftIndex", "rightEvent") #>
+<# } #>
+        output.hash.col[index] = hash;
+
+        if (output.Count == Config.DataBatchSize) FlushContents();
+    }
+
+    [DataContract]
+    private struct ActiveEventLeft
+    {
+        [DataMember]
+        public long Timestamp;
+
+        <# foreach (var f in this.leftFields) { #>
+
+        [DataMember]
+        public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.OriginalName #>;
+        <# } #>
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Populate(ref long timestamp, <#= leftBatchTypeName #> batch, int index)
+        {
+            Timestamp = timestamp;
+            <# foreach (var f in this.leftFields) { #>
+
+            this.<#= f.OriginalName #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+            <# } #>
+
+        }
+
+        public override string ToString()
+        {
+            return "[Timestamp='" + Timestamp + "', Payload='" + "']";
+        }
+    }
+
+    [DataContract]
+    private struct ActiveEventRight
+    {
+        [DataMember]
+        public long Timestamp;
+
+        <# foreach (var f in this.rightFields) { #>
+
+        [DataMember]
+        public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.OriginalName #>;
+        <# } #>
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Populate(ref long timestamp, <#= rightBatchTypeName #> batch, int index)
+        {
+            Timestamp = timestamp;
+            <# foreach (var f in this.rightFields) { #>
+
+            this.<#= f.OriginalName #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+            <# } #>
+
+        }
+
+        public override string ToString()
+        {
+            return "[Timestamp='" + Timestamp + "', Payload='" + "']";
+        }
+    }
+}

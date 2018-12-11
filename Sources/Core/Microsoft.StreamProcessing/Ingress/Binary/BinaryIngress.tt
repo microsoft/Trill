@@ -1,0 +1,92 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.IO;
+using Microsoft.StreamProcessing.Serializer;
+
+namespace Microsoft.StreamProcessing
+{
+    public static partial class Streamable
+    {
+<#
+    foreach (var hasPassive in new [] { false, true })
+    foreach (var hasContainer in new [] { false, true })
+    foreach (var hasKey in new [] { false, true })
+    foreach (var fromFile in new [] { false, true })
+    {
+        string methodName = (hasContainer ? "RegisterBinaryInput" : "ToStreamable") + (hasPassive ? "Passive" : string.Empty) + (fromFile ? "FromFile" : string.Empty);
+        string interfaceType = (hasPassive ? "IPassiveIngressStreamable" : "IIngressStreamable");
+        string keyParameter = hasKey ? "TKey, " : string.Empty;
+        string keyArgument = hasKey ? "TKey" : "Empty";
+#>
+        /// <summary>
+        /// Deserialize from binary stream to streamable
+        /// </summary>
+<# if (hasKey) { #>
+        /// <typeparam name="TKey"></typeparam>
+<# } #>
+        /// <typeparam name="TPayload"></typeparam>
+<# if (fromFile) { #>
+        /// <param name="fileName"></param>
+<# if (!hasPassive) { #>
+        /// <param name="numMessages"></param>
+<# }
+   } else { #>
+        /// <param name="binaryStream"></param>
+<# }
+   if (!hasPassive) { #>
+        /// <param name="scheduler"></param>
+<# } #>
+        /// <param name="readPropertiesFromStream"></param>
+        /// <param name="inputProperties"></param>
+<# if (hasContainer) { #>
+        /// <param name="container"></param>
+        /// <param name="identifier"></param>
+<# } #>
+        /// <returns></returns>
+        public static <#= interfaceType #><<#= keyArgument #>, TPayload> <#= methodName #><<#= keyParameter #>TPayload>(
+<# if (hasContainer) { #>
+            this QueryContainer container,
+<# } #>
+<# if (fromFile) { #>
+            <# if (!hasContainer) { #>this <# } #>string fileName,
+<# if (!hasPassive) { #>
+            int numMessages = 0,
+<# }
+   } else { #>
+            <# if (!hasContainer) { #>this <# } #>Stream binaryStream,
+<# }
+   if (!hasPassive) { #>
+            IIngressScheduler scheduler = null,
+<# } #>
+            bool readPropertiesFromStream = false,
+            StreamProperties<<#= keyArgument #>, TPayload> inputProperties = null<# if (hasContainer) { #>,
+            string identifier = null<# } #>)
+        {
+            return new BinaryIngressStreamable<#= hasPassive ? "Passive" : string.Empty #><<#= keyArgument #>, TPayload>(
+<# if (fromFile) { #>
+                new FileStream(fileName, FileMode.Open),
+<# } else { #>
+                binaryStream,
+<# }
+   if (!hasPassive) { #>
+                <#= fromFile && !hasPassive ? "numMessages" : "0" #>,
+                scheduler,
+<# } #>
+                inputProperties,
+                readPropertiesFromStream,
+                <#= hasContainer ? "container" : "null" #>,
+                <# if (hasContainer) { #>identifier ?? <# } #>Guid.NewGuid().ToString());
+        }
+
+<# } #>
+    }
+}

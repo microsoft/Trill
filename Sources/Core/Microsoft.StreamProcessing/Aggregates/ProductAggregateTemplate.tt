@@ -1,0 +1,38 @@
+﻿<#@ include file="AggregateTemplates.tt" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Linq.Expressions;
+using System.Numerics;
+
+namespace Microsoft.StreamProcessing.Aggregates
+{
+<#
+    // Create product aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName;
+#>
+
+    internal class Product<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>, <#= typeName #>, <#= typeName #>>
+    {
+        public Expression<Func<<#= typeName #>>> InitialState() => () => 0;
+
+        public Expression<Func<<#= typeName #>, long, <#= typeName #>, <#= typeName #>>> Accumulate()
+            => (oldProduct, timestamp, input) => (<#= typeName #>)(oldProduct * input);
+
+        public Expression<Func<<#= typeName #>, long, <#= typeName #>, <#= typeName #>>> Deaccumulate()
+            => (oldProduct, timestamp, input) => (<#= typeName #>)(oldProduct / input);
+
+        public Expression<Func<<#= typeName #>, <#= typeName #>, <#= typeName #>>> Difference()
+            => (leftProduct, rightProduct) => (<#= typeName #>)(leftProduct / rightProduct);
+
+        public Expression<Func<<#= typeName #>, <#= typeName #>>> ComputeResult() => product => product;
+    }
+<#
+    }
+#>
+}

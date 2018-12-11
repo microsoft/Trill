@@ -1,0 +1,171 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Linq.Expressions;
+
+namespace Microsoft.StreamProcessing
+{
+    /// <summary>
+    /// Streamable extension methods.
+    /// </summary>
+    public static partial class Streamable
+    {
+<#
+foreach (string partitionString in new string[] { string.Empty, "Partitioned" })
+foreach (string egressType in new string[] { "StreamEvent", "StartEdge", "Interval" })
+{
+    string genericArguments = string.IsNullOrEmpty(partitionString) ? "TPayload" : "TKey, TPayload";
+    string argumentSuffix = (egressType != "StreamEvent") ? ", TResult" : string.Empty;
+    string egressArray = (egressType != "StreamEvent")
+        ? "TResult[]"
+        : partitionString + "StreamEvent<" + genericArguments + ">[]";
+    string egressSegment = (egressType != "StreamEvent")
+        ? "ArraySegment<TResult>"
+        : "ArraySegment<" + partitionString + "StreamEvent<" + genericArguments + ">>";
+    string defaultGenerator = (egressType != "StreamEvent")
+        ? "TResult[Config.DataBatchSize]"
+        : partitionString + "StreamEvent<" + genericArguments + ">[Config.DataBatchSize]";
+    string partitionFunctionTypeArgument = !string.IsNullOrEmpty(partitionString) ? "TKey, " : string.Empty;
+    string singleConstructor = egressType == "StartEdge"
+        ? "Expression<Func<" + partitionFunctionTypeArgument + "long, TPayload, TResult>>"
+        : "Expression<Func<" + partitionFunctionTypeArgument + "long, long, TPayload, TResult>>";
+    string infixName = egressType == "StreamEvent" ? egressType : "Temporal";
+    string inputKey = string.IsNullOrEmpty(partitionString) ? "Empty" : "PartitionKey<TKey>";
+    string constructorParameters = null;
+    switch (egressType)
+    {
+        case "StartEdge":
+        case "Interval":
+            constructorParameters = "constructor, ";
+            break;
+        default:
+            constructorParameters = string.Empty;
+            break;
+    }
+
+    foreach (var hasContainer in new [] { false, true })
+    foreach (var hasGenerator in new [] { false, true })
+    {
+        string methodName = (hasContainer ? "Register" : "To")
+                          + (hasContainer ? (egressType == "StreamEvent" ? string.Empty : "Temporal") : (egressType == "StreamEvent" ? "StreamEvent" : "Temporal"))
+                          + (hasContainer ? "ArrayOutput" : "ArrayObservable");
+#>
+        /// <summary>
+        /// Exports a streamable as an observable of events. Produces events that are sync time ordered.
+<#      if (egressType == "StartEdge")
+        { #>
+        /// Expects only start-edge events in the stream, and constructs user-defined payloads as a result.
+<#      }
+        if (egressType == "Interval")
+        { #>
+        /// Expects only start-edge and interval events in the stream, and constructs user-defined payloads as a result.
+<#      } #>
+        /// </summary>
+<#      if (!string.IsNullOrEmpty(partitionString))
+        { #>
+        /// <typeparam name="TKey"></typeparam>
+<#      } #>
+        /// <typeparam name="TPayload"></typeparam>
+<#      if (egressType != "StreamEvent")
+        { #>
+        /// <typeparam name="TResult"></typeparam>
+<#      }
+        if (hasContainer)
+        { #>
+        /// <param name="container">The query container to which an egress point is being added.</param>
+        /// <param name="identifier">A string that can uniquely identify the point of egress in the query.</param>
+<#      } #>
+        /// <param name="stream"></param>
+<#      if (hasGenerator)
+        { #>
+        /// <param name="generator">A function that returns an array that will be populated with stream results.</param>
+<#      }
+        if (egressType == "StartEdge")
+        { #>
+        /// <param name="constructor">Method description that constructs result data from the start time and the payload of each event.</param>
+<#      }
+        if (egressType.StartsWith("Interval"))
+        { #>
+        /// <param name="constructor">Method description that constructs result data from the start time, end time, and the payload of each event.</param>
+<#      }
+        if (egressType == "StreamEvent")
+        { #>
+        /// <param name="reshapingPolicy">Policy that specifies whether and how events are reshaped at egress. Default passes events through unmodified.</param>
+<#      } #>
+        /// <returns></returns>
+        public static IObservable<<#= egressSegment #>> <#= methodName #><<#= genericArguments #><#= argumentSuffix #>>(
+<#      if (hasContainer)
+        { #>
+            this QueryContainer container,
+<#      } #>
+            <#= hasContainer ? string.Empty : "this " #>IStreamable<<#= inputKey #>, TPayload> stream<#
+        if (hasGenerator)
+        { #>,
+            Func<<#= egressArray #>> generator<#
+        }
+        if (egressType == "StartEdge" || egressType == "Interval")
+        { #>,
+            <#= singleConstructor #> constructor<#
+        }
+        if (egressType == "StreamEvent")
+        { #>,
+            ReshapingPolicy reshapingPolicy = ReshapingPolicy.None<#
+        }
+        if (hasContainer)
+        { #>,
+            string identifier = null<# } #>)
+        {
+            Invariant.IsNotNull(stream, nameof(stream));
+
+            return stream.To<#= infixName #>ArrayObservable(
+                <#= hasGenerator ? "generator" : "() => new " + defaultGenerator #>,
+                <#= constructorParameters #><#= hasContainer ? "container" : "null" #>,
+                <# if (hasContainer) { #>identifier ?? <# } #>Guid.NewGuid().ToString()<# if (egressType == "StreamEvent") { #>,
+                reshapingPolicy<# } #>);
+        }
+
+<#  } #>
+        internal static IObservable<<#= egressSegment #>> To<#= infixName #>ArrayObservable<<#= genericArguments #><#= argumentSuffix #>>(
+            this IStreamable<<#= inputKey #>, TPayload> stream,
+            Func<<#= egressArray #>> generator,
+<#  if (egressType == "StartEdge" || egressType == "Interval")
+    { #>
+                 <#= singleConstructor #> constructor,
+<#  } #>
+            QueryContainer container,
+            string identifer<#
+    if (egressType == "StreamEvent")
+    { #>,
+            ReshapingPolicy reshapingPolicy<#
+    } #>)
+        {
+            Invariant.IsNotNull(stream, nameof(stream));
+
+<#  // Non-StreamEvent methods do not use reshaping policy at all
+    switch (egressType)
+    {
+        case "StreamEvent": #>
+            return (reshapingPolicy == ReshapingPolicy.None)
+                ? new <#= partitionString #><#= egressType #>ArrayObservable<<#= genericArguments #><#= argumentSuffix #>>(stream, generator, <#= constructorParameters #>container, identifer)
+                : new <#= partitionString #><#= egressType #>ArrayObservable<<#= genericArguments #><#= argumentSuffix #>>(stream.ToEndEdgeFreeStream(), generator, <#= constructorParameters #>container, identifer);
+<#          break;
+        case "StartEdge": #>
+            return new <#= partitionString #><#= egressType #>ArrayObservable<<#= genericArguments #><#= argumentSuffix #>>(stream, generator, <#= constructorParameters #>container, identifer);
+<#          break;
+        case "Interval": #>
+            return new <#= partitionString #><#= egressType #>ArrayObservable<<#= genericArguments #><#= argumentSuffix #>>(stream.ToEndEdgeFreeStream(), generator, <#= constructorParameters #>container, identifer);
+<#          break;
+    } #>
+        }
+<#
+} #>
+    }
+}

@@ -1,0 +1,269 @@
+﻿<#@ template language="C#" inherits="CommonUnaryTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+<# if (this.keyType.Namespace != null) { #>
+using <#= this.keyType.Namespace #>;
+<# } #>
+<# if (this.payloadType.Namespace != null) { #>
+using <#= this.payloadType.Namespace #>;
+<# } #>
+<# if (this.resultType.Namespace != null) { #>
+using <#= this.resultType.Namespace #>;
+<# } #>
+
+// TKey: <#= TKey #>
+// TPayload: <#= TPayload #>
+// TResult: <#= TResult #>
+// Source Fields: <#= String.Join(",", this.fields.Select(f => f.OriginalName)) #>
+// Destination Fields: <#= String.Join(",", this.resultFields.Select(f => f.OriginalName)) #>
+// Computed Fields: <#= String.Join(",", this.computedFields.Keys.Select(f => f.OriginalName)) #>
+
+[DataContract]
+internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TResult #>>
+{
+    private <#= Transformer.GetMemoryPoolClassName(this.keyType, this.resultType) #><#= MemoryPoolGenericParameters #> pool;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+
+    [DataMember]
+    private int iter;
+
+    private StreamMessage<<#= TKey #>, <#= TResult #>> genericBatch;
+    [DataMember]
+    private <#= Transformer.GetBatchClassName(keyType, resultType) #><#= TKeyTResultGenericParameters #> batch;
+
+    // Fields used to point directly to the arrays within the result batch
+    private long[] dest_vsync;
+    private long[] dest_vother;
+    private <#= TKey #>[] destkey;
+    private int[] dest_hash;
+
+    <#= staticCtor #>
+
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TResult #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TResult #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TResult #>>() as <#= Transformer.GetMemoryPoolClassName(this.keyType, this.resultType) #><#= MemoryPoolGenericParameters #>;
+        this.queryPlanGenerator = queryPlanGenerator;
+        MyAllocate();
+    }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    private void MyAllocate()
+    {
+        pool.Get(out genericBatch);
+        genericBatch.Allocate();
+
+        this.batch = genericBatch as <#= Transformer.GetBatchClassName(keyType, resultType) #><#= TKeyTResultGenericParameters #>;
+        this.UpdatePointers();
+
+    }
+    protected override void UpdatePointers()
+    {
+        // Assign pointers to bookkeeping arrays
+        dest_vsync = this.batch.vsync.col;
+        dest_vother = this.batch.vother.col;
+        destkey = this.batch.key.col;
+        dest_hash = this.batch.hash.col;
+    }
+
+    protected override void DisposeState() => this.batch.Free();
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> _inBatch)
+    {
+        var batch = _inBatch as <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>;
+
+        var count = batch.Count;
+        this.batch.iter = batch.iter;
+
+        // Create locals that point directly to the arrays within the columns in the destination batch.
+
+        <# foreach (var f in this.computedFields.Keys) { #>
+        <# if (f.OptimizeString()) { #>
+
+        var dest_<#= f.Name #> = this.batch.<#= f.Name #>;
+        <# } else { #>
+
+        var dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
+        <# } #>
+        <# } #>
+
+        // Create locals that point directly to the arrays within the columns in the source batch.
+        <# foreach (var f in this.fields) { #>
+
+        <# if (f.canBeFixed) { #>
+
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = batch.<#= f.Name #>.col)
+        {
+        <# } else { #>
+
+        var <#= f.Name #>_col = batch.<#= f.Name #>.col;
+        <# } #>
+        <# } #>
+
+        var srckey = batch.key.col;
+        <# if (this.hasKey) { #>
+
+        var key_col = srckey; // hack until MakeColumnOriented is fixed
+        <# } #>
+
+        fixed (long* src_bv = batch.bitvector.col, src_vsync = batch.vsync.col, src_vother = batch.vother.col)
+        fixed (int* src_hash = batch.hash.col)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                {
+                    <# if (this.StartEdgeParameterName != null) { #>
+
+                    var <#= this.StartEdgeParameterName #> = src_vsync[i] < src_vother[i] ? src_vsync[i] : src_vother[i];
+                    <# } #>
+
+                <# if (this.useEnumerator) { #>
+
+                    var enumerator = <#= transformedSelectorAsSource #>.GetEnumerator();
+                    while (enumerator.MoveNext())
+                <# } else { #>
+                    <# if (!this.enumerableRepeatSelector) { #>
+
+                    var e_prime = <#= transformedSelectorAsSource #>;
+                    <# } #>
+
+                    <# if (this.keyParameterName != null) { #>
+                    var <#= this.keyParameterName #> = srckey[i];
+                    <# } #>
+                    for (int _x = 0; _x < <#= this.loopCounter #>; _x++)
+                <# } #>
+
+                    {
+                        dest_vsync[iter] = src_vsync[i];
+                        dest_vother[iter] = src_vother[i];
+                        <# if (this.useEnumerator) { #>
+
+                        this.batch[iter] = enumerator.Current;
+                        <# } else if (this.enumerableRepeatSelector) { #>
+
+                        <# foreach (var kv in this.computedFields) {
+                          var f = kv.Key;
+                          var v = kv.Value.ExpressionToCSharp();
+                        #>
+                        <# if (f.OptimizeString()) { #>
+
+                        dest_<#= f.Name #>.AddString(<#= v #>);
+                        <# } else { #>
+
+                        dest_<#= f.Name #>[iter] = <#= v #>;
+                        <# } #>
+                        <# } #>
+                        <# } else { #>
+
+                        this.batch[iter] = e_prime;
+                        <# } #>
+
+                        destkey[iter] = srckey[i];
+                        dest_hash[iter] = src_hash[i];
+                        iter++;
+
+                        if (iter == Config.DataBatchSize)
+                        {
+                            FlushContents();
+
+                            // Create locals that point directly to the arrays within the columns in the destination batch.
+                            <# foreach (var f in this.computedFields.Keys) { #>
+                            <# if (f.OptimizeString()) { #>
+
+                            dest_<#= f.Name #> = this.batch.<#= f.Name #>;
+                            <# } else { #>
+
+                            dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
+                            <# } #>
+                            <# } #>
+
+                            this.batch.iter = batch.iter;
+                        }
+                    }
+                <# if (this.useEnumerator) { #>
+
+                    enumerator.Dispose();
+                <# } #>
+                }
+                else if (src_vother[i] < 0)
+                {
+                    dest_vsync[iter] = src_vsync[i];
+                    dest_vother[iter] = src_vother[i];
+                    destkey[iter] = default;
+                    this.batch[iter] = default;
+                    dest_hash[iter] = src_hash[i];
+                    this.batch.bitvector.col[(iter) >> 6] |= (1L << ((iter) & 0x3f));
+
+                    iter++;
+
+                    if (iter == Config.DataBatchSize)
+                    {
+                        FlushContents();
+
+                        // Create locals that point directly to the arrays within the columns in the destination batch.
+                        <# foreach (var f in this.computedFields.Keys) { #>
+                        <# if (f.OptimizeString()) { #>
+
+                        dest_<#= f.Name #> = this.batch.<#= f.Name #>;
+                        <# } else { #>
+
+                        dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
+                        <# } #>
+                        <# } #>
+
+                        this.batch.iter = batch.iter;
+                    }
+                }
+            }
+
+        } // end src_hash, src_bv, src_vsync, src_vother
+
+        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        }
+        <# } #>
+
+        batch.Free();
+    }
+
+    protected override void FlushContents()
+    {
+        if (iter == 0) return;
+        this.batch.Count = iter;
+        this.batch.Seal();
+        this.Observer.OnNext(this.batch);
+        iter = 0;
+        MyAllocate();
+    }
+
+    public override int CurrentlyBufferedOutputCount => iter;
+
+    public override int CurrentlyBufferedInputCount => 0;
+}

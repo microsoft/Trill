@@ -1,0 +1,17 @@
+<Project>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!-- Code Analysis -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' And '$(Configuration)' == 'Debug'">
+    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <!-- Do not set RunCodeAnalysis*, as this is incompatible with netstandard2.0. Analyzers run by default whenever included. -->
+    <CodeAnalysisRuleSet>$(EnlistmentRoot)\Sources\Microsoft.StreamProcessing.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  
+</Project>

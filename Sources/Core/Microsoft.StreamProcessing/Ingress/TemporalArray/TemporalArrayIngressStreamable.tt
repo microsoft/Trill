@@ -1,0 +1,140 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+
+namespace Microsoft.StreamProcessing
+{
+<#
+foreach (var p in new [] { string.Empty, "Partitioned" })
+foreach (var m in new [] { "StreamEvent", "Interval" })
+{
+    var className = p + m + "ArrayIngressStreamable";
+    var typeParameters = string.IsNullOrEmpty(p) ? "TPayload" : "TPartitionKey, TPayload";
+    var ingressType =
+          (m == "StreamEvent" ? p + "StreamEvent<" : string.Empty)
+        + (string.IsNullOrEmpty(p) || m != "StreamEvent" ? "TPayload" : "TPartitionKey, TPayload")
+        + (m == "StreamEvent" ? ">" : string.Empty);
+    var keyType = string.IsNullOrEmpty(p) ? "Empty" : "PartitionKey<TPartitionKey>";
+#>
+    internal sealed class <#= className #><<#= typeParameters #>> : Streamable<<#= keyType #>, TPayload>, I<#= string.IsNullOrEmpty(p) ? "Observable" : "Partitioned" #>IngressStreamable<<#= typeParameters #>>, IDisposable
+    {
+        private readonly IObservable<ArraySegment<<#= ingressType #>>> observable;
+<# switch (m) {
+       case "Interval": #>
+<# if (!string.IsNullOrEmpty(p)) { #>
+        private readonly Expression<Func<TPayload, TPartitionKey>> partitionExtractor;
+<# } #>
+        private readonly Expression<Func<TPayload, long>> startEdgeExtractor;
+        private readonly Expression<Func<TPayload, long>> endEdgeExtractor;
+<#         break; #>
+<# } #>
+        private readonly OnCompletedPolicy onCompletedPolicy;
+        private readonly bool delayed;
+        private readonly QueryContainer container;
+
+        private <#= p #>DiagnosticObservable<<#= typeParameters #>> diagnosticOutput;
+
+        public <#= className #>(
+            IObservable<ArraySegment<<#= ingressType #>>> observable,
+<# switch (m) {
+       case "Interval":
+   if (!string.IsNullOrEmpty(p)) { #>
+            Expression<Func<TPayload, TPartitionKey>> partitionExtractor,
+<# } #>
+            Expression<Func<TPayload, long>> startEdgeExtractor,
+            Expression<Func<TPayload, long>> endEdgeExtractor,
+<#         break;
+   } #>
+            OnCompletedPolicy onCompletedPolicy,
+            QueryContainer container,
+            string identifier)
+            : base((Config.ForceRowBasedExecution || !typeof(TPayload).CanRepresentAsColumnar()
+                ? StreamProperties<<#= keyType #>, TPayload>.Default<#= (m == "Interval") ? "Ingress(startEdgeExtractor, endEdgeExtractor)" : string.Empty #>.ToRowBased()
+                : StreamProperties<<#= keyType #>, TPayload>.Default<#= (m == "Interval") ? "Ingress(startEdgeExtractor, endEdgeExtractor)" : string.Empty #>).SetQueryContainer(container))
+        {
+            Contract.Requires(observable != null);
+            Contract.Requires(identifier != null);
+
+            this.IngressSiteIdentifier = identifier;
+            this.observable = observable;
+<# switch (m) {
+       case "Interval":
+   if (!string.IsNullOrEmpty(p)) { #>
+            this.partitionExtractor = partitionExtractor;
+<# } #>
+            this.startEdgeExtractor = startEdgeExtractor;
+            this.endEdgeExtractor = endEdgeExtractor;
+<#         break;
+   } #>
+            this.onCompletedPolicy = onCompletedPolicy;
+            this.container = container;
+            this.delayed = container != null;
+
+            if (delayed) container.RegisterIngressSite(identifier);
+        }
+
+        public void Dispose()
+        {
+            if (diagnosticOutput != null) diagnosticOutput.Dispose();
+        }
+
+        [ContractInvariantMethod]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+        private void ObjectInvariant()
+        {
+            Contract.Invariant(this.observable != null);
+        }
+
+        public IObservable<OutOfOrder<#= p #>StreamEvent<<#= typeParameters #>>> GetDroppedAdjustedEventsDiagnostic()
+        {
+            if (diagnosticOutput == null) diagnosticOutput = new <#= p #>DiagnosticObservable<<#= typeParameters #>>();
+            return diagnosticOutput;
+        }
+
+        public override IDisposable Subscribe(IStreamObserver<<#= keyType #>, TPayload> observer)
+        {
+            Contract.EnsuresOnThrow<IngressException>(true);
+            var subscription = <#= p #><#= m #>ArraySubscriptionCreator<<#= typeParameters #>>.CreateSubscription(
+                this.observable,
+<# switch (m) {
+       case "Interval":
+   if (!string.IsNullOrEmpty(p)) { #>
+                this.partitionExtractor,
+<# } #>
+                this.startEdgeExtractor,
+                this.endEdgeExtractor,
+<#         break;
+   } #>
+                this.IngressSiteIdentifier,
+                this,
+                observer,
+                onCompletedPolicy,
+                diagnosticOutput);
+
+            if (delayed)
+            {
+                container.RegisterIngressPipe(this.IngressSiteIdentifier, subscription);
+                return subscription.DelayedDisposable;
+            }
+            else
+            {
+                subscription.Enable();
+                return subscription;
+            }
+        }
+
+        public string IngressSiteIdentifier { get; }
+    }
+
+<# } #>
+}

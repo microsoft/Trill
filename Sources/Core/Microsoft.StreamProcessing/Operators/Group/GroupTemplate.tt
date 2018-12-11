@@ -1,0 +1,268 @@
+﻿
+<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+[assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
+
+<#
+    List<string> genericParamList = new List<string>();
+    var TOuterKey = outerKeyType.GetCSharpSourceSyntax(ref genericParamList);
+    var outerKeyGenericParameterCount = genericParamList.Count;
+    var TSource = sourceType.GetCSharpSourceSyntax(ref genericParamList);
+    var sourceGenericParameterCount = genericParamList.Count;
+    var sourceGenericParameters = 0 < genericParamList.Count ? "<" + String.Join(",", genericParamList) + ">" : string.Empty;
+    var TInnerKey = innerKeyType.GetCSharpSourceSyntax(ref genericParamList);
+    var genericParameters = 0 < genericParamList.Count ? "<" + String.Join(",", genericParamList) + ">" : string.Empty;
+
+    var outKeyInnerKeyGenericParameterList = genericParamList.Take(outerKeyGenericParameterCount).Concat(genericParamList.Skip(sourceGenericParameterCount));
+    var TOuterKeyTInnerKeyGenericParameters = 0 < outKeyInnerKeyGenericParameterList.Count() ? "<" + String.Join(",", outKeyInnerKeyGenericParameterList) + ">" : string.Empty;
+
+    var resultBatchGenericParameters = genericParameters;
+    var resultBatchClassType = isFirstLevelGroup
+        ? Transformer.GetBatchClassName(innerKeyType, sourceType)
+        : Transformer.GetBatchClassName(typeof(CompoundGroupKey<,>).MakeGenericType(outerKeyType, innerKeyType), sourceType);
+    var sourceBatchClassType = Transformer.GetBatchClassName(outerKeyType, sourceType);
+
+    var innerKeyIsAnonymous = innerKeyType.IsAnonymousTypeName();
+    if (innerKeyIsAnonymous) {
+      transformedKeySelectorAsString = string.Format("({0})Activator.CreateInstance(typeof({0}), {1} )", TInnerKey, transformedKeySelectorAsString);
+    }
+
+    var outputKey = !isFirstLevelGroup ? "CompoundGroupKey<" + TOuterKey + ", " + TInnerKey + ">" : TInnerKey;
+    var nestedInfix = !isFirstLevelGroup ? "Nested" : string.Empty;
+    var ungroupingToUnit = isFirstLevelGroup && innerKeyType == typeof(Empty);
+    var swingingKeyFromField = isFirstLevelGroup && !this.swingingField.Equals(default(MyFieldInfo));
+#>
+
+// TOuterKey: <#= TOuterKey #>
+// TInnerKey: <#= TInnerKey #>
+// TSource: <#= TSource #>
+
+[DataContract]
+internal sealed class <#= CLASSNAME #><#= genericParameters #> :
+                       Pipe<<#= outputKey #>, <#= TSource #>>, IStreamObserver<<#= TOuterKey #>, <#= TSource #>>
+{
+<# if (innerKeyIsAnonymous) { #>
+    [SchemaSerialization]
+    private readonly Expression<Func<<#= TInnerKey #>, int>> keyComparer;
+    private readonly Func<<#= TInnerKey #>, int> innerHashCode;
+<# } #>
+    private readonly MemoryPool<<#= outputKey #>, <#= TSource #>> l1Pool;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+
+<# if (ungroupingToUnit) { #>
+
+    private readonly ColumnBatch<Microsoft.StreamProcessing.Empty> unitColumn;
+    private readonly ColumnBatch<int> unitHashColumn;
+<# } #>
+
+    <#= staticCtor #>
+
+    public <#= CLASSNAME #>() { }
+
+    public <#= CLASSNAME #>(
+        IStreamable<<#= outputKey #>, <#= TSource #>> stream,
+        IStreamObserver<<#= outputKey #>, <#= TSource #>> observer,
+        Expression<Func<<#= TInnerKey #>, int>> keyComparer,
+        Expression<Func<<#= TSource #>, <#= TInnerKey #>>> keySelector,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+<# if (innerKeyIsAnonymous) { #>
+<#     if (isFirstLevelGroup) { #>
+        var _keySelector = keySelector.Compile();
+<#     } #>
+        this.keyComparer = keyComparer;
+        this.innerHashCode = keyComparer.Compile();
+<# } #>
+        this.l1Pool = MemoryManager.GetMemoryPool<<#= outputKey #>, <#= TSource #>>(true);
+        this.queryPlanGenerator = queryPlanGenerator;
+<# if (ungroupingToUnit) { #>
+
+        this.l1Pool.GetKey(out this.unitColumn);
+        this.l1Pool.Get(out this.unitHashColumn);
+        Array.Clear(this.unitHashColumn.col, 0, this.unitHashColumn.col.Length);
+<# } #>
+    }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    protected override void FlushContents() { }
+
+    public override int CurrentlyBufferedOutputCount => 0;
+
+    public override int CurrentlyBufferedInputCount => 0;
+
+    protected override void DisposeState()
+    {
+<# if (ungroupingToUnit) { #>
+        this.unitColumn.Return();
+        this.unitHashColumn.Return();
+<# } #>
+    }
+
+    public unsafe void OnNext(StreamMessage<<#= TOuterKey #>, <#= TSource #>> batch)
+    {
+        StreamMessage<<#= outputKey #>, <#= TSource #>> resultBatchUncast; // Need this type to call Get with so the right subtype will be returned
+        this.l1Pool.Get(out resultBatchUncast);
+
+        <#= resultBatchClassType #><#= resultBatchGenericParameters #> resultBatch = resultBatchUncast as <#= resultBatchClassType #><#= resultBatchGenericParameters #>;
+        <#= sourceBatchClassType #><#= sourceGenericParameters #> inputBatch = batch as <#= sourceBatchClassType #><#= sourceGenericParameters #>;
+
+        resultBatch.vsync = batch.vsync;
+        resultBatch.vother = batch.vother;
+<# foreach (var f in this.fields) { #>
+        resultBatch.<#= f.Name #> = inputBatch.<#= f.Name #>;
+<# } #>
+<# if (this.payloadMightBeNull) { #>
+        resultBatch._nullnessvector = inputBatch._nullnessvector;
+<# } #>
+
+<# if (!ungroupingToUnit && !swingingHashColumn) { #>
+
+        resultBatch.hash = batch.hash.MakeWritable(this.l1Pool.intPool);
+<# } #>
+        resultBatch.bitvector = batch.bitvector;
+
+<# if (!ungroupingToUnit && (!isFirstLevelGroup || this.swingingField.Equals(default(MyFieldInfo)))) { #>
+        this.l1Pool.GetKey(out resultBatchUncast.key);
+<# } #>
+
+        resultBatch.Count = batch.Count;
+
+        var count = batch.Count;
+
+<# if (ungroupingToUnit) { #>
+        this.unitColumn.IncrementRefCount(1);
+        resultBatch.key = unitColumn;
+        this.unitHashColumn.IncrementRefCount(1);
+        resultBatch.hash = unitHashColumn;
+<# } else { #>
+
+        var src_key = batch.key.col;
+<# if (!isFirstLevelGroup || this.swingingField.Equals(default(MyFieldInfo))) { #>
+
+        var dest_key = resultBatch.key.col;
+<# } #>
+        var dest_payload = resultBatch;
+
+<# if (swingingKeyFromField) { #>
+        // The key selector was just e => e.f *and* isFirstLevelGroup so just swing the key field
+<# if (this.swingingField.OptimizeString()) { #>
+
+        resultBatch.key = resultBatch.<#= this.swingingField.Name #>.ToColumnBatch(this.l1Pool.stringPool, resultBatch.bitvector);
+<# } else { #>
+
+        resultBatch.key = resultBatch.<#= this.swingingField.Name #>;
+        resultBatch.key.IncrementRefCount(1);
+<# } #>
+<# } #>
+
+
+<# foreach (var f in this.fields) { #>
+
+<#     if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = resultBatch.<#= f.Name #>.col)
+        {
+<#     } else { #>
+
+<#         if (f.OptimizeString()) { #>
+        var <#= f.Name #>_col = resultBatch.<#= f.Name #>;
+<#         } else { #>
+        var <#= f.Name #>_col = resultBatch.<#= f.Name #>.col;
+<#         } #>
+<#     } #>
+<# } #>
+
+        <#= vectorHashCodeInitialization #>
+
+<# if (!swingingKeyFromField || !swingingHashColumn) { #>
+
+        fixed (long* src_bv = batch.bitvector.col) {
+<# if (!ungroupingToUnit) { #>
+        fixed (int* dest_hash = resultBatch.hash.col) {
+<# } #>
+            for (int i = 0; i < count; i++)
+            {
+                if ((src_bv[i >> 6] & (1L << (i & 0x3f))) != 0) continue;
+
+<# if (!swingingKeyFromField || !this.swingingField.OptimizeString()) { #>
+
+                var key = <#= this.transformedKeySelectorAsString #>;
+<# } #>
+<# if (innerKeyIsAnonymous) { #>
+                var innerHash = this.innerHashCode(key);
+<# } else if (swingingHashColumn) { #>
+
+                // don't compute hash because that was done by calling MultiString.GetHashCode
+<# } else { #>
+                var innerHash = <#= inlinedHashCodeComputation #>;
+<# } #>
+
+<# if (isFirstLevelGroup) { #>
+<#     if (!this.swingingField.Equals(default(MyFieldInfo))) { #>
+                // no assignment to key, pointer was swung!
+<#     } else { #>
+                dest_key[i] = key;
+<#     } #>
+<# if (!swingingHashColumn) { #>
+
+                dest_hash[i] = innerHash;
+<# } #>
+<# } else { #>
+                var hash = dest_hash[i] ^ innerHash;
+                dest_key[i].outerGroup = src_key[i];
+                dest_key[i].innerGroup = key;
+                dest_key[i].hashCode = hash;
+                dest_hash[i] = hash;
+<# } #>
+            }
+<# if (!ungroupingToUnit) { #>
+        } // end of fixed for dest_hash
+<# } #>
+        } // end of fixed for src_bv
+<# } #>
+
+        <# if (!String.IsNullOrWhiteSpace(vectorHashCodeInitialization) && !swingingHashColumn) { #>
+
+        this.hashCodeVector.Return();
+        <# } #>
+
+<# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        }
+<# } #>
+
+<# } #>
+        batch.ReleaseKey();
+<# if (ungroupingToUnit || swingingHashColumn) { #>
+
+        batch.hash.Return();
+<# } #>
+
+        batch.Return();
+
+        this.Observer.OnNext(resultBatch);
+    }
+
+    public void OnError(Exception error)
+    {
+        Observer.OnError(error);
+    }
+}

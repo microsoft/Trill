@@ -1,0 +1,306 @@
+﻿<#@ template language="C#" visibility="internal" inherits="AfaTemplate" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// CompiledGroupedAfaPipe_MultiEvent
+// TKey: <#= TKey #>
+// TPayload: <#= TPayload #>
+// TRegister: <#= TRegister #>
+// TAccumulator: <#= TAccumulator #>
+
+[DataContract]
+internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>
+{
+    <#= staticCtor #>
+
+    [DataMember]
+    protected FastMap<GroupedActiveStateAccumulator<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>> activeStates;
+    [DataMember]
+    protected FastMap<<#= TKey #>> keyHeads;
+
+    // Traversers
+    protected FastMap<GroupedActiveStateAccumulator<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>>.FindTraverser activeFindTraverser;
+    protected FastMap<<#= TKey #>>.FindTraverser keyHeadsFindTraverser;
+    protected FastMap<<#= TKey #>>.VisibleTraverser keyHeadsVisibleTraverser;
+
+    [DataMember]
+    protected long lastSyncTime;
+
+    private long[] dest_vsync;
+    private long[] dest_vother;
+    private <#= TKey #>[] destkey;
+    private int[] dest_hash;
+    private <#= resultBatchTypeName #> resultBatch;
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TRegister #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TRegister #>> observer,
+        object afa,
+        long MaxDuration)
+        : base(stream, observer, afa, MaxDuration, true)
+    {
+        activeStates = new FastMap<GroupedActiveStateAccumulator<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>>(1);
+        activeFindTraverser = new FastMap<GroupedActiveStateAccumulator<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>>.FindTraverser(activeStates);
+
+        keyHeads = new FastMap<<#= TKey #>>(1);
+        keyHeadsFindTraverser = new FastMap<<#= TKey #>>.FindTraverser(keyHeads);
+        keyHeadsVisibleTraverser = new FastMap<<#= TKey #>>.VisibleTraverser(keyHeads);
+
+        lastSyncTime = -1;
+    }
+
+    public override int CurrentlyBufferedInputCount => activeStates.Count;
+
+    private void ProcessCurrentTimestamp()
+    {
+        keyHeadsVisibleTraverser.currIndex = 0;
+        int index, hash;
+        bool ended = true;
+
+        while (keyHeadsVisibleTraverser.Next(out index, out hash))
+        {
+            if (activeFindTraverser.Find(hash))
+            {
+                int activeFind_index;
+                while (activeFindTraverser.Next(out activeFind_index))
+                {
+                    var state2 = activeStates.Values[activeFind_index];
+                    if (!(<#= keyEqualityComparer("state2.key", "keyHeads.Values[index]") #>)) continue;
+
+                    var newReg = activeStates.Values[activeFind_index].register;
+
+                    switch (state2.fromState) {
+                        <# foreach (var sourceNodeInfo in this.edgeInfos) { #>
+
+                        case <#= sourceNodeInfo.Item1 #>:
+                            switch (state2.toState) {
+                            <# foreach (var edge in sourceNodeInfo.Item2) { #>
+
+                                case <#= edge.TargetNode #>:
+
+                                    // We guarantee by construction that new transitions are the end of the linked list
+                                    if ((<#= edge.fromStartState ? "true" : "false" #>) && !<#= (this.AllowOverlappingInstances ? "true" : "false") #> && !ended)
+                                    {
+                                        <#= edge.Dispose("activeStates.Values[activeFind_index].accumulator") #>;
+                                        activeFindTraverser.Remove();
+                                    }
+                                    else
+                                    {
+                                        // Found tentative entry, complete transition
+                                        if (<#= edge.Fence("lastSyncTime", "state2.accumulator", "state2.register") #>)
+                                        {
+                                            <# if (edge.Transfer != null) { #>
+
+                                                activeStates.Values[activeFind_index].register = <#= edge.Transfer("lastSyncTime", "state2.accumulator", "state2.register") #>;
+                                            <# } #>
+
+                                            <#= edge.Dispose("activeStates.Values[activeFind_index].accumulator") #>;
+
+                                            // target state: <#= edge.TargetNode #> (<#= isFinal[edge.TargetNode] ? "final" : "not final" #>)
+                                            <# IfFinalStateProduceOutput(44, edge.TargetNode, string.Empty, "lastSyncTime", "state2.PatternStartTimestamp", "state2.key", "hash"); #>
+
+                                            <# if (hasOutgoingArcs[edge.TargetNode]) { #>
+
+                                            // there are outgoing edges
+                                            ended = false;
+                                            <# } else { #>
+
+                                            // there are no outgoing edges
+                                            activeFindTraverser.Remove();
+                                            <# } #>
+
+                                        }
+                                        else
+                                        {
+                                            <#= edge.Dispose("activeStates.Values[activeFind_index].accumulator") #>;
+                                            activeFindTraverser.Remove();
+                                        }
+                                    }
+                                    break;
+                            <# } #>
+
+                            } // end inner switch
+
+                            break;
+
+                        <# } #>
+
+                    } // end outer switch
+                }
+            }
+        }
+        keyHeads.Clear();
+    }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> batch)
+    {
+        dest_vsync = this.batch.vsync.col;
+        dest_vother = this.batch.vother.col;
+        destkey = this.batch.key.col;
+        dest_hash = this.batch.hash.col;
+
+        var count = batch.Count;
+
+        var srckey = batch.key.col;
+        <#= sourceBatchTypeName #> sourceBatch = batch as <#= sourceBatchTypeName #>;
+
+        <# foreach (var f in this.sourceFields) { #>
+
+        <#= BeginColumnPointerDeclaration(f, "sourceBatch") #>
+        <# } #>
+
+        fixed (long* src_bv = batch.bitvector.col, src_vsync = batch.vsync.col, src_vother = batch.vother.col)
+        {
+            fixed (int* src_hash = batch.hash.col)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0 || src_vother[i] < 0)
+                    {
+                        long synctime = src_vsync[i];
+
+                        if (synctime > lastSyncTime) // move time forward
+                        {
+                            ProcessCurrentTimestamp();
+                            lastSyncTime = synctime;
+                        }
+
+                        if (src_vother[i] < 0)
+                        {
+                            OnPunctuation(synctime);
+                            continue;
+                        }
+
+                        int keyHeads_index;
+                        bool keyHeadExists = false;
+                        if (keyHeadsFindTraverser.Find(src_hash[i]))
+                        {
+                            while (keyHeadsFindTraverser.Next(out keyHeads_index))
+                            {
+                                if (!(<#= keyEqualityComparer("keyHeads.Values[keyHeads_index]", "srckey[i]") #>)) continue;
+
+                                // Found entry, this key has been processed before
+                                keyHeadExists = true;
+                                break;
+                            }
+                        }
+
+                        if (!keyHeadExists)
+                        {
+                            // Apply new transitions, update existing transitions
+                            bool found = activeFindTraverser.Find(src_hash[i]);
+
+                            if (found)
+                            {
+                                int activeFind_index;
+                                while (activeFindTraverser.Next(out activeFind_index))
+                                {
+                                    var state = activeStates.Values[activeFind_index];
+                                    if (!(<#= keyEqualityComparer("state.key", "srckey[i]") #>)) continue;
+
+                                    // TODO: Found entry, create and accumulate new tentative transitions from current state
+                                    if (state.PatternStartTimestamp + MaxDuration > synctime)
+                                    {
+                                        switch (state.toState) {
+                                            <# foreach (var sourceNodeInfo in this.edgeInfos) { #>
+
+                                            case <#= sourceNodeInfo.Item1 #> :
+                                                <# foreach (var arcinfo in sourceNodeInfo.Item2) { #>
+
+                                                if (activeFind_index == -1) activeFind_index = activeStates.Insert(src_hash[i]);
+                                                activeStates.Values[activeFind_index].arcinfo = null /*arcinfo*/;
+                                                activeStates.Values[activeFind_index].key = state.key;
+                                                activeStates.Values[activeFind_index].fromState = state.toState;
+                                                activeStates.Values[activeFind_index].toState = <#= arcinfo.TargetNode #>;
+                                                activeStates.Values[activeFind_index].PatternStartTimestamp = state.PatternStartTimestamp;
+                                                activeStates.Values[activeFind_index].register = state.register;
+                                                activeStates.Values[activeFind_index].accumulator = <#= arcinfo.Initialize("synctime", "state.register") #>;
+                                                activeStates.Values[activeFind_index].accumulator = <#= arcinfo.Accumulate("synctime", "batch[i]", "state.register", "activeStates.Values[activeFind_index].accumulator") #>;
+                                                activeFind_index = -1;
+                                                <# } #>
+
+                                                break;
+                                            <# } #>
+
+                                        } // end switch
+                                    }
+
+                                    // Remove current state
+                                    if (activeFind_index != -1) activeFindTraverser.Remove();
+                                }
+                            }
+
+                            // Insert & accumulate new tentative transitions from start state
+                            <# foreach (var sourceNodeInfo in this.startEdgeInfos) { #>
+
+                            // start node: <#= sourceNodeInfo.Item1 #>
+                                <# foreach (var arcinfo in sourceNodeInfo.Item2) { #>
+
+                                {
+                                int index = activeFindTraverser.InsertAt(); // have to ensure the new states go to the end of the list
+                                activeStates.Values[index].arcinfo = null; /*arcinfo*/;
+                                activeStates.Values[index].key = srckey[i];
+                                activeStates.Values[index].fromState = <#= arcinfo.SourceNode #>;
+                                activeStates.Values[index].toState = <#= arcinfo.TargetNode #>;
+                                activeStates.Values[index].PatternStartTimestamp = synctime;
+                                activeStates.Values[index].register = defaultRegister;
+                                activeStates.Values[index].accumulator = <#= arcinfo.Initialize("synctime", "defaultRegister") #>;
+                                activeStates.Values[index].accumulator = <#= arcinfo.Accumulate("synctime", "batch[i]", "defaultRegister", "activeStates.Values[index].accumulator") #>;
+                                }
+                                <# } #>
+                            <# } #>
+
+                            // Update keyHeads to indicate that this key has been inserted
+                            keyHeads_index = keyHeads.Insert(src_hash[i]);
+                            keyHeads.Values[keyHeads_index] = srckey[i];
+
+                            // Done processing this event
+                            continue;
+                        }
+
+                        // Not the first insert of this key for this timestamp, perform accumulate for all tentative states
+                        if (activeFindTraverser.Find(src_hash[i]))
+                        {
+                            int activeFind_index;
+                            while (activeFindTraverser.Next(out activeFind_index))
+                            {
+                                var state2 = activeStates.Values[activeFind_index];
+                                if (!(<#= keyEqualityComparer("state2.key", "srckey[i]") #>)) continue;
+
+                                switch (state2.fromState) {
+                                    <# foreach (var sourceNodeInfo in this.edgeInfos) { #>
+
+                                    case <#= sourceNodeInfo.Item1 #> /* start state */ :
+                                    <# foreach (var arcinfo in sourceNodeInfo.Item2) { #>
+
+                                        // end state: <#= arcinfo.TargetNode #>;
+                                        // Found tentative entry, accumulate
+                                        activeStates.Values[activeFind_index].accumulator = <#= arcinfo.Accumulate("synctime", "batch[i]", "state2.register", "state2.accumulator") #>;
+                                    <# } #>
+
+                                    break;
+                                    <# } #>
+
+                                } // end switch
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        <# foreach (var f in this.sourceFields) { #>
+        <#= EndColumnPointerDeclaration(f) #>
+        <# } #>
+
+        batch.Free();
+    }
+}

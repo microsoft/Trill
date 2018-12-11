@@ -1,0 +1,196 @@
+﻿<#@ template language="C#" inherits="CommonUnaryTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Linq.Expressions;
+using System.IO;
+using System.Reflection;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+<# if (this.keyType.Namespace != null) { #>
+using <#= this.keyType.Namespace #>;
+<# } #>
+<# if (this.payloadType.Namespace != null) { #>
+using <#= this.payloadType.Namespace #>;
+<# } #>
+
+<#
+  string TKey;
+  var genericTypeNames = new string[]{"A", "B"};
+  if (keyType.IsAnonymousType())
+  {
+    TKey = genericTypeNames[0];
+  }
+  else
+  {
+    genericTypeNames[0] = string.Empty;
+    TKey = keyType.GetCSharpSourceSyntax();
+  }
+
+  string TPayload;
+  var payloadIsAnon = false;
+  if (payloadType.IsAnonymousType())
+  {
+    TPayload = genericTypeNames[1];
+    payloadIsAnon = true;
+  }
+  else
+  {
+    genericTypeNames[1] = string.Empty;
+    TPayload = payloadType.GetCSharpSourceSyntax();
+  }
+
+  var genericParameters = Transformer.GenericParameterList(genericTypeNames);
+
+  var genericParameters2 = string.Format("<{0}, {1}>", TKey, TPayload);
+  if (payloadType == typeof(int) || payloadType == typeof(long) || payloadType == typeof(string)) genericParameters2 = string.Empty;
+#>
+
+[DataContract]
+internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>>
+{
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+    private <#= Transformer.GetMemoryPoolClassName(this.keyType, this.payloadType) #><#= genericParameters2 #> pool;
+
+<#
+    if (payloadIsAnon) {
+        foreach (var f in this.fields) {
+#>
+    private PropertyInfo <#= f.Name #>_Property = typeof(<#= TPayload #>).GetProperty("<#= f.OriginalName #>");
+<#
+        }
+    }
+#>
+
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TPayload #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        this.pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TPayload #>>(true) as <#= Transformer.GetMemoryPoolClassName(this.keyType, this.payloadType) #><#= genericParameters2 #>;
+        this.queryPlanGenerator = queryPlanGenerator;
+    }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(this.queryPlanGenerator(previous, this));
+    }
+
+    protected override void FlushContents() { }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> batch)
+    {
+        StreamMessage<<#= TKey #>, <#= TPayload #>> resultBatchUncast; // Need this type to call Get with so the right subtype will be returned
+        this.pool.Get(out resultBatchUncast);
+
+        <#= BatchGeneratedFrom_TKey_TPayload #><#= genericParameters #> resultBatch = resultBatchUncast as <#= BatchGeneratedFrom_TKey_TPayload #><#= genericParameters #>;
+
+
+        resultBatch.CloneFromNoPayload(batch);
+
+        // Get memory pools for the payload columns.
+
+<# foreach (var f in this.fields) { #>
+
+        this.pool.Get(out resultBatch.<#= f.Name #>);
+<# } #>
+<# if (this.payloadType.CanContainNull()) { #>
+        this.pool.GetBV(out resultBatch._nullnessvector);
+<# } #>
+
+        var count = batch.Count;
+
+<# foreach (var f in this.fields) { #>
+
+<# if (f.canBeFixed) { #>
+
+        fixed (<#= f.Type.Name #>* dest_<#= f.Name #> = resultBatch.<#= f.Name #>.col)
+        {
+<# } else { #>
+
+        var dest_<#= f.Name #> = resultBatch.<#= f.Name #>.col;
+
+<# } #>
+<# } #>
+
+        fixed (long* bv = batch.bitvector.col)
+        {
+<# if (this.payloadType.CanBeFixed()) { #>
+        fixed (<#= TPayload #>* srcpayload = batch.payload.col)
+        {
+<# } else { #>
+
+        var srcpayload = batch.payload.col;
+
+<# } #>
+
+<# if (this.rowMajor) { #>
+            for (int i = 0; i < count; i++)
+            {
+                if ((bv[i >> 6] & (1L << (i & 0x3f)))==0)
+                {
+<# foreach (var f in this.fields) { #>
+
+<#   if (payloadIsAnon) { #>
+                    dest_<#= f.Name #>[i] = (<#= f.Type #>) this.<#= f.Name #>_Property.GetValue(srcpayload[i], null);
+<#   }  else { #>
+                    dest_<#= f.Name #>[i] = srcpayload[i].<#= f.OriginalName #>;
+<# } #>
+<# } #>
+                }
+            }
+<# } else { #>
+
+<# foreach (var f in this.fields) { #>
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        if ((bv[i >> 6] & (1L << (i & 0x3f)))==0)
+                        {
+<#   if (payloadIsAnon) { #>
+                            dest_<#= f.Name #>[i] = (<#= f.Type #>) this.<#= f.Name #>_Property.GetValue(srcpayload[i], null);
+<#   }  else { #>
+                            dest_<#= f.Name #>[i] = srcpayload[i].<#= f.OriginalName #>;
+<# } #>
+                        }
+                    }
+<# } #>
+
+<# } #>
+
+<# if (this.payloadType.CanBeFixed()) { #>
+        }
+<# } #>
+        }
+
+<# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        }
+<# } #>
+
+        resultBatch.Count = count;
+        resultBatch.Seal();
+        this.Observer.OnNext(resultBatch);
+
+        batch.Release();
+        batch.Return();
+    }
+
+    public override int CurrentlyBufferedOutputCount => 0;
+
+    public override int CurrentlyBufferedInputCount => 0;
+}

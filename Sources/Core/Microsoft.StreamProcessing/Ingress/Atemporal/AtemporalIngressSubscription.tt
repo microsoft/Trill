@@ -1,0 +1,150 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Runtime.Serialization;
+using System.Threading;
+using Microsoft.StreamProcessing.Internal;
+
+namespace Microsoft.StreamProcessing
+{
+<#
+    foreach (string timelinePolicy in new string[] { "WallClock", "Sequence" })
+    {
+#>
+    [DataContract]
+    internal sealed class MonotonicSubscription<#= timelinePolicy #><TPayload> : ObserverSubscriptionBase<TPayload, TPayload, TPayload>
+    {
+<# if (timelinePolicy == "WallClock") { #>
+        private readonly object sentinel = new object();
+        private IDisposable timer;
+<# } else { #>
+        [SchemaSerialization]
+        private readonly int eventsPerSample;
+        [DataMember]
+        private int eventCount = 0;
+<# } #>
+
+        public MonotonicSubscription<#= timelinePolicy #>() { }
+
+        public MonotonicSubscription<#= timelinePolicy #>(
+            IObservable<TPayload> observable,
+            string identifier,
+            Streamable<Empty, TPayload> streamable,
+            IStreamObserver<Empty, TPayload> observer,
+            FlushPolicy flushPolicy,
+            PeriodicPunctuationPolicy punctuationPolicy,
+            OnCompletedPolicy onCompletedPolicy,
+            TimelinePolicy timelinePolicy)
+            : base(
+                observable,
+                identifier,
+                streamable,
+                observer,
+                DisorderPolicy.Adjust(),
+                flushPolicy,
+                punctuationPolicy,
+                onCompletedPolicy,
+                null)
+        {
+<# if (timelinePolicy == "WallClock") { #>
+            if (timelinePolicy.punctuationInterval > default(TimeSpan))
+                this.timer = new Timer(EmitPunctuation, null, new TimeSpan(0), timelinePolicy.punctuationInterval);
+<# } else { #>
+            this.eventsPerSample = timelinePolicy.sampleSize;
+            this.currentTime = 0;
+<# } #>
+        }
+
+<# if (timelinePolicy == "WallClock") { #>
+        public override void OnCompleted()
+        {
+            lock (this.sentinel)
+            {
+                if (this.timer != null)
+                {
+                    this.timer.Dispose();
+                    this.timer = null;
+                }
+
+                base.OnCompleted();
+            }
+        }
+
+<# } #>
+        public override void OnNext(TPayload value)
+        {
+            Contract.EnsuresOnThrow<IngressException>(true);
+<# if (timelinePolicy == "WallClock") { #>
+            lock (this.sentinel)
+            {
+<# } #>
+<# if (timelinePolicy == "WallClock") { #>
+                this.currentTime = Math.Max(DateTimeOffset.UtcNow.Ticks, this.currentTime);
+<# } #>
+
+                this.currentBatch.Add(this.currentTime, StreamEvent.InfinitySyncTime, Empty.Default, value);
+                if (this.currentBatch.Count == Config.DataBatchSize) FlushContents();
+<# if (timelinePolicy == "Sequence") { #>
+                this.eventCount++;
+
+                if (this.eventCount == this.eventsPerSample)
+                {
+                    this.eventCount = 0;
+                    this.currentTime++;
+
+                    FlushContents();
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(this.currentTime));
+                }
+<# } #>
+<# if (timelinePolicy == "WallClock") { #>
+            }
+<# } #>
+        }
+
+<# if (timelinePolicy == "WallClock") { #>
+        private void EmitPunctuation(object state)
+        {
+            lock (this.sentinel)
+            {
+                if (this.timer != null)
+                {
+                    var time = DateTimeOffset.UtcNow.Ticks;
+                    this.currentTime = Math.Max(time, this.currentTime);
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(this.currentTime));
+                }
+            }
+        }
+
+        protected override void DisposeState()
+        {
+            lock (this.sentinel)
+            {
+                if (this.timer != null)
+                {
+                    this.timer.Dispose();
+                    this.timer = null;
+                }
+            }
+        }
+
+<# } #>
+        protected override void OnCompleted(long punctuationTime)
+        {
+            FlushContents();
+            OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTime));
+            if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
+                OnFlush();
+        }
+    }
+
+<# } #>
+}

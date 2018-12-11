@@ -1,0 +1,100 @@
+﻿// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+using Microsoft.StreamProcessing.Aggregates;
+
+<#
+
+  List<string> genericParamList = new List<string>();
+  int oldCount = 0;
+  var TKey = keyType.GetCSharpSourceSyntax(ref genericParamList);
+  var keyGenericParameters = new List<string>(genericParamList.Skip(oldCount));
+
+  oldCount = genericParamList.Count;
+  var TInput = inputType.GetCSharpSourceSyntax(ref genericParamList);
+  var inputGenericParameters = new List<string>(genericParamList.Skip(oldCount));
+
+  oldCount = genericParamList.Count;
+  var TState = stateType.GetCSharpSourceSyntax(ref genericParamList);
+  var stateGenericParameters = new List<string>(genericParamList.Skip(oldCount));
+
+  oldCount = genericParamList.Count;
+  var TOutput = outputType.GetCSharpSourceSyntax(ref genericParamList);
+  var outputGenericParameters = new List<string>(genericParamList.Skip(oldCount));
+
+  var genericParameters = genericParamList.BracketedCommaSeparatedString();
+  var TKeyTInputGenericParameters = keyGenericParameters.Concat(inputGenericParameters).BracketedCommaSeparatedString();
+  var TKeyTOutputGenericParameters = keyGenericParameters.Concat(outputGenericParameters).BracketedCommaSeparatedString();
+
+  var BatchGeneratedFrom_TKey_TInput = Transformer.GetBatchClassName(keyType, inputType);
+
+  var genericParameters2 = string.Format("<{0}, {1}>", TKey, TOutput);
+  if (!keyType.KeyTypeNeedsGeneratedMemoryPool() && outputType.MemoryPoolHasGetMethodFor())
+      genericParameters2 = string.Empty;
+  else if (!outputType.CanRepresentAsColumnar())
+      genericParameters2 = string.Empty;
+
+  Func<string, string> assignToOutput = rhs =>
+    this.outputType.IsAnonymousType()
+    ?
+    rhs
+    :
+    (
+    this.outputFields.Count() == 1
+    ?
+    string.Format("this.batch.{0}.col[c] = {1};", this.outputFields.First().Name, rhs)
+    :
+    "temporaryOutput = " + rhs + ";\r\n" + String.Join("\r\n", this.outputFields.Select(f => "dest_" + f.Name + "[c] = temporaryOutput." + f.OriginalName + ";")))
+    ;
+
+  var getOutputBatch = string.Format("this.pool.Get(out genericOutputbatch); this.batch = ({0}{1})genericOutputbatch;",
+          Transformer.GetBatchClassName(keyType, outputType),
+          TKeyTOutputGenericParameters);
+
+#>
+[assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
+
+// genericParams2 = "<#= genericParameters2 #>"
+
+[DataContract]
+struct StateAndActive
+{
+    [DataMember]
+    public <#= TState #> state;
+    [DataMember]
+    public ulong active;
+}
+
+[DataContract]
+struct HeldStateStruct
+{
+    [DataMember]
+    public long timestamp;
+    [DataMember]
+    public <#= TState #> state;
+}
+
+[DataContract]
+sealed class HeldState
+{
+    [DataMember]
+    public long timestamp;
+    [DataMember]
+    public StateAndActive state;
+}
+
+// TKey: <#= TKey #>
+// TInput: <#= TInput #>
+// TState: <#= TState #>
+// TOutput: <#= TOutput #>

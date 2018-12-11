@@ -1,0 +1,323 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+namespace Microsoft.StreamProcessing
+{<#
+for (int i = 0; i < 3; i++)
+{
+    var innerKey = i == 0 ? "CompoundGroupKey<TOuterKey, TInnerKey>" : (i == 1 ? "TInnerKey" : "TOuterKey");
+    var nestedInfix = i == 0 ? "Nested" : (i == 1) ? string.Empty : "SameKey";
+    var innerKeyTemplate = i < 2 ? "TInnerKey" : "TOuterKey";
+    var partitionedList = i == 0 ? new [] { true, false } : new [] { false };
+    foreach (var partitioned in partitionedList)
+    {
+        var partitionString = partitioned ? "Partitioned" : string.Empty; #>
+
+    [DataContract]
+    internal sealed class <#= partitionString #>Shuffle<#= nestedInfix #>Pipe<TOuterKey, TSource, TInnerKey> :
+        Pipe<<#= innerKey #>, TSource>, IStreamObserverAnd<#= nestedInfix #>GroupedStreamObservable<TOuterKey, TSource, <#= innerKeyTemplate #>>
+    {
+<#      if (i < 2)
+        { #>
+        [SchemaSerialization]
+        private readonly Expression<Func<TSource, TInnerKey>> keySelector;
+        private readonly Func<TSource, TInnerKey> keySelectorFunc;
+        [SchemaSerialization]
+        private readonly Expression<Func<TInnerKey, int>> keyComparer;
+        private readonly Func<TInnerKey, int> innerHashCode;
+<#      } #>
+
+        private readonly bool powerOf2;
+        private readonly int totalBranchesL2;
+        private readonly int shuffleId;
+        private readonly int totalBranchesL2Mask;
+
+        private readonly string errorMessages;
+        private readonly MemoryPool<<#= innerKey #>, TSource> l1Pool;
+
+        private readonly List<IStreamObserver<<#= innerKey #>, TSource>> Observers;
+
+        [DataMember]
+        private StreamMessage<<#= innerKey #>, TSource>[] batches;
+
+        [Obsolete("Used only by serialization. Do not call directly.")]
+            public <#= partitionString #>Shuffle<#= nestedInfix #>Pipe() { }
+
+            public <#= partitionString #>Shuffle<#= nestedInfix #>Pipe(
+                Shuffle<#= nestedInfix #>Streamable<TOuterKey, TSource, TInnerKey> stream,
+                IStreamObserver<<#= innerKey #>, TSource> observer,
+                int totalBranchesL2, int shuffleId)
+            : base(stream, observer)
+        {
+<#      if (i < 2)
+        { #>
+            this.keySelector = stream.KeySelector;
+            this.keySelectorFunc = this.keySelector.Compile();
+<#          if (i == 0)
+            { #>
+            this.keyComparer = ((CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey>)stream.Properties.KeyEqualityComparer).innerComparer.GetGetHashCodeExpr();
+<#          }
+            else
+            { #>
+            this.keyComparer = stream.Properties.KeyEqualityComparer.GetGetHashCodeExpr();
+<#          } #>
+            this.innerHashCode = this.keyComparer.Compile();
+<#      } #>
+            this.totalBranchesL2 = totalBranchesL2;
+            this.powerOf2 = ((totalBranchesL2 & (totalBranchesL2 - 1)) == 0);
+            this.totalBranchesL2Mask = totalBranchesL2 - 1;
+            this.shuffleId = shuffleId;
+
+            this.errorMessages = stream.ErrorMessages;
+            this.l1Pool = MemoryManager.GetMemoryPool<<#= innerKey #>, TSource>(stream.Properties.IsColumnar);
+
+            this.Observers = new List<IStreamObserver<<#= innerKey #>, TSource>>();
+
+            this.batches = new StreamMessage<<#= innerKey #>, TSource>[totalBranchesL2];
+            for (int i = 0; i < totalBranchesL2; i++)
+            {
+                this.l1Pool.Get(out StreamMessage<<#= innerKey #>, TSource> batch);
+                batch.Allocate();
+                this.batches[i] = batch;
+            }
+        }
+
+        public void AddObserver(IStreamObserver<<#= innerKey #>, TSource> observer) => this.Observers.Add(observer);
+
+        public override void OnFlush()
+        {
+            FlushContents();
+            for (int j = 0; j < this.totalBranchesL2; j++)
+            {
+                this.Observers[j].OnFlush();
+            }
+        }
+
+        public override void OnCompleted()
+        {
+            for (int j = 0; j < this.totalBranchesL2; j++)
+            {
+                this.batches[j].Free();
+                this.Observers[j].OnCompleted();
+            }
+        }
+
+        public override void OnError(Exception exception)
+        {
+            for (int j = 0; j < this.totalBranchesL2; j++)
+            {
+                this.batches[j].Free();
+                this.Observers[j].OnError(exception);
+            }
+        }
+
+        public unsafe void OnNext(StreamMessage<TOuterKey, TSource> batch)
+        {
+            var count = batch.Count;
+<#      if (i == 0 || i == 2)
+        { #>
+            var srckey = batch.key.col;
+<#      } #>
+            fixed (long* src_bv = batch.bitvector.col)
+            fixed (long* src_vsync = batch.vsync.col)
+            fixed (long* src_vother = batch.vother.col)
+            fixed (int* src_hash = batch.hash.col)
+            {
+<#      foreach (var k in new [] { 0, 1 })
+        {
+            if (k == 0)
+            { #>
+                if (this.powerOf2)
+<#          }
+            else
+            { #>
+                else
+<#          } #>
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        if ((src_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                        {
+                            if (src_vother[i] < 0)
+                            {
+                                // Add the punctuation <#= partitioned? "or low watermark " : string.Empty#>to all batches in the array
+                                for (int batchIndex = 0; batchIndex < this.totalBranchesL2; batchIndex++)
+                                {
+                                    var bb = this.batches[batchIndex];
+                                    var cc = bb.Count;
+                                    bb.vsync.col[cc] = src_vsync[i];
+                                    bb.vother.col[cc] = src_vother[i];
+<#          if (partitioned)
+            { #>
+                                    if (src_vother[i] == StreamEvent.PunctuationOtherTime)
+                                    {
+                                        bb.key.col[cc].outerGroup = srckey[i];
+                                        bb.hash.col[cc] = src_hash[i];
+                                    }
+                                    else
+                                    {
+                                        bb.key.col[cc].outerGroup = default;
+                                        bb.hash.col[cc] = 0;
+                                    }
+                                    bb.key.col[cc].innerGroup = default;
+<#          }
+            else
+            { #>
+                                    bb.key.col[cc] = default;
+                                    bb.hash.col[cc] = 0;
+<#          } #>
+                                    bb.bitvector.col[cc >> 6] |= (1L << (cc & 0x3f));
+                                    bb.Count++;
+
+                                    if (cc == Config.DataBatchSize - 1)
+                                    {
+                                        // flush this batch
+                                        if (this.batches[batchIndex].Count > 0)
+                                        {
+                                            this.batches[batchIndex].iter = this.shuffleId;
+                                            this.batches[batchIndex].Seal();
+                                            this.Observers[batchIndex].OnNext(this.batches[batchIndex]);
+                                            this.l1Pool.Get(out this.batches[batchIndex]);
+                                            this.batches[batchIndex].Allocate();
+                                        }
+                                    }
+                                }
+                            }
+                            continue;
+                        }
+
+<#          if (i < 2)
+            { #>
+                        var key = this.keySelectorFunc(batch[i]);
+                        var innerHash = this.innerHashCode(key);
+                        var hash = src_hash[i] ^ innerHash;
+<#          }
+            else
+            { #>
+                        var hash = src_hash[i];
+<#          } #>
+
+<#          if (k == 0)
+            { #>
+                        var index = hash & this.totalBranchesL2Mask;
+<#          }
+            else
+            { #>
+                        var index = (hash & 0x7fffffff) % this.totalBranchesL2;
+<#          } #>
+                        var b = this.batches[index];
+
+                        var x = b.Count;
+
+                        b.vsync.col[x] = src_vsync[i];
+                        b.vother.col[x] = src_vother[i];
+<#          if (i == 0)
+            { #>
+                        b.key.col[x].outerGroup = srckey[i];
+                        b.key.col[x].innerGroup = key;
+                        b.key.col[x].hashCode = hash;
+                        b.hash.col[x] = hash;
+<#          }
+            else if (i == 1)
+            { #>
+                        b.key.col[x] = key;
+                        b.hash.col[x] = this.innerHashCode(key);
+<#          }
+            else
+            { #>
+                        b.key.col[x] = srckey[i];
+                        b.hash.col[x] = hash;
+<#          } #>
+                        b[x] = batch[i];
+                        b.Count++;
+
+                        if (x == Config.DataBatchSize - 1)
+                        {
+                            // flush this batch
+                            if (this.batches[index].Count > 0)
+                            {
+                                this.batches[index].iter = this.shuffleId;
+                                this.batches[index].Seal();
+                                this.Observers[index].OnNext(this.batches[index]);
+                                this.l1Pool.Get(out this.batches[index]);
+                                this.batches[index].Allocate();
+                            }
+                        }
+                    }
+                }
+<#      } #>
+            }
+            batch.Release();
+            batch.Return();
+        }
+
+        public override void Checkpoint(System.IO.Stream stream)
+        {
+            base.Checkpoint(stream);
+
+            // Ensure that we checkpoint the other downstream operators
+            for (int i = 1; i < this.Observers.Count; i++)
+            {
+                this.Observers[i].Checkpoint(stream);
+            }
+        }
+
+        public override void Restore(System.IO.Stream stream)
+        {
+            base.Restore(stream);
+
+            // Ensure that we checkpoint the other downstream operators
+            for (int i = 1; i < this.Observers.Count; i++)
+            {
+                this.Observers[i].Restore(stream);
+            }
+        }
+
+        protected override void FlushContents()
+        {
+            for (int i = 0; i < this.batches.Length; i++)
+            {
+                if (this.batches[i].Count == 0) continue;
+                this.Observers[i].OnNext(this.batches[i]);
+                this.l1Pool.Get(out this.batches[i]);
+                this.batches[i].Allocate();
+            }
+        }
+
+        public override void ProduceQueryPlan(PlanNode previous)
+        {
+            this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
+                previous,
+                this,
+                typeof(TOuterKey),
+                typeof(<#= innerKey #>),
+                typeof(TSource),
+                <# if (i < 2) { #>this.keySelector<# } else { #>null<# } #>,
+                this.shuffleId,
+                this.totalBranchesL2,
+                true,
+                false,
+                this.errorMessages)));
+        }
+
+        public override int CurrentlyBufferedOutputCount => 0;
+
+        public override int CurrentlyBufferedInputCount => 0;
+    }
+<#  }
+} #>
+}

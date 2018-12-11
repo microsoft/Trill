@@ -1,0 +1,238 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Threading.Tasks;
+using Microsoft.StreamProcessing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace SimpleTesting
+{
+<#
+foreach (var orientation in new [] { "Row", "Columnar" })
+foreach (var batch in new [] { string.Empty, "SmallBatch" })
+foreach (var useMultiString in new [] { true, false, })
+{
+    var suffix = orientation + batch + (useMultiString ? "MultiString" : "RegularString");
+#>
+    [TestClass]
+    public class JoinTests<#= suffix #> : TestWithConfigSettingsAndMemoryLeakDetection
+    {
+        public JoinTests<#= suffix #>() : base(
+            new ConfigModifier()
+<#  switch (orientation)
+    {
+        case "Row": #>
+            .ForceRowBasedExecution(true)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+        case "Columnar": #>
+            .ForceRowBasedExecution(false)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+    } #>
+<# if (!string.IsNullOrEmpty(batch)) { #>
+            .DataBatchSize(100)
+<# } #>
+<# if (useMultiString) { #>
+            .UseMultiString(true)
+<# } else { #>
+            .UseMultiString(false)
+<# } #>
+            .MapArity(1)
+            .ReduceArity(1))
+       { }
+
+        [TestMethod, TestCategory("Gated")]
+        public void IOOEJ1<#= suffix #>()
+        {
+            var pack = Guid.NewGuid();
+            var cached1 = Enumerable.Range(0, 200).Select(i => new MyStruct() { field1 = i, field2 = 2.0 * i, })
+                .ToObservable();
+            var cachedStr1 = cached1
+                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+            var input1 = cachedStr1
+                .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime)
+                .SetProperty().IsSnapshotSorted(true, x => x.field1, pack)
+                ;
+            var cached2 = Enumerable.Range(0, 200).Select(i => new MyStruct() { field1 = i, field2 = 2.0 * i, })
+                .ToObservable();
+            var cachedStr2 = cached2
+                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+            var input2 = cachedStr2
+                .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime)
+                .SetProperty().IsSnapshotSorted(true, x => x.field1, pack)
+                ;
+
+            var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
+            var result = query.ToPayloadEnumerable().ToArray();
+
+            Assert.IsTrue(result.Length == 200);
+            Assert.IsTrue(result
+                .Select((gd, i) => gd.EventType == i && gd.GameId == 2 * i)
+                .All(b => b));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void IOOEJ2<#= suffix #>()
+        {
+            var pack = Guid.NewGuid();
+            var cached1 = Enumerable.Range(0, 200)
+                .Select(i => new MyStruct() { field1 = i, field2 = 2.0 * i, })
+                .ToObservable();
+            var cachedStr1 = cached1
+                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+            var input1 = cachedStr1
+                .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime)
+                .SetProperty().IsSnapshotSorted(true, x => x.field1, pack)
+                ;
+            var cached2 = Enumerable.Range(0, 200)
+                .ToObservable();
+            var cachedStr2 = cached2
+                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+            var input2 = cachedStr2
+                .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime)
+                .SetProperty().IsSnapshotSorted(true, x => x, pack)
+                ;
+
+            var query = input1
+                .Join(
+                    input2,
+                    e => e.field1,
+                    e => e,
+                (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+            var result = query
+                .ToPayloadEnumerable()
+                .ToArray();
+
+            Assert.IsTrue(result.Length == 200);
+            Assert.IsTrue(result
+                .Select((gd, i) => gd.EventType == i && gd.GameId == i)
+                .All(b => b));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void StartEdgeEquiJoin1<#= suffix #>()
+        {
+            var pack = Guid.NewGuid();
+            var result = new List<GameData>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Reverse()
+                .Select(i => new MyStruct() { field1 = i, field2 = 2.0 * i, })
+                .ToObservable();
+            var d1Subject = new Subject<MyStruct>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .ToObservable();
+            var d2Subject = new Subject<int>();
+
+            var input1 = container.RegisterAtemporalInput(d1Subject, TimelinePolicy.Sequence(100));
+            var input2 = container.RegisterAtemporalInput(d2Subject, TimelinePolicy.Sequence(100));
+
+            var query = input1.Join(input2, e => e.field1, e => e, (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+
+            var output = container.RegisterAtemporalOutput(query);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Count == 200);
+            Assert.IsTrue(result.Select(gd => gd.EventType == gd.GameId).All(b => b));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void StartEdgeEquiJoin2<#= suffix #>()
+        {
+            var pack = Guid.NewGuid();
+
+            var result = new List<GameData>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Reverse()
+                .Select(i => new MyStruct() { field1 = i, field2 = 2.0 * i, })
+                .ToObservable();
+            var d1Subject = new Subject<MyStruct>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => new MyStruct() { field1 = i, field2 = 2.0 * i, })
+                .ToObservable();
+            var d2Subject = new Subject<MyStruct>();
+
+            var input1 = container.RegisterAtemporalInput(data1, TimelinePolicy.Sequence(100));
+            var input2 = container.RegisterAtemporalInput(data2, TimelinePolicy.Sequence(100));
+
+            var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
+            var output = container.RegisterAtemporalOutput(query);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Count == 200);
+            Assert.IsTrue(result
+                .Select(gd => gd.EventType * 2 == gd.GameId)
+                .All(b => b));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void StartEdgeEquiJoin3<#= suffix #>()
+        {
+            var pack = Guid.NewGuid();
+            var input1 = Enumerable.Range(0, 200)
+                .Reverse()
+                .Select(i => new MyStruct() { field1 = i, field2 = 2.0 * i, })
+                .ToObservable()
+                .ToAtemporalStreamable(TimelinePolicy.Sequence(100))
+                ;
+            var input2 = Enumerable.Range(0, 200)
+                .Select(i => new MyStruct() { field1 = i, field2 = 2.0 * i, })
+                .ToObservable()
+                .ToAtemporalStreamable(TimelinePolicy.Sequence(100))
+                ;
+
+            var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new { EventType = (l.field1 * 2).ToString(), GameId = ((int)r.field2).ToString(), });
+            var result = query.ToPayloadEnumerable().ToArray();
+
+            Assert.IsTrue(result.Length == 200);
+            Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
+        }
+    }
+
+<# } #>
+}

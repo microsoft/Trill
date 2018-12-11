@@ -1,0 +1,719 @@
+﻿<#@ template language="C#" inherits="CommonUnaryTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+// *********************************************************************
+// Copyright (C) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+/*\
+    * Spec:
+    *
+    * Apply punctuation policy first. This means that even dropped events
+    * count towards the number of events seen since the last punctuation.
+    * For a Time punctuation policy, insert the punctuation before the
+    * event whose start time causes the insertion.
+    *
+    * Most complicated part is the bookkeeping. If the disorder policy is
+    * not Throw, then any events that are dropped or adjusted must be kept
+    * track of so that matching end events are dealt with.
+    *
+    * DisorderPolicy.Throw:
+    *   Don't drop any events.
+    *
+    * DisorderPolicy.Drop:
+    *   Start event: drop if it is out of order and remember it so corresponding
+    *   end event is also dropped.
+    *   End event: drop if its corresponding start event was dropped or if it is out
+    *   of order (latter may leave dangling start events that never have an end event).
+    *   Interval event: drop if it is out of order
+    *   Punctuation event: ??
+    *
+    * DisorderPolicy.Adjust:
+    *   Start event: if out of order, update start time to start time of previous event.
+    *   Remember event so corresponding end event is also modified.
+    *   End event: if out of order, update start time to start time of previous event.
+    *   If not out of order, check to see if corresponding start event had been modified.
+    *   If so, then update its end time to the modified start time of the start event.
+    *   (This is needed so that its end time matches the start time of the corresponding
+    *   start event.)
+    *   Interval event: if out of order, update start time to start time of previous event.
+    *   If its updated start time is now equal to or greater than its end time, drop it.
+\*/
+
+using System;
+using System.Diagnostics.Contracts;
+using System.Diagnostics;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+<#  bool partitioned = (partitionString == "Partitioned");
+    string baseStructure = partitionString + "StreamEvent<" + adjustedGenericArgs + ">";
+    string globalPunctuation= partitioned ? "LowWatermark" : "Punctuation";
+    string highWatermark = partitioned ? "partitionHighWatermarks[value.PartitionKey]" : "highWatermark";
+    string keyType = !partitioned ? "Microsoft.StreamProcessing.Empty" : "PartitionKey<TKey>";
+    string streamEventFromValue = fusionOption == "Disordered" ? ("new " + partitionString + "StreamEvent<" + genericArguments + ">(" + (!partitioned ? string.Empty : "value.PartitionKey, ") + "value.SyncTime, value.OtherTime, default)") : "value";
+#>
+[assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
+[DataContract]
+internal sealed class <#= className #><#= genericParameters #> : <#= partitionString #><#= fusionOption == "Disordered" ? "Disordered" : string.Empty #>ObserverSubscriptionBase<<#= keyOrNothing #><#= inheritBase #>, <#= TPayload #>, <#= TResult #>>
+{
+    <#= staticCtor #>
+
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IObservable<<#= inheritBase #>> observable,
+        string identifier,
+        IStreamable<<#= keyType #>, <#= payloadOrResult #>> streamable,
+        IStreamObserver<<#= keyType #>, <#= payloadOrResult #>> observer,
+        DisorderPolicy disorderPolicy,
+        <#= partitionString #>FlushPolicy flushPolicy,
+        PeriodicPunctuationPolicy punctuationPolicy,
+<#  if (partitioned) { #>
+        PeriodicLowWatermarkPolicy lowWatermarkPolicy,
+<#  } #>
+        OnCompletedPolicy onCompletedPolicy,
+        IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>> diagnosticOutput)
+        : base(observable,
+                identifier,
+                streamable,
+                observer,
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                    lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                diagnosticOutput)
+    {
+        <#= GeneratedBatchName #> generatedBatch = (<#= GeneratedBatchName #>) this.currentBatch;
+<#  foreach (var f in this.resultRepresentation.AllFields.Where(fld => fld.OptimizeString()))
+    {  #>
+        generatedBatch.<#= f.Name #>.Initialize();
+<#  } #>
+    }
+
+    [ContractInvariantMethod]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+    private void ObjectInvariant()
+    {
+        Contract.Invariant(this.startEventInformation != null);
+<#  if (!partitioned)
+    { #>
+        Contract.Invariant(StreamEvent.MinSyncTime <= this.currentTime);
+<#  } #>
+    }
+
+    protected override void FlushContents()
+    {
+        base.FlushContents();
+        <#= GeneratedBatchName #> generatedBatch = (<#= GeneratedBatchName #>) this.currentBatch;
+<#  foreach (var f in this.resultRepresentation.AllFields.Where(fld => fld.OptimizeString()))
+    {  #>
+        generatedBatch.<#= f.Name #>.Initialize();
+<#  } #>
+    }
+
+    public override void OnNext(<#= inheritBase #> <#= ingressType == "StreamEvent" ? "value" : "inputValue" #>)
+    {
+        Contract.EnsuresOnThrow<IngressException>(true);
+<#  if (ingressType == "Interval")
+    { #>
+        var value = <#= partitionString #>StreamEvent.CreateInterval(<#= !partitioned ? string.Empty : this.partitionFunction("inputValue") + ", " #><#= this.startEdgeFunction("inputValue") #>, <#= this.endEdgeFunction("inputValue") #>, inputValue);
+<#  }
+    if (fusionOption == "Disordered")
+    { #>
+<#= leadingText #>
+        Action(value.SyncTime, <#= generatedEndTimeVariable #>, transformedValue, <#= !partitioned ? "Microsoft.StreamProcessing.Empty.Default" : "new PartitionKey<TKey>(value.PartitionKey)" #>);
+<#= trailingText #>
+    }
+
+    private void Action(long start, long end, <#= TResult #> payload, <#= keyType #> actionKey)
+    {
+        var value = new <#= partitionString #>StreamEvent<<#= !partitioned ? string.Empty : "TKey, " #><#= TResult #>>(<#= !partitioned ? string.Empty : "actionKey.Key, " #>start, end, payload);
+<#  } #>
+        if (value.Is<#= globalPunctuation #>)
+        {
+            GenerateAndProcess<#= globalPunctuation #>(value.SyncTime);
+            return;
+        }
+
+<#  if (latencyOption == "WithLatency")
+    {
+        if (partitioned)
+        { #>
+            // Check to see if we need to generate a low watermark due to PeriodicLowWatermarkPolicy
+            if (lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
+                value.SyncTime > lowWatermarkTimestampLag)
+            {
+                var newLowWatermark = value.SyncTime - lowWatermarkTimestampLag;
+                if ((ulong)(newLowWatermark - lowWatermark) >= lowWatermarkGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
+                    var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)lowWatermarkGenerationPeriod);
+                    GenerateAndProcessLowWatermark(newLowWatermarkSnapped);
+                }
+            }
+
+        long moveFrom;
+        if (!currentTime.TryGetValue(value.PartitionKey, out moveFrom)) moveFrom = lowWatermark;
+        if (!partitionHighWatermarks.ContainsKey(value.PartitionKey))
+        {
+            partitionHighWatermarks.Add(value.PartitionKey, lowWatermark);
+
+            if (highWatermarkToPartitionsMap.TryGetValue(lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
+            else highWatermarkToPartitionsMap.Add(lowWatermark, new HashSet<TKey> { value.PartitionKey });
+        }
+<#      }
+        else
+        { #>
+        long moveFrom = currentTime;
+<#      } #>
+        long moveTo = moveFrom;
+
+        // Events at the reorder boundary or earlier - are handled using default processing policies
+        if (value.SyncTime <= moveFrom)
+        {
+            Process(ref value);
+            return;
+        }
+
+<#      if (ingressType == "StreamEvent")
+        { #>
+        if (value.IsData)
+        {
+<#          PushIndent("    ");
+        } #>
+        var oldTime = <#= highWatermark #>;
+        if (value.SyncTime > oldTime)
+        {
+            <#= highWatermark #> = value.SyncTime;
+
+<#          if (partitioned)
+            { #>
+            var oldSet = highWatermarkToPartitionsMap[oldTime];
+            if (oldSet.Count <= 1) highWatermarkToPartitionsMap.Remove(oldTime);
+            else oldSet.Remove(value.PartitionKey);
+
+            if (highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
+            else highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
+
+<#          } #>
+            moveTo = value.SyncTime - reorderLatency;
+            if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
+            if (moveTo < moveFrom) moveTo = moveFrom;
+            }
+<#      if (ingressType == "StreamEvent")
+        {
+            PopIndent(); #>
+        }
+<#      } #>
+
+        if (moveTo > moveFrom)
+        {
+            if (priorityQueueSorter != null)
+            {
+                <#= partitionString #>StreamEvent<<#= adjustedGenericArgs #>> resultEvent;
+
+                while ((!priorityQueueSorter.IsEmpty()) && priorityQueueSorter.Peek().SyncTime <= moveTo)
+                {
+                    resultEvent = priorityQueueSorter.Dequeue();
+                    Process(ref resultEvent<#if (partitioned) {#>, updateCurrentTime : false<#}#>);
+                }
+            }
+            else
+            {
+                // Extract and process data in-order from impatience, until timestamp of moveTo
+                PooledElasticCircularBuffer<<#= baseStructure #>> streamEvents = impatienceSorter.DequeueUntil(<#= !partitioned ? string.Empty : "value.PartitionKey, " #> moveTo, out bool recheck);
+
+                if (streamEvents != null)
+                {
+                    <#= baseStructure #> resultEvent;
+                    while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= moveTo)))
+                    {
+                        resultEvent = streamEvents.Dequeue();
+                        Process(ref resultEvent<#if (partitioned) {#>, updateCurrentTime : false<#}#>);
+                    }
+                }
+
+                if (!recheck && (streamEvents != null))
+                    impatienceSorter.Return(<#= !partitioned ? string.Empty : "value.PartitionKey, " #> streamEvents);
+            }
+        }
+
+        if (value.SyncTime == moveTo)
+        {
+            Process(ref value);
+            return;
+        }
+
+        // Enqueue value into impatience
+        if (priorityQueueSorter != null) priorityQueueSorter.Enqueue(value);
+        else impatienceSorter.Enqueue(ref value);
+
+        // Move currentTime forward
+<#      if (!partitioned)
+        { #>
+        currentTime = moveTo;
+<#      }
+        else
+        { #>
+        if (!currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime))
+            currentTime.Add(value.PartitionKey, moveTo);
+        else if (oldCurrentTime < moveTo)
+            currentTime[value.PartitionKey] = moveTo;
+<#      } #>
+        }
+
+    private void Process(ref <#= baseStructure #> value<#
+        if (partitioned)
+        {
+                #>, bool updateCurrentTime = true<#
+        }       #>)
+    {
+        Contract.EnsuresOnThrow<IngressException>(true);
+<#  }
+
+    if (ingressType == "StreamEvent")
+    { #>
+        Contract.Assume(value.SyncTime != value.OtherTime);
+
+<#  }
+
+    if (ingressType == "StreamEvent" && latencyOption == "WithLatency")
+    { #>
+        if (value.Is<#= globalPunctuation #>)
+        {
+            GenerateAndProcess<#= globalPunctuation #>(value.SyncTime);
+            return;
+        }
+
+<#  }
+    if (!partitioned)
+    { #>
+        long current = currentTime;
+<#  }
+    else
+    { #>
+        // Update global high water mark if necessary
+        highWatermark = Math.Max(highWatermark, value.SyncTime);
+
+        if (punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !lastPunctuationTime.ContainsKey(value.PartitionKey))
+            lastPunctuationTime.Add(value.PartitionKey, lowWatermark);
+
+        // Retrieve current time for this partition, updating currentTime if necessary
+        long current;
+        if (!currentTime.TryGetValue(value.PartitionKey, out current))
+        {
+<#          if (latencyOption == "WithLatency")
+            {#>
+            // We should always have a currentTime entry if we are not updating it
+            if (!updateCurrentTime) throw new IngressException("Partition expected to have a valid currentTime!");
+<#          }#>
+            current = lowWatermark;
+        }
+        else if (<#if (latencyOption == "WithLatency") {#>updateCurrentTime && <#}#>current < lowWatermark)
+        {
+            current = lowWatermark;
+            currentTime[value.PartitionKey] = lowWatermark;
+        }
+<#  } #>
+
+        var outOfOrder = value.SyncTime < current;
+        if (punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+        {
+<#  if (ingressType == "StreamEvent" && partitioned)
+    { #>
+            // Track punctuation
+            if (value.IsPunctuation && value.SyncTime > lastPunctuationTime[value.PartitionKey])
+                lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+
+<#  } #>
+            // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
+            // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
+            // (if necessary) when that timestamp was seen.
+<#  if (!partitioned)
+    { #>
+            ulong delta = (ulong)(value.SyncTime - lastPunctuationTime);
+            if (!outOfOrder && delta >= punctuationGenerationPeriod)
+            {
+                // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)punctuationGenerationPeriod);
+                OnPunctuation(StreamEvent.CreatePunctuation<<#= fusionOption == "Disordered" ? TResult : TPayload #>>(punctuationTimeSnapped));
+            }
+<#  }
+    else
+    { #>
+            // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+            // punctuations for all partitions
+            ulong delta = (ulong)(value.SyncTime - Math.Max(lastPunctuationTime[value.PartitionKey], lowWatermark));
+            if (!outOfOrder && punctuationGenerationPeriod > 0 && delta >= punctuationGenerationPeriod)
+            {
+                // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)punctuationGenerationPeriod);
+                OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, <#= fusionOption == "Disordered" ? TResult : TPayload #>>(value.PartitionKey, punctuationTimeSnapped));
+            }
+<#  }  #>
+        }
+
+<#  if (ingressType == "StreamEvent")
+    { #>
+        // check for out of order event
+<#      if (partitioned)
+        { #>
+        if (value.IsPunctuation)
+        {
+            OnPunctuation(value.CreatePunctuation(outOfOrder ? current : value.SyncTime));
+        }
+        else
+        {
+<#              PushIndent("    ");
+            }
+        } #>
+        if (disorderPolicyType == DisorderPolicyType.Throw)
+        {
+            if (outOfOrder)
+            {
+                var outOfOrderMessage = string.Format(System.Globalization.CultureInfo.InvariantCulture, "Out-of-order event encountered during ingress, under a disorder policy of Throw: value.SyncTime: {0}, current:{1}", value.SyncTime, current);
+                throw new IngressException(outOfOrderMessage);
+            }
+        }
+        else
+        {
+<#      if (ingressType == "StreamEvent")
+        { #>
+            // end events and interval events just get dropped
+            Tuple<long, <#= fusionOption == "Disordered" ? TResult : TPayload #>> key;
+            ElasticCircularBuffer<AdjustInfo> q;
+            switch (value.Kind)
+            {
+                case StreamEventKind.Start:
+                    if (outOfOrder)
+                    {
+                        key = Tuple.Create(value.SyncTime, value.Payload);
+                        if (!startEventInformation.TryGetValue(key, out q))
+                        {
+                            q = new ElasticCircularBuffer<AdjustInfo>();
+                            startEventInformation.Add(key, q);
+                            var x = new AdjustInfo(current);
+                            q.Enqueue(ref x);
+                        }
+                        else
+                        {
+                            var last = q.PeekLast();
+                            if (last.modifiedStartTime == current) last.numberOfOccurrences++;
+                            else
+                            {
+                                var x = new AdjustInfo(current);
+                                q.Enqueue(ref x);
+                            }
+                        }
+
+                        if (disorderPolicyType == DisorderPolicyType.Drop)
+                        {
+                            diagnosticOutput?.OnNext(OutOfOrder<#= partitionString #>StreamEvent.Create(<#= streamEventFromValue #>, new long?()));
+                            return; // drop
+                        }
+                        else
+                        {
+                            diagnosticOutput?.OnNext(OutOfOrder<#= partitionString #>StreamEvent.Create(<#= streamEventFromValue #>, new long?(current - value.SyncTime)));
+                            value = new <#= partitionString #>StreamEvent<<#= adjustedGenericArgs #>>(<#= !partitioned ? string.Empty : "value.PartitionKey, " #>current, StreamEvent.InfinitySyncTime, value.Payload);
+                        }
+                    }
+                    break;
+
+                case StreamEventKind.Interval:
+<#      } #>
+                    if (outOfOrder)
+                    {
+                        if (disorderPolicyType == DisorderPolicyType.Drop)
+                        {
+                            diagnosticOutput?.OnNext(OutOfOrder<#= partitionString #>StreamEvent.Create(<#= streamEventFromValue #>, new long?()));
+                            return; // drop
+                        }
+                        else
+                        {
+                            if (current >= value.OtherTime)
+                            {
+                                diagnosticOutput?.OnNext(OutOfOrder<#= partitionString #>StreamEvent.Create(<#= streamEventFromValue #>, new long?()));
+                                return; // drop
+                            }
+
+                            diagnosticOutput?.OnNext(OutOfOrder<#= partitionString #>StreamEvent.Create(<#= streamEventFromValue #>, new long?(current - value.SyncTime)));
+                            value = new <#= partitionString #>StreamEvent<<#= adjustedGenericArgs #>>(<#= !partitioned ? string.Empty : "value.PartitionKey, " #>current, value.OtherTime, value.Payload);
+                        }
+                    }
+<#      if (ingressType == "StreamEvent")
+        { #>
+                    break;
+
+                case StreamEventKind.End:
+                    // it may not be out of order, but did we drop/adjust the corresponding start event?
+                    key = Tuple.Create(value.OtherTime, value.Payload);
+                    if (startEventInformation.TryGetValue(key, out q))
+                    {
+                        Contract.Assume(!q.IsEmpty());
+                        var firstElement = q.PeekFirst();
+                        firstElement.numberOfOccurrences--;
+                        if (firstElement.numberOfOccurrences == 0)
+                        {
+                            q.Dequeue(); // throw away returned value
+                            if (q.Count == 0) startEventInformation.Remove(key);
+                        }
+                        var adjustedTime = firstElement.modifiedStartTime;
+
+                        if (disorderPolicyType == DisorderPolicyType.Drop)
+                        {
+                            diagnosticOutput?.OnNext(OutOfOrder<#= partitionString #>StreamEvent.Create(<#= streamEventFromValue #>, new long?()));
+                            return; // drop
+                        }
+                        else
+                        {
+                            diagnosticOutput?.OnNext(OutOfOrder<#= partitionString #>StreamEvent.Create(<#= streamEventFromValue #>, new long?(current - value.SyncTime)));
+                            value = new <#= partitionString #>StreamEvent<<#= adjustedGenericArgs #>>(<#= !partitioned ? string.Empty : ("value.PartitionKey, ") #>outOfOrder ? current : value.SyncTime, adjustedTime, value.Payload);
+                        }
+                    }
+                    else if (outOfOrder)
+                    {
+                        if (disorderPolicyType == DisorderPolicyType.Drop)
+                        {
+                            diagnosticOutput?.OnNext(OutOfOrder<#= partitionString #>StreamEvent.Create(<#= streamEventFromValue #>, new long?()));
+                            return; // drop
+                        }
+                        else
+                        {
+                            diagnosticOutput?.OnNext(OutOfOrder<#= partitionString #>StreamEvent.Create(<#= streamEventFromValue #>, new long?(current - value.SyncTime)));
+                            value = new <#= partitionString #>StreamEvent<<#= adjustedGenericArgs #>>(<#= !partitioned ? string.Empty : ("value.PartitionKey, ") #>current, value.OtherTime, value.Payload);
+                        }
+                    }
+
+                    break;
+                default:
+                    Contract.Assert(false, "switch meant to be exhaustive");
+                    throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+            }
+<#      } #>
+        }
+
+<#      PushIndent("            "); #>
+<#=     fusionOption == "Fused" ? leadingText : string.Empty #>
+<#      AddToGeneratedBatch(); #>
+<#=     fusionOption == "Fused" ? trailingText : string.Empty #>
+<#      PopIndent(); #>
+<#      if (partitioned && ingressType == "StreamEvent")
+        {
+            PopIndent(); #>
+        }
+<#      } #>
+
+<#      if (!partitioned)
+        { #>
+        if (currentTime < value.SyncTime) currentTime = value.SyncTime;
+<#      }
+        else
+        { #>
+        if (!currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
+            currentTime[value.PartitionKey] = value.SyncTime;
+<#      } #>
+    }
+
+    private void GenerateAndProcess<#= globalPunctuation #>(long syncTime)
+    {
+        if (syncTime <= <#= partitioned ? "lowWatermark" : "lastPunctuationTime" #>) return;
+
+<#      if (latencyOption == "WithLatency")
+        { #>
+        // Process events queued for reorderLatency up to the <#= globalPunctuation #> syncTime
+        if (priorityQueueSorter != null)
+        {
+            <#= baseStructure #> resultEvent;
+            while ((!priorityQueueSorter.IsEmpty()) && priorityQueueSorter.Peek().SyncTime <= syncTime)
+            {
+                resultEvent = priorityQueueSorter.Dequeue();
+                Process(ref resultEvent<#if (partitioned) {#>, updateCurrentTime : false<#}#>);
+            }
+        }
+        else
+        {
+<#          if (partitioned)
+            { #>
+            bool recheck;
+            var PartitionedstreamEvents = impatienceSorter.DequeueUntil(syncTime);
+
+            int index = FastDictionary<TKey, Tuple<bool, PooledElasticCircularBuffer<PartitionedStreamEvent<TKey, <#= TPayload #>>>>>.IteratorStart;
+            while(<#= partitionString #>streamEvents.Iterate(ref index))
+            {
+                var entry = <#= partitionString #>streamEvents.entries[index];
+                recheck = entry.value.Item1;
+                var streamEvents = entry.value.Item2;
+<#              PushIndent("    ");
+            }
+            else
+            { #>
+            var streamEvents = impatienceSorter.DequeueUntil(syncTime, out bool recheck);
+<#          } #>
+            if (streamEvents != null)
+            {
+                <#= baseStructure #> resultEvent;
+                while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= syncTime)))
+                {
+                    resultEvent = streamEvents.Dequeue();
+                    Process(ref resultEvent<#if (partitioned) {#>, updateCurrentTime : false<#}#>);
+                }
+                if (!recheck) impatienceSorter.Return(<#= !partitioned ? string.Empty : "entry.key , " #> streamEvents);
+            }
+<#          if (partitioned)
+            {
+                PopIndent(); #>
+            }
+<#          } #>
+        }
+
+<#      } #>
+        // Update cached global times
+        highWatermark = Math.Max(syncTime, highWatermark);
+<#      if (partitioned)
+        { #>
+        if (lowWatermark < syncTime)
+        {
+            lowWatermark = syncTime;
+
+            // Gather keys whose high watermarks are before the new low watermark
+            var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
+            foreach (var keyValuePair in highWatermarkToPartitionsMap)
+            {
+                // Since highWatermarkToPartitionsMap is sorted, we can stop as soon as we reach the threshold
+                if (keyValuePair.Key >= lowWatermark) break;
+
+                expiredWatermarkKVPs.Add(keyValuePair);
+            }
+
+            // Clean up state from expired partitions
+            foreach (var expiredWatermarkKVP in expiredWatermarkKVPs)
+            {
+                var expiredWatermark = expiredWatermarkKVP.Key;
+                highWatermarkToPartitionsMap.Remove(expiredWatermark);
+
+                var expiredKeys = expiredWatermarkKVP.Value;
+                foreach (var expiredKey in expiredKeys)
+                {
+                    lastPunctuationTime.Remove(expiredKey);
+                    partitionHighWatermarks.Remove(expiredKey);
+                    currentTime.Remove(expiredKey);
+                }
+            }
+        }
+<#      }
+        else
+        { #>
+        currentTime = Math.Max(syncTime, currentTime);
+        lastPunctuationTime = Math.Max(syncTime, lastPunctuationTime);
+<#      } #>
+
+        // Add <#= globalPunctuation #> to batch
+        var count = currentBatch.Count;
+        currentBatch.vsync.col[count] = syncTime;
+        currentBatch.vother.col[count] = <#= partitionString #>StreamEvent.<#= globalPunctuation #>OtherTime;
+        currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
+        currentBatch.key.col[count] = default;
+        currentBatch[count] = default;
+        currentBatch.hash.col[count] = 0;
+        currentBatch.Count = count + 1;
+
+        // Flush if necessary
+        if (flushPolicy == <#= partitionString #>FlushPolicy.FlushOn<#= globalPunctuation #> ||
+            (flushPolicy == <#= partitionString #>FlushPolicy.FlushOnBatchBoundary && currentBatch.Count == Config.DataBatchSize))
+        {
+            OnFlush();
+        }
+        else if (currentBatch.Count == Config.DataBatchSize)
+        {
+            FlushContents();
+        }
+    }
+
+<#      if (partitioned && latencyOption == "WithLatency")
+        { #>
+    protected override void UpdatePointers()
+    {
+        foreach (var kvp in partitionHighWatermarks)
+        {
+            if (highWatermarkToPartitionsMap.TryGetValue(kvp.Value, out HashSet<TKey> set))
+                set.Add(kvp.Key);
+            else
+                highWatermarkToPartitionsMap.Add(kvp.Value, new HashSet<TKey> { kvp.Key });
+        }
+    }
+
+<#      } #>
+    protected override void OnCompleted(long punctuationTime)
+    {
+        GenerateAndProcess<#= globalPunctuation #>(punctuationTime);
+        // Flush, but if we just flushed due to the punctuation generated above
+        if (flushPolicy != <#= partitionString #>FlushPolicy.FlushOn<#= globalPunctuation #>)
+            OnFlush();
+    }
+}
+
+<#+
+private void AddToGeneratedBatch()
+{
+#>
+{
+    <#= GeneratedBatchName #> generatedBatch = (<#= GeneratedBatchName #>) this.currentBatch;
+    var count = currentBatch.Count;
+    currentBatch.vsync.col[count] = value.SyncTime;
+    currentBatch.vother.col[count] = <#= generatedEndTimeVariable #>;
+    currentBatch.key.col[count] = <#= emptyOrPartition #>;
+    currentBatch.hash.col[count] = <#= partitionString == "Partitioned" ? "value.PartitionKey.GetHashCode()" : "0" #>;
+<#+ if (resultRepresentation.noFields)
+    { #>
+    generatedBatch.payload.col[count] = <#= valueString #>;
+<#+ }
+    else
+    { #>
+<#+     if (this.resultMightBeNull)
+        { #>
+    if (<#= valueString #> == null)
+    {
+        generatedBatch._nullnessvector.col[count >> 6] |= (1L << (count & 0x3f));
+    }
+    else
+    {
+<#+         PushIndent("    ");
+        } #>
+<#+     foreach (var f in resultRepresentation.AllFields)
+        {
+            if (f.OptimizeString())
+            { #>
+        generatedBatch.<#= f.Name #>.AddString(<#= valueString #>.<#= f.OriginalName #>);
+<#+         }
+            else
+            { #>
+        generatedBatch.<#= f.Name #>.col[count] = <#= valueString #>.<#= f.OriginalName #>;
+<#+         }
+        }
+    }  #>
+<#+ if (this.resultMightBeNull)
+    {
+        PopIndent(); #>
+    }
+<#+ } #>
+
+    currentBatch.Count++;
+    if (currentBatch.Count == Config.DataBatchSize)
+    {
+        if (flushPolicy == <#= partitionString #>FlushPolicy.FlushOnBatchBoundary) OnFlush();
+        else FlushContents();
+    }
+}
+<#+
+}
+#>

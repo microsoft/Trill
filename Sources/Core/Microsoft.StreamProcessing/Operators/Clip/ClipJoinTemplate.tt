@@ -1,0 +1,761 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Reflection" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Threading;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// TKey: <#= TKey #>
+// TLeft: <#= TLeft #>
+// TRight: <#= TRight #>
+
+[DataContract]
+internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= TKey #>, <#= TLeft #>, <#= TRight #>, <#= TLeft #>>
+{
+    private readonly MemoryPool<<#= TKey #>, <#= TLeft #>> pool;
+
+    [SchemaSerialization]
+    private readonly Expression<Func<<#= TKey #>, <#= TKey #>, bool>> keyComparer;
+    [SchemaSerialization]
+    private readonly Expression<Func<<#= TLeft #>, <#= TLeft #>, bool>> leftComparer;
+
+    private StreamMessage<<#= TKey #>, <#= TLeft #>> genericOutputBatch;
+    [DataMember]
+    private <#= BatchGeneratedFrom_TKey_TLeft #><#= TKeyTLeftGenericParameters #> output;
+
+    [DataMember]
+    private FastMap<LeftInterval> leftIntervalMap = new FastMap<LeftInterval>();
+    [DataMember]
+    private FastMap<LeftEdge> leftEdgeMap = new FastMap<LeftEdge>();
+    [DataMember]
+    private RemovableEndPointHeap leftEndPointHeap;
+    [DataMember]
+    private long nextLeftTime = long.MinValue;
+    [DataMember]
+    private long nextRightTime = long.MinValue;
+    [DataMember]
+    private long currTime = long.MinValue;
+
+    private readonly Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator;
+
+    <#= staticCtor #>
+
+    [Obsolete("Used only by serialization. Do not call directly.")]
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TLeft #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TLeft #>> observer,
+        IEqualityComparerExpression<<#= TKey #>> keyEqualityComparer,
+        IEqualityComparerExpression<<#= TLeft #>> leftComparer,
+        Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        this.queryPlanGenerator = queryPlanGenerator;
+        this.keyComparer = keyEqualityComparer.GetEqualsExpr();
+
+        this.leftComparer = leftComparer.GetEqualsExpr();
+
+        this.leftEndPointHeap = new RemovableEndPointHeap();
+        this.pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TLeft #>>(true /*stream.Properties.IsColumnar*/);
+        <# GetOutputBatch(); #>
+    }
+
+    public override int CurrentlyBufferedOutputCount => output.Count;
+    public override int CurrentlyBufferedLeftInputCount => base.CurrentlyBufferedLeftInputCount + leftEdgeMap.Count + leftIntervalMap.Count;
+    public override int CurrentlyBufferedRightInputCount => base.CurrentlyBufferedRightInputCount;
+
+    protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)
+    {
+        this.Observer.ProduceQueryPlan(queryPlanGenerator(left, right, this));
+    }
+
+    protected override void DisposeState() => this.output.Free();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void ProcessBothBatches(StreamMessage<<#= TKey #>, <#= TLeft #>> genericLeftBatch, StreamMessage<<#= TKey #>, <#= TRight #>> genericRightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
+    {
+        var leftBatch = genericLeftBatch as <#= Transformer.GetBatchClassName(keyType, leftType) #><#= TKeyTLeftGenericParameters #>;
+        var rightBatch = genericRightBatch as <#= Transformer.GetBatchClassName(keyType, rightType) #><#= TKeyTRightGenericParameters #>;
+
+        leftBatchFree = rightBatchFree = true;
+        if (!GoToVisibleRow(leftBatch))
+        {
+            leftBatchDone = true;
+            rightBatchDone = false;
+            return;
+        }
+
+        nextLeftTime = leftBatch.vsync.col[leftBatch.iter];
+        if (!GoToVisibleRow(rightBatch))
+        {
+            leftBatchDone = false;
+            rightBatchDone = true;
+            return;
+        }
+
+        nextRightTime = rightBatch.vsync.col[rightBatch.iter];
+
+        while (true)
+        {
+            if (nextLeftTime <= nextRightTime)
+            {
+                UpdateTime(nextLeftTime);
+
+                /*
+                ProcessLeftEvent(
+                    nextLeftTime,
+                    leftBatch.vother.col[leftBatch.iter],
+                    ref leftBatch.key.col[leftBatch.iter],
+                    leftBatch[leftBatch.iter],
+                    leftBatch.hash.col[leftBatch.iter]);
+                */
+                <# ProcessLeftEvent("nextLeftTime", "leftBatch.vother.col[leftBatch.iter]", "leftBatch.key.col[leftBatch.iter]", "leftBatch", "leftBatch.iter",  "leftBatch.hash.col[leftBatch.iter]"); #>
+
+                leftBatch.iter++;
+
+                if (!GoToVisibleRow(leftBatch))
+                {
+                    leftBatchDone = true;
+                    rightBatchDone = false;
+                    return;
+                }
+
+                nextLeftTime = leftBatch.vsync.col[leftBatch.iter];
+            }
+            else
+            {
+                UpdateTime(nextRightTime);
+
+                ProcessRightEvent(
+                    nextRightTime,
+                    rightBatch.vother.col[rightBatch.iter],
+                    ref rightBatch.key.col[rightBatch.iter],
+                    rightBatch.hash.col[rightBatch.iter]);
+
+                rightBatch.iter++;
+
+                if (!GoToVisibleRow(rightBatch))
+                {
+                    leftBatchDone = false;
+                    rightBatchDone = true;
+                    return;
+                }
+
+                nextRightTime = rightBatch.vsync.col[rightBatch.iter];
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void ProcessLeftBatch(StreamMessage<<#= TKey #>, <#= TLeft #>> genericBatch, out bool isBatchDone, out bool isBatchFree)
+    {
+        var batch = genericBatch as <#= Transformer.GetBatchClassName(keyType, leftType) #><#= TKeyTLeftGenericParameters #>;
+
+        isBatchFree = true;
+        while (true)
+        {
+            if (!GoToVisibleRow(batch))
+            {
+                isBatchDone = true;
+                return;
+            }
+
+            nextLeftTime = batch.vsync.col[batch.iter];
+
+            if (nextLeftTime > nextRightTime)
+            {
+                isBatchDone = false;
+                return;
+            }
+
+            UpdateTime(nextLeftTime);
+
+            /*
+            ProcessLeftEvent(
+                nextLeftTime,
+                batch.vother.col[batch.iter],
+                ref batch.key.col[batch.iter],
+                batch[batch.iter],
+                batch.hash.col[batch.iter]);
+            */
+            <# ProcessLeftEvent("nextLeftTime", "batch.vother.col[batch.iter]", "batch.key.col[batch.iter]", "batch", "batch.iter",  "batch.hash.col[batch.iter]"); #>
+
+            batch.iter++;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void ProcessRightBatch(StreamMessage<<#= TKey #>, <#= TRight #>> genericBatch, out bool isBatchDone, out bool isBatchFree)
+    {
+        var batch = genericBatch as <#= Transformer.GetBatchClassName(keyType, rightType) #><#= TKeyTRightGenericParameters #>;
+
+        isBatchFree = true;
+        while (true)
+        {
+            if (!GoToVisibleRow(batch))
+            {
+                isBatchDone = true;
+                return;
+            }
+
+            nextRightTime = batch.vsync.col[batch.iter];
+
+            if (nextRightTime > nextLeftTime)
+            {
+                isBatchDone = false;
+                return;
+            }
+
+            UpdateTime(nextRightTime);
+
+            ProcessRightEvent(
+                nextRightTime,
+                batch.vother.col[batch.iter],
+                ref batch.key.col[batch.iter],
+                batch.hash.col[batch.iter]);
+
+            batch.iter++;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool GoToVisibleRow<TPayload>(StreamMessage<<#= TKey #>, TPayload> batch)
+    {
+        while (batch.iter < batch.Count && (batch.bitvector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0 && batch.vother.col[batch.iter] >= 0)
+        {
+            batch.iter++;
+        }
+
+        return (batch.iter != batch.Count);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void UpdateTime(long time)
+    {
+        if (time != currTime)
+        {
+            currTime = time;
+            ReachTime();
+        }
+    }
+
+/*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ProcessLeftEvent(long start, long end, ref <#= TKey #> key, <#= TLeft #> payload, int hash)
+    {
+        if (start < end)
+        {
+            // Row is a start edge or interval.
+            bool isInterval = end < StreamEvent.InfinitySyncTime;
+            if (isInterval)
+            {
+                bool isFullyOutputtable = nextRightTime >= end;
+                if (isFullyOutputtable)
+                {
+                    // Output full interval.
+                    AddToBatch(start, end, ref key, ref payload, hash);
+                }
+                else
+                {
+                    // Insert into map to remember interval.
+                    int mapIndex = leftIntervalMap.Insert(hash);
+
+                    // Insert into heap to schedule removal at endpoint.
+                    int heapIndex = leftEndPointHeap.Insert(end, mapIndex);
+
+                    // Set value in map, also remembering heap's index.
+                    leftIntervalMap.Values[mapIndex].Initialize(start, ref key, ref payload, heapIndex);
+
+                    // Output start edge.
+                    AddToBatch(start, StreamEvent.InfinitySyncTime, ref key, ref payload, hash);
+                }
+            }
+            else
+            {
+                int index = leftEdgeMap.Insert(hash);
+                leftEdgeMap.Values[index].Populate(start, ref key, ref payload);
+
+                // Output start edge.
+                AddToBatch(start, StreamEvent.InfinitySyncTime, ref key, ref payload, hash);
+            }
+        }
+        else if (end == StreamEvent.PunctuationOtherTime)
+        {
+            AddPunctuationToBatch(start);
+        }
+        else
+        {
+            // Row is an end edge.
+            var leftEvents = leftEdgeMap.Find(hash);
+            int index;
+            while (leftEvents.Next(out index))
+            {
+                var leftEdge = leftEdgeMap.Values[index];
+                var leftKey = leftEdge.Batch.key.col[leftEdge.Index];
+                if (AreSame(end, ref key, ref payload, ref leftEdgeMap.Values[index]))
+                {
+                    // Output end edge.
+                    AddToBatch(start, end, ref key, ref payload, hash);
+
+                    // Remove from leftMap.
+                    leftEvents.Remove();
+                    break;
+                }
+            }
+        }
+    }
+*/
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ProcessRightEvent(long start, long end, ref <#= TKey #> key, int hash)
+    {
+        if (end == StreamEvent.PunctuationOtherTime)
+        {
+            AddPunctuationToBatch(start);
+            return;
+        }
+        else if (start >= end)
+        {
+            // Row is an end edge, which we don't care about because the start edge would have already
+            // removed all joining left events.
+            return;
+        }
+
+        // Mark any matching left intervals as no longer active.
+        int index;
+        var leftIntervals = leftIntervalMap.Find(hash);
+        while (leftIntervals.Next(out index))
+        {
+            long leftStart = leftIntervalMap.Values[index].Start;
+            var leftInterval = leftIntervalMap.Values[index];
+            var leftIntervalKey = leftInterval.Key;
+            if (leftStart < start && <#= this.keyComparer("key", "leftIntervalKey") #>)
+            {
+                // Output end edge.
+                /*
+                AddToBatch(
+                    start,
+                    leftStart,
+                    ref leftIntervalMap.Values[index].Key,
+                    ref leftIntervalMap.Values[index].Payload,
+                    hash);
+                */
+                <# AddToBatch("start", "leftStart",  "leftIntervalKey", "leftIntervalMap.Values[index]", "hash"); #>
+
+                // Remove from heap and map.
+                leftEndPointHeap.Remove(leftIntervalMap.Values[index].HeapIndex);
+                leftIntervals.Remove();
+            }
+        }
+
+        // Remove any matching left edges.
+        var leftEdges = leftEdgeMap.Find(hash);
+        while (leftEdges.Next(out index))
+        {
+            var leftEdge = leftEdgeMap.Values[index];
+            long leftStart = leftEdge.Start;
+            var leftEdgeKey = leftEdge.Key;
+            if (leftStart < start && <#= this.keyComparer("key", "leftEdgeKey") #>)
+            {
+                // Output end edge.
+                /*
+                AddToBatch(
+                    start,
+                    leftStart,
+                    ref leftEdgeMap.Values[index].Key,
+                    ref leftEdgeMap.Values[index].Payload,
+                    hash);
+                */
+                <# AddToBatch("start", "leftStart",  "leftEdgeKey", "leftEdge", "hash"); #>
+
+                // Remove left event.
+                leftEdges.Remove();
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ReachTime()
+    {
+        // Carry-out all interval endpoints for left intervals that end prior or at new current time.
+        long endPointTime;
+        int index;
+        while (leftEndPointHeap.TryGetNextInclusive(currTime, out endPointTime, out index))
+        {
+            // Output end edge.
+            /*
+            AddToBatch(
+                endPointTime,
+                leftIntervalMap.Values[index].Start,
+                ref leftIntervalMap.Values[index].Key,
+                ref leftIntervalMap.Values[index].Payload,
+                leftIntervalMap.GetHash(index));
+            */
+            var leftInterval = leftIntervalMap.Values[index];
+            var leftIntervalKey = leftInterval.Key;
+            var leftIntervalStart = leftInterval.Start;
+            var leftIntervalHash = leftIntervalMap.GetHash(index);
+            <# AddToBatch("endPointTime", "leftIntervalStart",  "leftIntervalKey", "leftInterval", "leftIntervalHash"); #>
+
+            // Remove from leftMap.
+            leftIntervalMap.Remove(index);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddPunctuationToBatch(long start)
+    {
+        if (start > lastCTI)
+        {
+            lastCTI = start;
+
+            int index = output.Count++;
+            output.vsync.col[index] = start;
+            output.vother.col[index] = StreamEvent.PunctuationOtherTime;
+            output.key.col[index] = default;
+<#     foreach (var f in this.leftFields) {
+          if (f.OptimizeString()) { #>
+            output.<#= f.Name #>.AddString(string.Empty);
+<#       } else { #>
+            output.<#= f.Name #>.col[index] = default;
+<#       }
+        } #>
+            output.hash.col[index] = 0;
+            output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+
+            if (output.Count == Config.DataBatchSize) FlushContents();
+        }
+    }
+
+/*
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddToBatch(long start, long end, ref <#= TKey #> key, ref <#= TLeft #> payload, int hash)
+    {
+        int index = output.Count++;
+        output.vsync.col[index] = start;
+        output.vother.col[index] = end;
+        output.key.col[index] = key;
+        output[index] = payload;
+        output.hash.col[index] = hash;
+
+        if (output.Count == Config.DataBatchSize)
+        {
+            this.Observer.OnNext(output);
+            pool.Get(out output);
+            output.Allocate();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool AreSame(long start, ref <#= TKey #> key, ref <#= TLeft #> payload, ref LeftEdge active)
+    {
+        return start == active.Start && keyComparerEquals(key, active.Key) && leftComparerEquals(payload, active.Payload);
+    }
+*/
+    protected override void FlushContents()
+    {
+        if (output.Count == 0) return;
+        this.Observer.OnNext(output);
+        <# GetOutputBatch(); #>
+    }
+<# if (!noFields && !this.leftType.GetTypeInfo().IsValueType) { #>
+    [DataContract]
+    private struct <#= ActiveEventType #>
+    {
+<# foreach (var f in this.leftFields) { #>
+        [DataMember]
+        public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.OriginalName #>;
+<# } #>
+    }
+<# } #>
+/*
+    [DataContract]
+    private struct LeftInterval
+    {
+        [DataMember]
+        public long Start;
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public <#= TLeft #> Payload;
+        [DataMember]
+        public int HeapIndex;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Initialize(long start, ref <#= TKey #> key, ref <#= TLeft #> payload, int heapIndex)
+        {
+            Start = start;
+            Key = key;
+            Payload = payload;
+            HeapIndex = heapIndex;
+        }
+
+        public override string ToString()
+        {
+            return "[Start=" + Start + ", Key='" + Key + "', Payload='" + Payload + "', HeapIndex=" + HeapIndex + "]";
+        }
+    }
+*/
+    [DataContract]
+    private struct LeftInterval
+    {
+        [DataMember]
+        public long Start;
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public int HeapIndex;
+        [DataMember]
+        public <#= ActiveEventType #> Payload;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Initialize(long start, <#= BatchGeneratedFrom_TKey_TLeft #><#= TKeyTLeftGenericParameters #> batch, int index, int heapIndex)
+        {
+            Start = start;
+            Key = batch.key.col[index];
+<# foreach (var f in this.leftFields) { #>
+            this.Payload.<#= f.OriginalName #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+<# } #>
+            HeapIndex = heapIndex;
+        }
+
+        public override string ToString()
+        {
+            //return string.Format("[Start={0}, Key='{1}', Payload='{2}', HeapIndex={3}", Start, Key, Batch[Index], HeapIndex);
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.AppendFormat("[Start={0}", Start);
+            sb.AppendFormat(", Key='{0}'", Key);
+            <# foreach (var f in this.leftFields) { #>
+            sb.AppendFormat(", <#= f.OriginalName #>={0}, ", Payload.<#= f.OriginalName #>);
+            <# } #>
+            sb.AppendFormat(", Key='{0}'", HeapIndex);
+            sb.Append("]");
+            return sb.ToString();
+        }
+    }
+/*
+    [DataContract]
+    private struct LeftEdge
+    {
+        [DataMember]
+        public long Start;
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public <#= TLeft #> Payload;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Populate(long start, ref <#= TKey #> key, ref <#= TLeft #> payload)
+        {
+            Start = start;
+            Key = key;
+            Payload = payload;
+        }
+
+        public override string ToString()
+        {
+            return "[Start=" + Start + ", Key='" + Key + "', Payload='" + Payload + "]";
+        }
+    }
+*/
+    [DataContract]
+    private struct LeftEdge
+    {
+        [DataMember]
+        public long Start;
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public <#= ActiveEventType #> Payload;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Populate(long start, <#= BatchGeneratedFrom_TKey_TLeft #><#= TKeyTLeftGenericParameters #> batch, int index)
+        {
+            Start = start;
+            Key = batch.key.col[index];
+<# foreach (var f in this.leftFields) { #>
+            this.Payload.<#= f.OriginalName #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+<# } #>
+        }
+
+        public override string ToString()
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.AppendFormat("[Start={0}", Start);
+            sb.AppendFormat(", Key='{0}'", Key);
+            <# foreach (var f in this.leftFields) { #>
+            sb.AppendFormat(", <#= f.OriginalName #>={0}, ", Payload.<#= f.OriginalName #>);
+            <# } #>
+            sb.Append("]");
+            return sb.ToString();
+            //return string.Format("[Start={0}, Key='{1}', Payload='{2}'", Start, KeyColumn.col[RowIndex], Batch[RowIndex]);
+        }
+    }
+}
+
+<#+
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ProcessLeftEvent(string start, string end, string key, string batch, string index, string hash)
+    {
+#>
+    { // begin ProcessLeftEvent
+        var start_ProcessLeftEvent = <#= start #>;
+        var end_ProcessLeftEvent = <#= end #>;
+        var key_ProcessLeftEvent = <#= key #>;
+        var batch_ProcessLeftEvent = <#= batch #>;
+        var index_ProcessLeftEvent = <#= index #>;
+        var hash_ProcessLeftEvent = <#= hash #>;
+
+        if (start_ProcessLeftEvent < end_ProcessLeftEvent)
+        {
+            // Row is a start edge or interval.
+            bool isInterval = end_ProcessLeftEvent < StreamEvent.InfinitySyncTime;
+            if (isInterval)
+            {
+                bool isFullyOutputtable = nextRightTime >= end_ProcessLeftEvent;
+                if (isFullyOutputtable)
+                {
+                    // Output full interval.
+                    <#+ AddToBatch(start, end, key, batch, index, hash); #>
+                }
+                else
+                {
+                    // Insert into map to remember interval.
+                    int mapIndex = leftIntervalMap.Insert(hash_ProcessLeftEvent);
+
+                    // Insert into heap to schedule removal at endpoint.
+                    int heapIndex = leftEndPointHeap.Insert(end_ProcessLeftEvent, mapIndex);
+
+                    // Set value in map, also remembering heap's index.
+                    leftIntervalMap.Values[mapIndex].Initialize(start_ProcessLeftEvent, batch_ProcessLeftEvent, index_ProcessLeftEvent, heapIndex);
+
+                    // Output start edge.
+                    <#+ AddToBatch(start, "StreamEvent.InfinitySyncTime", key, batch, index, hash); #>
+                }
+            }
+            else
+            {
+                int index = leftEdgeMap.Insert(hash_ProcessLeftEvent);
+                leftEdgeMap.Values[index].Populate(start_ProcessLeftEvent, batch_ProcessLeftEvent, index_ProcessLeftEvent);
+
+                // Output start edge.
+                <#+ AddToBatch(start, "StreamEvent.InfinitySyncTime", key, batch, index, hash); #>
+            }
+        }
+        else
+        {
+            // Row is an end edge.
+            var leftEvents = leftEdgeMap.Find(hash_ProcessLeftEvent);
+            int index;
+            while (leftEvents.Next(out index))
+            {
+                var leftEdge = leftEdgeMap.Values[index];
+                var areSame =
+                    end_ProcessLeftEvent == leftEdge.Start &&
+                    //keyComparerEquals(key, active.Key) &&
+                    <#= this.keyComparer("key_ProcessLeftEvent", "leftEdge.Key") #> &&
+                    // leftComparerEquals(payload, active.Payload)
+                    <#= this.leftComparer("batch_ProcessLeftEvent", "leftEdge.Payload") #>
+                    ;
+                //if (AreSame(end, ref key, ref payload, ref leftEdgeMap.Values[index]))
+                if (areSame)
+                {
+                    // Output end edge.
+                    <#+ AddToBatch(start, end, key, batch, index, hash); #>
+
+                    // Remove from leftMap.
+                    leftEvents.Remove();
+                    break;
+                }
+            }
+        }
+    } // end ProcessLeftEvent
+<#+
+    }
+
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddToBatch(string start, string end, string key, string batch, string batchIndex, string hash)
+    {
+#>
+    { // begin AddToBatch
+        int index_AddToBatch = output.Count++;
+        output.vsync.col[index_AddToBatch] = <#= start #>;
+        output.vother.col[index_AddToBatch] = <#= end #>;
+        output.key.col[index_AddToBatch] = <#= key #>;
+        //output[index] = payload;
+<#+     foreach (var f in this.leftFields) {
+          if (f.OptimizeString()) { #>
+
+        output.<#= f.Name #>.AddString(<#= batch #>.<#= f.Name #>[<#= batchIndex #>]);
+<#+       } else { #>
+        output.<#= f.Name #>.col[index_AddToBatch] = <#= batch #>.<#= f.Name #>.col[<#= batchIndex #>];
+<#+       }
+        } #>
+        output.hash.col[index_AddToBatch] = <#= hash #>;
+
+        if (output.Count == Config.DataBatchSize)
+        {
+            output.Seal();
+            this.Observer.OnNext(output);
+            <#+ GetOutputBatch(); #>
+        }
+    } // end AddToBatch
+<#+
+    }
+
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddToBatch(string start, string end, string key, string leftInterval, string hash)
+    {
+#>
+    { // begin AddToBatch
+        int index_AddToBatch = output.Count++;
+        output.vsync.col[index_AddToBatch] = <#= start #>;
+        output.vother.col[index_AddToBatch] = <#= end #>;
+        output.key.col[index_AddToBatch] = <#= key #>;
+        //output[index] = payload;
+<#+     foreach (var f in this.leftFields) {
+         var sourceName = leftInterval + ".Payload";
+         if (!noFields) sourceName += "." + f.OriginalName;
+          if (f.OptimizeString()) { #>
+
+        output.<#= f.Name #>.AddString(<#= sourceName #>);
+<#+       } else { #>
+        output.<#= f.Name #>.col[index_AddToBatch] = <#= sourceName #>;
+<#+       }
+        } #>
+        output.hash.col[index_AddToBatch] = <#= hash #>;
+
+        if (output.Count == Config.DataBatchSize)
+        {
+            output.Seal();
+            this.Observer.OnNext(output);
+            <#+ GetOutputBatch(); #>
+        }
+    } // end AddToBatch
+<#+
+    }
+
+    private void GetOutputBatch() { #>
+  pool.Get(out genericOutputBatch);
+  genericOutputBatch.Allocate();
+  output = (<#= Transformer.GetBatchClassName(this.keyType, this.leftType) #> <#= this.TKeyTLeftGenericParameters #>)genericOutputBatch;
+<#+ foreach (var f in this.leftFields.Where(fld => fld.OptimizeString())) {  #>
+  output.<#= f.Name #>.Initialize();
+<#+ }
+
+    } #>

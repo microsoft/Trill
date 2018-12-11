@@ -1,0 +1,61 @@
+<Project>
+
+  <!-- Global include of the version file to avoid per-project link inclusion. -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)CommonAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <!-- Setup global MSBuild variables -->
+  <PropertyGroup>
+    <EnlistmentRoot>$(MSBuildThisFileDirectory.TrimEnd({'\\'}))\..</EnlistmentRoot>
+  </PropertyGroup>
+
+  <!-- Begin common properties for all projects -->
+
+  <!-- Global defines for all Trill projects -->
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);BINARYMERGE;COLUMNAR;BITVECTOR;MULTICORE_GA</DefineConstants>
+    <!-- This incantation calculates build number in format YMMDD, where Y is last digit of the year -->
+    <VersionBuild>$([System.String]::Format('{0}{1,2}{2,2}', '$([System.DateTime]::Now.Year.ToString().Substring(3))', '$([System.DateTime]::Now.Month)', '$([System.DateTime]::Now.Day)'))</VersionBuild>
+    <VersionBuild>$(_VersionTemp_Build.Replace(' ','0'))</VersionBuild>
+    <VersionFull>fullfullfull</VersionFull>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);DOTNETCORE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net46' And '$(Configuration)' == 'Debug'">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net46' And '$(Configuration)' == 'Release'">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Ensure all binaries are placed in the same location instead of within each project's directory -->
+  <PropertyGroup>
+    <OutputPath>$(EnlistmentRoot)\bin\$(Platform)\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+
+  <!-- Signing -->
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(EnlistmentRoot)\Sources\TrillKey.snk</AssemblyOriginatorKeyFile>
+    <PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Warning to be fixed :) -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Use the latest C# version -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!-- End common properties for all projects -->
+
+</Project>

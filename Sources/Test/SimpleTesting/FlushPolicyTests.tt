@@ -1,0 +1,27 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using Microsoft.StreamProcessing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace SimpleTesting.Flush
+{<#
+    foreach (var completedPolicy in new [] { "None", "Flush", "EndOfStream" })
+    foreach (var flushPolicy in new [] { "None", "FlushOnPunctuation", "FlushOnBatchBoundary" })
+    {
+        var flushPrefix = flushPolicy == "None" ? "FlushNone" : flushPolicy;
+        var completedSuffix = "_OnCompleted" + completedPolicy;
+        var testName = flushPrefix + completedSuffix;
+#>
+
+    [TestClass]
+    public class <#= testName #> : FlushTestBase
+    {
+        public <#= testName #>() : base(DisorderPolicy.Throw(), FlushPolicy.<#= flushPolicy #>, PeriodicPunctuationPolicy.None(), OnCompletedPolicy.<#= completedPolicy #>)
+        { }
+    }
+<#  } #>
+}

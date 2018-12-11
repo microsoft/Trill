@@ -1,0 +1,629 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+namespace Microsoft.StreamProcessing
+{<#
+foreach (var fused in new [] { false, true })
+foreach (var partitionString in new [] { string.Empty, "Partitioned" })
+foreach (var m in new [] { "StreamEvent", "Interval" })
+{
+    bool partitioned = partitionString == "Partitioned";
+    var className = partitionString + m + "IngressStreamable" + (fused ? "Fused" : string.Empty);
+    var classNameUnfused = partitionString + m + "IngressStreamable";
+    var classNameFused = partitionString + m + "IngressStreamableFused";
+    var outputType = fused ? "TResult" : "TPayload";
+    var typeParameters = !partitioned ? "TPayload" : "TPartitionKey, TPayload";
+    string baseStructure = (m == "Interval") ? "TPayload" : (partitionString + "StreamEvent<" + typeParameters + ">");
+    var ingressType =
+          (m == "StreamEvent" ? partitionString + "StreamEvent<" : string.Empty)
+        + (!partitioned || m == "Interval" ? "TPayload" : "TPartitionKey, TPayload")
+        + (m == "StreamEvent" ? ">" : string.Empty);
+    var keyType = !partitioned ? "Empty" : "PartitionKey<TPartitionKey>"; #>
+
+    internal sealed class <#= className #><<#= typeParameters #><#= !fused ? string.Empty : ", TResult" #>> : Streamable<<#= keyType #>, <#= outputType #>>, <# if (!fused) { #>I<#= partitioned ? "Partitioned" : "Observable" #>IngressStreamable<<#= typeParameters #>>, <# } #>IFusibleStreamable<<#= keyType #>, <#= outputType #>>, IDisposable
+    {
+<#  if (fused) { #>
+        private readonly <#= classNameUnfused #><<#= typeParameters #>> entryPoint = null;
+<#  } #>
+        private readonly FuseModule fuseModule;
+        private readonly IObservable<<#= ingressType #>> observable;
+<#  if (m == "Interval")
+    {
+        if (partitioned)
+        { #>
+        private readonly Expression<Func<TPayload, TPartitionKey>> partitionExtractor;
+<#      } #>
+        private readonly Expression<Func<TPayload, long>> startEdgeExtractor;
+        private readonly Expression<Func<TPayload, long>> endEdgeExtractor;
+<#  } #>
+        private readonly DisorderPolicy disorderPolicy;
+        private readonly <#= partitionString #>FlushPolicy flushPolicy;
+        private readonly PeriodicPunctuationPolicy punctuationPolicy;
+<#  if (partitioned) { #>
+        private readonly PeriodicLowWatermarkPolicy lowWatermarkPolicy;
+<#  } #>
+        private readonly OnCompletedPolicy onCompletedPolicy;
+        private readonly bool delayed;
+
+        private readonly QueryContainer container;
+
+<#  if (!fused) { #>
+        internal <#= partitionString #>DiagnosticObservable<<#= typeParameters #>> diagnosticOutput;
+<#  } #>
+
+        public <#= className #>(
+            IObservable<<#= ingressType #>> observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned)
+        { #>
+            Expression<Func<TPayload, TPartitionKey>> partitionExtractor,
+<#      } #>
+            Expression<Func<TPayload, long>> startEdgeExtractor,
+            Expression<Func<TPayload, long>> endEdgeExtractor,
+<#  } #>
+            DisorderPolicy disorderPolicy,
+            <#= partitionString #>FlushPolicy flushPolicy,
+            PeriodicPunctuationPolicy punctuationPolicy,
+<#  if (partitioned) { #>
+            PeriodicLowWatermarkPolicy lowWatermarkPolicy,
+<#  } #>
+            OnCompletedPolicy onCompletedPolicy,
+            QueryContainer container,
+            string identifier<# if (fused) { #>,
+            FuseModule fuseModule,
+            <#= classNameUnfused #><<#= typeParameters #>> entryPoint,
+            StreamProperties<<#= keyType #>, TResult> properties<# } #>)
+<#  if (fused) { #>
+            : base(properties)
+<#  } else { #>
+            : base(StreamProperties<<#= keyType #>, <#= outputType #>>.Default<#= (m == "Interval") ? "Ingress(startEdgeExtractor, endEdgeExtractor)" : string.Empty #>.SetQueryContainer(container))
+<#  } #>
+        {
+            Contract.Requires(observable != null);
+            Contract.Requires(identifier != null);
+
+            this.IngressSiteIdentifier = identifier;
+            this.observable = observable;
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+            this.partitionExtractor = partitionExtractor;
+<#      } #>
+            this.startEdgeExtractor = startEdgeExtractor;
+            this.endEdgeExtractor = endEdgeExtractor;
+<#  } #>
+            this.disorderPolicy = disorderPolicy;
+            this.flushPolicy = flushPolicy;
+            this.punctuationPolicy = punctuationPolicy;
+<#  if (partitioned) { #>
+            this.lowWatermarkPolicy = lowWatermarkPolicy;
+<#  } #>
+            this.onCompletedPolicy = onCompletedPolicy;
+            this.container = container;
+            this.delayed = container != null;
+<#  if (fused)
+    { #>
+            this.fuseModule = fuseModule;
+            this.entryPoint = entryPoint;
+<#  }
+    else
+    { #>
+            this.fuseModule = new FuseModule();
+            if (this.delayed) container.RegisterIngressSite(this.IngressSiteIdentifier);
+<#  } #>
+
+<#  if (!partitioned)
+    { #>
+            if (Config.ForceRowBasedExecution
+<#      if (fused)
+        { #>
+                || !typeof(TResult).CanRepresentAsColumnar()
+                || typeof(TResult).IsAnonymousTypeName()
+<#      } #>
+                || !typeof(TPayload).CanRepresentAsColumnar()
+                || typeof(TPayload).IsAnonymousTypeName())
+            {
+                this.properties = properties.ToRowBased();
+            }
+            else this.properties = properties.ToDelayedColumnar(CanGenerateColumnar);
+<#  }
+    else
+    { #>
+            this.properties = properties.ToRowBased();
+<#  } #>
+        }
+
+<#  if (fused)
+        { #>
+        public void Dispose() => entryPoint?.Dispose();
+<#  }
+    else
+    { #>
+        public void Dispose() => diagnosticOutput?.Dispose();
+<#  } #>
+
+        [ContractInvariantMethod]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+        private void ObjectInvariant()
+        {
+            Contract.Invariant(observable != null);
+        }
+
+        public IObservable<OutOfOrder<#= partitionString #>StreamEvent<<#= typeParameters #>>> GetDroppedAdjustedEventsDiagnostic()
+        {
+<#  if (fused)
+    { #>
+            return entryPoint.GetDroppedAdjustedEventsDiagnostic();
+<#  }
+    else
+    { #>
+            if (diagnosticOutput == null) diagnosticOutput = new <#= partitionString #>DiagnosticObservable<<#= typeParameters #>>();
+            return diagnosticOutput;
+<#  } #>
+        }
+
+        public override IDisposable Subscribe(IStreamObserver<<#= keyType #>, <#= outputType #>> observer)
+        {
+            Contract.EnsuresOnThrow<IngressException>(true);
+
+            IIngressStreamObserver pipe = null;
+            if (properties.IsColumnar) pipe = GetPipe(observer);
+            else
+            {
+                pipe = <#= partitionString #><#= m #>SubscriptionCreator<<#= typeParameters #>, <#= outputType #>>.CreateSubscription(
+                    observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                    partitionExtractor,
+<#      } #>
+                    startEdgeExtractor,
+                    endEdgeExtractor,
+<#  } #>
+                    this.IngressSiteIdentifier,
+                    this,
+                    observer,
+                    disorderPolicy,
+                    flushPolicy,
+                    punctuationPolicy,
+<#  if (partitioned) { #>
+                    lowWatermarkPolicy,
+<#  } #>
+                    onCompletedPolicy,
+                    <#= fused ? "entryPoint." : string.Empty #>diagnosticOutput,
+                    fuseModule);
+            }
+
+            if (this.delayed)
+            {
+                container.RegisterIngressPipe(this.IngressSiteIdentifier, pipe);
+                return pipe.DelayedDisposable;
+            }
+            else
+            {
+                pipe.Enable();
+                return pipe;
+            }
+        }
+
+        public string IngressSiteIdentifier { get; private set; } = Guid.NewGuid().ToString();
+
+        private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
+                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+
+        private bool CanGenerateColumnar()
+        {
+            var lookupKey = CacheKey.Create(
+<#  if (m == "Interval")
+    { #>
+                Tuple.Create(
+                    startEdgeExtractor.ExpressionToCSharp(),
+                    endEdgeExtractor != null ? endEdgeExtractor.ExpressionToCSharp() : string.Empty<#
+        if (partitioned)
+        { #>,
+                    partitionExtractor.ExpressionToCSharp()<#
+        } #>),
+<#  } #>
+                Tuple.Create(
+                    fuseModule.ToString(),
+                    Config.AllowFloatingReorderPolicy,
+                    punctuationPolicy.ToString(),
+<#  if (partitioned) { #>
+                    lowWatermarkPolicy.ToString(),
+<#  } #>
+                    disorderPolicy.ToString(),
+                    (disorderPolicy.type != DisorderPolicyType.Throw && <#= fused ? "entryPoint." : string.Empty #>diagnosticOutput != null ? "WithDiagnostic" : string.Empty)));
+
+            var generatedPipeType = cachedPipes.GetOrAdd(
+                lookupKey,
+                key => TemporalIngressTemplate.Generate<#= !fused ? string.Empty : "Fused" #><<#= typeParameters #><#= !fused ? string.Empty : ", TResult" #>>(
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                    partitionExtractor,
+<#      } #>
+                    startEdgeExtractor,
+                    endEdgeExtractor,
+<#  } #>
+                    disorderPolicy.reorderLatency > 0 ? "WithLatency" : string.Empty,
+                    disorderPolicy.type != DisorderPolicyType.Throw && <#= fused ? "entryPoint." : string.Empty #>diagnosticOutput != null ? "WithDiagnostic" : string.Empty,
+                    fuseModule));
+
+            errorMessages = generatedPipeType.Item2;
+            return generatedPipeType.Item1 != null;
+        }
+
+        private IIngressStreamObserver GetPipe(IStreamObserver<<#= keyType #>, <#= outputType #>> observer)
+        {
+            var lookupKey = CacheKey.Create(
+<#  if (m == "Interval")
+    { #>
+                Tuple.Create(
+                    startEdgeExtractor.ExpressionToCSharp(),
+                    endEdgeExtractor != null ? endEdgeExtractor.ExpressionToCSharp() : string.Empty<#
+        if (partitioned)
+        { #>,
+                    partitionExtractor.ExpressionToCSharp()<#
+        } #>),
+<#  } #>
+                Tuple.Create(
+                    fuseModule.ToString(),
+                    Config.AllowFloatingReorderPolicy,
+                    punctuationPolicy.ToString(),
+<#  if (partitioned) { #>
+                    lowWatermarkPolicy.ToString(),
+<#  } #>
+                    disorderPolicy.ToString(),
+                    (disorderPolicy.type != DisorderPolicyType.Throw && <#= fused ? "entryPoint." : string.Empty #>diagnosticOutput != null ? "WithDiagnostic" : string.Empty)));
+
+            object instance;
+            var generatedPipeType = cachedPipes.GetOrAdd(
+                lookupKey,
+                key => TemporalIngressTemplate.Generate<#= !fused ? string.Empty : "Fused" #><<#= typeParameters #><#= !fused ? string.Empty : ", TResult" #>>(
+<#  if (m == "Interval")
+    {
+        if (partitioned)
+        { #>
+                    partitionExtractor,
+<#      } #>
+                    startEdgeExtractor,
+                    endEdgeExtractor,
+<#  } #>
+                    disorderPolicy.reorderLatency > 0 ? "WithLatency" : string.Empty,
+                    disorderPolicy.type != DisorderPolicyType.Throw && <#= fused ? "entryPoint." : string.Empty #>diagnosticOutput != null ? "WithDiagnostic" : string.Empty,
+                    fuseModule));
+            instance = Activator.CreateInstance(
+                generatedPipeType.Item1,
+                observable, this.IngressSiteIdentifier, this, observer, disorderPolicy, flushPolicy, punctuationPolicy, <#= partitioned ? "lowWatermarkPolicy, " : string.Empty #>onCompletedPolicy, <#= fused ? "entryPoint." : string.Empty #>diagnosticOutput);
+            var returnValue = (IIngressStreamObserver)instance;
+            return returnValue;
+        }
+<#  if (m == "StreamEvent")
+    { #>
+
+        public override string ToString()
+        {
+            if (container != null)
+                return "RegisterInput({0}, " + disorderPolicy.ToString() + ", " + flushPolicy.ToString() + ", " + punctuationPolicy.ToString() + ", " +<#= partitioned ? " lowWatermarkPolicy.ToString() + \", \" +" : string.Empty #> onCompletedPolicy.ToString() + ")";
+            else
+                return "ToStreamable(" + disorderPolicy.ToString() + ", " + flushPolicy.ToString() + ", " + punctuationPolicy.ToString() + ", " +<#= partitioned ? " lowWatermarkPolicy.ToString() + \", \" +" : string.Empty #> onCompletedPolicy.ToString() + ")";
+        }
+<#  } #>
+
+        public bool CanFuseSelect(LambdaExpression expression, bool hasStart, bool hasKey) => true;
+
+        public IFusibleStreamable<<#= keyType #>, TNewResult> FuseSelect<TNewResult>(Expression<Func<<#= outputType #>, TNewResult>> expression)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, TNewResult>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseSelect(expression),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.Select<TNewResult>(expression, false, false));
+        }
+
+        public IFusibleStreamable<<#= keyType #>, TNewResult> FuseSelect<TNewResult>(Expression<Func<long, <#= outputType #>, TNewResult>> expression)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, TNewResult>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseSelect(expression),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.Select<TNewResult>(expression, true, false, true));
+        }
+
+        public IFusibleStreamable<<#= keyType #>, TNewResult> FuseSelectWithKey<TNewResult>(Expression<Func<<#= keyType #>, <#= outputType #>, TNewResult>> expression)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, TNewResult>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseSelectWithKey(expression),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.Select<TNewResult>(expression, false, true));
+        }
+
+        public IFusibleStreamable<<#= keyType #>, TNewResult> FuseSelectWithKey<TNewResult>(Expression<Func<long, <#= keyType #>, <#= outputType #>, TNewResult>> expression)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, TNewResult>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseSelectWithKey(expression),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.Select<TNewResult>(expression, true, true));
+        }
+
+        public bool CanFuseSelectMany(LambdaExpression expression, bool hasStart, bool hasKey) => true;
+
+        public IFusibleStreamable<<#= keyType #>, TNewResult> FuseSelectMany<TNewResult>(Expression<Func<<#= outputType #>, System.Collections.Generic.IEnumerable<TNewResult>>> expression)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, TNewResult>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseSelectMany(expression),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.SelectMany<TNewResult>(expression));
+        }
+
+        public IFusibleStreamable<<#= keyType #>, TNewResult> FuseSelectMany<TNewResult>(Expression<Func<long, <#= outputType #>, System.Collections.Generic.IEnumerable<TNewResult>>> expression)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, TNewResult>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseSelectMany(expression),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.SelectMany<TNewResult>(expression));
+        }
+
+        public IFusibleStreamable<<#= keyType #>, TNewResult> FuseSelectManyWithKey<TNewResult>(Expression<Func<<#= keyType #>, <#= outputType #>, System.Collections.Generic.IEnumerable<TNewResult>>> expression)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, TNewResult>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseSelectManyWithKey(expression),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.SelectMany<TNewResult>(expression));
+        }
+
+        public IFusibleStreamable<<#= keyType #>, TNewResult> FuseSelectManyWithKey<TNewResult>(Expression<Func<long, <#= keyType #>, <#= outputType #>, System.Collections.Generic.IEnumerable<TNewResult>>> expression)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, TNewResult>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseSelectManyWithKey(expression),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.SelectMany<TNewResult>(expression));
+        }
+
+        public IFusibleStreamable<<#= keyType #>, <#= outputType #>> FuseWhere(Expression<Func<<#= outputType #>, bool>> expression)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, <#= outputType #>>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseWhere(expression),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.Where(expression));
+        }
+
+        public IFusibleStreamable<<#= keyType #>, <#= outputType #>> FuseSetDurationConstant(long value)
+        {
+            return new <#= classNameFused #><<#= typeParameters #>, <#= outputType #>>(
+                observable,
+<#  if (m == "Interval")
+    {
+        if (partitioned) { #>
+                partitionExtractor,
+<#      } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                this.IngressSiteIdentifier,
+                fuseModule.Clone().FuseSetDurationConstant(value),
+                <#= fused ? "entryPoint" : "this" #>,
+                Properties.ToConstantDuration(true, value));
+        }
+
+        public IObservable<TNewResult> FuseEgressObservable<TNewResult>(Expression<Func<long, long, <#= outputType #>, <#= keyType #>, TNewResult>> expression, QueryContainer container, string identifier)
+        {
+<#  if (m == "Interval")
+    { #>
+            return new FusedObservable<<#= keyType #>, TPayload, TPayload, <#= outputType #>, TNewResult>(
+                observable,
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#      if (partitioned) { #>
+                ParameterSubstituter.AddPartitionKey(partitionExtractor),
+<#      } else { #>
+                (o) => Empty.Default,
+<#      } #>
+                (o) => o,
+<#  }
+    else
+    { #>
+            return new FusedObservable<<#= keyType #>, <#= baseStructure #>, TPayload, <#= outputType #>, TNewResult>(
+                observable,
+                (o) => o.SyncTime,
+                (o) => o.OtherTime,
+<#      if (partitioned) { #>
+                (o) => new PartitionKey<TPartitionKey>(o.PartitionKey),
+<#      } else { #>
+                (o) => Empty.Default,
+<#      } #>
+                (o) => o.Payload,
+<#  } #>
+                fuseModule,
+                expression,
+                container,
+                this.IngressSiteIdentifier,
+                identifier);
+        }
+
+        public bool CanFuseEgressObservable => Config.AllowFloatingReorderPolicy;
+    }
+<#
+} #>
+}

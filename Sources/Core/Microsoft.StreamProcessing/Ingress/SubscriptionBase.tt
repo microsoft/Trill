@@ -1,0 +1,663 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+namespace Microsoft.StreamProcessing.Internal
+{
+<#
+foreach (string partitionString in new[] { string.Empty, "Partitioned" })
+foreach (bool disordered in new[] { true, false })
+{
+    bool partitioned = (partitionString == "Partitioned");
+    string genericArgument = !partitioned ? string.Empty : "TKey, ";
+    string baseType = !partitioned ? "Empty" : "PartitionKey<TKey>";
+    string impatienceSorter = !partitioned ? "ImpatienceSorter<" + (disordered ? "TResult" : "TPayload") + ">" : "PartitionedImpatienceSorter<TKey, " + (disordered ? "TResult" : "TPayload") + ">";
+    string priorityQueueSorter = !partitioned ? "StreamEventPriorityQueue<" + (disordered ? "TResult" : "TPayload") + ">" : "PartitionedStreamEventPriorityQueue<TKey, " + (disordered ? "TResult" : "TPayload") + ">";
+    string globalPunctuation= partitioned ? "LowWatermark" : "Punctuation";
+
+
+    string genericArguments = !partitioned ? "TPayload" : "TKey, TPayload";
+    string adjustedGenericArgs = disordered ? genericArguments.Replace("TPayload", "TResult") : genericArguments;
+    string baseStructure = partitionString + "StreamEvent<" + adjustedGenericArgs + ">";
+#>
+    /// <summary>
+    /// Currently for internal use only - do not use directly.
+    /// </summary>
+<#  if (partitioned) { #>
+    /// <typeparam name="TKey"></typeparam>
+<#  } #>
+    /// <typeparam name="TIngressStructure"></typeparam>
+    /// <typeparam name="TPayload"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public abstract class <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>ObserverSubscriptionBase<<#= genericArgument #>TIngressStructure, TPayload, TResult> : <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>SubscriptionBase<<#= genericArgument #>TIngressStructure, TPayload, TResult>, IObserver<TIngressStructure>
+    {
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        private readonly Func<IDisposable> primaryAction;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>ObserverSubscriptionBase() { }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="observable"></param>
+        /// <param name="identifier"></param>
+        /// <param name="streamable"></param>
+        /// <param name="observer"></param>
+        /// <param name="disorderPolicy"></param>
+        /// <param name="punctuationPolicy"></param>
+<#  if (partitioned) { #>
+        /// <param name="lowWatermarkPolicy"></param>
+<#  } #>
+        /// <param name="onCompletedPolicy"></param>
+        /// <param name="flushPolicy"></param>
+        /// <param name="diagnosticOutput"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>ObserverSubscriptionBase(
+            IObservable<TIngressStructure> observable,
+            string identifier,
+            IStreamable<<#= baseType #>, TResult> streamable,
+            IStreamObserver<<#= baseType #>, TResult> observer,
+            DisorderPolicy disorderPolicy,
+            <#= partitionString #>FlushPolicy flushPolicy,
+            PeriodicPunctuationPolicy punctuationPolicy,
+<#  if (partitioned) { #>
+            PeriodicLowWatermarkPolicy lowWatermarkPolicy,
+<#  } #>
+            OnCompletedPolicy onCompletedPolicy,
+            IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArgument #>TPayload>> diagnosticOutput) : base(
+                identifier,
+                streamable,
+                observer,
+                disorderPolicy,
+                flushPolicy,
+                punctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                diagnosticOutput)
+        {
+            Contract.Requires(observable != null);
+
+            this.primaryAction = () => observable.Subscribe(this);
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override IDisposable PrimaryAction() => this.primaryAction();
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override void Enable() => this.subscription.Enable();
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="input"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public abstract void OnNext(TIngressStructure input);
+    }
+
+    /// <summary>
+    /// Currently for internal use only - do not use directly.
+    /// </summary>
+<#  if (partitioned) { #>
+    /// <typeparam name="TKey"></typeparam>
+<#  } #>
+    /// <typeparam name="TIngressStructure"></typeparam>
+    /// <typeparam name="TPayload"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public abstract class <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>SubscriptionBase<<#= genericArgument #>TIngressStructure, TPayload, TResult> : Pipe<<#= baseType #>, TResult>, IIngressStreamObserver
+    {
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected IDisposable disposer;
+        private readonly string errorMessages;
+        private new readonly bool isColumnar;
+
+        [SchemaSerialization]
+        private readonly string disorderString;
+        [SchemaSerialization]
+        private readonly string punctuationString;
+<#  if (partitioned)
+    { #>
+        [SchemaSerialization]
+        private readonly string lowWatermarkString;
+<#  } #>
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        internal readonly DisorderPolicyType disorderPolicyType;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected readonly long reorderLatency;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [SchemaSerialization]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected readonly <#= partitionString #>FlushPolicy flushPolicy;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        internal readonly PeriodicPunctuationPolicyType punctuationPolicyType;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected readonly ulong punctuationGenerationPeriod;
+
+<#  if (partitioned) { #>
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        internal readonly PeriodicLowWatermarkPolicyType lowWatermarkPolicyType;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected readonly ulong lowWatermarkGenerationPeriod;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected readonly long lowWatermarkTimestampLag;
+
+<#  } #>
+        [SchemaSerialization]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        private readonly OnCompletedPolicy onCompletedPolicy;
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        private readonly MemoryPool<<#= baseType #>, TResult> pool;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected StreamMessage<<#= baseType #>, TResult> currentBatch;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected <#= !partitioned ? "long" : "Dictionary<TKey, long>" #> currentTime<#= !partitioned ? " = StreamEvent.MinSyncTime" : " = new Dictionary<TKey, long>()" #>;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected Dictionary<Tuple<long, <#= disordered ? "TResult" : "TPayload" #>>, ElasticCircularBuffer<AdjustInfo>> startEventInformation = new Dictionary<Tuple<long, <#= disordered ? "TResult" : "TPayload" #>>, ElasticCircularBuffer<AdjustInfo>>(1);
+
+<#  if (!partitioned)
+    { #>
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [DataMember]
+        protected long lastPunctuationTime = StreamEvent.MinSyncTime;
+
+<#  }
+    else
+    { #>
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [DataMember]
+        protected Dictionary<TKey, long> lastPunctuationTime = new Dictionary<TKey, long>();
+
+<#  } #>
+        /* Reorder-specific data structures */
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long highWatermark = 0;
+
+<#  if (partitioned) { #>
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// Tracks each partition's high watermark, which, unlike currentTime, does not include the reorderLatency.
+        /// This is only used for partitioned streams with latency (i.e. nonzero reorderLatency)
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected Dictionary<TKey, long> partitionHighWatermarks = new Dictionary<TKey, long>();
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// Inverse of partitionHighWatermarks - maps highWatermark times to sets of partitions that have that value as their high watermark.
+        /// This is only used for partitioned streams with latency (i.e. nonzero reorderLatency)
+        /// NB: Do not mark as DataMember or as state managed: this is an inversion of existing data in field partitionHighWatermarks.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected SortedDictionary<long, HashSet<TKey>> highWatermarkToPartitionsMap = new SortedDictionary<long, HashSet<TKey>>();
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long lowWatermark = 0;
+
+<#  } #>
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [DataMember]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected <#= impatienceSorter #> impatienceSorter = null;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected <#= priorityQueueSorter #> priorityQueueSorter = null;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArgument #>TPayload>> diagnosticOutput;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>SubscriptionBase() { }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected DelayedSubscription subscription;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="identifier"></param>
+        /// <param name="streamable"></param>
+        /// <param name="observer"></param>
+        /// <param name="disorderPolicy"></param>
+        /// <param name="flushPolicy"></param>
+        /// <param name="punctuationPolicy"></param>
+<#  if (partitioned) { #>
+        /// <param name="lowWatermarkPolicy"></param>
+<#  } #>
+        /// <param name="onCompletedPolicy"></param>
+        /// <param name="diagnosticOutput"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>SubscriptionBase(
+            string identifier,
+            IStreamable<<#= baseType #>, TResult> streamable,
+            IStreamObserver<<#= baseType #>, TResult> observer,
+            DisorderPolicy disorderPolicy,
+            <#= partitionString #>FlushPolicy flushPolicy,
+            PeriodicPunctuationPolicy punctuationPolicy,
+<#  if (partitioned) { #>
+            PeriodicLowWatermarkPolicy lowWatermarkPolicy,
+<#  } #>
+            OnCompletedPolicy onCompletedPolicy,
+            IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArgument #>TPayload>> diagnosticOutput)
+            : base(streamable, observer)
+        {
+            Contract.Requires(observer != null);
+            Contract.Requires(punctuationPolicy != null);
+<#  if (partitioned) { #>
+            Contract.Requires(lowWatermarkPolicy != null);
+<#  } #>
+
+            this.IngressSiteIdentifier = identifier;
+            this.disorderString = disorderPolicy.ToString();
+            this.disorderPolicyType = disorderPolicy.type;
+            this.reorderLatency = disorderPolicy == null ? 0 : disorderPolicy.reorderLatency;
+            this.punctuationString = punctuationPolicy.ToString();
+            this.punctuationPolicyType = punctuationPolicy.type;
+            this.punctuationGenerationPeriod = punctuationPolicy == null ? 0 : punctuationPolicy.generationPeriod;
+<#  if (partitioned) { #>
+            this.lowWatermarkString = lowWatermarkPolicy.ToString();
+            this.lowWatermarkPolicyType = lowWatermarkPolicy.type;
+            this.lowWatermarkGenerationPeriod = lowWatermarkPolicy == null ? 0 : lowWatermarkPolicy.generationPeriod;
+            this.lowWatermarkTimestampLag = lowWatermarkPolicy == null ? 0 : lowWatermarkPolicy.lowWatermarkTimestampLag;
+<#  } #>
+            this.onCompletedPolicy = onCompletedPolicy;
+            this.flushPolicy = flushPolicy;
+            this.diagnosticOutput = diagnosticOutput;
+
+            if (Config.IngressSortingTechnique == SortingTechnique.PriorityQueue)
+                this.priorityQueueSorter = new <#= priorityQueueSorter #>();
+            else
+                this.impatienceSorter = new <#= impatienceSorter #>();
+
+            this.isColumnar = streamable.Properties.IsColumnar;
+            this.pool = MemoryManager.GetMemoryPool<<#= baseType #>, TResult>(this.isColumnar);
+            this.pool.Get(out this.currentBatch);
+            this.currentBatch.Allocate();
+            this.errorMessages = streamable.ErrorMessages;
+
+            this.subscription = new DelayedSubscription(PrimaryAction);
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void FlushContents()
+        {
+            if (this.currentBatch == null || this.currentBatch.Count == 0) return;
+            this.currentBatch.Seal();
+            this.Observer.OnNext(this.currentBatch);
+            this.pool.Get(out this.currentBatch);
+            this.currentBatch.Allocate();
+        }
+
+<#  if (partitioned)
+    { #>
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="value"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected void OnPunctuation(PartitionedStreamEvent<<#= genericArgument #><#= disordered ? "TResult" : "TPayload" #>> value)
+        {
+            Contract.Requires(value.IsPunctuation);
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                this.lastPunctuationTime[value.PartitionKey] = Math.Max(value.SyncTime, this.lastPunctuationTime[value.PartitionKey]);
+            }
+
+            var count = this.currentBatch.Count;
+            this.currentBatch.vsync.col[count] = value.SyncTime;
+            this.currentBatch.vother.col[count] = value.OtherTime;
+            this.currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
+            this.currentBatch.key.col[count] = new PartitionKey<TKey>(value.PartitionKey);
+            this.currentBatch.hash.col[count] = value.PartitionKey.GetHashCode();
+            this.currentBatch[count] = default;
+            this.currentBatch.Count = count + 1;
+            if (this.currentBatch.Count == Config.DataBatchSize)
+            {
+                if (this.flushPolicy == PartitionedFlushPolicy.FlushOnBatchBoundary) OnFlush();
+                else FlushContents();
+            }
+        }
+
+<#  }
+    else
+    { #>
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="value"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected void OnPunctuation(StreamEvent<<#= disordered ? "TResult" : "TPayload" #>> value)
+        {
+            Contract.Requires(value.IsPunctuation);
+
+            this.lastPunctuationTime = Math.Max(value.SyncTime, this.lastPunctuationTime);
+
+            var count = this.currentBatch.Count;
+            this.currentBatch.vsync.col[count] = value.SyncTime;
+            this.currentBatch.vother.col[count] = value.OtherTime;
+            this.currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
+            this.currentBatch.key.col[count] = Empty.Default;
+            this.currentBatch.hash.col[count] = 0;
+            this.currentBatch[count] = default;
+            this.currentBatch.Count = count + 1;
+
+            if (this.flushPolicy == FlushPolicy.FlushOnPunctuation ||
+                (this.flushPolicy == FlushPolicy.FlushOnBatchBoundary && this.currentBatch.Count == Config.DataBatchSize))
+            {
+                OnFlush();
+            }
+            else if (this.currentBatch.Count == Config.DataBatchSize)
+            {
+                FlushContents();
+            }
+        }
+<#  } #>
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override void OnCompleted()
+        {
+            if (this.onCompletedPolicy != OnCompletedPolicy.None)
+            {
+                OnCompleted(this.onCompletedPolicy == OnCompletedPolicy.Flush ? this.currentTime<#if (partitioned) { #>.Values.Max()<#}#> : StreamEvent.InfinitySyncTime);
+            }
+
+            base.OnCompleted();
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="punctuationTime"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected abstract void OnCompleted(long punctuationTime);
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="previous"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override void ProduceQueryPlan(PlanNode previous)
+        {
+            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+                this,
+                typeof(<#= baseType #>), typeof(TPayload), this.isColumnar, this.errorMessages));
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public string IngressSiteIdentifier { get; private set; }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public IDisposable DelayedDisposable => this.subscription;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override void DisposeState()
+        {
+            this.currentBatch?.Free();
+            this.currentBatch = null;
+            this.impatienceSorter?.Dispose();
+            this.disposer?.Dispose();
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="managed"></param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void Dispose(bool managed) => Dispose();
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected abstract IDisposable PrimaryAction();
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public abstract void Enable();
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public int CurrentlyBufferedStartEdgeCount => this.startEventInformation.Count;
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override int CurrentlyBufferedOutputCount => this.currentBatch.Count;
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override int CurrentlyBufferedInputCount => this.CurrentlyBufferedStartEdgeCount + this.CurrentlyBufferedReorderCount;
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public int CurrentlyBufferedReorderCount => (this.priorityQueueSorter != null ? this.priorityQueueSorter.Count() : 0) + (this.impatienceSorter != null ? this.impatienceSorter.Count() : 0);
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataContract]
+        protected sealed class AdjustInfo
+        { // needs to be a class so it can be updated while it is sitting in a queue
+            /// <summary>
+            /// Currently for internal use only - do not use directly.
+            /// </summary>
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            [DataMember]
+            public long modifiedStartTime;
+            /// <summary>
+            /// Currently for internal use only - do not use directly.
+            /// </summary>
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            [DataMember]
+            public uint numberOfOccurrences;
+
+            /// <summary>
+            /// Currently for internal use only - do not use directly.
+            /// </summary>
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            public AdjustInfo() { }
+
+            /// <summary>
+            /// Currently for internal use only - do not use directly.
+            /// </summary>
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            public AdjustInfo(long modifiedStartTime)
+            {
+                this.modifiedStartTime = modifiedStartTime;
+                this.numberOfOccurrences = 1;
+            }
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="stream"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override void Restore(Stream stream)
+        {
+            if (stream != null)
+            {
+                base.Restore(stream);
+            }
+
+            this.subscription.Enable();
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected sealed class DelayedSubscription : IDisposable
+        {
+            private IDisposable inner;
+            private readonly Func<IDisposable> func;
+            private bool disposed;
+
+            /// <summary>
+            /// Currently for internal use only - do not use directly.
+            /// </summary>
+            /// <param name="func"></param>
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            public DelayedSubscription(Func<IDisposable> func) => this.func = func;
+
+            /// <summary>
+            /// Currently for internal use only - do not use directly.
+            /// </summary>
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            public void Enable()
+            {
+                this.inner = this.func();
+                if (this.disposed) DisposeInternal();
+            }
+
+            /// <summary>
+            /// Currently for internal use only - do not use directly.
+            /// </summary>
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            public void Dispose()
+            {
+                if (this.inner != null) DisposeInternal();
+                this.disposed = true;
+            }
+
+            private void DisposeInternal()
+            {
+                this.inner.Dispose();
+            }
+        }
+    }
+
+<# } #>
+}

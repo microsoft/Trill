@@ -1,0 +1,106 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+
+namespace Microsoft.StreamProcessing
+{
+<#
+foreach (var partitionString in new string[] { string.Empty, "Partitioned" }) {
+    string genericArguments = string.IsNullOrEmpty(partitionString) ? "TPayload" : "TKey, TPayload";
+    string keyType = string.IsNullOrEmpty(partitionString) ? "Empty" : "PartitionKey<TKey>";
+#>
+    internal class <#= partitionString #>DiagnosticObservable<<#= genericArguments #>> : IObservable<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>, IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>, IDisposable
+    {
+        private List<IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>> observers = new List<IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>>();
+
+        public IDisposable Subscribe(IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>> observer)
+        {
+            this.observers.Add(observer);
+            return this;
+        }
+
+        public void OnCompleted()
+        {
+            foreach (var observer in this.observers)
+            {
+                observer.OnCompleted();
+            }
+        }
+
+        public void OnError(Exception error)
+        {
+            foreach (var observer in this.observers)
+            {
+                observer.OnError(error);
+            }
+        }
+
+        public void OnNext(OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>> value)
+        {
+            foreach (var observer in this.observers)
+            {
+                observer.OnNext(value);
+            }
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    /// <summary>
+    /// A structure for representing when a tuple had to be adjusted or dropped from a source of data ingress.
+    /// </summary>
+<# if (!string.IsNullOrEmpty(partitionString)) { #>
+    /// <typeparam name="TKey">The partition key type.</typeparam>
+<# } #>
+    /// <typeparam name="TPayload">The type of the stream event payload.</typeparam>
+    [DataContract]
+    public struct OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>
+    {
+        /// <summary>
+        /// The event that was adjusted or dropped in its original version.
+        /// </summary>
+        [DataMember]
+        public <#= partitionString #>StreamEvent<<#= genericArguments #>> Event;
+
+        /// <summary>
+        /// The amount of time that the event was adjusted, or null if the event was dropped.
+        /// </summary>
+        [DataMember]
+        public long? TimeAdjustment;
+    }
+
+    /// <summary>
+    /// Static class containing generator methods for OutOfOrder<#= partitionString #>StreamEvent objects.
+    /// </summary>
+    public static class OutOfOrder<#= partitionString #>StreamEvent
+    {
+        /// <summary>
+        /// Create an OutOfOrder<#= partitionString #>StreamEvent object from its constituent parts.
+        /// </summary>
+<# if (!string.IsNullOrEmpty(partitionString)) { #>
+        /// <typeparam name="TKey">The partition key type.</typeparam>
+<# } #>
+        /// <typeparam name="TPayload">The type of the underlying event.</typeparam>
+        /// <param name="e">The event that has arrived in the stream out of order.</param>
+        /// <param name="delta">The amount of time that the event was out of order.</param>
+        /// <returns></returns>
+        public static OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>> Create<<#= genericArguments #>>(<#= partitionString #>StreamEvent<<#= genericArguments #>> e, long? delta)
+        {
+            return new OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>> { Event = e, TimeAdjustment = delta };
+        }
+    }
+
+<# } #>
+}

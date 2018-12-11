@@ -1,0 +1,354 @@
+﻿<#@ template language="C#" inherits="CommonUnaryTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Reflection" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Threading;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+[assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
+
+// TKey: <#= TKey #>
+// TPayload: <#= TPayload #>
+
+[DataContract]
+internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>>
+{
+    private readonly MemoryPool<<#= TKey #>, <#= TPayload #>> pool;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+
+    private StreamMessage<<#= TKey #>, <#= TPayload #>> genericOutputBatch;
+    [DataMember]
+    private <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> output;
+
+    [DataMember]
+    private SortedDictionary<long, FastDictionary2<ActiveEvent, int>> eventMap;
+    [DataMember]
+    private long lastSyncTime;
+    [DataMember]
+    private long lastCti;
+
+    private DataStructurePool<FastDictionary2<ActiveEvent, int>> dictPool;
+
+    <#= staticCtor #>
+
+    [Obsolete("Used only by serialization. Do not call directly.")]
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TPayload #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TPayload #>>(true /*stream.Properties.IsColumnar*/);
+        this.queryPlanGenerator = queryPlanGenerator;
+
+        //(1, EqualityComparerExtensions.GetCompoundEqualityComparerExpression<ActiveEvent, long, <#= TKey #>, <#= TPayload #>>(e => e.End, EqualityComparerExpression<long>.Default, e => e.Key, stream.Properties.KeyEqualityComparer, e => e.Payload, stream.Properties.PayloadEqualityComparer)));
+        var comparer = new EqualityComparerExpression<ActiveEvent>(
+            (ae1, ae2) => ae1.End == ae2.End && <#= this.keyEquals("ae1", "ae2") #> && <#= this.payloadEquals("ae1.Payload", "ae2.Payload") #>,
+            (ae) => ((int) ae.End) ^ <#= this.keyHashFunction("ae") #> ^ <#= this.payloadHashFunction("ae.Payload") #>) ;
+        var equals = comparer.GetEqualsExpr().Compile();
+        var getHashCode = comparer.GetGetHashCodeExpr().Compile();
+        var generator = comparer.CreateFastDictionary2Generator<ActiveEvent,int>(1, equals, getHashCode, stream.Properties.QueryContainer);
+        dictPool = new DataStructurePool<FastDictionary2<ActiveEvent,int>>(() => generator.Invoke());
+        eventMap = new SortedDictionary<long, FastDictionary2<ActiveEvent, int>>();
+        GetOutputBatch();
+        lastSyncTime = StreamEvent.MinSyncTime;
+        lastCti = StreamEvent.MinSyncTime;
+    }
+
+    private void GetOutputBatch()
+    {
+        pool.Get(out genericOutputBatch);
+        genericOutputBatch.Allocate();
+        output = (<#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>)genericOutputBatch;
+<# foreach (var f in this.fields.Where(fld => fld.OptimizeString())) {  #>
+
+        output.<#= f.Name #>.Initialize();
+<# } #>
+   }
+
+    protected override void DisposeState()
+    {
+        this.output.Free();
+        this.dictPool.Dispose();
+    }
+
+    private void OutputCompletedIntervals()
+    {
+        List<long> delList = new List<long>();
+        // Output all completed intervals
+        foreach (var kvp in eventMap)
+        {
+            var index = FastDictionary2<ActiveEvent, int>.IteratorStart;
+            while (kvp.Value.Iterate(ref index))
+            {
+                var outevt = kvp.Value.entries[index].key;
+                if (outevt.End == StreamEvent.InfinitySyncTime)
+                {
+                    foreach (var key in delList)
+                        eventMap.Remove(key);
+                    return;
+                }
+
+                for (int j = 0; j < kvp.Value.entries[index].value; j++)
+                {
+                    AddToBatch(kvp.Key, outevt);
+                }
+                kvp.Value.Remove(outevt);
+            }
+            dictPool.Return(kvp.Value);
+            delList.Add(kvp.Key);
+        }
+        foreach (var key in delList)
+            eventMap.Remove(key);
+    }
+
+    private void OutputAllEvents()
+    {
+        // Output all collected intervals
+        foreach (var kvp in eventMap)
+        {
+            var index = FastDictionary2<ActiveEvent, int>.IteratorStart;
+            while (kvp.Value.Iterate(ref index))
+            {
+                var outevt = kvp.Value.entries[index].key;
+
+                for (int j = 0; j < kvp.Value.entries[index].value; j++)
+                {
+                    AddToBatch(kvp.Key, outevt);
+                }
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddToBatch(long startTime, ActiveEvent outevt)
+    {
+       int ind = output.Count++;
+       output.vsync.col[ind] = startTime;
+       output.vother.col[ind] = outevt.End;
+       lastSyncTime = startTime;
+       output.key.col[ind] = outevt.Key;
+
+<#     foreach (var f in this.fields) {
+         var sourceName = "outevt.Payload";
+         if (!noFields) sourceName += "." + f.OriginalName;
+#>
+
+<#       if (f.OptimizeString()) { #>
+
+       output.<#= f.Name #>.AddString(<#= sourceName #>);
+<#       } else { #>
+
+       output.<#= f.Name #>.col[ind] = <#= sourceName #>;
+<#       } #>
+<#     } #>
+
+       output.hash.col[ind] = outevt.Hash;
+
+       if (output.Count == Config.DataBatchSize) FlushContents();
+    }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> genericBatch)
+    {
+        var batch = genericBatch as <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>;
+
+        var count = batch.Count;
+        batch.bitvector = batch.bitvector.MakeWritable(pool.bitvectorPool);
+
+        fixed (long* vsync = batch.vsync.col)
+        fixed (long* vother = batch.vother.col)
+        fixed (long* bv = batch.bitvector.col)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0 || vother[i] == long.MinValue)
+                {
+                    if (batch.vother.col[i] == long.MinValue) // Punctuation
+                    {
+                        if (vsync[i] == StreamEvent.InfinitySyncTime)
+                            OutputAllEvents();
+                        else
+                            OutputCompletedIntervals();
+
+                        lastCti = Math.Max(vsync[i], lastCti);
+                        lastSyncTime = Math.Max(vsync[i], lastSyncTime);
+                        AddPunctuationToBatch(batch.vsync.col[i]);
+                    }
+                    else if (vsync[i] < vother[i]) // Start edge or interval
+                    {
+                        ActiveEvent evt = new ActiveEvent(batch, i);
+
+                        FastDictionary2<ActiveEvent, int> entry;
+                        if (!eventMap.TryGetValue(vsync[i], out entry))
+                        {
+                            dictPool.Get(out entry);
+                            eventMap.Add(vsync[i], entry);
+                        }
+                        int index;
+                        if (!entry.Lookup(evt, out index))
+                        {
+                            entry.Insert(evt, 1);
+                        }
+                        else
+                        {
+                            entry.entries[index].value++;
+                        }
+                    }
+                    else // end edge
+                    {
+                        // lookup corresponding start edge
+                        ActiveEvent lookupevt = new ActiveEvent(batch, i);
+                        lookupevt.End = StreamEvent.InfinitySyncTime;
+
+                        FastDictionary2<ActiveEvent, int> entry;
+                        if (!eventMap.TryGetValue(vother[i], out entry))
+                        {
+                            throw new InvalidOperationException("Found end edge without corresponding start edge");
+                        }
+
+                        int index;
+                        if (!entry.Lookup(lookupevt, out index))
+                        {
+                            throw new InvalidOperationException("Found end edge without corresponding start edge");
+                        }
+
+                        // Set interval payload to the payload of the original start-edge
+                        // (in case they are different due to an optimized payload equality comparer)
+                        //lookupevt.Payload = entry.entries[index].key.Payload;
+                        var startEdgeActiveEvent = entry.entries[index].key;
+<#     foreach (var f in this.fields) { #>
+
+                        lookupevt.Payload<#= noFields ? string.Empty : "." + f.OriginalName #> = startEdgeActiveEvent.Payload<#= noFields ? string.Empty : "." + f.OriginalName #>;
+<#     } #>
+
+                        // delete the start edge
+                        entry.entries[index].value--;
+                        if (entry.entries[index].value == 0)
+                        {
+                            entry.Remove(lookupevt);
+                        }
+
+                        // insert interval
+                        lookupevt.End = batch.vsync.col[i];
+
+                        if (!entry.Lookup(lookupevt, out index))
+                        {
+                            entry.Insert(lookupevt, 1);
+                        }
+                        else
+                        {
+                            entry.entries[index].value++;
+                        }
+                        OutputCompletedIntervals(); // Can make this more efficient by trying only if the first event in index got completed
+                    }
+                }
+            }
+        }
+
+        batch.Free();
+    }
+
+    private void AddPunctuationToBatch(long start)
+    {
+        int index = output.Count++;
+        output.vsync.col[index] = start;
+        output.vother.col[index] = StreamEvent.PunctuationOtherTime;
+        output.key.col[index] = default;
+        output[index] = default;
+        output.hash.col[index] = 0;
+        output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+
+        if (output.Count == Config.DataBatchSize) FlushContents();
+    }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    protected override void FlushContents()
+    {
+        if (output.Count == 0) return;
+        output.Seal();
+        this.Observer.OnNext(output);
+        GetOutputBatch();
+    }
+
+    public override int CurrentlyBufferedOutputCount => output.Count;
+
+    public override int CurrentlyBufferedInputCount
+    {
+        get
+        {
+            int count = 0;
+            foreach (var tuple in eventMap)
+            {
+                int iter = FastDictionary2<ActiveEvent, int>.IteratorStart;
+                while (tuple.Value.Iterate(ref iter)) count += tuple.Value.entries[iter].value;
+            }
+            return count;
+        }
+    }
+
+<# if (!noFields && !this.payloadType.GetTypeInfo().IsValueType) { #>
+    [DataContract]
+    public struct <#= ActiveEventType #>
+    {
+<# foreach (var f in this.fields) { #>
+      [DataMember]
+      public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.OriginalName #>;
+<# } #>
+    }
+<# } #>
+
+    [DataContract]
+    public struct ActiveEvent
+    {
+        [DataMember]
+        public long End;
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public int Hash;
+
+        [DataMember]
+        public <#= ActiveEventType #> Payload;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ActiveEvent(<#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> batch, int index)
+        {
+            End = batch.vother.col[index];
+
+<# if (this.noFields) { #>
+            this.Payload = batch.payload.col[index];
+<# } else { #>
+            <# foreach (var f in this.fields) { #>
+
+            this.Payload.<#= f.OriginalName #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+            <# } #>
+<# } #>
+            Key = batch.key.col[index];
+            Hash = batch.hash.col[index];
+        }
+
+        public override string ToString()
+        {
+            return "[End=" + End + ", Key='" + Key + "', Payload='" + "']";
+        }
+    }
+}

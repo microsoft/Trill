@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{60E3B711-7DC6-4604-85B9-303393C0197A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ComponentTesting</RootNamespace>
+    <AssemblyName>ComponentTesting</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TestProjectType>UnitTest</TestProjectType>
+    <CodeContractsAssemblyMode>0</CodeContractsAssemblyMode>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>4.0</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>;DEBUG;TRACE;CODE_ANALYSIS;BINARYMERGE;COLUMNAR;BITVECTOR;MULTICORE_GA</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>F:\dev\Trill\Sources\Test\..\..\bintest\x64\Debug\TrillTest.xml</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>1591</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>;TRACE;BINARYMERGE;COLUMNAR;BITVECTOR;MULTICORE_GA</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>F:\dev\Trill\Sources\Test\..\..\bintest\x64\Release\TrillTest.xml</DocumentationFile>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>1591</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Aggregates\AverageAggregate.cs" />
+    <Compile Include="Aggregates\CompoundAggregate.cs" />
+    <Compile Include="Aggregates\PercentileAggregates.cs" />
+    <Compile Include="Aggregates\PerKeyAggregate.cs" />
+    <Compile Include="Aggregates\CountAggregate.cs" />
+    <Compile Include="Aggregates\GroupAggregate.cs" />
+    <Compile Include="Aggregates\MaxAggregate.cs" />
+    <Compile Include="Aggregates\MinAggregate.cs" />
+    <Compile Include="Aggregates\SumAggregate.cs" />
+    <Compile Include="Aggregates\TopKAggregate.cs" />
+    <Compile Include="Aggregates\WhereAggregate.cs" />
+    <Compile Include="Collections\EndPointQueueTest.cs" />
+    <Compile Include="Collections\FastListTest.cs" />
+    <Compile Include="Collections\FastMapTest.cs" />
+    <Compile Include="Collections\AbstractEventBatch.cs" />
+    <Compile Include="Collections\RemovableEndPointHeapTest.cs" />
+    <Compile Include="Serializer\SerializabilityTypeScan.cs" />
+    <Compile Include="Streamables\BeatStreamableTest.cs" />
+    <Compile Include="Collections\EndPointHeapTest.cs" />
+    <Compile Include="Streamables\ClipStreamableTest.cs" />
+    <Compile Include="Streamables\EquiJoinStreamableTest.cs" />
+    <Compile Include="Streamables\LeftAntiSemiJoinStreamableTest.cs" />
+    <Compile Include="Streamables\ExtendLifetimeTest.cs" />
+    <Compile Include="Streamables\PointAtEndTest.cs" />
+    <Compile Include="Streamables\StitchTest.cs" />
+    <Compile Include="TestUtils.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Microsoft.StreamProcessing\Microsoft.StreamProcessing.csproj">
+      <Project>{29810b58-a929-4127-83df-5004d94c8641}</Project>
+      <Name>Microsoft.StreamProcessing</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\app.config">
+      <Link>app.config</Link>
+    </None>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Reactive.Linq">
+      <Version>4.1.2</Version>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  
+  <!-- This is needed for all .NET Framework projects that have a project reference to a multi-platform project: https://github.com/NuGet/Home/issues/4488 -->
+  <ItemGroup>
+    <PackageReference Include="Legacy2CPSWorkaround" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
+  
+  <!-- Setup global MSBuild variables -->
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    
+    <!-- Automatic Version Control (TODO: not hooked up to the rest yet...) -->
+    <VersionMajor>0</VersionMajor> <!-- Change major version here -->
+    <VersionMinor>9</VersionMinor> <!-- Change minor version here -->
+  </PropertyGroup>
+
+  <!-- VS to TFS Source Control integration -->
+  <PropertyGroup>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+
+  <!-- Define Platform and Configuration -->
+  <PropertyGroup>    
+    <!-- Force x64 -->
+    <PlatformTarget>x64</PlatformTarget>
+    <Platform>x64</Platform>
+    <!-- Default to Debug configuration -->
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <!-- Force x64 for AnyCPU built assemblies. It can be accidentally set for exes,
+     and this prevents it from being persisted in the proj file. -->
+    <Prefer32bit>false</Prefer32bit>
+  </PropertyGroup>
+
+  <!-- Compile settings. -->
+  <!-- Note: MUST be AFTER the previous PropertyGroup that sets Platform and Configuration. -->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <Optimize Condition="'$(Optimize)' == ''">false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;TRACE;CODE_ANALYSIS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release'">
+    <Optimize Condition="'$(Optimize)' == ''">true</Optimize>
+    <DebugType Condition="'$(DebugType)' == ''">pdbonly</DebugType>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DebugSymbols Condition="'$(DebugSymbols)' == ''">true</DebugSymbols>
+    <DebugType Condition="'$(DebugType)' == ''">full</DebugType>
+    <ErrorReport Condition="'$(ErrorReport)' == ''">prompt</ErrorReport>
+    <WarningLevel Condition="'$(WarningLevel)' == ''">4</WarningLevel>
+    <TreatWarningsAsErrors Condition="'$(TreatWarningsAsErrors)' == ''">true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Common properties for all projects -->
+  <PropertyGroup>
+    <!-- Global defines for all Trill projects -->
+    <DefineConstants>$(DefineConstants);BINARYMERGE;COLUMNAR;BITVECTOR;MULTICORE_GA</DefineConstants>
+
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)Microsoft.StreamProcessing.Test.ruleset</CodeAnalysisRuleSet>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+    
+    <!-- Signing -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\TrillKey.snk</AssemblyOriginatorKeyFile>
+
+    <!-- Warning to be fixed :) -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>1591</NoWarn>
+
+  </PropertyGroup>
+
+  <!-- Globally define Rx version, so on update it needs to be changed just here -->
+  <!-- and unfortunately in packages.config everywhere -->
+  <!-- To enable single common packages.config need to check in nuget.exe in a -->
+  <!-- known location and use nuget.targets -->
+  <PropertyGroup>
+    <NewtonsoftJsonVersion>7.0.1</NewtonsoftJsonVersion>
+  </PropertyGroup>
+
+  <!-- Don't remove these lines! Needed for VS to pick up proper ProjectConfiguration. -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" />
+
+  <PropertyGroup>
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\bintest\$(Platform)\$(Configuration)\</OutputPath>
+    <DocumentationFile>$(MSBuildThisFileDirectory)..\..\bintest\$(Platform)\$(Configuration)\$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+
+  <!-- Code Analysis -->
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <RunCodeAnalysisOnThisProject>true</RunCodeAnalysisOnThisProject>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)Microsoft.StreamProcessing.Test.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+</Project>

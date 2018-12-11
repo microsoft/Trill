@@ -1,0 +1,59 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+<#+
+private string IterateComma(string template, int count)
+{
+    return Iterate(template, count, ", ");
+}
+
+private string IterateCommaFrom(string template, int count, int from)
+{
+    return IterateFrom(template, count, from, ", ");
+}
+
+private string IterateLine(string template, int count)
+{
+    return Iterate(template, count, "\r\n");
+}
+
+private string IterateCommaLine(string template, int count)
+{
+    return Iterate(template, count, ",\r\n");
+}
+
+private string Iterate(string template, int count, string seperater="")
+{
+    StringBuilder result = new StringBuilder();
+    for (int i = 1; i <= count; i++)
+    {
+        if (i > 1)
+        {
+            result.Append(seperater);
+        }
+
+        result.Append(template.Replace("$", i.ToString()));
+    }
+    return result.ToString();
+}
+
+private string IterateFrom(string template, int count, int from, string seperater="")
+{
+    StringBuilder result = new StringBuilder();
+    for (int i = from; i <= count; i++)
+    {
+        if (i > from)
+        {
+            result.Append(seperater);
+        }
+
+        result.Append(template.Replace("$", i.ToString()));
+    }
+    return result.ToString();
+}
+#>

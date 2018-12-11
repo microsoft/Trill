@@ -1,0 +1,522 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Threading;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// TKey: <#= TKey #>
+// TLeft: <#= TLeft #>
+// TRight: <#= TRight #>
+// TResult: <#= TResult #>
+
+[DataContract]
+internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= TKey #>, <#= TLeft #>, <#= TRight #>, <#= TResult #>>
+{
+    private const int DefaultCapacity = 64;
+    private readonly MemoryPool<<#= TKey #>, <#= TResult #>> pool;
+    private readonly Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator;
+
+    [DataMember]
+    private FastMap<ActiveEventLeft> leftEdgeMap = new FastMap<ActiveEventLeft>(DefaultCapacity);
+    [DataMember]
+    private FastMap<ActiveEventRight> rightEdgeMap = new FastMap<ActiveEventRight>(DefaultCapacity);
+
+    private StreamMessage<<#= TKey #>, <#= TResult #>> genericOutputBatch;
+    [DataMember]
+    private <#= BatchGeneratedFrom_TKey_TResult #><#= TKeyTResultGenericParameters #> output;
+
+    [DataMember]
+    private long nextLeftTime = long.MinValue;
+    [DataMember]
+    private bool isLeftComplete;
+    [DataMember]
+    private long nextRightTime = long.MinValue;
+    [DataMember]
+    private bool isRightComplete;
+
+    <#= staticCtor #>
+
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TResult #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TResult #>> observer,
+        Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TResult #>>(true /*stream.Properties.IsColumnar*/);
+        <# GetOutputBatch(); #>
+        this.queryPlanGenerator = queryPlanGenerator;
+    }
+
+    protected override void FlushContents()
+    {
+        if (output.Count == 0) return;
+        output.Seal();
+        this.Observer.OnNext(output);
+        <# GetOutputBatch(); #>
+    }
+
+    public override int CurrentlyBufferedOutputCount => output.Count;
+    public override int CurrentlyBufferedLeftInputCount => base.CurrentlyBufferedLeftInputCount + leftEdgeMap.Count;
+    public override int CurrentlyBufferedRightInputCount => base.CurrentlyBufferedRightInputCount + rightEdgeMap.Count;
+
+    protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(left, right, this));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void DisposeState() => this.output.Free();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void ProcessBothBatches(StreamMessage<<#= TKey #>, <#= TLeft #>> leftBatch, StreamMessage<<#= TKey #>, <#= TRight #>> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
+    {
+        var generatedLeftBatch = leftBatch as <#= Transformer.GetBatchClassName(keyType, leftType) #><#= TKeyTLeftGenericParameters #>;
+        var generatedRightBatch = rightBatch as <#= Transformer.GetBatchClassName(keyType, rightType) #><#= TKeyTRightGenericParameters #>;
+
+        leftBatchFree = rightBatchFree = true;
+        if (!GoToVisibleRow(leftBatch))
+        {
+            leftBatchDone = true;
+            rightBatchDone = false;
+            return;
+        }
+
+        UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
+
+        if (!GoToVisibleRow(rightBatch))
+        {
+            leftBatchDone = false;
+            rightBatchDone = true;
+            return;
+        }
+
+        UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
+
+        FastMap<ActiveEventRight>.FindTraverser rightEdges = default;
+        while (true)
+        {
+            bool leftPunctuation = leftBatch.vother.col[leftBatch.iter] == StreamEvent.PunctuationOtherTime;
+            bool rightPunctuation = rightBatch.vother.col[rightBatch.iter] == StreamEvent.PunctuationOtherTime;
+
+            if (nextLeftTime <= nextRightTime)
+            {
+                if (leftPunctuation)
+                {
+                    AddPunctuationToBatch(nextLeftTime);
+                }
+                else
+                {
+                    // ProcessLeftStartEdge
+                    if (true)
+                    {
+                        bool first = true;
+                        <#= TKey #> key = default;
+
+                        var hash = leftBatch.hash.col[leftBatch.iter];
+                        if (rightEdgeMap.Find(hash, ref rightEdges))
+                        {
+                            int rightIndex;
+
+                            while (rightEdges.Next(out rightIndex))
+                            {
+                                if (first) { key = leftBatch.key.col[leftBatch.iter]; first = false; }
+                                //if (keyComparer(key, rightEdgeMap.Values[rightIndex].Key))
+                                var activeEventRight = rightEdgeMap.Values[rightIndex];
+                                var rightKey = activeEventRight.Key;
+                                if (<#= this.keyComparer("key", "rightKey") #>)
+                                {
+                                    //payload = leftBatch[leftBatch.iter];
+                                    //OutputStartEdge(nextLeftTime, ref key, ref payload, ref rightEdgeMap.Values[rightIndex].Payload, hash);
+                                    <# OutputStartEdgeWithActiveEventRight("nextLeftTime", "key", "generatedLeftBatch", "leftBatch.iter", "activeEventRight", "hash"); #>
+                                }
+                            }
+                        }
+                        if (!isRightComplete)
+                        {
+                            int newIndex = leftEdgeMap.Insert(hash);
+                            if (first) key = leftBatch.key.col[leftBatch.iter];
+                            leftEdgeMap.Values[newIndex].Populate(generatedLeftBatch, leftBatch.iter);
+                        }
+                    }
+                }
+
+                leftBatch.iter++;
+
+                if (!GoToVisibleRow(leftBatch))
+                {
+                    leftBatchDone = true;
+                    rightBatchDone = false;
+                    return;
+                }
+
+                UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
+            }
+            else
+            {
+                if (rightPunctuation)
+                {
+                    AddPunctuationToBatch(nextRightTime);
+                }
+                else
+                {
+                    // ProcessRightStartEdge
+                    <# ProcessRightStartEdge2(
+                        "nextRightTime",
+                        "generatedRightBatch",
+                        "rightBatch.iter",
+                        "rightBatch.hash.col[rightBatch.iter]");
+                    #>
+                }
+
+                rightBatch.iter++;
+
+                if (!GoToVisibleRow(rightBatch))
+                {
+                    leftBatchDone = false;
+                    rightBatchDone = true;
+                    return;
+                }
+
+                UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void ProcessLeftBatch(StreamMessage<<#= TKey #>, <#= TLeft #>> batch, out bool isBatchDone, out bool isBatchFree)
+    {
+        var generatedLeftBatch = batch as <#= Transformer.GetBatchClassName(keyType, leftType) #><#= TKeyTLeftGenericParameters #>;
+
+        isBatchFree = true;
+        while (true)
+        {
+            if (!GoToVisibleRow(batch))
+            {
+                isBatchDone = true;
+                return;
+            }
+
+            UpdateNextLeftTime(batch.vsync.col[batch.iter]);
+
+            if (nextLeftTime > nextRightTime)
+            {
+                isBatchDone = false;
+                return;
+            }
+
+            if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+            {
+                AddPunctuationToBatch(batch.vsync.col[batch.iter]);
+                batch.iter++;
+                continue;
+            }
+
+            // ProcessLeftStartEdge
+            FastMap<ActiveEventRight>.FindTraverser rightEdges = default;
+            if (true)
+            {
+                bool first = true;
+                <#= TKey #> key = default;
+
+                var hash = batch.hash.col[batch.iter];
+                if (rightEdgeMap.Find(hash, ref rightEdges))
+                {
+                    int rightIndex;
+
+                    while (rightEdges.Next(out rightIndex))
+                    {
+                        if (first) { key = batch.key.col[batch.iter]; first = false; }
+                        //if (keyComparer(key, rightEdgeMap.Values[rightIndex].Key))
+                        var activeEventRight = rightEdgeMap.Values[rightIndex];
+                        var rightKey = activeEventRight.Key;
+                        if (<#= this.keyComparer("key", "rightKey") #>)
+                        {
+                            //payload = batch[batch.iter];
+                            //OutputStartEdge(nextLeftTime, ref key, ref payload, ref rightEdgeMap.Values[rightIndex].Payload, hash);
+                            <# OutputStartEdgeWithActiveEventRight("nextLeftTime", "key", "generatedLeftBatch", "batch.iter", "activeEventRight", "hash"); #>
+                        }
+                    }
+                }
+                if (!isRightComplete)
+                {
+                    int newIndex = leftEdgeMap.Insert(hash);
+                    if (first) key = batch.key.col[batch.iter];
+                    //payload = batch[batch.iter]; // potential rare recomputation
+
+                    //leftEdgeMap.Values[newIndex].Populate(ref key, ref payload);
+                    leftEdgeMap.Values[newIndex].Populate(generatedLeftBatch, batch.iter);
+                }
+            }
+
+            batch.iter++;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected override void ProcessRightBatch(StreamMessage<<#= TKey #>, <#= TRight #>> batch, out bool isBatchDone, out bool isBatchFree)
+    {
+        var generatedBatch = batch as <#= Transformer.GetBatchClassName(keyType, rightType) #><#= TKeyTRightGenericParameters #>;
+
+        isBatchFree = true;
+        while (true)
+        {
+            if (!GoToVisibleRow(batch))
+            {
+                isBatchDone = true;
+                return;
+            }
+
+            UpdateNextRightTime(batch.vsync.col[batch.iter]);
+
+            if (nextRightTime > nextLeftTime)
+            {
+                isBatchDone = false;
+                return;
+            }
+
+            if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+            {
+                AddPunctuationToBatch(batch.vsync.col[batch.iter]);
+                batch.iter++;
+                continue;
+            }
+
+            // ProcessRightStartEdge
+            <# ProcessRightStartEdge2(
+                "nextRightTime",
+                "generatedBatch",
+                "batch.iter",
+                "batch.hash.col[batch.iter]");
+            #>
+
+            batch.iter++;
+        }
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool GoToVisibleRow<TPayload>(StreamMessage<<#= TKey #>, TPayload> batch)
+    {
+        while (batch.iter < batch.Count && (batch.bitvector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0 && batch.vother.col[batch.iter] >= 0)
+        {
+            batch.iter++;
+        }
+
+        return (batch.iter != batch.Count);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void UpdateNextLeftTime(long time)
+    {
+        nextLeftTime = time;
+        if (nextLeftTime == StreamEvent.InfinitySyncTime)
+        {
+            isLeftComplete = true;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void UpdateNextRightTime(long time)
+    {
+        nextRightTime = time;
+        if (nextRightTime == StreamEvent.InfinitySyncTime)
+        {
+            isRightComplete = true;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddPunctuationToBatch(long start)
+    {
+        if (start > lastCTI)
+        {
+            lastCTI = start;
+
+            int index = output.Count++;
+            output.vsync.col[index] = start;
+            output.vother.col[index] = StreamEvent.PunctuationOtherTime;
+            output.key.col[index] = default;
+            output[index] = default;
+            output.hash.col[index] = 0;
+            output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+
+            if (output.Count == Config.DataBatchSize) FlushContents();
+        }
+    }
+
+    [DataContract]
+    private struct ActiveEventLeft
+    {
+        public <#= TKey #> Key;
+        <# foreach (var f in this.leftFields) { #>
+
+        [DataMember]
+        public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.OriginalName #>;
+        <# } #>
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Populate(<#= BatchGeneratedFrom_TKey_TLeft #> batch, int index)
+        {
+            Key = batch.key.col[index];
+            <# foreach (var f in this.leftFields) { #>
+
+            this.<#= f.OriginalName #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+            <# } #>
+
+        }
+
+        public override string ToString()
+        {
+            return "[Payload='" + "']";
+        }
+    }
+
+    [DataContract]
+    private struct ActiveEventRight
+    {
+        public <#= TKey #> Key;
+        <# foreach (var f in this.rightFields) { #>
+
+        [DataMember]
+        public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.OriginalName #>;
+        <# } #>
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Populate(<#= BatchGeneratedFrom_TKey_TRight #> batch, int index)
+        {
+            Key = batch.key.col[index];
+            <# foreach (var f in this.rightFields) { #>
+
+            this.<#= f.OriginalName #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+            <# } #>
+
+        }
+
+        public override string ToString()
+        {
+            return "[Payload='" + "']";
+        }
+    }
+}
+
+<#+
+private void ProcessRightStartEdge2(string start, string rightBatch, string rightBatchIndex, string hash)
+{
+#>
+  { // begin ProcessRigthStartEdge
+    var start_ProcessRightStartEdge = <#= start #>;
+    var rightBatch_ProcessRightStartEdge = <#= rightBatch #>;
+    var rightBatchIndex_ProcessRightStartEdge = <#= rightBatchIndex #>;
+    var key_ProcessRightStartEdge = <#= rightBatch #>.key.col[<#= rightBatchIndex#>];
+    var hash_ProcessRightStartEdge = <#= hash #>;
+    if (leftEdgeMap.Count > 0)
+    {
+        var leftEdges = leftEdgeMap.Find(hash_ProcessRightStartEdge);
+        int leftIndex;
+        while (leftEdges.Next(out leftIndex))
+        {
+            //if (keyComparer(key, leftEdgeMap.Values[leftIndex].Key))
+            var activeEventLeft = leftEdgeMap.Values[leftIndex];
+            var leftKey = activeEventLeft.Key;
+            if (<#= this.keyComparer("key_ProcessRightStartEdge", "leftKey") #>)
+            {
+                //OutputStartEdge(start, ref key, ref leftEdgeMap.Values[leftIndex].Payload, ref payload, hash);
+<#+
+                OutputStartEdgeWithActiveEventLeft("start_ProcessRightStartEdge", "key_ProcessRightStartEdge", "activeEventLeft", "rightBatch_ProcessRightStartEdge", "rightBatchIndex_ProcessRightStartEdge", "hash_ProcessRightStartEdge");
+#>
+            }
+        }
+    }
+    if (!isLeftComplete)
+    {
+        int newIndex = rightEdgeMap.Insert(<#= hash #>);
+        //rightEdgeMap.Values[newIndex].Populate(ref key, ref payload);
+        rightEdgeMap.Values[newIndex].Populate(<#= rightBatch #>, <#= rightBatchIndex #>);
+    }
+  } // end ProcessRightStartEdge
+<#+
+}
+
+// inline: private void OutputStartEdge(long start, ref TKey key, ref TLeft leftPayload, ref TRight rightPayload, int hash)
+private void OutputStartEdgeWithActiveEventLeft(string start, string key, string activeEventLeft, string rightBatch, string rightBatchIndex, string hash)
+{
+#>
+   { // begin OutputStartEdgeWithActiveEventLeft
+        var start_OutputStartEdge = <#= start #>;
+        var key_OutputStartEdge = <#= key #>;
+        var rightBatch_OutputStartEdge = <#= rightBatch #>;
+        var rightBatchIndex_OutputStartEdge = <#= rightBatchIndex #>;
+        var hash_OutputStartEdge = <#= hash #>;
+
+        int index = output.Count++;
+        output.vsync.col[index] = start_OutputStartEdge;
+        output.vother.col[index] = StreamEvent.InfinitySyncTime;
+        output.key.col[index] = key_OutputStartEdge;
+        //output[index] = selector(leftPayload, rightPayload);
+<#+ if (this.leftMessageRepresentation.noFields) { #>
+        <#= rightBatchSelector(activeEventLeft + ".payload", "rightBatch_OutputStartEdge", "rightBatchIndex_OutputStartEdge") #>
+<#+ } else { #>
+        <#= rightBatchSelector(activeEventLeft, "rightBatch_OutputStartEdge", "rightBatchIndex_OutputStartEdge") #>
+<#+ } #>
+        output.hash.col[index] = hash_OutputStartEdge;
+
+        if (output.Count == Config.DataBatchSize) FlushContents();
+    } // end OutputStartEdgeWithActiveEventLeft
+<#+
+}
+
+// inline: private void OutputStartEdge(long start, ref TKey key, ref TLeft leftPayload, ref TRight rightPayload, int hash)
+private void OutputStartEdgeWithActiveEventRight(string start, string key, string leftBatch, string leftBatchIndex, string rightActiveEvent, string hash)
+{
+#>
+   { // begin OutputStartEdgeWithActiveEventRight
+        var start_OutputStartEdge = <#= start #>;
+        var key_OutputStartEdge = <#= key #>;
+        var leftBatch_OutputStartEdge = <#= leftBatch #>;
+        var leftBatchIndex = <#= leftBatchIndex #>;
+        var hash_OutputStartEdge = <#= hash #>;
+
+        int index = output.Count++;
+        output.vsync.col[index] = start_OutputStartEdge;
+        output.vother.col[index] = StreamEvent.InfinitySyncTime;
+        output.key.col[index] = key_OutputStartEdge;
+        //output[index] = selector(leftPayload, rightPayload);
+<#+ if (this.rightMessageRepresentation.noFields) { #>
+        <#= leftBatchSelector("leftBatch_OutputStartEdge", "leftBatchIndex", rightActiveEvent + ".payload") #>
+<#+ } else { #>
+        <#= leftBatchSelector("leftBatch_OutputStartEdge", "leftBatchIndex", rightActiveEvent) #>
+<#+ } #>
+        output.hash.col[index] = hash_OutputStartEdge;
+
+        if (output.Count == Config.DataBatchSize) FlushContents();
+    } // end OutputStartEdgeWithActiveEventRight
+<#+
+}
+
+
+    private void GetOutputBatch() { #>
+  pool.Get(out genericOutputBatch);
+  genericOutputBatch.Allocate();
+  output = (<#= Transformer.GetBatchClassName(this.keyType, this.resultType) #> <#= this.TKeyTResultGenericParameters #>)genericOutputBatch;
+<#+ foreach (var f in this.outputFields.Where(fld => fld.OptimizeString())) {  #>
+  output.<#= f.Name #>.Initialize();
+<#+ }
+
+    } #>

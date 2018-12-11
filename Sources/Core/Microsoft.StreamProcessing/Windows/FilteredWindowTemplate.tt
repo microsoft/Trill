@@ -1,0 +1,71 @@
+﻿<#@ template language="C#" visibility="internal" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="../Aggregates/AggregateTemplates.tt" #>
+<#@ include file="../Utilities/Templates.tt" #>
+using System;
+using System.Linq.Expressions;
+using System.Numerics;
+using Microsoft.StreamProcessing.Aggregates;
+
+namespace Microsoft.StreamProcessing
+{
+    /// <summary>
+    /// Derived class from Window where additional semantics are applied when a filter is present
+    /// </summary>
+    /// <typeparam name="TKey">Grouping key type for input data</typeparam>
+    /// <typeparam name="TSource">Event payload type for input data</typeparam>
+    public sealed class FilteredWindow<TKey, TSource> : Window<TKey, TSource>
+    {
+        internal FilteredWindow(Expression<Func<TSource, bool>> filter, StreamProperties<TKey, TSource> properties)
+            : base(filter, properties)
+        { }
+<#
+    // Create average aggregates (for non-nullable types).
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive average aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype.
+        /// </summary>
+        public new IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>?> Average(Expression<Func<TSource, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(selector, "selector");
+            var aggregate = new AverageFilterable<#= typeFriendlyName #>Aggregate();
+            return aggregate.Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+
+    // Create average-square aggregates (for non-nullable types).
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName;
+#>
+
+        /// <summary>
+        /// Computes a time-sensitive average squares aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype.
+        /// </summary>
+        public new IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>?> AverageSquares(Expression<Func<TSource, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(selector, "selector");
+            var aggregate = new AverageSquareFilterable<#= typeFriendlyName #>Aggregate();
+            return aggregate.Wrap(selector).ApplyFilter(this.Filter);
+        }
+<#
+    }
+#>
+    }
+}

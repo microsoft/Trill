@@ -1,0 +1,381 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+[assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
+
+<#
+    var outputKey = !isFirstLevelGroup ? "CompoundGroupKey<" + TOuterKey + ", " + TInnerKey + ">" : TInnerKey;
+    var nestedInfix = !isFirstLevelGroup ? "Nested" : (transformedKeySelectorAsString == string.Empty ? "SameKey" : string.Empty);
+#>
+
+// Shuffle Pipe
+// TOuterKey: <#= TOuterKey #>
+// TInnerKey: <#= TInnerKey #>
+// TSource: <#= TSource #>
+// outputKey: <#= outputKey #>
+
+[DataContract]
+internal sealed class <#= CLASSNAME #><#= genericParameters #> :
+                       Pipe<<#= outputKey #>, <#= TSource #>>,
+                       IStreamObserverAnd<#= nestedInfix #>GroupedStreamObservable<<#= TOuterKey #>, <#= TSource #>, <#= TInnerKey #>>
+
+{
+
+<#  if (innerKeyIsAnonymous)
+    { #>
+    [SchemaSerialization]
+    private readonly Expression<Func<<#= TInnerKey #>, int>> keyComparer;
+    private readonly Func<<#= TInnerKey #>, int> innerHashCode;
+<#  } #>
+
+    private readonly int totalBranchesL2, shuffleId, totalBranchesL2Mask;
+
+    private readonly MemoryPool<<#= outputKey #>, <#= TSource #>> l1Pool;
+
+    private List<IStreamObserver<<#= outputKey #>, <#= TSource #>>> Observers;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+
+    <#= resultBatchClassType #><#= resultBatchGenericParameters #>[] batches;
+
+    <#= staticCtor #>
+
+    public <#= CLASSNAME #>() { }
+
+    public <#= CLASSNAME #>(
+        IStreamable<<#= outputKey #>, <#= TSource #>> stream,
+        IStreamObserver<<#= outputKey #>, <#= TSource #>> observer,
+        int _totalBranchesL2,
+        int _shuffleId,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+<#  if (innerKeyIsAnonymous)
+    {
+        if (isFirstLevelGroup)
+        { #>
+        keyComparer = stream.Properties.KeyEqualityComparer.GetGetHashCodeExpr();
+<#      }
+        else
+        { #>
+        keyComparer = ((CompoundGroupKeyEqualityComparer<<#= TOuterKey #>, <#= TInnerKey #>>)stream.Properties.KeyEqualityComparer).innerComparer.GetGetHashCodeExpr();
+<#      } #>
+        innerHashCode = keyComparer.Compile();
+<#  } #>
+        totalBranchesL2 = _totalBranchesL2;
+        totalBranchesL2Mask = totalBranchesL2 - 1;
+        shuffleId = _shuffleId;
+        this.queryPlanGenerator = queryPlanGenerator;
+
+        l1Pool = MemoryManager.GetMemoryPool<<#= outputKey #>, <#= TSource #>>(true /*stream.Properties.IsColumnar*/);
+
+        Observers = new List<IStreamObserver<<#= outputKey #>, <#= TSource #>>>();
+
+        batches = new <#= resultBatchClassType #><#= resultBatchGenericParameters #>[totalBranchesL2];
+    }
+
+    protected override void FlushContents()
+    {
+        StreamMessage<<#= outputKey #>, <#= TSource #>> batch;
+        for (int i = 0; i < batches.Length; i++)
+        {
+            if (batches[0] == null || batches[i].Count == 0) continue;
+            batches[i].Seal();
+            Observers[i].OnNext(batches[i]);
+            l1Pool.Get(out batch);
+            batch.Allocate();
+            var generatedBatch = batch as <#= resultBatchClassType #><#= resultBatchGenericParameters #>;
+<#  foreach (var f in this.fields.Where(fld => fld.OptimizeString()))
+    { #>
+            generatedBatch.<#= f.Name #>.Initialize();
+<#  } #>
+            batches[i] = generatedBatch;
+        }
+    }
+
+    public override int CurrentlyBufferedOutputCount => 0;
+
+    public override int CurrentlyBufferedInputCount => 0;
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        var node = queryPlanGenerator(previous, this);
+        Observers.ForEach(o => o.ProduceQueryPlan(node));
+    }
+
+    public void AddObserver(IStreamObserver<<#= outputKey #>, <#= TSource #>> observer)
+    {
+        Observers.Add(observer);
+    }
+
+    public override void OnFlush()
+    {
+        FlushContents();
+        for (int j = 0; j < this.totalBranchesL2; j++)
+        {
+            this.Observers[j].OnFlush();
+        }
+    }
+
+    public override void OnCompleted()
+    {
+        for (int j = 0; j < this.totalBranchesL2; j++)
+        {
+            this.batches[j].Free();
+            this.Observers[j].OnCompleted();
+        }
+    }
+
+    public override void OnError(Exception exception)
+    {
+        for (int j = 0; j < this.totalBranchesL2; j++)
+        {
+            this.batches[j].Free();
+            this.Observers[j].OnError(exception);
+        }
+    }
+
+    public unsafe void OnNext(StreamMessage<<#= TOuterKey #>, <#= TSource #>> batch)
+    {
+        <#= sourceBatchClassType #><#= TOuterKeyTSourceGenericParameters #> sourceBatch = batch as <#= sourceBatchClassType #><#= TOuterKeyTSourceGenericParameters #>;
+
+        var count = batch.Count;
+        var srckey = batch.key.col;
+
+
+<#  foreach (var f in this.fields)
+    {
+        if (f.canBeFixed)
+        { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = sourceBatch.<#= f.Name #>.col)
+        {
+<#      }
+        else if (f.OptimizeString())
+        { #>
+
+        var <#= f.Name #>_col = sourceBatch.<#= f.Name #>;
+<#      }
+        else
+        { #>
+
+        var <#= f.Name #>_col = sourceBatch.<#= f.Name #>.col;
+<#      }
+    } #>
+
+        if (batches[0] == null)
+            for (int i = 0; i < totalBranchesL2; i++)
+            {
+                StreamMessage<<#= outputKey #>, <#= TSource #>> newBatch;
+                l1Pool.Get(out newBatch);
+                newBatch.Allocate();
+                var generatedBatch = newBatch as <#= resultBatchClassType #><#= resultBatchGenericParameters #>;
+<#  foreach (var f in this.fields.Where(fld => fld.OptimizeString()))
+    { #>
+                generatedBatch.<#= f.Name #>.Initialize(<#= f.Name #>_col.col.UsedLength);
+<#  } #>
+                batches[i] = generatedBatch;
+            }
+
+        <#= vectorHashCodeInitialization #>
+
+<#
+    string innerHash = (transformedKeySelectorAsString == string.Empty ? "src_hash[i]" : (innerKeyIsAnonymous ? "innerHashCode(key)" : inlinedHashCodeComputation));
+    string index = isFirstLevelGroup ?
+        (powerOf2 ? ("innerHash & totalBranchesL2Mask") : ("(innerHash & 0x7fffffff) % totalBranchesL2")) :
+        (powerOf2? ("hash & totalBranchesL2Mask") : ("(hash & 0x7fffffff) % totalBranchesL2"));
+#>
+
+        fixed (long* src_bv = batch.bitvector.col)
+        fixed (long* src_vsync = batch.vsync.col)
+        fixed (long* src_vother = batch.vother.col)
+        fixed (int* src_hash = batch.hash.col)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if ((src_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                {
+                    if (src_vother[i] < 0)
+                    {
+                        // Add the punctuation/low watermark to all batches in the array
+                        for (int batchIndex = 0; batchIndex < totalBranchesL2; batchIndex++)
+                        {
+                            var bb = batches[batchIndex];
+                            var cc = bb.Count;
+                            bb.vsync.col[cc] = src_vsync[i];
+                            bb.vother.col[cc] = src_vother[i];
+<#  if (isFirstLevelGroup)
+    { #>
+                            bb.key.col[cc] = <#= this.transformedKeySelectorAsString != string.Empty ? this.transformedKeySelectorAsString : "srckey[i]" #>;
+                            bb.hash.col[cc] = <#= innerHash #>;
+<#  }
+    else
+    { #>
+                            if (src_vother[i] == StreamEvent.PunctuationOtherTime)
+                            {
+<#      if (transformedKeySelectorAsString != string.Empty)
+        { #>
+                                var key = <#= this.transformedKeySelectorAsString #>;
+                                var hash = src_hash[i] ^ <#= innerHash #>;
+                                bb.key.col[cc].outerGroup = srckey[i];
+                                bb.key.col[cc].innerGroup = <#= this.transformedKeySelectorAsString #>;
+                                bb.key.col[cc].hashCode = hash;
+                                bb.hash.col[cc] = hash;
+<#      }
+        else
+        { #>
+                                bb.key.col[cc] = srckey[i];
+                                bb.hash.col[cc] = <#= innerHash #>;
+<#      } #>
+                            }
+                            else
+                            {
+                                bb.key.col[cc] = default;
+                                bb.hash.col[cc] = 0;
+                            }
+<#  }
+
+    foreach (var f in this.fields)
+    {
+        if (f.OptimizeString())
+        { #>
+                            bb.<#= f.Name #>.AddString(string.Empty);
+<#      }
+        else
+        { #>
+                            bb.<#= f.Name #>.col[cc] = default;
+<#      }
+    } #>
+                            bb.bitvector.col[cc >> 6] |= (1L << (cc & 0x3f));
+                            bb.Count++;
+                            if (cc == Config.DataBatchSize - 1)
+                            {
+                                // flush this batch
+                                if (batches[batchIndex].Count > 0)
+                                {
+                                    batches[batchIndex].iter = shuffleId;
+                                    batches[batchIndex].Seal();
+                                    Observers[batchIndex].OnNext(batches[batchIndex]);
+                                    StreamMessage<<#= outputKey #>, <#= TSource #>> newBatch;
+                                    l1Pool.Get(out newBatch);
+                                    newBatch.Allocate();
+                                    var generatedBatch = newBatch as <#= resultBatchClassType #><#= resultBatchGenericParameters #>;
+<#  foreach (var f in this.fields.Where(fld => fld.OptimizeString()))
+    { #>
+                                    generatedBatch.<#= f.Name #>.Initialize(<#= f.Name #>_col.col.UsedLength);
+<#  } #>
+                                    batches[batchIndex] = generatedBatch;
+
+                                }
+                            }
+                        }
+
+                    }
+                    continue;
+                }
+                else
+                {
+<#  if (transformedKeySelectorAsString != string.Empty)
+    { #>
+                    var key = <#= this.transformedKeySelectorAsString #>;
+<#  } #>
+                    var innerHash = <#= innerHash #>;
+
+<#  if (!isFirstLevelGroup)
+    { #>
+                    var hash = src_hash[i] ^ innerHash;
+<#  } #>
+                    var index = <#= index #>;
+                    var b = batches[index];
+                    var x = b.Count;
+
+                    b.vsync.col[x] = src_vsync[i];
+                    b.vother.col[x] = src_vother[i];
+
+<#  if (transformedKeySelectorAsString != string.Empty)
+    {
+        if (isFirstLevelGroup)
+        { #>
+                    b.key.col[x] = key;
+                    b.hash.col[x] = innerHash;
+<#      }
+        else
+        { #>
+                    b.key.col[x].outerGroup = srckey[i];
+                    b.key.col[x].innerGroup = key;
+                    b.key.col[x].hashCode = hash;
+                    b.hash.col[x] = hash;
+<#      }
+    }
+    else
+    { #>
+                    b.key.col[x] = srckey[i];
+                    b.hash.col[x] = innerHash;
+<#  } #>
+
+<#  foreach (var f in this.fields)
+    {
+        if (f.OptimizeString())
+        { #>
+                    b.<#= f.Name #>.AddString(<#= f.Name #>_col,i);
+<#      }
+        else
+        { #>
+                    b.<#= f.Name #>.col[x] = <#= f.Name #>_col[i];
+<#      }
+    } #>
+
+                    b.Count++;
+
+                    if (x == Config.DataBatchSize - 1)
+                    {
+                        // flush this batch
+                        int j = index;
+                        //for (int j = 0; j < Config.ReduceArity; j++)
+                        {
+                            if (batches[j].Count > 0)
+                            {
+                                batches[j].iter = shuffleId;
+                                batches[j].Seal();
+                                Observers[j].OnNext(batches[j]);
+                                StreamMessage<<#= outputKey #>, <#= TSource #>> newBatch;
+                                l1Pool.Get(out newBatch);
+                                newBatch.Allocate();
+                                var generatedBatch = newBatch as <#= resultBatchClassType #><#= resultBatchGenericParameters #>;
+<#  foreach (var f in this.fields.Where(fld => fld.OptimizeString()))
+    { #>
+                                generatedBatch.<#= f.Name #>.Initialize(<#= f.Name #>_col.col.UsedLength);
+<#  } #>
+                                batches[j] = generatedBatch;
+                            }
+                        }
+                    }
+                }
+            } // end for loop
+        } // end fixed src_hash, src_vother, src_vsync, src_bv
+
+<#  if (!String.IsNullOrWhiteSpace(vectorHashCodeInitialization))
+    { #>
+        hashCodeVector.Return();
+<#  }
+
+    foreach (var f in this.fields.Where(fld => fld.canBeFixed))
+    { #>
+
+        } // end fixed <#= f.Name #>
+<#  } #>
+
+        batch.Release();
+        batch.Return();
+    }
+}

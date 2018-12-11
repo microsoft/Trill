@@ -1,0 +1,266 @@
+﻿<#@ template language="C#" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="../Aggregates/AggregateTemplates.tt" #>
+<#@ include file="Templates.tt" #>
+<# int maxCompoundAggregateParameters = 15; #>
+using System;
+using System.Linq.Expressions;
+using System.Numerics;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+
+namespace Microsoft.StreamProcessing
+{
+    public static partial class Streamable
+    {
+<#  // Create sum aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive sum aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// </summary>
+        public static IStreamable<TKey, <#= typeName #>> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.Sum(selector));
+        }
+<#  }
+
+    // Create nullable versions of sum aggregates.
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive sum aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
+        /// no affect on the sum.
+        /// </summary>
+        public static IStreamable<TKey, <#= typeName #>> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.Sum(selector));
+        }
+<#  }
+
+    // Create sum of squares aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive sum of squares aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// </summary>
+        public static IStreamable<TKey, <#= typeName #>> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.SumSquares(selector));
+        }
+<#  }
+
+    // Create nullable versions of sum of squares aggregates.
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive sum of squares aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
+        /// no affect on the sum.
+        /// </summary>
+        public static IStreamable<TKey, <#= typeName #>> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.SumSquares(selector));
+        }
+<#  }
+
+    // Create product aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive product aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// </summary>
+        public static IStreamable<TKey, <#= typeName #>> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.Product(selector));
+        }
+<#  }
+
+    // Create nullable versions of product aggregates.
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive product aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
+        /// no affect on the sum.
+        /// </summary>
+        public static IStreamable<TKey, <#= typeName #>> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.Product(selector));
+        }
+<#  }
+
+    // Create average aggregates (for non-nullable types).
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive average aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype.
+        /// </summary>
+        public static IStreamable<TKey, <#= returnTypeName #>> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.Average(selector));
+        }
+<#  }
+
+    // Create nullable versions of average aggregates.
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive average aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
+        /// </summary>
+        public static IStreamable<TKey, <#= returnTypeName #>?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.Average(selector));
+        }
+<#  }
+
+    // Create average of squares aggregates (for non-nullable types).
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive average of squares aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype.
+        /// </summary>
+        public static IStreamable<TKey, <#= returnTypeName #>> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.AverageSquares(selector));
+        }
+<#  }
+
+    // Create nullable versions of average of squares aggregates.
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName; #>
+
+        /// <summary>
+        /// Computes a time-sensitive average of squares aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
+        /// </summary>
+        public static IStreamable<TKey, <#= returnTypeName #>?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(selector, nameof(selector));
+            return source.Aggregate(w => w.AverageSquares(selector));
+        }
+<#  }
+
+    // Create compound aggregate varients. We skip count = 1 because single aggregate implementation is different and already implemented.
+    for (int count = 2; count <= maxCompoundAggregateParameters; count++)
+    {#>
+
+        /// <summary>
+        /// Applies multiple aggregates to snapshot windows on the input stream.
+        /// </summary>
+        public static IStreamable<TKey, TOutput> Aggregate<TKey, TInput, <#= IterateComma("TState$, TOutput$", count) #>, TOutput>(
+            this IStreamable<TKey, TInput> source,
+<#= IterateLine("            Func<Window<TKey, TInput>, IAggregate<TInput, TState$, TOutput$>> aggregate$,", count) #>
+            Expression<Func<<#= IterateComma("TOutput$", count) #>, TOutput>> merger)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+<#= IterateLine("            Invariant.IsNotNull(aggregate$, nameof(aggregate$));", count) #>
+            Invariant.IsNotNull(merger, nameof(merger));
+
+            var window = new Window<TKey, TInput>(source.Properties);
+<#= IterateLine("            var agg$ = aggregate$(window);", count) #>
+            var compound = AggregateFunctions.Combine(<#= IterateComma("agg$", count) #>, merger);
+            return new SnapshotWindowStreamable<TKey, TInput, StructTuple<<#= IterateComma("TState$", count) #>>, TOutput>(source, compound);
+        }
+
+        /// <summary>
+        /// Applies multiple aggregates to snapshot windows on the input stream relative to the selected grouping key.
+        /// </summary>
+        public static IStreamable<Empty, TResult> AggregateByKey<TInput, TInnerKey, <#= IterateComma("TState$, TOutput$", count) #>, TOutput, TResult>(
+            this IStreamable<Empty, TInput> source,
+            Expression<Func<TInput, TInnerKey>> keySelector,
+<#= IterateLine("            Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState$, TOutput$>> aggregate$,", count) #>
+            Expression<Func<<#= IterateComma("TOutput$", count) #>, TOutput>> merger,
+            Expression<Func<TInnerKey, TOutput, TResult>> resultSelector)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(keySelector, nameof(keySelector));
+<#= IterateLine("            Invariant.IsNotNull(aggregate$, nameof(aggregate$));", count) #>
+            Invariant.IsNotNull(merger, nameof(merger));
+
+            var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(source.Properties.GroupNested(keySelector));
+<#= IterateLine("            var agg$ = aggregate$(window);", count) #>
+            var compound = AggregateFunctions.Combine(<#= IterateComma("agg$", count) #>, merger);
+
+            return new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<<#= IterateComma("TState$", count) #>>, TOutput, TResult>
+                    (source, compound, keySelector, resultSelector);
+        }
+
+        /// <summary>
+        /// Applies multiple aggregates to "snapshot windows" (SI terminology) on the input stream.
+        /// </summary>
+        internal static IStreamable<TKey, TOutput> Aggregate<TKey, TInput, <#= IterateComma("TState$, TOutput$", count) #>, TOutput>(
+            this IStreamable<TKey, TInput> source,
+<#= IterateLine("            IAggregate<TInput, TState$, TOutput$> aggregate$,", count) #>
+            Expression<Func<<#= IterateComma("TOutput$", count) #>, TOutput>> merger)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+<#= IterateLine("            Invariant.IsNotNull(aggregate$, nameof(aggregate$));", count) #>
+            Invariant.IsNotNull(merger, nameof(merger));
+
+            var compound = AggregateFunctions.Combine(<#= IterateComma("aggregate$", count) #>, merger);
+            return new SnapshotWindowStreamable<TKey, TInput, StructTuple<<#= IterateComma("TState$", count) #>>, TOutput>(source, compound);
+        }
+<#  } #>
+    }
+}

@@ -1,0 +1,241 @@
+﻿<#@ template language="C#" inherits="CommonUnaryTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+<# if (this.keyType.Namespace != null) { #>
+using <#= this.keyType.Namespace #>;
+<# } #>
+<# if (this.payloadType.Namespace != null && this.payloadType.Namespace != this.keyType.Namespace) { #>
+using <#= this.payloadType.Namespace #>;
+<# } #>
+<# if (this.resultType.Namespace != null && this.resultType.Namespace != this.keyType.Namespace && this.resultType.Namespace != this.payloadType.Namespace) { #>
+using <#= this.resultType.Namespace #>;
+<# } #>
+[assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
+
+// Source Fields: <#= String.Join(",", this.fields.Select(f => f.OriginalName)) #>
+// Destination Fields: <#= String.Join(",", this.destinationFields.Select(f => f.OriginalName)) #>
+// Computed Fields: <#= String.Join(",", this.computedFields.Keys.Select(f => f.OriginalName)) #>
+// Swinging Fields: <#= String.Join(",", this.swingingFields.Select(tup => string.Format("<{0},{1}>", tup.Item1.OriginalName, tup.Item2.Name))) #>
+
+[DataContract]
+internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TResult #>>
+{
+    private <#= Transformer.GetMemoryPoolClassName(this.keyType, this.resultType) #><#= MemoryPoolGenericParameters #> pool;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+<# foreach (var f in this.unassignedFields) { #>
+<# if (!f.OptimizeString()) { #>
+
+    private readonly ColumnBatch<<#= f.TypeName #>> sharedDefaultColumnFor_<#= f.Name #>;
+<# } #>
+<# } #>
+
+    <#= staticCtor #>
+
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TResult #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TResult #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TResult #>>() as <#= Transformer.GetMemoryPoolClassName(this.keyType, this.resultType) #><#= MemoryPoolGenericParameters #>;
+        this.queryPlanGenerator = queryPlanGenerator;
+<# foreach (var f in this.unassignedFields.Where(fld => !fld.OptimizeString())) { #>
+
+        pool.Get(out sharedDefaultColumnFor_<#= f.Name #>);
+        Array.Clear(sharedDefaultColumnFor_<#= f.Name #>.col, 0, sharedDefaultColumnFor_<#= f.Name #>.col.Length);
+<# } #>
+
+    }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    protected override void DisposeState()
+    {
+<# foreach (var f in this.unassignedFields.Where(fld => !fld.OptimizeString())) { #>
+        this.sharedDefaultColumnFor_<#= f.Name #>.Return();
+<# } #>
+    }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> _inBatch)
+    {
+        var sourceBatch = _inBatch as <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>;
+
+        StreamMessage<<#= TKey #>, <#= TResult #>> _genBatch; // Need this type to call Get with so the right subtype will be returned
+        pool.Get(out _genBatch);
+
+        <#= Transformer.GetBatchClassName(keyType, resultType) #><#= TKeyTResultGenericParameters #> resultBatch = _genBatch as <#= Transformer.GetBatchClassName(keyType, resultType) #><#= TKeyTResultGenericParameters #>;
+        var count = sourceBatch.Count;
+
+        resultBatch.vsync = sourceBatch.vsync;
+        resultBatch.vother = sourceBatch.vother;
+        resultBatch.key = sourceBatch.key;
+        resultBatch.hash = sourceBatch.hash;
+        resultBatch.bitvector = sourceBatch.bitvector;
+
+<# if (resultType.CanContainNull()) { #>
+        pool.GetBV(out resultBatch._nullnessvector);
+<# } #>
+
+        // Get memory pools for the result columns.
+        // When no transformation was done to the query, then needed for all fields in the result type.
+        // When the query was transformed, then this is needed only for computed fields, since
+        // any field that is just assigned a field from the source type will get its value by
+        // swinging a pointer for the corresponding column.
+
+<# foreach (var f in (this.ProjectionReturningResultInstance != null ? this.destinationFields : this.computedFields.Keys)) { #>
+        pool.Get(out resultBatch.<#= f.Name #>);
+<# } #>
+
+<# foreach (var f in this.unassignedFields) { #>
+<# if (!f.OptimizeString()) { #>
+        this.sharedDefaultColumnFor_<#= f.Name #>.IncrementRefCount(1);
+<# } #>
+        resultBatch.<#= f.Name #> = this.sharedDefaultColumnFor_<#= f.Name #>;
+<# } #>
+
+        // Create locals that point directly to the arrays within the columns in the destination batch.
+
+<# foreach (var f in this.computedFields.Keys) { #>
+<# if (f.OptimizeString()) { #>
+        var dest_<#= f.Name #> = resultBatch.<#= f.Name #>;
+<# } else { #>
+        var dest_<#= f.Name #> = resultBatch.<#= f.Name #>.col;
+<# } #>
+<# } #>
+
+        // Create locals that point directly to the arrays within the columns in the source batch.
+<# if (this.ProjectionReturningResultInstance != null || 0 < this.computedFields.Count()) { #>
+<# foreach (var f in this.fields) { #>
+<# if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = sourceBatch.<#= f.Name #>.col)
+        {
+<# } else { #>
+        var <#= f.Name #>_col = sourceBatch.<#= f.Name #>.col;
+<# } #>
+<# } #>
+
+        fixed (long* bv = sourceBatch.bitvector.col)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                {
+<# if (this.StartEdgeParameterName != null) { #>
+                    var <#= this.StartEdgeParameterName #> = sourceBatch.vsync.col[i] < sourceBatch.vother.col[i] ? sourceBatch.vsync.col[i] : sourceBatch.vother.col[i];
+<# } #>
+<# if (this.needSourceInstance) { #>
+                    var <#= PARAMETER #> = sourceBatch[i];
+<# } #>
+<# if (this.ProjectionReturningResultInstance != null) { #>
+                    resultBatch[i] = <#= this.ProjectionReturningResultInstance #>;
+<# } else { #>
+<# foreach (var kv in this.computedFields) {
+                      var f = kv.Key;
+                      var v = kv.Value.ExpressionToCSharp();
+                    #>
+<# if (f.OptimizeString()) { #>
+                    dest_<#= f.Name #>.AddString(<#= v #>);
+<# } else { #>
+                    dest_<#= f.Name #>[i] = <#= v #>;
+<# } #>
+<# } #>
+<# } #>
+                }
+            }
+        }
+
+<# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+        }
+<# } #>
+<# } #>
+
+        #region MultiString Vector Operations (if any)
+<# foreach (var mso in this.multiStringOperations) { #>
+            <#= mso #>
+<# } #>
+        #endregion
+
+        #region Swinging Fields
+
+        // When the query is transformed, then any fields in the result batch that
+        // are just assigned from a field in the source batch are computed by just
+        // swinging the pointer for the corresponding column.
+
+<# foreach (var tuple in this.swingingFields) {
+          var destField = tuple.Item1.Name;
+          var sourceField = tuple.Item2.Name; #>
+
+        // Special case for a field in the output being assigned the key field
+        // when both are strings and the output field is a MultiString. The key
+        // field is a CB<string> so we need to call MultiString.FromColumnBatch
+<# if (tuple.Item1.OptimizeString() && sourceField.Equals("key")) { #>
+        resultBatch.<#= destField #> = MultiString.FromColumnBatch(sourceBatch.<#= sourceField #>, sourceBatch.bitvector, pool.charArrayPool, pool.intPool, pool.shortPool, pool.bitvectorPool);
+<# } else { #>
+        resultBatch.<#= destField #> = sourceBatch.<#= sourceField #>;
+<# } #>
+<# } #>
+
+        // We avoid incrementing the ref counts on the ouput batch because for the
+        // most part we are throwing away our reference to the columns from the source batch
+        // so the reference count doesn't change. But the same field might get swung to more
+        // than one column in the output batch. In that case, we need to increment the ref count.
+<# foreach (var kv in this.swungFieldsCount) {
+          var sourceField = kv.Key;
+          var count = kv.Value;
+          if (sourceField.Name.Equals("key") && !sourceField.OptimizeString()) {
+            // special case: we "pointer swing" the key field once just because the key
+            // of the output batch is the key of the source batch
+            // (Note that this really applies only to SelectKey since Select is not able
+            // to reference the key field in the selector.)
+            count++;
+          }
+          if (count == 1) continue; #>
+        sourceBatch.<#= sourceField.Name #>.IncrementRefCount(<#= count - 1 #>);
+<# } #>
+        #endregion
+
+        resultBatch.Count = count;
+        resultBatch.Seal();
+
+        // Return source columns as necessary.
+        // When the query is transformed, this is the "non-swinging" fields.
+        // Otherwise it is all source fields
+<# foreach (var sourceField in this.nonSwingingFields) { #>
+<# if (sourceField.OptimizeString()) { #>
+        sourceBatch.<#= sourceField.Name #>.Dispose();
+<# } else { #>
+        sourceBatch.<#= sourceField.Name #>.Return();
+<# } #>
+<# } #>
+<# if (payloadType.CanContainNull()) { #>
+        sourceBatch._nullnessvector.ReturnClear();
+<# } #>
+
+        sourceBatch.Return();
+        this.Observer.OnNext(resultBatch);
+    }
+
+    public override int CurrentlyBufferedOutputCount => 0;
+
+    public override int CurrentlyBufferedInputCount => 0;
+}

@@ -1,0 +1,2259 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reactive.Linq;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+using Microsoft.StreamProcessing.Serializer;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace SimpleTesting
+{
+    public static class ClassWithNestedType1<T>
+    {
+        public class NestedType<U> {
+            public T x;
+            public U y;
+        }
+    }
+
+    public static class ClassWithNestedType2<T, U>
+    {
+        public class NestedType {
+            public T x;
+            public U y;
+        }
+    }
+
+    public class ClassWithAutoProps : IEqualityComparer<ClassWithAutoProps>
+    {
+        public int IntField;
+        public string StringField;
+        public string StringAutoProp { get; set; }
+        public int IntAutoProp { get; set; }
+        public bool Equals(ClassWithAutoProps a, ClassWithAutoProps b)
+        {
+            return a.IntAutoProp == b.IntAutoProp &&
+                a.IntField == b.IntField &&
+                (a.StringAutoProp != null || b.StringAutoProp == null) &&
+                (a.StringAutoProp == null || a.StringAutoProp.Equals(b.StringAutoProp)) &&
+                (a.StringField != null || b.StringField == null) &&
+                (a.StringField == null || a.StringField.Equals(b.StringField));
+        }
+
+        public int GetHashCode(ClassWithAutoProps obj) => obj.IntField.GetHashCode();
+        public override bool Equals(object obj) => obj is ClassWithAutoProps other ? Equals(this, other) : false;
+        public override int GetHashCode() => GetHashCode(this);
+    }
+
+    public class ClassWithOnlyAutoProps : IEqualityComparer<ClassWithOnlyAutoProps>
+    {
+        public string StringAutoProp { get; set; }
+        public int IntAutoProp { get; set; }
+        public bool Equals(ClassWithOnlyAutoProps a, ClassWithOnlyAutoProps b)
+        {
+            return a.IntAutoProp == b.IntAutoProp &&
+                (a.StringAutoProp != null || b.StringAutoProp == null) &&
+                (a.StringAutoProp == null || a.StringAutoProp.Equals(b.StringAutoProp));
+        }
+
+        public int GetHashCode(ClassWithOnlyAutoProps obj) => obj.IntAutoProp.GetHashCode();
+        public override bool Equals(object obj) => obj is ClassWithOnlyAutoProps other ? Equals(this, other) : false;
+        public override int GetHashCode() => GetHashCode(this);
+    }
+
+    internal class ClassImplementingIComparable : IComparable<ClassImplementingIComparable>
+    {
+        public int CompareTo(ClassImplementingIComparable other) => 3;
+    }
+
+    internal class ClassImplementingGenericIComparer : IComparer<ClassImplementingGenericIComparer>
+    {
+        public int Compare(ClassImplementingGenericIComparer x, ClassImplementingGenericIComparer y) => 3;
+    }
+
+    internal class ClassImplementingNonGenericIComparer : System.Collections.IComparer
+    {
+        public int Compare(object x, object y) => 3;
+    }
+
+    public class SERListEqualityComparer : IEqualityComparer<StreamEvent<List<RankedEvent<char>>>>
+    {
+        public bool Equals(StreamEvent<List<RankedEvent<char>>> a, StreamEvent<List<RankedEvent<char>>> b)
+        {
+            if (a.SyncTime != b.SyncTime) return false;
+            if (a.OtherTime != b.OtherTime) return false;
+
+            if (a.Kind != b.Kind) return false;
+
+            if (a.Kind != StreamEventKind.Punctuation)
+            {
+                if (a.Payload.Count != b.Payload.Count) return false;
+
+                for (int j = 0; j < a.Payload.Count; j++)
+                {
+                    if (!a.Payload[j].Equals(b.Payload[j])) return false;
+                }
+            }
+
+            return true;
+        }
+
+        public int GetHashCode(StreamEvent<List<RankedEvent<char>>> obj)
+        {
+            int ret = (int)(obj.SyncTime ^ obj.OtherTime);
+            foreach (var l in obj.Payload)
+            {
+                ret = ret ^ l.GetHashCode();
+            }
+            return ret;
+        }
+    }
+
+    public struct Payload
+    {
+        public long field1;
+        public long field2;
+    }
+
+    public class Event
+    {
+        public DateTime Vs;
+        public long V;
+        public int Key;
+    }
+
+    public struct ResultEvent
+    {
+        public int Key;
+        public ulong Cnt;
+    }
+
+    public class PayloadWithFieldOfNestedType1
+    {
+        public ClassWithNestedType1<int>.NestedType<string> nt;
+
+        public PayloadWithFieldOfNestedType1()
+        {
+            this.nt = new ClassWithNestedType1<int>.NestedType<string>();
+        }
+
+        public PayloadWithFieldOfNestedType1(int i)
+        {
+            this.nt = new ClassWithNestedType1<int>.NestedType<string> { x = i };
+        }
+    }
+
+    public class PayloadWithFieldOfNestedType2
+    {
+        public ClassWithNestedType2<int, string>.NestedType nt;
+
+        public PayloadWithFieldOfNestedType2()
+        {
+            this.nt = new ClassWithNestedType2<int, string>.NestedType();
+        }
+
+        public PayloadWithFieldOfNestedType2(int i)
+        {
+            this.nt = new ClassWithNestedType2<int, string>.NestedType { x = i };
+        }
+    }
+<#
+foreach (var fusionOption in new [] { "Fused", string.Empty })
+foreach (var orientation in new [] { "Row", "Columnar" })
+foreach (var batch in new [] { string.Empty, "SmallBatch" })
+foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
+{
+    var suffix = fusionOption + orientation + batch + disorderPolicy;
+#>
+
+    [TestClass]
+    public class SimpleTests<#= suffix #> : TestWithConfigSettingsAndMemoryLeakDetection
+    {
+        public SimpleTests<#= suffix #>() : base(new ConfigModifier()
+<#  switch (orientation)
+    {
+        case "Row": #>
+            .ForceRowBasedExecution(true)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+        case "Columnar": #>
+            .ForceRowBasedExecution(false)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+    }
+    if (!string.IsNullOrEmpty(disorderPolicy)) { #>
+            .AllowFloatingReorderPolicy(true)
+<#  }
+    if (!string.IsNullOrEmpty(batch)) { #>
+            .DataBatchSize(100)
+<#  } #>
+            .UseMultiString(true)
+            .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
+        { }
+
+        // Total number of input events
+        private const int NumEvents = 1000;
+        private readonly IEnumerable<MyStruct2> enumerable = Enumerable.Range(0, NumEvents)
+            .Select(e =>
+                new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
+
+        private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
+
+        private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
+
+        public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
+        {
+            if (a.Count != b.Count) return false;
+
+            for (int j = 0; j < a.Count; j++)
+            {
+                if (!a[j].Equals(b[j])) return false;
+            }
+
+            return true;
+        }
+
+        public static int MyGetHashCode(List<RankedEvent<char>> a)
+        {
+            int ret = 0;
+            foreach (var l in a)
+            {
+                ret = ret ^ l.GetHashCode();
+            }
+            return ret;
+        }
+
+        private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
+        {
+            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
+        }
+
+        private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
+        {
+            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
+        }
+
+        public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
+        {
+            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Where1<#= suffix #>()
+        {
+            TestWhere(e => e.field2.mystring.Contains("string")<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Where2<#= suffix #>()
+        {
+            TestWhere(e => e.field2.mystring.Equals("string0")<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Where3<#= suffix #>()
+        {
+            TestWhere(e => e.field2.mystring.Equals("string0")<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Where4<#= suffix #>()
+        {
+            TestWhere(e => e.field3.nestedField == 0<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Where5<#= suffix #>()
+        {
+            TestWhere(e => true<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Where6<#= suffix #>()
+        {
+            TestWhere(e => false<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Where7<#= suffix #>()
+        {
+            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Where8<#= suffix #>()
+        {
+            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Where9<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents);
+            var streamResult = input
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Where(v => v % 2 == 0)
+                .Where(v => v % 3 == 0)
+                .ToPayloadEnumerable();
+
+            var a = streamResult.ToArray();
+            Assert.IsTrue(input.Where(v => v % 6 == 0).SequenceEqual(a));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void WhereWithFailedTransformation<#= suffix #>() // stays columnar, but causes payload to be reconstituted
+        {
+            Enumerable.Range(0, 100)
+                .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
+                .TestWhere(r => r.ToString().Length > 3<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Select1<#= suffix #>()
+        {
+            TestSelect(e => e.field1<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Select2<#= suffix #>()
+        {
+            TestSelect(e => e.field2<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Select3<#= suffix #>()
+        {
+            TestSelect(e => e.field3<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Select4<#= suffix #>()
+        {
+            TestSelect(e => new NestedStruct { nestedField = e.field1 }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Select5<#= suffix #>()
+        {
+            TestSelect(e => e.doubleField<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Select6<#= suffix #>()
+        {
+            TestSelect(e => ((ulong)e.field1)<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Select7<#= suffix #>()
+        {
+            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
+            TestSelect(e => new { A = e.field1, B = e.field1, }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Select8<#= suffix #>()
+        {
+            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+            // This is just a degenerate case where the expression is *always* null.
+            TestSelect<ClassWithOnlyAutoProps>(e => null<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectFromUlongToLong<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents);
+            var streamResult = input
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select(v => (long)v)
+                ;
+
+            var payloadEnum = streamResult.ToPayloadEnumerable();
+            var a = payloadEnum.ToArray();
+            Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, longInteger) => (long)integer == longInteger).All(p => p));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectAnonymousType<#= suffix #>()
+        {
+            TestSelect(e => new { anonfield1 = e.field1, x = 3 }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectAnonymousTypeChained<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents);
+            var streamResult = input
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select(v => new { X = v })
+                .Select(e => new { Y = e.X })
+                ;
+
+            var payloadEnum = streamResult.ToPayloadEnumerable();
+            var a = payloadEnum.ToArray();
+            Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.Y).All(p => p));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectAnonymousTypeChainedNoOp<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents);
+            var streamResult = input
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select(v => new { X = v })
+                .Select(e => e)
+                ;
+
+            var payloadEnum = streamResult.ToPayloadEnumerable();
+            var a = payloadEnum.ToArray();
+            Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectAnonymousTypeWithFloatField<#= suffix #>()
+        {
+            // The point of this test is to have an anonymous type with a "field" in it
+            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
+            TestSelect(e => new { floatField = e.field1 * 3.0, }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectWhereAnonymousType<#= suffix #>()
+        {
+            var streamResult = this.enumerable
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select(e => new { anonfield1 = e.field1 })
+                .Where(e => e.anonfield1 == 0)
+                .ToPayloadEnumerable();
+            var linqResult = this.enumerable
+                .Select(e => new { anonfield1 = e.field1 })
+                .Where(e => e.anonfield1 == 0);
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void WhereFromClassWithAutoProps<#= suffix #>()
+        {
+            var enumerable = Enumerable.Range(0, NumEvents)
+                .Select(i => new ClassWithAutoProps() { StringAutoProp = i.ToString(), IntAutoProp = i, IntField = i + 1, StringField = i.ToString(), })
+                ;
+            var streamResult = enumerable
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Where(e => e.IntAutoProp.ToString().Equals(e.StringAutoProp))
+                .ToPayloadEnumerable()
+                .ToArray()
+                ;
+            var linqResult = enumerable
+                .Where(e => e.IntAutoProp.ToString().Equals(e.StringAutoProp))
+                .ToArray()
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult, new ClassWithAutoProps()));
+
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void SelectFromClassWithAutoProps<#= suffix #>()
+        {
+            var enumerable = Enumerable.Range(0, NumEvents)
+                .Select(i => new ClassWithAutoProps() { StringAutoProp = i.ToString(), IntAutoProp = i, IntField = i + 1, StringField = i.ToString(), })
+                ;
+            var streamResult = enumerable
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select(e => new { A = e.StringAutoProp, B = e.IntAutoProp + e.StringAutoProp.Length + e.IntField, })
+                .ToPayloadEnumerable()
+                ;
+            var linqResult = enumerable
+                .Select(e => new { A = e.StringAutoProp, B = e.IntAutoProp + e.StringAutoProp.Length + e.IntField, })
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void WhereFromClassWithOnlyAutoProps<#= suffix #>()
+        {
+            var enumerable = Enumerable.Range(0, NumEvents)
+                .Select(i => new ClassWithOnlyAutoProps() { StringAutoProp = i.ToString(), IntAutoProp = i, })
+                ;
+            var streamResult = enumerable
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Where(e => e.IntAutoProp.ToString().Equals(e.StringAutoProp))
+                .ToPayloadEnumerable()
+                .ToArray()
+                ;
+            var linqResult = enumerable
+                .Where(e => e.IntAutoProp.ToString().Equals(e.StringAutoProp))
+                .ToArray()
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult, new ClassWithOnlyAutoProps()));
+
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void SelectFromClassWithOnlyAutoProps<#= suffix #>()
+        {
+            var enumerable = Enumerable.Range(0, NumEvents)
+                .Select(i => new ClassWithOnlyAutoProps() { StringAutoProp = i.ToString(), IntAutoProp = i, })
+                ;
+            var streamResult = enumerable
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select(e => new { A = e.StringAutoProp, B = e.IntAutoProp + e.StringAutoProp.Length + e.IntAutoProp, })
+                .ToPayloadEnumerable()
+                ;
+            var linqResult = enumerable
+                .Select(e => new { A = e.StringAutoProp, B = e.IntAutoProp + e.StringAutoProp.Length + e.IntAutoProp, })
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void UnassignedColumn_SelectWhere<#= suffix #>()
+        {
+            var streamResult = this.enumerable
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select(e => new MyStruct { field1 = e.field1, })
+                .Where(e => e.field2 > 0.0)
+                .ToPayloadEnumerable();
+            var linqResult = this.enumerable
+                .Select(e => new MyStruct { field1 = e.field1, })
+                .Where(e => e.field2 > 0.0);
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void UnassignedColumn_GroupApply<#= suffix #>()
+        {
+            var streamResult = this.enumerable
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
+                .Where(e => e.field2 >= 0.0)
+                .ToPayloadEnumerable();
+            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectWithCtorCall<#= suffix #>()
+        {
+            TestSelect(e => new StructWithCtor(e.field1)<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectMany01<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents)
+                .Select(e => new MyStruct { field1 = e, field2 = (double)e, field3 = Guid.NewGuid(), })
+                ;
+            var streamResult = input
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .ToPayloadEnumerable()
+                ;
+            var linqResult = input
+                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectMany02<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents)
+                .Select(e => new MyStruct { field1 = e, field2 = (double)e, field3 = Guid.NewGuid(), })
+                ;
+            var streamResult = input
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectMany(e => Enumerable.Repeat(e.field1, 2))
+                .ToPayloadEnumerable()
+                ;
+            var linqResult = input
+                .SelectMany(e => Enumerable.Repeat(e.field1, 2))
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectMany03<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents)
+                .Select(e => new MyStruct { field1 = e, field2 = (double)e, field3 = Guid.NewGuid(), })
+                ;
+            var streamResult = input
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectMany(e => Enumerable.Repeat(e.field2, e.field1))
+                .ToPayloadEnumerable()
+                ;
+            var linqResult = input
+                .SelectMany(e => Enumerable.Repeat(e.field2, e.field1))
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectMany04<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents)
+                .Select(e => new MyStruct { field1 = e, field2 = (double)e, field3 = Guid.NewGuid(), })
+                ;
+            var streamResult = input
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectMany(e => Enumerable.Repeat(e.field2, 1))
+                .ToPayloadEnumerable()
+                ;
+            var linqResult = input
+                .SelectMany(e => Enumerable.Repeat(e.field2, 1))
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectStart01<#= suffix #>()
+        {
+            // tests computed field with start time parameter
+            var input = Enumerable.Range(0, NumEvents)
+                ;
+            var streamResult = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(e, e))
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select((l, e) => e + ((int)l))
+                ;
+            var expected = input
+                .Select(e => e + e)
+                ;
+            var output = streamResult
+                .ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges)
+                .Where(e => e.IsData)
+                .Select(se => se.Payload)
+                .ToEnumerable()
+                .ToArray()
+                ;
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void SelectStart02<#= suffix #>()
+        {
+            // tests simple parameter selection with start time parameter
+            var input = Enumerable.Range(0, NumEvents)
+                ;
+            var streamResult = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(e, e))
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select((l, e) => l)
+                ;
+            var expected = input
+                .Select(e => (long)e)
+                ;
+            var output = streamResult
+                .ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges)
+                .Where(e => e.IsData)
+                .Select(se => se.Payload)
+                .ToEnumerable()
+                .ToArray()
+                ;
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void SelectKey01<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents)
+                ;
+            var streamResult = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(e, e))
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectByKey((k, e) => new StructTuple<Empty, int>() { Item1 = k, Item2 = e, })
+                ;
+            var expected = input
+                .Select(e => new StructTuple<Empty, int>() { Item1 = Empty.Default, Item2 = e, })
+                ;
+            var output = streamResult
+                .ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges)
+                .Where(e => e.IsData)
+                .Select(se => se.Payload)
+                .ToEnumerable()
+                .ToArray()
+                ;
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void SelectKey02<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents)
+                ;
+            var streamResult = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(e, e))
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectByKey((k, e) => k)
+                ;
+            var expected = input
+                .Select(e => Empty.Default)
+                ;
+            var output = streamResult
+                .ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges)
+                .Where(e => e.IsData)
+                .Select(se => se.Payload)
+                .ToEnumerable()
+                .ToArray()
+                ;
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void SelectKey03<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents)
+                ;
+            var streamResult = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(e, e))
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectByKey((s, k, e) => new StructTuple<Empty, int>() { Item1 = k, Item2 = e + (int)s, })
+                ;
+            var expected = input
+                .Select(e => new StructTuple<Empty, int>() { Item1 = Empty.Default, Item2 = e + e, })
+                ;
+            var output = streamResult
+                .ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges)
+                .Where(e => e.IsData)
+                .Select(se => se.Payload)
+                .ToEnumerable()
+                .ToArray()
+                ;
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void SelectKey04<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, NumEvents)
+                ;
+            var streamResult = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(e, e))
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select(e => (int?)(e + 1))
+                .SelectByKey((k, e) => new object[] { e, })
+                ;
+            var expected = input
+                .Select(e => new object[] { (int?)(e + 1), })
+                .ToArray()
+                ;
+            var output = streamResult
+                .ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges)
+                .Where(e => e.IsData)
+                .Select(se => se.Payload)
+                .ToEnumerable()
+                .ToArray()
+                ;
+            Assert.IsTrue(expected.Length == output.Length);
+            for (int i = 0; i < expected.Length; i++)
+            {
+                var e = (int?)(expected[i][0]);
+                var o = (int?)(output[i][0]);
+                Assert.IsTrue(e.HasValue && o.HasValue && (e.Value == o.Value));
+            }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectManyStart01<#= suffix #>()
+        {
+            // tests computed field with start time parameter
+            var input = Enumerable.Range(1, NumEvents)
+                ;
+            var streamResult = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(e, e))
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectMany((l, e) => Enumerable.Repeat(33, e + ((int)l)))
+                ;
+
+            var linqResult = input
+                .SelectMany(e => Enumerable.Repeat(33, e + e))
+                ;
+            var output = streamResult
+                .ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges)
+                .Where(e => e.IsData)
+                .Select(se => se.Payload)
+                .ToEnumerable()
+                .ToArray()
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(output));
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void SelectManyKey01<#= suffix #>()
+        {
+            // tests computed field with start time parameter
+            var input = Enumerable.Range(1, NumEvents)
+                ;
+            var streamResult = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(e, e))
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectManyByKey((k, e) => Enumerable.Repeat(33, e + (k == Empty.Default ? 1 : 2)))
+                ;
+
+            var linqResult = input
+                .SelectMany(e => Enumerable.Repeat(33, e + 1))
+                ;
+            var output = streamResult
+                .ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges)
+                .Where(e => e.IsData)
+                .Select(se => se.Payload)
+                .ToEnumerable()
+                .ToArray()
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(output));
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void SelectManyStartKey01<#= suffix #>()
+        {
+            // tests computed field with start time parameter
+            var input = Enumerable.Range(1, NumEvents)
+                ;
+            var streamResult = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(e, e))
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .SelectManyByKey((ts, k, e) => Enumerable.Repeat(33 + ((int)ts), e + (k == Empty.Default ? 1 : 2)))
+                ;
+
+            var linqResult = input
+                .SelectMany(e => Enumerable.Repeat(33 + e, e + 1))
+                ;
+            var output = streamResult
+                .ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges)
+                .Where(e => e.IsData)
+                .Select(se => se.Payload)
+                .ToEnumerable()
+                .ToArray()
+                ;
+            Assert.IsTrue(linqResult.SequenceEqual(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void WhereSelect1<#= suffix #>()
+        {
+            TestWhereSelect(e => true, e => e.field1<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SelectStruct<#= suffix #>()
+        {
+            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+            Config.ForceRowBasedExecution = true;
+
+            var input = Enumerable.Range(0, 100);
+            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+
+            var streamResult = input
+                .ToStreamable()
+<# if (string.IsNullOrEmpty(fusionOption)) { #>
+                .ShiftEventLifetime(0)
+<# } #>
+                .Select(lambda)
+                .ToPayloadEnumerable();
+            var linqResult = input
+                .Select(lambda.Compile());
+
+            var query = input.Where(e => true);
+            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+
+            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+        }
+
+<# if (string.IsNullOrEmpty(fusionOption)) { // the following tests don't have fusion options yet #>
+        [TestMethod, TestCategory("Gated")]
+        public void ClipByConstantNoOpIntervals<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 5, 'a'),
+                StreamEvent.CreateInterval(2, 6, 'b'),
+                StreamEvent.CreateInterval(3, 7, 'c'),
+                StreamEvent.CreateInterval(4, 8, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 5, 'a'),
+                StreamEvent.CreateInterval(2, 6, 'b'),
+                StreamEvent.CreateInterval(3, 7, 'c'),
+                StreamEvent.CreateInterval(4, 8, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var result = input.ToObservable()
+                .ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None)
+                .ClipEventDuration(10)
+                .ToStreamEventObservable().ToEnumerable();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ClipByConstantNoOpEdges<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(1, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateStart(3, 'c'),
+                StreamEvent.CreateStart(4, 'd'),
+                StreamEvent.CreateEnd(5, 1, 'a'),
+                StreamEvent.CreateEnd(6, 2, 'b'),
+                StreamEvent.CreateEnd(7, 3, 'c'),
+                StreamEvent.CreateEnd(8, 4, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(1, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateStart(3, 'c'),
+                StreamEvent.CreateStart(4, 'd'),
+                StreamEvent.CreateEnd(5, 1, 'a'),
+                StreamEvent.CreateEnd(6, 2, 'b'),
+                StreamEvent.CreateEnd(7, 3, 'c'),
+                StreamEvent.CreateEnd(8, 4, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var result = input.ToObservable()
+                .ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None)
+                .ClipEventDuration(10)
+                .ToStreamEventObservable().ToEnumerable();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ClipByConstantClippedIntervals<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 15, 'a'),
+                StreamEvent.CreateInterval(2, 16, 'b'),
+                StreamEvent.CreateInterval(3, 17, 'c'),
+                StreamEvent.CreateInterval(4, 18, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 11, 'a'),
+                StreamEvent.CreateInterval(2, 12, 'b'),
+                StreamEvent.CreateInterval(3, 13, 'c'),
+                StreamEvent.CreateInterval(4, 14, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var result = input.ToObservable()
+                .ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None)
+                .ClipEventDuration(10)
+                .ToStreamEventObservable().ToEnumerable();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ClipByConstantClippedEdges<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(1, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateStart(3, 'c'),
+                StreamEvent.CreateStart(4, 'd'),
+                StreamEvent.CreateEnd(5, 1, 'a'),
+                StreamEvent.CreateEnd(6, 2, 'b'),
+                StreamEvent.CreateEnd(7, 3, 'c'),
+                StreamEvent.CreateEnd(8, 4, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(1, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateEnd(3, 1, 'a'),
+                StreamEvent.CreateStart(3, 'c'),
+                StreamEvent.CreateEnd(4, 2, 'b'),
+                StreamEvent.CreateStart(4, 'd'),
+                StreamEvent.CreateEnd(5, 3, 'c'),
+                StreamEvent.CreateEnd(6, 4, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var result = input.ToObservable()
+                .ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None)
+                .ClipEventDuration(2)
+                .ToStreamEventObservable().ToEnumerable();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+<# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+        [TestMethod, TestCategory("Gated")]
+        public void DisorderPolicy1<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(9, 'y'),
+                StreamEvent.CreateStart(5, 'x'),
+                StreamEvent.CreateEnd(20, 5, 'x'),
+                StreamEvent.CreateEnd(22, 9, 'y'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(9, 'y'),
+                StreamEvent.CreateStart(9, 'x'),
+                StreamEvent.CreateEnd(20, 9, 'x'),
+                StreamEvent.CreateEnd(22, 9, 'y'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None(), OnCompletedPolicy.None);
+            var result = str.ToStreamEventObservable().ToEnumerable();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void DisorderPolicy2<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(9, 'y'),
+                StreamEvent.CreateStart(5, 'x'),
+                StreamEvent.CreateEnd(22, 9, 'y'),
+                StreamEvent.CreateEnd(24, 5, 'x'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(9, 'y'),
+                StreamEvent.CreateStart(9, 'x'),
+                StreamEvent.CreateEnd(22, 9, 'y'),
+                StreamEvent.CreateEnd(24, 9, 'x'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None(), OnCompletedPolicy.None);
+            var result = str.ToStreamEventObservable().ToEnumerable();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void DisorderPolicy3<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(9, 'y'),
+                StreamEvent.CreateStart(5, 'x'),
+                StreamEvent.CreateEnd(22, 9, 'y'),
+                StreamEvent.CreateEnd(20, 5, 'x'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(9, 'y'),
+                StreamEvent.CreateStart(9, 'x'),
+                StreamEvent.CreateEnd(22, 9, 'y'),
+                StreamEvent.CreateEnd(22, 9, 'x'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var observInput = input.ToObservable();
+            var str = observInput.ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None(), OnCompletedPolicy.None);
+            var result = str.ToStreamEventObservable().ToEnumerable();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void DisorderPolicy4<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(5, 'x'),
+                StreamEvent.CreateStart(9, 'y'),
+                StreamEvent.CreateStart(5, 'x'),
+                StreamEvent.CreateStart(5, 'x'),
+                StreamEvent.CreateStart(11, 'z'),
+                StreamEvent.CreateStart(5, 'x'),
+                StreamEvent.CreateStart(5, 'x'),
+                StreamEvent.CreateEnd(20, 5, 'x'),
+                StreamEvent.CreateEnd(22, 9, 'y'),
+                StreamEvent.CreateEnd(24, 5, 'x'),
+                StreamEvent.CreateEnd(26, 5, 'x'),
+                StreamEvent.CreateEnd(28, 11, 'z'),
+                StreamEvent.CreateEnd(30, 5, 'x'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(5, 'x'),
+                StreamEvent.CreateStart(9, 'y'),
+                StreamEvent.CreateStart(9, 'x'),
+                StreamEvent.CreateStart(9, 'x'),
+                StreamEvent.CreateStart(11, 'z'),
+                StreamEvent.CreateStart(11, 'x'),
+                StreamEvent.CreateStart(11, 'x'),
+                StreamEvent.CreateEnd(20, 9, 'x'),
+                StreamEvent.CreateEnd(22, 9, 'y'),
+                StreamEvent.CreateEnd(24, 9, 'x'),
+                StreamEvent.CreateEnd(26, 11, 'x'),
+                StreamEvent.CreateEnd(28, 11, 'z'),
+                StreamEvent.CreateEnd(30, 11, 'x'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None(), OnCompletedPolicy.None);
+            var result = str.ToStreamEventObservable().ToEnumerable();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+<# } #>
+
+        [TestMethod, TestCategory("Gated")]
+        public void PunctuationPolicy2<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(1, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateStart(4, 'c'),
+                StreamEvent.CreateStart(7, 'd'),
+                StreamEvent.CreateEnd(20, 1, 'a'),
+                StreamEvent.CreateEnd(22, 2, 'b'),
+                StreamEvent.CreateEnd(34, 4, 'c'),
+                StreamEvent.CreateEnd(35, 7, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(1, 'a'),
+<# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+                StreamEvent.CreatePunctuation<char>(2),
+<# } #>
+                StreamEvent.CreateStart(2, 'b'),
+<# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+                StreamEvent.CreatePunctuation<char>(4),
+<# } #>
+                StreamEvent.CreateStart(4, 'c'),
+<# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+                StreamEvent.CreatePunctuation<char>(6),
+<# } #>
+                StreamEvent.CreateStart(7, 'd'),
+<# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+                StreamEvent.CreatePunctuation<char>(20),
+<# } #>
+                StreamEvent.CreateEnd(20, 1, 'a'),
+<# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+                StreamEvent.CreatePunctuation<char>(22),
+<# } #>
+                StreamEvent.CreateEnd(22, 2, 'b'),
+<# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+                StreamEvent.CreatePunctuation<char>(34),
+<# } #>
+                StreamEvent.CreateEnd(34, 4, 'c'),
+                StreamEvent.CreateEnd(35, 7, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
+            var result = str.ToStreamEventObservable().ToEnumerable();
+            var a = result.ToArray();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AlterDurationTest1<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(3, 'x'),
+                StreamEvent.CreateEnd(5, 3, 'x'),
+                StreamEvent.CreateStart(7, 'y'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(3, 8, 'x'),
+                StreamEvent.CreateInterval(7, 12, 'y'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
+            var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
+            var a = result.ToArray();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PunctuationPolicy3<#= suffix #>()
+        { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'd'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'e'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'f'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'g'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'h'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
+<# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+                StreamEvent.CreatePunctuation<char>(StreamEvent.MinSyncTime + 1),
+<# } #>
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'd'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'e'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'f'),
+<# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+                StreamEvent.CreatePunctuation<char>(StreamEvent.MinSyncTime + 2),
+<# } #>
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'g'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'h'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
+            var result = str.ToStreamEventObservable().ToEnumerable();
+            var a = result.ToArray();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void StreamCache1<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 1000000); // make sure it is enough to have more than one data batch
+            ulong limit = 10000;
+            var cachedStream = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(0, e))
+                .ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None)
+                .Cache(limit);
+            var streamResult = cachedStream
+                .ToPayloadEnumerable();
+
+            var c = (ulong)streamResult.Count();
+            Assert.IsTrue(c == limit);
+            cachedStream.Dispose();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void StreamCache2<#= suffix #>()
+        {
+            var limit = 10; // 00000;
+            var input = Enumerable.Range(0, limit); // make sure it is enough to have more than one data batch
+            var cachedStream = input
+                .ToObservable()
+                .Select(e => StreamEvent.CreateStart(StreamEvent.MinSyncTime, e))
+                .ToStreamable(DisorderPolicy.Throw())
+                .Cache();
+            var streamResult = cachedStream
+                .ToStreamEventObservable()
+                .Where(e => e.IsData)
+                .Select(e => e.Payload)
+                .ToEnumerable();
+            var foo = streamResult.Count();
+
+            Assert.IsTrue(input.SequenceEqual(streamResult));
+            cachedStream.Dispose();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExpressionEquals1<#= suffix #>()
+        {
+            var x = ComparerExpression<int>.Default.GetCompareExpr()
+                .ExpressionEquals(ComparerExpression<int>.Default.GetCompareExpr());
+            Assert.IsTrue(x);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExpressionEquals2<#= suffix #>()
+        {
+            var x = new CompoundGroupKeyEqualityComparer<Empty, MyStruct2>(EqualityComparerExpression<Empty>.Default, EqualityComparerExpression<MyStruct2>.Default);
+            var y = x.GetEqualsExpr().ExpressionEquals(x.GetEqualsExpr());
+            Assert.IsTrue(y);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExpressionEquals3<#= suffix #>()
+        {
+            var x1 = new CompoundGroupKeyComparer<Empty, MyStruct2>(ComparerExpression<Empty>.Default, ComparerExpression<MyStruct2>.Default);
+            var x2 = new CompoundGroupKeyComparer<Empty, MyStruct2>(ComparerExpression<Empty>.Default, ComparerExpression<MyStruct2>.Default);
+            var y = x1.GetCompareExpr().ExpressionEquals(x2.GetCompareExpr());
+            Assert.IsTrue(y);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExpressionEquals4<#= suffix #>()
+        {
+            var x1 = new CompoundGroupKeyComparer<Empty, MyStruct2>(ComparerExpression<Empty>.Default, ComparerExpression<MyStruct2>.Default);
+            var x2 = new CompoundGroupKeyComparer<Empty, MyStruct2>(ComparerExpression<Empty>.Default, ComparerExpression<MyStruct2>.Default);
+
+            var xx1 = new CompoundGroupKeyComparer<CompoundGroupKey<Empty, MyStruct2>, MyStruct2>(x1, ComparerExpression<MyStruct2>.Default);
+            var xx2 = new CompoundGroupKeyComparer<CompoundGroupKey<Empty, MyStruct2>, MyStruct2>(x2, ComparerExpression<MyStruct2>.Default);
+
+            var y = xx1.GetCompareExpr().ExpressionEquals(xx2.GetCompareExpr());
+            Assert.IsTrue(y);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void CompoundGroupKeyEqualityComparerDefault<#= suffix #>()
+        {
+            var xx1 = EqualityComparerExpression<CompoundGroupKey<CompoundGroupKey<Empty, MyStruct2>, MyStruct2>>.Default;
+
+            var x2 = new CompoundGroupKeyEqualityComparer<Empty, MyStruct2>(EqualityComparerExpression<Empty>.Default, EqualityComparerExpression<MyStruct2>.Default);
+            var xx2 = new CompoundGroupKeyEqualityComparer<CompoundGroupKey<Empty, MyStruct2>, MyStruct2>(x2, EqualityComparerExpression<MyStruct2>.Default);
+
+            var y = xx1.ExpressionEquals(xx2);
+            Assert.IsTrue(y);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void CompoundGroupKeyComparerDefault<#= suffix #>()
+        {
+            var xx1 = ComparerExpression<CompoundGroupKey<CompoundGroupKey<Empty, MyStruct2>, MyStruct2>>.Default;
+
+            var x2 = new CompoundGroupKeyComparer<Empty, MyStruct2>(ComparerExpression<Empty>.Default, ComparerExpression<MyStruct2>.Default);
+            var xx2 = new CompoundGroupKeyComparer<CompoundGroupKey<Empty, MyStruct2>, MyStruct2>(x2, ComparerExpression<MyStruct2>.Default);
+
+            var y = xx1.ExpressionEquals(xx2);
+            Assert.IsTrue(y);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ComparerExpressionForIComparable<#= suffix #>()
+        {
+            var defaultComparerExpressionProvider = ComparerExpression<ClassImplementingIComparable>.Default;
+            var defaultCompareExpression = defaultComparerExpressionProvider.GetCompareExpr();
+            var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
+            var o = new ClassImplementingIComparable();
+            var result = compiledDefaultCompareExpression(o, o);
+            Assert.IsTrue(result == 3);
+
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ComparerExpressionForGenericIComparer<#= suffix #>()
+        {
+            var defaultComparerExpressionProvider = ComparerExpression<ClassImplementingGenericIComparer>.Default;
+            var defaultCompareExpression = defaultComparerExpressionProvider.GetCompareExpr();
+            var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
+            var o = new ClassImplementingGenericIComparer();
+            var result = compiledDefaultCompareExpression(o, o);
+            Assert.IsTrue(result == 3);
+
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ComparerExpressionForNonGenericIComparer<#= suffix #>()
+        {
+            var defaultComparerExpressionProvider = ComparerExpression<ClassImplementingNonGenericIComparer>.Default;
+            var defaultCompareExpression = defaultComparerExpressionProvider.GetCompareExpr();
+            var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
+            var o = new ClassImplementingNonGenericIComparer();
+            var result = compiledDefaultCompareExpression(o, o);
+            Assert.IsTrue(result == 3);
+
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ComparerExpressionForAnonymousType1<#= suffix #>()
+        {
+            var i = 3;
+            var a = new { Z = i, A = (char)('a' + i), W = "abc" };
+            var f = GetDefaultComparerExpression(a);
+            var g = f.GetCompareExpr();
+            var h = g.Compile();
+            var k = h(a, a);
+            Assert.IsTrue(k == 0);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void EqualityComparerExpressionForAnonymousType1<#= suffix #>()
+        {
+            var i = 3;
+            var a = new { Z = i, A = (char)('a' + i), W = "abc" };
+            var f = GetDefaultEqualityComparerExpression(a);
+            var g = f.GetEqualsExpr();
+            var h = g.Compile();
+            var k = h(a, a);
+            Assert.IsTrue(k);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void EqualityComparerExpressionForAnonymousType2<#= suffix #>()
+        {
+            var i = 3;
+            var a = new { Z = i, A = (char)('a' + i), W = "abc" };
+            var b = new { Z = i + 1, A = (char)('a' + i), W = "abc" };
+            var f = GetDefaultEqualityComparerExpression(a);
+            var g = f.GetEqualsExpr();
+            var h = g.Compile();
+            var k = h(a, b);
+            Assert.IsFalse(k);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void EqualityComparerExpressionForAnonymousType3<#= suffix #>()
+        {
+            var i = 3;
+            var a = new { Z = i, A = (char)('a' + i), W = "abc" };
+            var b = new { Z = i, A = (char)('b' + i), W = "abc" };
+            var f = GetDefaultEqualityComparerExpression(a);
+            var g = f.GetEqualsExpr();
+            var h = g.Compile();
+            var k = h(a, b);
+            Assert.IsFalse(k);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void EqualityComparerExpressionForAnonymousType4<#= suffix #>()
+        {
+            var i = 3;
+            var a = new { Z = i, A = (char)('a' + i), W = "abc" };
+            var b = new { Z = i, A = (char)('a' + i), W = "abcd" };
+            var f = GetDefaultEqualityComparerExpression(a);
+            var g = f.GetEqualsExpr();
+            var h = g.Compile();
+            var k = h(a, b);
+            Assert.IsFalse(k);
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void NaryMulticast1<#= suffix #>()
+        {
+            var enumerable = Enumerable.Range(0, 10000).ToList();
+
+            var stream = enumerable.ToStreamable();
+            var multiStream = stream.Multicast(3);
+
+            var output1 = multiStream[0].Where(e => e % 3 == 0);
+            var output2 = multiStream[1].Where(e => e % 3 == 1);
+            var output3 = multiStream[2].Where(e => e % 3 == 2);
+            var union = output1.Union(output2).Union(output3);
+
+            var output = union.ToPayloadEnumerable().ToList();
+            output.Sort();
+            Assert.IsTrue(enumerable.SequenceEqual(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void NaryMulticastContainer1<#= suffix #>()
+        {
+            var outputList = new List<int>();
+
+            // Inputs
+            var container = new QueryContainer();
+            Stream state = null;
+
+            // Input data
+            var enumerable = Enumerable.Range(0, 10000).ToList();
+            var inputObservable = enumerable.ToObservable().Select(e => StreamEvent.CreateStart(0, e));
+
+            // Query start
+            var stream = container.RegisterInput(inputObservable);
+            var multiStream = stream.Multicast(3);
+
+            var output1 = multiStream[0].Where(e => e % 3 == 0);
+            var output2 = multiStream[1].Where(e => e % 3 == 1);
+            var output3 = multiStream[2].Where(e => e % 3 == 2);
+            var union = output1.Union(output2).Union(output3);
+
+            var outputObservable = container.RegisterOutput(union);
+
+            // Test the output
+            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            container.Restore(state);
+            outputAsync.Wait();
+
+            outputList.Sort();
+            Assert.IsTrue(enumerable.SequenceEqual(outputList));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void NaryMulticastContainerError<#= suffix #>()
+        {
+            // Inputs
+            var container = new QueryContainer();
+            Stream state = new MemoryStream();
+
+            // Input data
+            var enumerable = Enumerable.Range(0, 10000).ToList();
+            var inputObservable = enumerable.ToObservable().Select(e => StreamEvent.CreateStart(0, e));
+
+            // Query start
+            var stream = container.RegisterInput(inputObservable);
+            var multiStream = stream.Multicast(3);
+
+            var output1 = multiStream[0].Where(e => e % 3 == 0);
+            var output2 = multiStream[1].Where(e => e % 3 == 1);
+            var output3 = multiStream[2].Where(e => e % 3 == 2);
+            var union = output1.Union(output2).Union(output3);
+
+            var outputObservable = container.RegisterOutput(union);
+
+            // Validate that attempting to start the query before subscriptions will result in an error.
+            bool foundException = false;
+            try
+            {
+                container.Restore(state);
+            }
+            catch (Exception)
+            {
+                foundException = true;
+            }
+
+            Assert.IsTrue(foundException, "Expected an exception.");
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void StreamSort<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 20).Select(i => (char)('a' + i));
+            var reversedInput = input.Reverse();
+            var str = reversedInput.ToStatStreamable();
+            var sortedStream = str.Sort(c => c);
+            var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
+            var a = result.ToArray();
+            Assert.IsTrue(input.SequenceEqual(result));
+            sortedStream.Dispose();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SortModifiedStream<#= suffix #>()
+        {
+            // The Sort method on a stream uses an observable cache. The cache
+            // had been putting all rows from the messages into the list to be sorted,
+            // even if it was an invalid row.
+            var input = Enumerable.Range(0, 20).Select(i => (char)('a' + i));
+            var str = input.ToStatStreamable();
+            var str2 = str.Where(r => r != 'b');
+            var sortedStream = str2.Sort(c => c);
+            var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
+            Assert.IsTrue(input.Count() == result.Count() + 1); // just make sure deleted element isn't counted anymore
+            sortedStream.Dispose();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void GroupStreamableCodeGenTest1<#= suffix #>()
+        {
+            var input1 = new[]
+            {
+                StreamEvent.CreateInterval(100, 101, 13),
+                StreamEvent.CreateInterval(100, 110, 11),
+                StreamEvent.CreateInterval(101, 105, 12),
+                StreamEvent.CreateInterval(102, 112, 21),
+                StreamEvent.CreateInterval(109, 112, 14),
+                StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+            };
+
+            var input2 = new[]
+            {
+                StreamEvent.CreateInterval(100, 110, 'd'),
+                StreamEvent.CreateInterval(101, 103, 'b'),
+                StreamEvent.CreateInterval(106, 108, 'b'),
+                StreamEvent.CreateInterval(106, 109, 'b'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime)
+            };
+
+            var inputStream1 = input1.ToObservable().ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
+            var inputStream2 = input2.ToObservable().ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
+            var outputStream = inputStream1.WhereNotExists(
+                inputStream2,
+                l => l / 10,
+                r => r - 'a');
+
+            var expected = new[]
+            {
+                StreamEvent.CreateStart(100, 11),
+                StreamEvent.CreateEnd(101, 100, 11),
+                StreamEvent.CreateStart(103, 11),
+                StreamEvent.CreateEnd(106, 103, 11),
+                StreamEvent.CreateInterval(109, 110, 11),
+                StreamEvent.CreateInterval(103, 105, 12),
+                StreamEvent.CreateInterval(100, 101, 13),
+                StreamEvent.CreateInterval(109, 112, 14),
+                StreamEvent.CreateStart(102, 21),
+                StreamEvent.CreateEnd(112, 102, 21),
+                StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+            };
+            var outputEnumerable = outputStream.ToStreamEventObservable().ToEnumerable();
+            var output = outputEnumerable.ToArray();
+            Assert.IsTrue(expected.IsEquivalentTo(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void CountColumnar1<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'd'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'e'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'f'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'g'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'h'),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expected = new StreamEvent<ulong>[] {
+                StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
+                StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
+                StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
+                StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime + 1, 6),
+                StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 2),
+                StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 2, StreamEvent.MinSyncTime + 1, 6),
+                StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime + 2, 9),
+                StreamEvent.CreatePunctuation<ulong>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
+            var count = str.Count();
+            var outputEnumerable = count.ToStreamEventObservable().ToEnumerable();
+            var output = outputEnumerable.ToArray();
+            Assert.IsTrue(expected.IsEquivalentTo(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AverageColumnar1<#= suffix #>() // tests codegen for Snapshot_noecq
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
+
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'd'),  // 100
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'e'),  // 101
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'f'),  // 102 running average = 99.5
+
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'g'),  // 103
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'h'),  // 104
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expected = new StreamEvent<double>[] {
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
+                StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
+                StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 99.5),
+                StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 2),
+                StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 2, StreamEvent.MinSyncTime + 1, 99.5),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 101.0),
+                StreamEvent.CreatePunctuation<double>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None).SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
+            var avg = str.Average(c => (double)c);
+            var outputEnumerable = avg.ToStreamEventObservable().ToEnumerable();
+            var output = outputEnumerable.ToArray();
+            Assert.IsTrue(expected.IsEquivalentTo(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AverageColumnar2<#= suffix #>() // tests codegen for Snapshot_q
+        {
+            var zero = StreamEvent.MinSyncTime;
+            var one = StreamEvent.MinSyncTime + 1;
+            var two = StreamEvent.MinSyncTime + 2;
+            var three = StreamEvent.MinSyncTime + 3;
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(zero, one, 'a'),
+                StreamEvent.CreateInterval(zero, one, 'b'),
+                StreamEvent.CreateInterval(zero, one, 'c'),
+                StreamEvent.CreateInterval(one, two, 'd'),
+                StreamEvent.CreateInterval(one, two, 'e'),
+                StreamEvent.CreateInterval(one, two, 'f'),
+                StreamEvent.CreateInterval(two, three, 'g'),
+                StreamEvent.CreateInterval(two, three, 'h'),
+                StreamEvent.CreateInterval(two, three, 'i'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expected = new StreamEvent<double>[] {
+                StreamEvent.CreateInterval(zero, one, 98.0),
+                StreamEvent.CreatePunctuation<double>(one),
+                StreamEvent.CreateInterval(one, two, 101.0),
+                StreamEvent.CreatePunctuation<double>(two),
+                StreamEvent.CreateInterval(two, three, 104.0),
+                StreamEvent.CreatePunctuation<double>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None).SetProperty().IsConstantDuration(true, 1);
+            var avg = str.Average(c => (double)c);
+            var outputEnumerable = avg.ToStreamEventObservable().ToEnumerable();
+            var output = outputEnumerable.ToArray();
+            Assert.IsTrue(expected.IsEquivalentTo(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AverageColumnar3<#= suffix #>() // tests codegen for Snapshot_pq
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
+
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'd'),  // 100
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'e'),  // 101
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 'f'),  // 102 running average = 99.5
+
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'g'),  // 103
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'h'),  // 104
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expected = new StreamEvent<double>[] {
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
+                StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
+                StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 1, 99.5),
+                StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 2),
+                StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 2, StreamEvent.MinSyncTime + 1, 99.5),
+                StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 101.0),
+                StreamEvent.CreatePunctuation<double>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
+            var avg = str.Average(c => (double)c);
+            var outputEnumerable = avg.ToStreamEventObservable().ToEnumerable();
+            var output = outputEnumerable.ToArray();
+            Assert.IsTrue(expected.IsEquivalentTo(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SumColumnar1<#= suffix #>() // make sure expression is properly parenthesized in codegen
+        {
+            var input = Enumerable.Range(0, 100);
+            Expression<Func<int, int>> query = e => e & 0x7;
+
+            var streamResult = input
+                .ToStreamable()
+                .Sum(query)
+                .ToPayloadEnumerable()
+                .Last();
+
+            var expected = input.Sum(query.Compile());
+            Assert.IsTrue(expected == streamResult);
+
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void MultiAggregate1<#= suffix #>() // test codegen for multi-aggregates
+        {
+            var input = Enumerable.Range(0, 100).Select(i => new MyStruct { field1 = i, field2 = 0.0, field3 = Guid.Empty, });
+
+            var streamResult = input
+                .ToStreamable()
+                .Aggregate(a => a.Sum(x => x.field1), a => a.Count(), (s, c) => new MyStruct { field1 = s + ((int)c) })
+                .ToPayloadEnumerable()
+                ;
+
+            Assert.IsTrue(streamResult.Count() == 1);
+
+            Assert.IsTrue(streamResult.First().field1 == 5050);
+
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void MultiAggregate2<#= suffix #>() // test codegen for multi-aggregates with anonymous type
+        {
+            var input = Enumerable.Range(0, 100).Select(i => new MyStruct { field1 = i, field2 = 0.0, field3 = Guid.Empty, });
+
+            var streamResult = input
+                .ToStreamable()
+                .Aggregate(a => a.Sum(x => x.field1), a => a.Count(), (s, c) => new { field1 = s, field2 = c })
+                .ToPayloadEnumerable()
+                ;
+
+            Assert.IsTrue(streamResult.Count() == 1);
+
+            var f = streamResult.First();
+            Assert.IsTrue(f.field1 == 4950 && f.field2 == 100);
+
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ToEndEdgeFreeTest1<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(1, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateStart(3, 'c'),
+                StreamEvent.CreateStart(4, 'd'),
+                StreamEvent.CreateEnd(20, 1, 'a'),
+                StreamEvent.CreateEnd(22, 2, 'b'),
+                StreamEvent.CreateEnd(24, 3, 'c'),
+                StreamEvent.CreateEnd(26, 4, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 20, 'a'),
+                StreamEvent.CreateInterval(2, 22, 'b'),
+                StreamEvent.CreateInterval(3, 24, 'c'),
+                StreamEvent.CreateInterval(4, 26, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None).Cache(0, false, true);
+            var result = str.ToStreamEventObservable().ToEnumerable().ToArray();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+            str.Dispose();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ToEndEdgeFreeTest2<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(1, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateStart(3, 'c'),
+                StreamEvent.CreateStart(4, 'd'),
+                StreamEvent.CreateEnd(20, 1, 'a'),
+                StreamEvent.CreateEnd(24, 3, 'c'),
+                StreamEvent.CreateEnd(26, 4, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 20, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateInterval(3, 24, 'c'),
+                StreamEvent.CreateInterval(4, 26, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None).Cache(0, false, true);
+            var result = str.ToStreamEventObservable().ToEnumerable().ToArray();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+            str.Dispose();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ToEndEdgeFreeTest3<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 20, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateStart(3, 'c'),
+                StreamEvent.CreateStart(4, 'd'),
+                StreamEvent.CreateEnd(22, 2, 'b'),
+                StreamEvent.CreateEnd(24, 4, 'd'),
+                StreamEvent.CreateEnd(26, 3, 'c'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 20, 'a'),
+                StreamEvent.CreateInterval(2, 22, 'b'),
+                StreamEvent.CreateInterval(3, 26, 'c'),
+                StreamEvent.CreateInterval(4, 24, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None).Cache(0, false, true);
+            var result = str.ToStreamEventObservable().ToEnumerable().ToArray();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+            str.Dispose();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void BinaryUnionTest1<#= suffix #>()
+        {
+            var input1 = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(2, 20, 'a'),
+                StreamEvent.CreateStart(4, 'b'),
+                StreamEvent.CreateStart(6, 'c'),
+                StreamEvent.CreateStart(8, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var input2 = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(3, 20, 'a'),
+                StreamEvent.CreateStart(5, 'b'),
+                StreamEvent.CreateStart(7, 'c'),
+                StreamEvent.CreateStart(9, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(2, 20, 'a'),
+                StreamEvent.CreateInterval(3, 20, 'a'),
+                StreamEvent.CreateStart(4, 'b'),
+                StreamEvent.CreateStart(5, 'b'),
+                StreamEvent.CreateStart(6, 'c'),
+                StreamEvent.CreateStart(7, 'c'),
+                StreamEvent.CreateStart(8, 'd'),
+                StreamEvent.CreateStart(9, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str1 = input1.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null).Cache();
+            var str2 = input2.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null).Cache();
+            var resultEnum = str1.Union(str2).ToStreamEventObservable().ToEnumerable();
+            var result = resultEnum.ToList();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+            str1.Dispose();
+            str2.Dispose();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void BinaryUnionTest2<#= suffix #>()
+        {
+            var input1 = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 20, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateStart(3, 'c'),
+                StreamEvent.CreateStart(4, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var input2 = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(5, 20, 'a'),
+                StreamEvent.CreateStart(6, 'b'),
+                StreamEvent.CreateStart(7, 'c'),
+                StreamEvent.CreateStart(8, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 20, 'a'),
+                StreamEvent.CreateStart(2, 'b'),
+                StreamEvent.CreateStart(3, 'c'),
+                StreamEvent.CreateStart(4, 'd'),
+                StreamEvent.CreateInterval(5, 20, 'a'),
+                StreamEvent.CreateStart(6, 'b'),
+                StreamEvent.CreateStart(7, 'c'),
+                StreamEvent.CreateStart(8, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str1 = input1.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation).Cache();
+            var str2 = input2.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation).Cache();
+            var result = str1.Union(str2).ToStreamEventObservable().ToEnumerable();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+            str1.Dispose();
+            str2.Dispose();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void DeterministicUnionTest<#= suffix #>()
+        {
+            int count = 100;
+            DateTime now = DateTime.UtcNow;
+
+            var input = new List<StreamEvent<int>> { StreamEvent.CreatePunctuation<int>(now.Ticks) };
+
+            // Add right events.
+            for (int i = 0; i < count; ++i)
+                input.Add(StreamEvent.CreatePoint(now.Ticks, 2 * i + 1));
+
+            // Cti forces right batch to go through before reaching Config.DataBatchSize.
+            input.Add(StreamEvent.CreatePunctuation<int>(now.Ticks));
+
+            // Add left events.
+            for (int i = 0; i < count; ++i)
+                input.Add(StreamEvent.CreatePoint(now.Ticks, 2 * i));
+            input.Add(StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime));
+
+            // Expect left before right even though right went through first.
+            var expectedOutput = new List<StreamEvent<int>> { StreamEvent.CreatePunctuation<int>(now.Ticks) };
+            for (int i = 0; i < count; i++)
+                expectedOutput.Add(StreamEvent.CreatePoint(now.Ticks, 2 * i));
+            for (int i = 0; i < count; i++)
+                expectedOutput.Add(StreamEvent.CreatePoint(now.Ticks, 2 * i + 1));
+            expectedOutput.Add(StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime));
+
+            var inputStreams = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None).Multicast(2);
+
+            var left = inputStreams[0].Where(e => e % 2 == 0);
+            var right = inputStreams[1].Where(e => e % 2 == 1);
+
+            var result = left
+                .Union(right)
+                .ToStreamEventObservable()
+                .ToEnumerable()
+                .ToList();
+
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ToEndEdgeFreeTest4<#= suffix #>()
+        {
+            var input = new StreamEvent<char>[] {
+                StreamEvent.CreateStart(1, 'a'),
+                StreamEvent.CreateEnd(5, 1, 'a'),
+                StreamEvent.CreateStart(6, 'b'),
+                StreamEvent.CreateEnd(10, 6, 'b'),
+                StreamEvent.CreateStart(11, 'c'),
+                StreamEvent.CreateEnd(15, 11, 'c'),
+                StreamEvent.CreateStart(16, 'd'),
+                StreamEvent.CreateEnd(20, 16, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var expectedOutput = new StreamEvent<char>[] {
+                StreamEvent.CreateInterval(1, 5, 'a'),
+                StreamEvent.CreateInterval(6, 10, 'b'),
+                StreamEvent.CreateInterval(11, 15, 'c'),
+                StreamEvent.CreateInterval(16, 20, 'd'),
+                StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
+            };
+            var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation);
+            var result = str.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).ToEnumerable().ToArray();
+            Assert.IsTrue(expectedOutput.SequenceEqual(result));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AggregateTest1<#= suffix #>()
+        {
+            long threeSecondTicks = TimeSpan.FromSeconds(3).Ticks;
+
+            var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
+                                 .ToObservable()
+                                 .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
+            var expectedResult = new StreamEvent<ResultEvent>[] {
+                StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
+                StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
+                StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),
+                StreamEvent.CreateEnd(633979008030000000, 633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),
+                StreamEvent.CreateStart(633979008030000000, new ResultEvent { Key = 1, Cnt = 3 }),
+                StreamEvent.CreateEnd(633979008040000000, 633979008030000000, new ResultEvent { Key = 1, Cnt = 3 }),
+                StreamEvent.CreateStart(633979008040000000, new ResultEvent { Key = 1, Cnt = 2 }),
+                StreamEvent.CreateEnd(633979008050000000, 633979008040000000, new ResultEvent { Key = 1, Cnt = 2 }),
+                StreamEvent.CreateStart(633979008050000000, new ResultEvent { Key = 1, Cnt = 1 }),
+                StreamEvent.CreateEnd(633979008060000000, 633979008050000000, new ResultEvent { Key = 1, Cnt = 1 }),
+            };
+            var counts = stream.GroupApply(
+                                    g => g.Key,
+                                    e => e.Count(),
+                                    (g, e) => new ResultEvent { Key = g.Key, Cnt = e })
+                               .ToStreamEventObservable()
+                               .ToEnumerable()
+                               .Where(e => e.IsData && e.Payload.Key == 1);
+            foreach (var x in counts)
+            {
+                Console.WriteLine("{0}, {1}", x.SyncTime, x.OtherTime);
+            }
+            Assert.IsTrue(expectedResult.SequenceEqual(counts));
+        }
+
+        public IEnumerable<Event> Events()
+        {
+            var vs = new DateTime(2010, 1, 1, 0, 00, 00, DateTimeKind.Utc);
+            var rand = new Random(0);
+            int eventCnt = 5;
+            for (int i = 0; i < eventCnt; i++)
+            {
+                yield return new Event { Vs = vs, V = rand.Next(10), Key = rand.Next(3) };
+                vs = vs.AddSeconds(1);
+            }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void CodeGenWithFieldOfGenericType<#= suffix #>()
+        {
+            // Taken from the PerformanceTest sample.
+            // The GroupApply creates batches where the key is a generic type and codegen was doing a type cast without making sure the type's name was valid C# syntax
+            var numEventsPerTumble = 2000;
+            var tumblingWindowDataset =
+                Observable.Range(0, 100)
+                    .Select(e => StreamEvent.CreateInterval(((long)e / numEventsPerTumble) * numEventsPerTumble, ((long)e / numEventsPerTumble) * numEventsPerTumble + numEventsPerTumble, new Payload { field1 = 0, field2 = 0 }))
+                    .ToStreamable()
+                    .SetProperty().IsConstantDuration(true, numEventsPerTumble)
+                    .SetProperty().IsSnapshotSorted(true, e => e.field1);
+            var result = tumblingWindowDataset.GroupApply(e => e.field2, str => str.Count(), (g, c) => new { Key = g, Count = c });
+            var a = result.ToStreamEventObservable().ToEnumerable().ToArray();
+            Assert.IsTrue(a.Length == 3); // just make sure it doesn't crash
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void StringSerialization<#= suffix #>()
+        {
+            var rand = new Random(0);
+            var pool = MemoryManager.GetColumnPool<string>();
+
+            for (int x = 0; x < 100; x++)
+            {
+                pool.Get(out ColumnBatch<string> inputStr);
+
+                var toss1 = rand.NextDouble();
+                inputStr.UsedLength = toss1 < 0.1 ? 0 : rand.Next(Config.DataBatchSize);
+
+                for (int i = 0; i < inputStr.UsedLength; i++)
+                {
+                    var toss = rand.NextDouble();
+                    inputStr.col[i] = toss < 0.2 ? string.Empty : (toss < 0.4 ? null : Guid.NewGuid().ToString());
+                    if (x == 0) inputStr.col[i] = null;
+                    if (x == 1) inputStr.col[i] = string.Empty;
+                }
+
+                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                var ms = new MemoryStream { Position = 0 };
+
+                s.Serialize(ms, inputStr);
+                ms.Position = 0;
+                ColumnBatch<string> resultStr = s.Deserialize(ms);
+
+                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+
+                for (int j = 0; j < inputStr.UsedLength; j++)
+                {
+                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                }
+                resultStr.ReturnClear();
+                inputStr.ReturnClear();
+            }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void CharArraySerialization<#= suffix #>()
+        {
+            var orig = Config.SerializationCompressionLevel;
+
+            Config.SerializationCompressionLevel = SerializationCompressionLevel.CharArrayToUTF8;
+            var rand = new Random(0);
+
+            for (int x = 0; x < 5; x++)
+            {
+                var inputStr = new MultiString();
+
+                var toss1 = rand.NextDouble();
+                var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
+
+                for (int i = 0; i < usedLength; i++)
+                {
+                    var toss = rand.NextDouble();
+                    string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
+                    if (x == 0) str = string.Empty;
+                    inputStr.AddString(str);
+                }
+
+                inputStr.Seal();
+
+                StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                var ms = new MemoryStream { Position = 0 };
+
+                s.Serialize(ms, inputStr);
+                ms.Position = 0;
+                var resultStr = s.Deserialize(ms);
+
+                Assert.IsTrue(resultStr.Count == inputStr.Count);
+
+                for (int j = 0; j < inputStr.Count; j++)
+                {
+                    Assert.IsTrue(inputStr[j] == resultStr[j]);
+                }
+                resultStr.Dispose();
+                inputStr.Dispose();
+            }
+
+            Config.SerializationCompressionLevel = orig;
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void MultipleAggregatesWithCompiledDictionaries<#= suffix #>()
+        {
+            IEnumerable<StreamEvent<StreamScope_InputEvent0>> bacon = Array.Empty<StreamEvent<StreamScope_InputEvent0>>();
+            IObservableIngressStreamable<StreamScope_InputEvent0> input = bacon.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
+            var result =
+                input
+                .GroupAggregate(
+                    s => new { s.OutputTs, s.DelayInMilliseconds, s.UserId },
+                    s => s.Count(),
+                    s => s.Min(r => r.Duration),
+                    s => s.Max(r => r.Duration),
+                    s => s.Average(r => r.Duration),
+                    (key, cnt, minDuration, maxDuration, avgDuration) => new StreamScope_OutputEvent0()
+                    {
+                        OutputTs = key.Key.OutputTs,
+                        DelayInMilliseconds = key.Key.DelayInMilliseconds,
+                        UserId = key.Key.UserId,
+                        Cnt = (long)cnt,
+                        MinDuration = minDuration,
+                        MaxDuration = maxDuration,
+                        AvgDuration = avgDuration,
+                    }).ToStreamEventObservable();
+
+            var b = result;
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PayloadWithFieldOfNestedType01<#= suffix #>()
+        {
+            var input = Enumerable
+                .Range(0, NumEvents)
+                .Select(i => new PayloadWithFieldOfNestedType1(i))
+                ;
+            var streamResult = input
+                .ToStreamable()
+                .Where(p => p.nt.x % 2 == 0)
+                .ToPayloadEnumerable();
+
+            var a = streamResult.ToArray();
+            var linqResult = input.Where(p => p.nt.x % 2 == 0);
+            Assert.IsTrue(Enumerable.Zip(linqResult, a, (p1, p2) => p1.nt.x == p2.nt.x).All(p => p));
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void PayloadWithFieldOfNestedType02<#= suffix #>()
+        {
+            var input = Enumerable
+                .Range(0, NumEvents)
+                .Select(i => new PayloadWithFieldOfNestedType2(i))
+                ;
+            var streamResult = input
+                .ToStreamable()
+                .Where(p => p.nt.x % 2 == 0)
+                .ToPayloadEnumerable();
+
+            var a = streamResult.ToArray();
+            var linqResult = input.Where(p => p.nt.x % 2 == 0);
+            Assert.IsTrue(Enumerable.Zip(linqResult, a, (p1, p2) => p1.nt.x == p2.nt.x).All(p => p));
+        }
+<# } #>
+    }
+<# } #>
+}

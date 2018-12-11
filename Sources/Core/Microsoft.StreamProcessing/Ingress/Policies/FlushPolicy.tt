@@ -1,0 +1,51 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System.Runtime.Serialization;
+
+namespace Microsoft.StreamProcessing
+{<#
+foreach (string partitionString in new string[] { string.Empty, "Partitioned" })
+{
+    string flushEventString = (partitionString == "Partitioned") ? "LowWatermark" : "Punctuation";
+#>
+
+    /// <summary>
+    /// Specifies when to flush batched output events.
+    /// </summary>
+    [DataContract]
+    public enum <#= partitionString #>FlushPolicy
+    {
+        /// <summary>
+        /// Do not flush. Output events will be batched and egressed normally.
+        /// </summary>
+        /// <returns>An instance of the flush policy</returns>
+        None,
+
+        /// <summary>
+<#      if (partitionString == "Partitioned")
+        { #>
+        /// When a low watermark is ingressed, a flush will also be propagated through the query.
+<#      }
+        else
+        { #>
+        /// When a punctuation is ingressed or generated, a flush will also be propagated through the query.
+<#      } #>
+        /// This is the default policy.
+        /// </summary>
+        FlushOn<#= flushEventString #>,
+
+        /// <summary>
+        /// When a batch is filled on ingress, a flush will be propagated through the query.
+        /// </summary>
+        FlushOnBatchBoundary,
+    }
+<#} #>
+}

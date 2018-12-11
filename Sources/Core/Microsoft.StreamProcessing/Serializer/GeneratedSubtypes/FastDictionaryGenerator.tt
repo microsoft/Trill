@@ -1,0 +1,83 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+namespace Microsoft.StreamProcessing.Internal
+{
+<#
+foreach (var t in new[] {string.Empty, "2", "3"})
+{
+#>
+    internal static class FastDictionaryGenerator<#= t #>
+    {
+        private const string Prefix = "GeneratedFastDictionary<#= t #>_";
+        private static readonly object sentinel = new object();
+        private static int classCounter = 0;
+        private static Dictionary<Tuple<string, Type, Type>, Type> generatorCache =
+            new Dictionary<Tuple<string, Type, Type>, Type>();
+
+        public static Func<FastDictionary<#= t #><TKey, TValue>> CreateFastDictionary<#= t #>Generator<TKey, TValue>(
+            this IEqualityComparerExpression<TKey> comparerExp, int capacity, Func<TKey, TKey, bool> equalsFunc, Func<TKey, int> getHashCodeFunc, QueryContainer container)
+        {
+            if (EqualityComparerExpression<TKey>.IsSimpleDefault(comparerExp)) return () => new FastDictionary<#= t #><TKey, TValue>();
+            if (container == null) return () => new FastDictionary<#= t #><TKey, TValue>(capacity, equalsFunc, getHashCodeFunc);
+
+            var equalsExp = comparerExp.GetEqualsExpr();
+            var getHashCodeExp = comparerExp.GetGetHashCodeExpr();
+            var vars = VariableFinder.Find(equalsExp).Select(o => o.GetHashCode()).ToList();
+            if (!vars.Any()) vars.Add(string.Empty.GetHashCode());
+            var hashvars = VariableFinder.Find(getHashCodeExp).Select(o => o.GetHashCode()).ToList();
+            if (!hashvars.Any()) hashvars.Add(string.Empty.GetHashCode());
+            var key =
+                Tuple.Create(
+                    equalsExp.ToString() + getHashCodeExp.ToString() + string.Concat(vars.Aggregate((a, i) => a ^ i)) + string.Concat(hashvars.Aggregate((a, i) => a ^ i)),
+                    typeof(TKey), typeof(TValue));
+
+            Type temp;
+            lock (sentinel)
+            {
+                if (!generatorCache.TryGetValue(key, out temp))
+                {
+                    string typeName = Prefix + classCounter++;
+                    var builderCode = new GeneratedFastDictionary(typeName, <#= string.IsNullOrEmpty(t) ?  "string.Empty" : "\"" + t + "\"" #>).TransformText();
+                    var a = Transformer.CompileSourceCode(builderCode, Array.Empty<Assembly>(), out string errorMessages);
+
+                    temp = a.GetType(typeName + "`2");
+                    temp = temp.MakeGenericType(typeof(TKey), typeof(TValue));
+                    MethodInfo init = temp.GetTypeInfo().GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+                    init.Invoke(null, new object[] { equalsFunc, getHashCodeFunc, capacity });
+                    generatorCache.Add(key, temp);
+                }
+                if (!container.TryGetFastDictionary<#= t #>Type(key, out Type other))
+                    container.RegisterFastDictionary<#= t #>Type(key, temp);
+           }
+
+            return () => (FastDictionary<#= t #><TKey, TValue>)Activator.CreateInstance(temp);
+        }
+    }
+<#
+}
+#>
+    internal partial class GeneratedFastDictionary
+    {
+        private string classname;
+        private string dictType;
+        public GeneratedFastDictionary(string name, string dictType)
+        {
+            this.classname = name;
+            this.dictType = dictType;
+        }
+    }
+}

@@ -1,0 +1,119 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Linq.Expressions;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing.Internal;
+
+namespace Microsoft.StreamProcessing
+{
+<#
+    foreach (string partitionString in new string[] { string.Empty, "Partitioned" })
+    foreach (string ingressType in new string[] { "StreamEvent", "StartEdge", "Interval" })
+    {
+        string genericArguments = string.IsNullOrEmpty(partitionString) ? "TPayload" : "TKey, TPayload";
+        string argumentSuffix = (ingressType != "StreamEvent") ? ", TResult" : string.Empty;
+        string egress = (ingressType != "StreamEvent")
+            ? "TResult"
+            : partitionString + "StreamEvent<" + genericArguments + ">";
+        string partitionKeyArgument = !string.IsNullOrEmpty(partitionString) ? "colkey[i].Key, " : string.Empty;
+        string partitionFunctionTypeArgument = !string.IsNullOrEmpty(partitionString) ? "TKey, " : string.Empty;
+        string singleFunctionConstructor = ingressType == "StartEdge"
+            ? "Expression<Func<" + partitionFunctionTypeArgument + "long, TPayload, TResult>>"
+            : "Expression<Func<" + partitionFunctionTypeArgument + "long, long, TPayload, TResult>>";
+        string singleFunction = ingressType == "StartEdge"
+            ? "Func<" + partitionFunctionTypeArgument + "long, TPayload, TResult>"
+            : "Func<" + partitionFunctionTypeArgument + "long, long, TPayload, TResult>";
+        string inputKey = string.IsNullOrEmpty(partitionString) ? "Empty" : "PartitionKey<TKey>";
+#>
+    [DataContract]
+    internal sealed class <#= partitionString #><#= ingressType #>EgressPipe<<#= genericArguments #><#= argumentSuffix #>> : EgressBoundary<<#= inputKey #>, TPayload, <#= egress #>>
+    {
+<#      switch (ingressType) {
+            case "StartEdge":
+            case "Interval": #>
+        private readonly <#= singleFunction #> constructor;
+<#              break;
+        } #>
+
+        [Obsolete("Used only by serialization. Do not call directly.")]
+        public <#= partitionString #><#= ingressType #>EgressPipe() { }
+
+        public <#= partitionString #><#= ingressType #>EgressPipe(
+<#      switch (ingressType) {
+            case "StartEdge":
+            case "Interval": #>
+                 <#= singleFunctionConstructor #> constructor,
+<#              break;
+        } #>
+            IObserver<<#= egress #>> observer,
+            QueryContainer container)
+            : base(observer, container)
+        {
+<#      switch (ingressType) {
+            case "StartEdge":
+            case "Interval": #>
+            this.constructor = constructor.Compile();
+<#              break;
+        } #>
+        }
+
+        public override void OnNext(StreamMessage<<#= inputKey #>, TPayload> batch)
+        {
+<#      if (!string.IsNullOrEmpty(partitionString))
+        { #>
+            var colkey = batch.key.col;
+<#      } #>
+            var col_bv = batch.bitvector.col;
+            var col_vsync = batch.vsync.col;
+            var col_vother = batch.vother.col;
+
+            for (int i = 0; i < batch.Count; i++)
+            {
+                if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0<#if (ingressType == "StreamEvent") { #> && col_vother[i] >= 0<# } #>)
+                    continue;
+<#      if (ingressType == "StreamEvent")
+        { #>
+                else if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                    this.observer.OnNext(<#= partitionString #>StreamEvent.CreatePunctuation<<#= genericArguments #>>(<#= partitionKeyArgument #>col_vsync[i]));
+<#          if (partitionString == "Partitioned")
+            { #>
+                else if (col_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
+                    this.observer.OnNext(PartitionedStreamEvent.CreateLowWatermark<TKey, TPayload>(col_vsync[i]));
+<#          }
+        }
+        switch (ingressType)
+        {
+            case "StartEdge": #>
+                else if (col_vother[i] == StreamEvent.InfinitySyncTime)
+                    this.observer.OnNext(this.constructor(<#= partitionKeyArgument #>col_vsync[i], batch[i]));
+                else
+                    throw new StreamProcessingException("The query has encountered either an end edge or an interval, while the egress point expects only start edges.");
+<#              break;
+            case "Interval": #>
+                else
+                    this.observer.OnNext(this.constructor(<#= partitionKeyArgument #>col_vsync[i], col_vother[i], batch[i]));
+<#              break;
+            default: #>
+                else
+                    this.observer.OnNext(new <#= partitionString #>StreamEvent<<#= genericArguments #>>(<#= partitionKeyArgument #>col_vsync[i], col_vother[i], col_vother[i] >= 0 ? batch[i] : default));
+<#              break;
+        } #>
+            }
+            batch.Free();
+        }
+
+        public override int CurrentlyBufferedOutputCount => 0;
+
+        public override int CurrentlyBufferedInputCount => 0;
+    }
+<#  } #>
+}

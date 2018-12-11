@@ -1,0 +1,202 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+namespace Microsoft.StreamProcessing
+{
+<# for (int i = 0; i < 3; i++)
+{
+    var innerKey = i == 0 ? "CompoundGroupKey<TOuterKey, TInnerKey>" : (i == 1 ? "TInnerKey" : "TOuterKey");
+    var nestedInfix = i == 0 ? "Nested" : ((i == 1) ? string.Empty : "SameKey");
+    var innerKeyTemplate = i < 2 ? "TInnerKey" : "TOuterKey";
+#>
+    internal sealed class Shuffle<#= nestedInfix #>Streamable<TOuterKey, TSource, TInnerKey> : Streamable<<#= innerKey #>, TSource>
+    {
+        private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
+                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+
+<# if (i < 2) { #>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Used to avoid creating redundant readonly property.")]
+        public readonly Expression<Func<TSource, TInnerKey>> KeySelector;
+<# } #>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Used to avoid creating redundant readonly property.")]
+        public readonly IStreamable<TOuterKey, TSource> Source;
+        public readonly int totalBranchesL2;
+        public readonly int shuffleId;
+<# if (i < 2) { #>
+        private readonly Group<#= nestedInfix #>Streamable<TOuterKey, TSource, TInnerKey> singleThreadedShuffler;
+<# } #>
+        public readonly bool powerOf2;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "_totalBranchesL2-1", Justification = "Enforced with code contract.")]
+        public Shuffle<#= nestedInfix #>Streamable(
+            <# if (i < 2) { #>IEqualityComparerExpression<TInnerKey> comparer,<# } #>
+            IStreamable<TOuterKey, TSource> source,
+            <# if (i < 2) { #>Expression<Func<TSource, TInnerKey>> keySelector,<# } #>
+            int totalBranchesL2,
+            int shuffleId)
+<# if (i == 0) { #>
+            : base(source.Properties.GroupNested(keySelector))
+<# }
+else if (i == 1) { #>
+            : base(source.Properties.Group(keySelector))
+<# }
+else { #>
+            : base(source.Properties)
+<# } #>
+        {
+            Contract.Requires(source != null);
+<# if (i < 2) { #>
+            Contract.Requires(keySelector != null);
+<# } #>
+            Contract.Requires(totalBranchesL2 > 0);
+
+            Source = source;
+<# if (i < 2) { #>
+            KeySelector = keySelector;
+<# } #>
+            this.totalBranchesL2 = totalBranchesL2;
+            this.shuffleId = shuffleId;
+            powerOf2 = ((totalBranchesL2 & (totalBranchesL2 - 1)) == 0);
+
+<# if (i < 2) { #>
+            if (totalBranchesL2 <= 1)
+            {
+                singleThreadedShuffler = new Group<#= nestedInfix #>Streamable<TOuterKey, TSource, TInnerKey>(comparer, source, keySelector);
+                this.properties = singleThreadedShuffler.Properties;
+            }
+<# } #>
+        }
+
+        private IStreamObserverAnd<#= nestedInfix #>GroupedStreamObservable<TOuterKey, TSource, <#= innerKeyTemplate #>> pipe = null;
+        private int numBranches = 0;
+
+        public override IDisposable Subscribe(IStreamObserver<<#= innerKey #>, TSource> observer)
+        {
+            if (totalBranchesL2 <= 1)
+            {
+<# if (i < 2) { #>
+                return singleThreadedShuffler.Subscribe(observer);
+<# } else { #>
+                return Source.Subscribe(observer);
+<# } #>
+            }
+
+            numBranches++;
+            if (pipe == null)
+            {
+                if (this.Properties.IsColumnar && CanGenerateColumnar()) pipe = GetPipe(observer, totalBranchesL2, shuffleId);
+                else pipe = CreatePipe(observer);
+            }
+            var o = observer;
+            pipe.AddObserver(o);
+
+            var d = o as IDisposable;
+            if (numBranches < totalBranchesL2)
+            {
+                return d ?? Utility.EmptyDisposable;
+            }
+            else
+            {
+                // Reset status for next set of subscribe calls
+                var oldpipe = pipe;
+                pipe = null;
+                numBranches = 0;
+
+                if (d == null)
+                    return Source.Subscribe(oldpipe);
+                else
+                    return Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
+            }
+        }
+
+        private IStreamObserverAnd<#= nestedInfix #>GroupedStreamObservable<TOuterKey, TSource, <#= innerKeyTemplate #>> CreatePipe(
+            IStreamObserver<<#= innerKey #>, TSource> observer)
+        {
+<# if (i == 0) { #>
+            if (typeof(TOuterKey).GetPartitionType() == null)
+                return new Shuffle<#= nestedInfix #>Pipe<TOuterKey, TSource, TInnerKey>(this, observer, totalBranchesL2, shuffleId);
+            return new PartitionedShuffle<#= nestedInfix #>Pipe<TOuterKey, TSource, TInnerKey>(this, observer, totalBranchesL2, shuffleId);
+<# } else { #>
+            return new Shuffle<#= nestedInfix #>Pipe<TOuterKey, TSource, TInnerKey>(this, observer, totalBranchesL2, shuffleId);
+<# } #>
+        }
+
+        private bool CanGenerateColumnar()
+        {
+            var typeOfTOuterKey = typeof(TOuterKey);
+            var typeOfTSource = typeof(TSource);
+            var typeOfTInnerKey = typeof(TInnerKey);
+
+            if (!typeOfTSource.CanRepresentAsColumnar()) return false;
+            if (typeOfTOuterKey.GetPartitionType() != null) return false;
+            if (typeOfTInnerKey.GetPartitionType() != null) return false;
+
+            var keyEqComparer = Properties.KeyEqualityComparer;
+            string inlinedHashCodeComputation;
+            if (keyEqComparer is CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey> comparer)
+            {
+                var y = comparer.innerComparer.GetGetHashCodeExpr();
+                inlinedHashCodeComputation = y.Inline("key");
+            }
+            else
+            {
+                inlinedHashCodeComputation = keyEqComparer.GetGetHashCodeExpr().Inline("key");
+            }
+
+            var lookupKey = CacheKey.Create(<#= i != 2 ? "KeySelector.ToString(), " : string.Empty #>inlinedHashCodeComputation, powerOf2);
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ShuffleTemplate.Generate<TOuterKey, TSource, TInnerKey>(<#= i < 2 ? "this.KeySelector" : "null" #>, inlinedHashCodeComputation, <#= i == 0 ? "true" : "false" #>, this.powerOf2));
+
+            errorMessages = generatedPipeType.Item2;
+            return generatedPipeType.Item1 != null;
+        }
+
+        private IStreamObserverAnd<#= nestedInfix #>GroupedStreamObservable<TOuterKey, TSource, <#= innerKeyTemplate #>> GetPipe(IStreamObserver<<#= innerKey #>, TSource> observer, int totalBranchesL2, int shuffleId)
+        {
+            var keyEqComparer = Properties.KeyEqualityComparer;
+            string inlinedHashCodeComputation;
+            if (keyEqComparer is CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey> comparer)
+            {
+                var y = comparer.innerComparer.GetGetHashCodeExpr();
+                inlinedHashCodeComputation = y.Inline("key");
+            }
+            else
+            {
+                inlinedHashCodeComputation = keyEqComparer.GetGetHashCodeExpr().Inline("key");
+            }
+
+            var lookupKey = CacheKey.Create(<#= i != 2 ? "KeySelector.ToString(), " : string.Empty #>inlinedHashCodeComputation, powerOf2);
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ShuffleTemplate.Generate<TOuterKey, TSource, TInnerKey>(<#= i < 2 ? "this.KeySelector" : "null" #>, inlinedHashCodeComputation, <#= i == 0 ? "true" : "false" #>, this.powerOf2));
+
+            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new GroupPlanNode(
+                    p,
+                    o,
+                    typeof(TOuterKey),
+                    typeof(CompoundGroupKey<TOuterKey, TInnerKey>),
+                    typeof(TSource),
+                    <#= i < 2 ? "this.KeySelector" : "null" #>,
+                    this.shuffleId,
+                    this.totalBranchesL2,
+                    true,
+                    true,
+                    generatedPipeType.Item2));
+
+            var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, totalBranchesL2, shuffleId, planNode);
+            var returnValue = (IStreamObserverAnd<#= nestedInfix #>GroupedStreamObservable<TOuterKey, TSource, <#= innerKeyTemplate #>>)instance;
+            return returnValue;
+        }
+    }
+
+<# } #>
+}

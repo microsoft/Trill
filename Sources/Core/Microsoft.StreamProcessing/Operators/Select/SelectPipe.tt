@@ -1,0 +1,97 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Linq.Expressions;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+namespace Microsoft.StreamProcessing
+{
+<#
+    foreach ( var hasKey in new [] { false, true } )
+    foreach ( var hasStartEdge in new [] { false, true } )
+    {
+        string className = "Select" + (hasKey ? "Key" : string.Empty) + "Pipe" + (hasStartEdge ? "WithStartEdge" : string.Empty);
+        string expressionType = "Func<" + (hasStartEdge ? "long, " : string.Empty) + (hasKey ? "TKey, " : string.Empty) + "TPayload, TResult>";
+#>
+
+    [DataContract]
+    internal sealed class <#= className #><TKey, TPayload, TResult> : UnaryPipe<TKey, TPayload, TResult>
+    {
+        [SchemaSerialization]
+        private readonly Expression<<#= expressionType #>> selector;
+        private readonly <#= expressionType #> selectorFunc;
+        private readonly MemoryPool<TKey, TResult> pool;
+        private readonly string errorMessages;
+
+        [Obsolete("Used only by serialization. Do not call directly.")]
+        public <#= className #>() { }
+
+        public <#= className #>(SelectStreamable<TKey, TPayload, TResult> stream, IStreamObserver<TKey, TResult> observer)
+            : base(stream, observer)
+        {
+            this.selector = (Expression<<#= expressionType #>>)stream.Selector;
+            this.selectorFunc = this.selector.Compile();
+            this.pool = MemoryManager.GetMemoryPool<TKey, TResult>(stream.Properties.IsColumnar);
+            this.errorMessages = stream.ErrorMessages;
+        }
+
+        public override void ProduceQueryPlan(PlanNode previous)
+        {
+            this.Observer.ProduceQueryPlan(new SelectPlanNode(
+                previous, this,
+                typeof(TKey), typeof(TPayload), typeof(TResult),
+                this.selector, <#= hasKey.ToString().ToLowerInvariant() #>, <#= hasStartEdge.ToString().ToLowerInvariant() #>, false, this.errorMessages));
+        }
+
+        public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
+        {
+            this.pool.Get(out StreamMessage<TKey, TResult> outputBatch);
+
+            var count = batch.Count;
+            outputBatch.vsync = batch.vsync;
+            outputBatch.vother = batch.vother;
+            outputBatch.key = batch.key;
+            outputBatch.hash = batch.hash;
+            outputBatch.iter = batch.iter;
+            this.pool.GetPayload(out outputBatch.payload);
+            outputBatch.bitvector = batch.bitvector;
+
+            var dest = outputBatch.payload.col;
+            var src = batch.payload.col;
+<# if (hasStartEdge) { #>
+            var vsync = batch.vsync.col;
+            var vother = batch.vother.col;
+<# } #>
+<# if (hasKey) { #>
+            var srckey = batch.key.col;
+<# } #>
+            fixed (long* bv = batch.bitvector.col)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                        dest[i] = this.selectorFunc(<#= hasStartEdge ? "vsync[i] < vother[i] ? vsync[i] : vother[i], " : string.Empty #><#= hasKey ? "srckey[i], " : string.Empty #>src[i]);
+                }
+            }
+            outputBatch.Count = count;
+            batch.payload.Return();
+            batch.Return();
+            this.Observer.OnNext(outputBatch);
+        }
+
+        public override int CurrentlyBufferedOutputCount => 0;
+
+        public override int CurrentlyBufferedInputCount => 0;
+    }
+<#  } #>
+}

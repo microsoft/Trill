@@ -1,0 +1,78 @@
+﻿<#@ include file="AggregateTemplates.tt" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Linq.Expressions;
+using System.Numerics;
+
+namespace Microsoft.StreamProcessing.Aggregates
+{
+<#
+    // Create average aggregates.
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName;
+#>
+
+    internal class AverageSquare<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>, AverageState<<#= sumTypeName #>>, <#= returnTypeName #>>
+    {
+        public Expression<Func<AverageState<<#= sumTypeName #>>>> InitialState()
+            => () => default;
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, long, <#= typeName #>, AverageState<<#= sumTypeName #>>>> Accumulate()
+            => (oldState, timestamp, input) => new AverageState<<#= sumTypeName #>> { Count = oldState.Count + 1, Sum = oldState.Sum + (<#= sumTypeName #>)(input * input) };
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, long, <#= typeName #>, AverageState<<#= sumTypeName #>>>> Deaccumulate()
+            => (oldState, timestamp, input) => new AverageState<<#= sumTypeName #>> { Count = oldState.Count - 1, Sum = oldState.Sum - (<#= sumTypeName #>)(input * input) };
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, AverageState<<#= sumTypeName #>>, AverageState<<#= sumTypeName #>>>> Difference()
+            => (left, right) => new AverageState<<#= sumTypeName #>> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, <#= returnTypeName #>>> ComputeResult()
+            => state => (<#= returnTypeName #>)state.Sum / state.Count;
+    }
+
+    internal class AverageSquareNullable<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>?, AverageState<<#= sumTypeName #>>, <#= returnTypeName #>?>
+    {
+        public Expression<Func<AverageState<<#= sumTypeName #>>>> InitialState()
+            => () => default;
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, long, <#= typeName #>?, AverageState<<#= sumTypeName #>>>> Accumulate()
+            => (oldState, timestamp, input) => input.HasValue ? new AverageState<<#= sumTypeName #>> { Count = oldState.Count + 1, Sum = oldState.Sum + (<#= sumTypeName #>)(input.Value * input.Value) } : oldState;
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, long, <#= typeName #>?, AverageState<<#= sumTypeName #>>>> Deaccumulate()
+            => (oldState, timestamp, input) => input.HasValue ? new AverageState<<#= sumTypeName #>> { Count = oldState.Count - 1, Sum = oldState.Sum - (<#= sumTypeName #>)(input.Value * input.Value) } : oldState;
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, AverageState<<#= sumTypeName #>>, AverageState<<#= sumTypeName #>>>> Difference()
+            => (left, right) => new AverageState<<#= sumTypeName #>> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, <#= returnTypeName #>?>> ComputeResult()
+            => state => state.Count != 0 ? (<#= returnTypeName #>)state.Sum / state.Count : (<#= returnTypeName #>?)null;
+    }
+
+    internal class AverageSquareFilterable<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>, AverageState<<#= sumTypeName #>>, <#= returnTypeName #>?>
+    {
+        public Expression<Func<AverageState<<#= sumTypeName #>>>> InitialState()
+            => () => default;
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, long, <#= typeName #>, AverageState<<#= sumTypeName #>>>> Accumulate()
+            => (oldState, timestamp, input) => new AverageState<<#= sumTypeName #>> { Count = oldState.Count + 1, Sum = oldState.Sum + (<#= sumTypeName #>)(input * input) };
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, long, <#= typeName #>, AverageState<<#= sumTypeName #>>>> Deaccumulate()
+            => (oldState, timestamp, input) => new AverageState<<#= sumTypeName #>> { Count = oldState.Count - 1, Sum = oldState.Sum - (<#= sumTypeName #>)(input * input) };
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, AverageState<<#= sumTypeName #>>, AverageState<<#= sumTypeName #>>>> Difference()
+            => (left, right) => new AverageState<<#= sumTypeName #>> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<<#= sumTypeName #>>, <#= returnTypeName #>?>> ComputeResult()
+            => state => state.Count != 0 ? (<#= returnTypeName #>)state.Sum / state.Count : (<#= returnTypeName #>?)null;
+    }
+<#
+    }
+#>
+}

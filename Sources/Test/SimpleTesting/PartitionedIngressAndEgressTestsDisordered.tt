@@ -1,0 +1,41 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using Microsoft.StreamProcessing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SimpleTesting.PartitionedIngressAndEgress;
+
+namespace SimpleTesting.PartitionedIngressAndEgressDisordered
+{<#
+foreach (var disorder in new [] {"Drop", "Adjust"})
+foreach (var reorderLatency in new [] { 0, 5, 10 })
+foreach (var lowWatermark in new [] { "None", "Time" })
+foreach (var lowWatermarkPeriod in new [] { 0, 5, 20 })
+foreach (var lowWatermarkLag in new [] { 0, 5, 20 })
+{
+    if (lowWatermark == "None" && (lowWatermarkPeriod != 0 || lowWatermarkLag != 0))
+    {
+        continue;
+    }
+
+    var disorderSuffix = disorder + "Reorder" + reorderLatency.ToString();
+    var lowWatermarkSuffix = "LowWatermark" + (lowWatermark == "None" ? "None" : lowWatermarkPeriod + "_" + lowWatermarkLag);
+    var suffix = disorderSuffix + lowWatermarkSuffix;
+    var disorderPolicy = "DisorderPolicy." + disorder + "(" + reorderLatency.ToString() + ")";
+    var lowWatermarkPolicy = "PeriodicLowWatermarkPolicy." + (lowWatermark == "None" ? "None()" : "Time(" + lowWatermarkPeriod + ", " + lowWatermarkLag + ")");
+#>
+
+    [TestClass]
+    public class TriPartitionedDisorderedTests<#= suffix #> : PartitionedDisorderedTestsBase
+    {
+        [TestMethod, TestCategory("Gated")]
+        public void LocalDisordering() => LocalDisorderingBase(<#= disorderPolicy #>, <#= lowWatermarkPolicy #>);
+
+        [TestMethod, TestCategory("Gated")]
+        public void ReorderLatencyDisordering() => ReorderLatencyDisorderingBase(<#= disorderPolicy #>, <#= lowWatermarkPolicy #>);
+    }
+<# } #>
+}

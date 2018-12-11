@@ -1,0 +1,65 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+<#+
+protected virtual void IfFinalStateProduceOutput(int indent, int node, string insertArgument, string syncTime, string otherTime, string keyValue, string hashValue)
+{
+    this.PushIndent(new string(' ', indent));
+    if (this.isFinal[node])
+    {
+        if (!this.isSyncTimeSimultaneityFree)
+        {
+#>
+int ind = tentativeOutput.Insert(<#= insertArgument #>);
+tentativeOutput.Values[ind].other = <#= otherTime #> + MaxDuration;
+tentativeOutput.Values[ind].key = <#= keyValue #>;
+tentativeOutput.Values[ind].payload = newReg;
+<#+
+        }
+        else
+        {
+#>
+dest_vsync[iter] = <#= syncTime #>;
+dest_vother[iter] = <#= otherTime #> + MaxDuration;
+<#+
+            if (this.noPublicResultFields) {
+#>
+batch[iter] = newReg;
+<#+
+            }
+            else
+            {
+                foreach (var f in this.resultFields)
+                {
+#>
+resultBatch_<#= f.Name #>_col[iter] = newReg.<#= f.OriginalName #>;
+<#+
+                }
+            }
+#>
+destkey[iter] = <#= keyValue #>;
+dest_hash[iter] = <#= hashValue #>;
+iter++;
+
+if (iter == Config.DataBatchSize)
+{
+    FlushContents();
+    resultBatch = batch as <#= this.resultBatchTypeName #>;
+    dest_vsync = batch.vsync.col;
+    dest_vother = batch.vother.col;
+    destkey = batch.key.col;
+    dest_hash = batch.hash.col;
+}
+<#+
+        }
+    }
+    this.PopIndent();
+    return;
+}
+#>

@@ -1,0 +1,718 @@
+﻿<#@ template language="C#" visibility="internal" inherits="AfaTemplate" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// CompiledGroupedAfaPipe_MultiEventList
+// TKey: <#= TKey #>
+// TPayload: <#= TPayload #>
+// TRegister: <#= TRegister #>
+// TAccumulator: <#= TAccumulator #>
+
+<#  var grouped = !this.keyType.Equals(typeof(Microsoft.StreamProcessing.Empty));
+    Func<EdgeInfo,string> arcTypeName = (EdgeInfo edge) => {
+      if (edge is MultiEdgeInfo) return "MultiElement";
+      return edge.Type == EdgeInfo.EdgeType.Single ? "SingleElement" : "ListElement";
+    };
+    var CurrentListName = grouped ? "currentList" : "currentTimestampEventList";
+    var CurrentList = CurrentListName + (grouped ? ".payloads" : ".Items");
+    var CurrentListCount = string.Format("{0}{1}.Count", CurrentListName, (grouped ? ".payloads" : string.Empty));
+    Func<EdgeInfo,string> secondArgToFenceAndTransfer = (EdgeInfo edge) =>
+          {
+            if (edge.Type == EdgeInfo.EdgeType.Multi)
+              return "acc";
+            else if (edge.Type == EdgeInfo.EdgeType.Single)
+              return  (this.payloadHasNoFields ? "listElement.payload" : "listElement");
+            else // list
+              return "payloadList";
+          };
+    Func<string, string> EventRefWrapper = (string s) => this.payloadHasNoFields ? s + ".payload" : s; #>
+
+<# if (grouped) { #>
+[DataContract]
+internal struct GeneratedSavedEventRef
+{
+    [DataMember]
+    public <#= TKey #> key;
+    [DataMember]
+    public AList<GeneratedEventRef> payloads;
+}
+<# } #>
+
+[DataContract]
+internal struct GeneratedEventRef
+{
+<# foreach (var f in this.sourceFields) { #>
+    [DataMember]
+    public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.Name #>;
+<# } #>
+
+    public void Populate(<#= sourceBatchTypeName #> batch, int index)
+    {
+<# foreach (var f in this.sourceFields) { #>
+        this.<#= f.Name #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+<# } #>
+    }
+}
+
+[DataContract]
+internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>
+{
+    <#= staticCtor #>
+
+    [DataMember]
+<# if (grouped) { #>
+
+    private FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>> activeStates;
+<# } else { #>
+
+    private FastLinkedList<GroupedActiveState<<#= TKey #>, <#= TRegister #>>> activeStates;
+<# }
+   if (grouped) { #>
+
+    private FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>.FindTraverser activeFindTraverser;
+<# } #>
+
+    [DataMember]
+<# if (grouped) { #>
+
+    private FastMap<GeneratedSavedEventRef> currentTimestampEventList;
+<# } else { #>
+
+    private AList<GeneratedEventRef> currentTimestampEventList;
+<# } #>
+
+<# if (grouped) { #>
+
+    private FastMap<GeneratedSavedEventRef>.FindTraverser eventListTraverser;
+    private FastMap<GeneratedSavedEventRef>.VisibleTraverser allEventListTraverser;
+<# } else { #>
+
+    private FastLinkedList<GroupedActiveState<Microsoft.StreamProcessing.Empty, <#= TRegister #>>>.ListTraverser activeStatesTraverser;
+<# } #>
+
+    [DataMember]
+    private long lastSyncTime;
+
+    private long[] dest_vsync;
+    private long[] dest_vother;
+    private <#= TKey #>[] destkey;
+    private int[] dest_hash;
+    private <#= resultBatchTypeName #> resultBatch;
+
+    <# foreach (var f in this.sourceFields) { #>
+
+    <#= ColumnPointerFieldDeclaration(f, "sourceBatch") #>
+    <# } #>
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TRegister #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TRegister #>> observer,
+        object afa,
+        long MaxDuration)
+        : base(stream, observer, afa, MaxDuration, true)
+    {
+<# if (grouped) { #>
+
+        activeStates = new FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>();
+<# } else { #>
+
+        activeStates = new FastLinkedList<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>();
+<# } #>
+
+<# if (grouped) { #>
+
+        activeFindTraverser = new FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>.FindTraverser(activeStates);
+<# } #>
+
+<# if (grouped) { #>
+
+        currentTimestampEventList = new FastMap<GeneratedSavedEventRef>();
+<# } else { #>
+
+        currentTimestampEventList = new AList<GeneratedEventRef>();
+<# } #>
+
+<# if (grouped) { #>
+
+        eventListTraverser = new FastMap<GeneratedSavedEventRef>.FindTraverser(currentTimestampEventList);
+        allEventListTraverser = new FastMap<GeneratedSavedEventRef>.VisibleTraverser(currentTimestampEventList);
+<# } else { #>
+
+        currentTimestampEventList = new AList<GeneratedEventRef>();
+        activeStatesTraverser = new FastLinkedList<GroupedActiveState<Microsoft.StreamProcessing.Empty, <#= TRegister #>>>.ListTraverser(activeStates);
+<# } #>
+        lastSyncTime = -1;
+    }
+
+    public override int CurrentlyBufferedInputCount => activeStates.Count;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ProcessCurrentTimestamp()
+    {
+        if (currentTimestampEventList.Count == 0) return;
+        List<<#= TPayload #>> payloadList = null;
+<# if (grouped) { #>
+
+        int el_index, el_hash;
+<# } #>
+
+        long synctime = lastSyncTime;
+        <#= TAccumulator #> acc;
+
+<# if (grouped) { #>
+
+        allEventListTraverser.currIndex = 0;
+
+        while (allEventListTraverser.Next(out el_index, out el_hash)) {
+            var currentList = currentTimestampEventList.Values[el_index];
+<# } #>
+
+            /* (1) Process currently active states */
+            bool ended = true;
+<# if (grouped) { #>
+            if (activeFindTraverser.Find(el_hash))
+<# } #>
+            {
+                int index, orig_index;
+
+<# if (grouped) { #>
+
+                while (activeFindTraverser.Next(out index))
+<# } else { #>
+            if (activeStatesTraverser.Find())
+            {
+                while (activeStatesTraverser.Next(out index))
+<# } #>
+                {
+                    orig_index = index;
+
+                    var state = activeStates.Values[index];
+<# if (grouped) { #>
+
+                    if (!(<#= keyEqualityComparer("state.key", "currentList.key") #>)) continue;
+<# } #>
+
+                    if (state.PatternStartTimestamp + MaxDuration > synctime)
+                    {
+                        switch (state.state) {
+                            <# foreach (var sourceNodeInfo in this.edgeInfos) { #>
+
+                            case <#= sourceNodeInfo.Item1 #> :
+                            {
+                                <# foreach (var arcInfo in sourceNodeInfo.Item2) {
+                                       var multiArcInfo = arcInfo as MultiEdgeInfo;
+                                 #>
+
+                                // type of arc: <#= arcTypeName(arcInfo) #>
+                                <# if (multiArcInfo != null) { #>
+
+                                acc = <#= multiArcInfo.Initialize("synctime", "state.register") #>;
+                                for (int i = 0; i < <#= (grouped ? "currentList.payloads.Count" : "currentTimestampEventList.Count") #>; i++)
+                                {
+                                    var listElement = <#= CurrentList #>[i];
+                                    acc = <#= multiArcInfo.Accumulate("synctime", EventRefWrapper("listElement"), "state.register", "acc") #>;
+                                    <# if (multiArcInfo.SkipToEnd != null) { #>
+
+                                    if (<#= multiArcInfo.SkipToEnd("synctime", "payload", "acc") #>) break;
+                                    <# } #>
+
+                                }
+                                <# } #>
+
+                                <# if (multiArcInfo == null) { #>
+
+                                <# if (arcInfo.Type == EdgeInfo.EdgeType.List) { #>
+
+                                if (payloadList == null)
+                                {
+                                    payloadList = new List<<#= TPayload #>>(<#= CurrentListName #>.Count);
+                                    for (int i = 0; i < <#= CurrentListName #>.Count; i++)
+                                    {
+                                        var listElement = <#= CurrentList #>[i];
+<#                                      CreateNewInstance("listElement"); #>
+                                        payloadList.Add(payload);
+                                    }
+                                }
+                                <# } #>
+
+                                <# if (arcInfo.Type == EdgeInfo.EdgeType.Single) { #>
+
+                                var listElement = <#= CurrentList #>[0];
+                                <# } #>
+                                <# } #>
+
+                                if (<#= arcInfo.Fence("synctime", secondArgToFenceAndTransfer(arcInfo), "state.register") #>)
+                                {
+                                    // assign new register value
+                                    <# UpdateRegisterValue(arcInfo, "state.register", "synctime", secondArgToFenceAndTransfer(arcInfo), "state.register"); #>
+
+                                    // target nodes
+                                    <# foreach (var ns in arcInfo.EpsilonReachableNodes) { #>
+
+                                    // target state: <#= ns #> (<#= isFinal[ns] ? "final" : "not final" #>)
+                                    <# var keyArg = (grouped ? "currentList.key" : "Microsoft.StreamProcessing.Empty.Default"); #>
+                                    <# var hashArg = (grouped ? "el_hash" : "0"); #>
+
+                                    <# IfFinalStateProduceOutput(36, ns, string.Empty, "synctime", "state.PatternStartTimestamp", keyArg, hashArg); #>
+                                    <# if (hasOutgoingArcs[ns]) { #>
+
+                                    {
+                                        // target node has outgoing edges
+                                        if (index == -1) index = activeStates.Insert(<#= grouped ? "el_hash" : string.Empty #>);
+<# if (grouped) { #>
+
+                                        activeStates.Values[index].key = currentList.key;
+<# } #>
+                                        activeStates.Values[index].state = <#= ns #>;
+                                        activeStates.Values[index].register = newReg;
+                                        activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+
+                                        index = -1;
+
+                                        ended = false;
+                                    }
+
+                                    <# } else { #>
+
+                                    // target node does not have any outgoing edges
+                                    <# } #>
+
+                                    //if (IsDeterministic) break; // We are guaranteed to have only one successful transition
+                                    <# } #>
+
+                                }
+                                <# if (multiArcInfo != null) { #>
+
+                                <#= multiArcInfo.Dispose("acc") #>;
+                                <# } #>
+                            <# } #>
+
+                                break;
+                            }
+                        <# } #>
+
+                        } // end switch
+                    } // end if the current state's timestamp plus MaxDuration is greater than the current synctime
+                    if (index == orig_index)
+<# if (grouped) { #>
+
+                        activeFindTraverser.Remove();
+<# } else { #>
+
+                        activeStatesTraverser.Remove();
+<# } #>
+                    if (IsDeterministic) break; // We are guaranteed to have only one active state
+                }
+<# if (!grouped) { #>
+             }
+<# } #>
+            }
+
+            /* (2) Start new activations from the start state(s) */
+            <# if (!this.AllowOverlappingInstances) { #>
+
+            <# if (grouped) { #>
+
+            if (!ended) continue;
+            <# } else { #>
+
+            if (ended) {
+            <# } #>
+            <# } #>
+
+            <# foreach (var sourceNodeInfo in this.startEdgeInfos) { #>
+
+                // start node: <#= sourceNodeInfo.Item1 #>
+                <# foreach (var arcInfo in sourceNodeInfo.Item2) {
+                       var multiArcInfo = arcInfo as MultiEdgeInfo;
+                #>
+
+                // type of arc: <#= arcTypeName(arcInfo) #>
+                <# if (multiArcInfo != null) { #>
+
+                    acc = <#= multiArcInfo.Initialize("synctime", "defaultRegister") #>;
+                    for (int i = 0; i < <#= (grouped ? "currentList.payloads.Count" : "currentTimestampEventList.Count") #>; i++)
+                    {
+                        var listElement = <#= CurrentList #>[i];
+                        acc = <#= multiArcInfo.Accumulate("synctime", EventRefWrapper("listElement"), "defaltRegister", "acc") #>;
+                        <# if (multiArcInfo.SkipToEnd != null) { #>
+
+                        if (<#= multiArcInfo.SkipToEnd("synctime", "payload", "acc") #>) break;
+                        <# } #>
+
+                    }
+                    <# } #>
+
+                    <# if (multiArcInfo == null) { #>
+
+                    <# if (arcInfo.Type == EdgeInfo.EdgeType.List) { #>
+
+                    if (payloadList == null)
+                    {
+                        payloadList = new List<<#= TPayload #>>(<#= CurrentListName #>.Count);
+                        for (int i = 0; i < <#= CurrentListName #>.Count; i++)
+                        {
+                            var listElement = <#= CurrentList #>[i];
+<#                          CreateNewInstance("listElement"); #>
+                            payloadList.Add(payload);
+                        }
+                    }
+                    <# } #>
+
+                    <# if (arcInfo.Type == EdgeInfo.EdgeType.Single) { #>
+
+                    if (<#= CurrentListCount #> == 1) {
+                    var listElement = <#= CurrentList #>[0];
+                    <# } #>
+                    <# } #>
+
+                    if (<#= arcInfo.Fence("synctime", EventRefWrapper("listElement"), "defaultRegister") #>)
+                    {
+                        // assign new register value
+                        <# UpdateRegisterValue(arcInfo, "defaultRegister", "synctime", "#dummy#", "defaultRegister"); #>
+
+                        // target nodes
+                        <# foreach (var ns in arcInfo.EpsilonReachableNodes) { #>
+
+                        // target state: <#= ns #> (<#= isFinal[ns] ? "final" : "not final" #>)
+                        <# IfFinalStateProduceOutput(24, ns, string.Empty, "synctime", "synctime", "currentList.key", (grouped ? "el_hash" : "0")); #>
+                        <# if (hasOutgoingArcs[ns]) { #>
+
+                    {
+                        int index = activeStates.Insert(<#= grouped ? "el_hash" : string.Empty #>);
+<# if (grouped) { #>
+
+                        activeStates.Values[index].key = currentList.key;
+<# } #>
+
+                        activeStates.Values[index].state = <#= ns #>;
+                        activeStates.Values[index].register = newReg;
+                        activeStates.Values[index].PatternStartTimestamp = synctime;
+                    }
+                        <# } #>
+
+                        //if (IsDeterministic) break; // We are guaranteed to have only one successful transition
+                        <# } #>
+
+                    }
+                    <# if (multiArcInfo != null) { #>
+
+                    <#= multiArcInfo.Dispose("acc") #>;
+                    <# } else { #>
+
+                    <# if (arcInfo.Type == EdgeInfo.EdgeType.Single) { #>
+
+                    } // end if currentList.payloads.Count == 1
+                    <# } #>
+                    <# } #>
+                 <# } #>
+            <# } #>
+
+            <# if (!this.AllowOverlappingInstances && !grouped) { #>
+
+            }
+            <# } #>
+
+<# if (!grouped) { #>
+
+                //if (IsDeterministic) break; // We are guaranteed to have only one start state
+<# } #>
+
+<# if (grouped) { #>
+
+            currentList.payloads = null; // Let GC handle this
+<# } #>
+
+<# if (grouped) { #>
+
+        }
+<# } #>
+
+
+<# if (grouped) { #>
+
+        currentTimestampEventList.Clear();
+<# } else { #>
+
+        currentTimestampEventList.Count = 0;
+<# } #>
+    }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> batch)
+    {
+        var count = batch.Count;
+
+        this.dest_vsync = this.batch.vsync.col;
+        this.dest_vother = this.batch.vother.col;
+        this.destkey = this.batch.key.col;
+        this.dest_hash = this.batch.hash.col;
+
+        var srckey = batch.key.col;
+
+        <#= sourceBatchTypeName #> sourceBatch = batch as <#= sourceBatchTypeName #>;
+
+        <# foreach (var f in this.sourceFields) { #>
+
+        <#= ColumnPointerFieldAssignment(f, "sourceBatch") #>
+        <# } #>
+
+        GeneratedEventRef evref = default;
+<# if (grouped) { #>
+
+        GeneratedSavedEventRef sevref = default;
+<# } #>
+
+        fixed (long* src_bv = batch.bitvector.col, src_vsync = batch.vsync.col, src_vother = batch.vother.col)
+        {
+            fixed (int* src_hash = batch.hash.col)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0 || src_vother[i] < 0)
+                    {
+                        long synctime = src_vsync[i];
+
+                        int index, hash;
+
+                        if (synctime > lastSyncTime) // move time forward
+                        {
+                            ProcessCurrentTimestamp();
+                            lastSyncTime = synctime;
+                        }
+
+                        if (src_vother[i] < 0)
+                        {
+                            OnPunctuation(synctime);
+                            continue;
+                        }
+<# if (grouped) { #>
+
+                        bool done = false;
+
+                        if (eventListTraverser.Find(src_hash[i]))
+                        {
+                            while (eventListTraverser.Next(out index))
+                            {
+                                var state = currentTimestampEventList.Values[index];
+
+                                if (keyEqualityComparer(state.key, srckey[i]))
+                                {
+                                    if (state.payloads.Count == state.payloads.Items.Length)
+                                    {
+                                        state.payloads.EnsureCapacity(state.payloads.Count + 1);
+                                    }
+                                    state.payloads.Items[state.payloads.Count].Populate(batch, i);
+                                    state.payloads.Count++;
+
+                                    done = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!done)
+                        {
+                            index = currentTimestampEventList.Insert(src_hash[i]);
+                            sevref.payloads = new Microsoft.StreamProcessing.Internal.Collections.AList<GeneratedEventRef>(10);
+
+                            sevref.payloads.Items[0].Populate(sourceBatch, i);
+                            sevref.payloads.Count++;
+
+                            sevref.key = srckey[i];
+                            currentTimestampEventList.Values[index] = sevref;
+                        }
+<# } else { #>
+
+                        if (currentTimestampEventList.Count == currentTimestampEventList.Items.Length)
+                        {
+                            currentTimestampEventList.EnsureCapacity(currentTimestampEventList.Count + 1);
+                        }
+
+                        currentTimestampEventList.Items[currentTimestampEventList.Count].Populate(sourceBatch, i);
+                        currentTimestampEventList.Count++;
+<# } #>
+
+                    }
+                }
+            }
+        }
+        batch.Free();
+    }
+}
+
+[DataContract]
+public class AList<T>
+{
+    private const int _defaultCapacity = 4;
+    private static readonly T[] _emptyArray;
+    [DataMember]
+    public T[] Items;
+    [DataMember]
+    public int Count;
+
+    static AList()
+    {
+        _emptyArray = new T[0];
+    }
+
+    public AList()
+    {
+        Items = _emptyArray;
+    }
+
+    public AList(int capacity)
+    {
+        if (capacity < 0)
+        {
+            throw new ArgumentOutOfRangeException("capacity", "NeedNonNegNum");
+        }
+        if (capacity == 0)
+        {
+            Items = _emptyArray;
+        }
+        else
+        {
+            Items = new T[capacity];
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Add(T item)
+    {
+        if (Count == Items.Length)
+        {
+            EnsureCapacity(Count + 1);
+        }
+        Items[Count++] = item;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear()
+    {
+        if (Count > 0)
+        {
+            Array.Clear(Items, 0, Count);
+            Count = 0;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Reset()
+    {
+        Count = 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EnsureCapacity(int min)
+    {
+        if (Items.Length < min)
+        {
+            int num = (Items.Length == 0) ? 4 : (Items.Length * 2);
+            if (num > 0x7fefffff)
+            {
+                num = 0x7fefffff;
+            }
+            if (num < min)
+            {
+                num = min;
+            }
+            Capacity = num;
+        }
+    }
+
+    public void Insert(int index, T item)
+    {
+        if (index > Count)
+        {
+            throw new ArgumentOutOfRangeException("index");
+        }
+        if (Count == Items.Length)
+        {
+            EnsureCapacity(Count + 1);
+        }
+        if (index < Count)
+        {
+            Array.Copy(Items, index, Items, index + 1, Count - index);
+        }
+        Items[index] = item;
+        Count++;
+    }
+
+    public int Capacity
+    {
+        get
+        {
+            return Items.Length;
+        }
+        set
+        {
+            if (value < Count)
+            {
+            }
+            if (value != Items.Length)
+            {
+                if (value > 0)
+                {
+                    T[] destinationArray = new T[value];
+                    if (Count > 0)
+                    {
+                        Array.Copy(Items, 0, destinationArray, 0, Count);
+                    }
+                    Items = destinationArray;
+                }
+                else
+                {
+                    Items = _emptyArray;
+                }
+            }
+        }
+    }
+
+    public T this[int index]
+    {
+        get
+        {
+            if (index >= Count)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            return Items[index];
+        }
+        set
+        {
+            if (index >= Count)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            Items[index] = value;
+        }
+    }
+}
+
+<#+
+private void CreateNewInstance(string s) {
+#>
+<#+ if (payloadIsAnon) {
+  var fieldArgs = String.Join(",", this.sourceFields.Select(f => string.Format("{0}.{1}", s, f.Name)));
+#>
+                                        var payload = (<#= TPayload  #>)Activator.CreateInstance(typeof(<#= TPayload #>) <#= fieldArgs #> );
+<#+ } else if (this.payloadHasNoFields) { #>
+                                        var payload = <#= s #>.payload;
+<#+ } else { #>
+                                        var payload = new <#= TPayload  #>();
+<#+ foreach (var f in this.sourceFields) { #>
+                                        payload.<#= f.OriginalName #> = <#= s #>.<#= f.Name #>;
+<#+ } #>
+<#+ } #>
+<#+ } #>

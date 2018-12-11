@@ -1,0 +1,1092 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Linq" #>
+<#
+    List<string> genericParamList = new List<string>();
+    var TKEY = keyType.GetCSharpSourceSyntax(ref genericParamList);
+    var keyGenericParameterCount = genericParamList.Count;
+    var TPAYLOAD = payloadType.GetCSharpSourceSyntax(ref genericParamList);
+    var payloadGenericParmeterList = genericParamList.Skip(keyGenericParameterCount);
+    var genericParameters = 0 < genericParamList.Count ? "<" + String.Join(",", genericParamList) + ">" : string.Empty;
+    var payloadGenericParameters = 0 < payloadGenericParmeterList.Count() ? "<" + String.Join(",", payloadGenericParmeterList) + ">" : string.Empty;
+    var payloadIsAnon = payloadType.IsAnonymousType();
+    if (payloadIsAnon) TPAYLOAD = TPAYLOAD.CleanUpIdentifierName();
+
+    Type t;
+#>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+<# if (payloadIsAnon) { #>
+using System.Reflection;
+<# } #>
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+<# if (this.keyType.Namespace != null && this.keyType.Namespace != "Microsoft.StreamProcessing") { #>
+using <#= this.keyType.Namespace #>;
+<# } #>
+<# if (this.payloadType.Namespace != null) { #>
+using <#= this.payloadType.Namespace #>;
+<# } #>
+
+// <#= TKEY #>: Name of type that is the key type.
+// <#= TPAYLOAD #>: Name of type that is the payload type.
+
+[assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
+[DataContract]
+public partial class <#= CLASSNAME #><#= genericParameters #> : StreamMessage<<#= TKEY #>, <#= TPAYLOAD #>>
+{
+
+<# if (this.payloadMightBeNull) { #>
+// When the payload is a reference type (but *not* anonymous), then there needs to be a bit
+// indicating if the instance corresponding to any particular row is actually null.
+    [DataMember]
+    public ColumnBatch<long> _nullnessvector;
+<# } #>
+
+// Payload Fields
+<#
+  foreach (var f in this.fields) {
+#>
+  [DataMember]
+<#
+    if (f.OptimizeString()) {
+#>
+  public MultiString <#= f.Name #>;
+<#
+    } else {
+#>
+  public ColumnBatch<<#= f.Type.GetCSharpSourceSyntax() #>> <#= f.Name #>;
+<#
+    }
+#>
+<#
+    if (payloadIsAnon) {
+#>
+  private PropertyInfo <#= f.OriginalName #>_Property = typeof(<#= TPAYLOAD #>).GetProperty("<#= f.OriginalName #>");
+<# } #>
+<# } #>
+
+  public <#= CLASSNAME #>()
+    : base() {
+  }
+
+/*
+  public <#= CLASSNAME #>(bool allocateColumns)
+    : base(true) {
+    if (allocateColumns) {
+    <# foreach (var f in this.fields) { #>
+
+    this.<#= f.Name #> = new ColumnBatch<<#= f.Type.GetCSharpSourceSyntax() #>>(Config.DataBatchSize);
+    <# } #>
+    <# if (this.payloadMightBeNull) { #>
+    this._nullnessvector = new ColumnBatch<long>(1 + (Config.DataBatchSize >>6));
+    <# } #>
+    }
+  }
+*/
+
+<# var includeDebugInfo = Config.CodegenOptions.GenerateDebugInfo;
+#if DEBUG
+includeDebugInfo = true;
+#endif
+#>
+<# if (includeDebugInfo) { #>
+  static <#= CLASSNAME #>() {
+<# if ((Config.CodegenOptions.BreakIntoCodeGen & Config.CodegenOptions.DebugFlags.Batches) != 0)
+    { #>
+        if (System.Diagnostics.Debugger.IsAttached)
+            System.Diagnostics.Debugger.Break();
+        else
+            System.Diagnostics.Debugger.Launch();
+<#  } #>
+  }
+<# } #>
+
+  public <#= CLASSNAME #>(MemoryPool<<#= TKEY #>, <#= TPAYLOAD #>> pool)
+    : base(pool) {
+  }
+
+  /*
+  public override void Allocate() {
+    AllocatePayload();
+    base.Allocate();
+  }
+  */
+
+  public override void AllocatePayload() {
+<#
+   if (this.keyType.KeyTypeNeedsGeneratedMemoryPool() || !this.payloadType.MemoryPoolHasGetMethodFor()) {
+#>
+    <#= Transformer.GetMemoryPoolClassName(keyType, payloadType)  #> <<#= TKEY #>, <#= TPAYLOAD #>> pool = this.memPool as <#= Transformer.GetMemoryPoolClassName(keyType, payloadType) #> <<#= TKEY #>, <#= TPAYLOAD #>>;
+<#
+foreach (var f in this.fields) {
+#>
+<#
+if (f.Type == this.payloadType) {
+#>
+    pool.GetPayload(out <#= f.Name #>);
+<# } else { #>
+    pool.Get(out <#= f.Name #>);
+<# } #>
+<# } #>
+<# }  else { #>
+<# foreach (var f in this.fields) { #>
+    this.memPool.Get(out <#= f.Name #>);
+<# } #>
+<# } #>
+<# if (this.payloadMightBeNull) { #>
+
+  this.memPool.GetBV(out this._nullnessvector);
+<# } #>
+  }
+
+  protected override void AssignPayloadPool(MemoryPool<<#= TKEY #>, <#= TPAYLOAD #>> memPool)
+  {
+<# if (!payloadIsAnon && this.noPublicFields) { #>
+  this.payload.pool = memPool.payloadPool;
+<# } else {
+  t = this.payloadType;
+  if (t != typeof(int) && t != typeof(long) && t != typeof(string)) {
+#>
+    <#= Transformer.GetMemoryPoolClassName(keyType, payloadType)  #> <<#= TKEY #>, <#= TPAYLOAD #>> pool = memPool as <#= Transformer.GetMemoryPoolClassName(keyType, payloadType) #> <<#= TKEY #>, <#= TPAYLOAD #>>;
+<#
+  foreach (var f in this.fields.Where(fld => !fld.OptimizeString())) {
+    var t2 = f.Type;
+    var idForT = Transformer.GetValidIdentifier(t2);
+    string poolName;
+    if (t2 == typeof(int))
+      poolName = "intPool";
+    else if (t2 == typeof(long))
+      poolName = "longPool";
+    else if (t2 == typeof(byte))
+      poolName = "bytePool";
+    else if (t2 == typeof(string)) {
+      if (f.OptimizeString()) {
+        poolName = "charArrayPool";
+      } else {
+        poolName = "stringPool";
+      }
+    } else {
+      poolName = "_" + idForT + "_Pool";
+    }
+#>
+    this.<#= f.Name #>.pool = pool.<#= poolName #>;
+<#
+  }
+}
+}
+#>
+  }
+
+  public override void CloneFrom(StreamMessage<<#= TKEY #>, <#= TPAYLOAD #>> value, bool swing = false) {
+
+    // TODO:
+    // GENERATE: this.payload = value.payload;
+    // GENERATE: value.payload.IncrementRefCount(1);
+
+    var batch = value as <#= CLASSNAME #><#= genericParameters #>;
+
+    if (batch != null) {
+        // Payload Fields
+    <# foreach (var f in this.fields) { #>
+    <# if (f.OptimizeString()) { #>
+
+        if (swing) {
+            this.<#= f.Name #> = batch.<#= f.Name #>;
+        } else {
+            this.<#= f.Name #> = batch.<#= f.Name #>.Clone();
+        }
+    <# } else { #>
+
+        this.<#= f.Name #> = batch.<#= f.Name #>;
+    <# } #>
+    <# } #>
+    <# if (this.payloadMightBeNull) { #>
+          this._nullnessvector = batch._nullnessvector;
+    <# } #>
+
+        if (!swing)
+        {
+            // Payload fields
+    <# foreach (var f in this.fields.Where(fld => !fld.OptimizeString())) { #>
+
+            batch.<#= f.Name #>.IncrementRefCount(1);
+    <# } #>
+    <# if (this.payloadMightBeNull) { #>
+            batch._nullnessvector.IncrementRefCount(1);
+    <# } #>
+
+        }
+    } else {
+        this.AllocatePayload();
+        for (int i = 0; i < value.Count; i++) {
+            var payload = value.payload.col[i];
+            <# if (this.payloadMightBeNull) { #>
+            if (payload == null) {
+              this._nullnessvector.col[i >> 6] |= (1L << (i & 0x3f));
+              continue;
+            }
+            <# } #>
+            <# foreach (var f in this.fields) { #>
+
+            <# if (this.noPublicFields) { #>
+
+            this.<#= f.Name #>.col[i] = payload;
+            <# } else { #>
+              <# if (payloadIsAnon) { #>
+                <# if (f.OptimizeString()) { #>
+
+            this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null));
+                <# } else { #>
+
+            this.<#= f.Name #>.col[i] = (<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null);
+                <# } #>
+              <# } else { #>
+                <# if (f.OptimizeString()) { #>
+
+            this.<#= f.Name #>.AddString(payload.<#= f.OriginalName #>);
+                <# } else { #>
+
+            this.<#= f.Name #>.col[i] = payload.<#= f.OriginalName #>;
+                <# } #>
+            <# } #>
+            <# } #>
+            <# } #>
+
+        }
+        value.ReleasePayload();
+        value.payload = null; // null out pointer so base call doesn't mistakenly copy it.
+    }
+    base.CloneFrom(value, swing);
+  }
+
+  public override void ReleasePayload() {
+<# foreach (var f in this.fields) { #>
+      if (this.<#= f.Name #> != null)
+<# if (f.OptimizeString()) { #>
+          this.<#= f.Name #>.Dispose();
+<# } else { #>
+          this.<#= f.Name #>.Return();
+<# } #>
+<# } #>
+<# if (this.payloadMightBeNull) { #>
+
+      this._nullnessvector.ReturnClear();
+<# } #>
+  }
+
+  public override bool Add(long vsync, long vother, <#= TKEY #> key, <#= TPAYLOAD #> payload) {
+
+    <# if (needsPolymorphismCheck) { #>
+    if (typeof(<#= TPAYLOAD #>) != payload.GetType()) throw new StreamProcessingException("Cannot do columnar operation on polymorphic sets.  The value's type " + payload.GetType().FullName + " does not match the declared payload type.");
+    <# } #>
+
+    // Payload Fields
+<# if (this.payloadMightBeNull) { #>
+    if (payload == null) {
+        this._nullnessvector.col[base.Count >> 6] |= (1L << (base.Count & 0x3f));
+        goto CallBase;
+    }
+<# } #>
+<#
+  if (this.noPublicFields)
+  {
+#>
+    this.payload.col[base.Count] = payload;
+<#
+  }
+  else
+  {
+      foreach (var f in this.fields)
+      {
+        if (payloadIsAnon)
+        {
+#>
+<# if (f.OptimizeString()) { #>
+    this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) <#= f.OriginalName #>_Property.GetValue(payload, null));
+<# } else { #>
+    this.<#= f.Name #>.col[base.Count] = (<#= f.Type.GetCSharpSourceSyntax() #>) <#= f.OriginalName #>_Property.GetValue(payload, null);
+<# } #>
+
+<#
+        }
+        else
+        {
+#>
+<# if (f.OptimizeString()) { #>
+    this.<#= f.Name #>.AddString(payload.<#= f.OriginalName #>);
+<# } else { #>
+    this.<#= f.Name #>.col[base.Count] = payload.<#= f.OriginalName #>;
+<# } #>
+<#
+        }
+      }
+#>
+
+<# } #>
+
+<# if (this.payloadMightBeNull) { #>
+    CallBase:
+<# } #>
+    return base.Add(vsync, vother, key, payload);
+  }
+
+    public unsafe override bool Add(
+        ArraySegment<StreamEvent<<#= TPAYLOAD #>>> largeBatch,
+        ref long currentTime,
+        ref int offset,
+        out bool encounteredPunctuation)
+    {
+        var n = largeBatch.Offset + largeBatch.Count;
+        var count = base.Count;
+        var localOffset = offset;
+        encounteredPunctuation = false; // let's be optimistic!
+        fixed (long* vsync = this.vsync.col) {
+        fixed (long* vother = this.vother.col) {
+
+<# foreach (var f in this.fields) { #>
+
+<# if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = this.<#= f.Name #>.col) {
+<# } else { #>
+
+        var <#= f.Name #>_col = this.<#= f.Name #>.col;
+<# } #>
+<# } #>
+
+        while ((count < Config.DataBatchSize) && (localOffset < n))
+        {
+            <# if (needsPolymorphismCheck) { #>
+            if (typeof(<#= TPAYLOAD #>) != largeBatch.Array[localOffset].Payload.GetType()) throw new StreamProcessingException("Cannot do columnar operation on polymorphic sets.  The value's type " + largeBatch.Array[localOffset].GetType().FullName + " does not match the declared payload type.");
+            <# } #>
+            if (largeBatch.Array[localOffset].OtherTime == long.MinValue) {
+                // BUGBUG: see StreamEvent<T>.IsPunctuation if that gets inlined, then use it here
+                encounteredPunctuation = true;
+                base.Count = count;
+                offset = localOffset;
+                return false;
+            }
+            if (largeBatch.Array[localOffset].SyncTime < currentTime) {
+                throw new IngressException("Out-of-order event encountered during ingress, under a disorder policy of Throw");
+            }
+            currentTime = largeBatch.Array[localOffset].SyncTime;
+            vsync[count] = largeBatch.Array[localOffset].SyncTime;
+            vother[count] = largeBatch.Array[localOffset].OtherTime;
+            var payload = largeBatch.Array[localOffset].Payload;
+<#
+  if (this.noPublicFields) {
+#>
+            this.payload.col[count] = payload;
+<# } else { #>
+<# if (this.payloadMightBeNull) { #>
+            if (payload == null) {
+                this._nullnessvector.col[count >> 6] |= (1L << (count & 0x3f));
+                goto BottomOfLoop;
+            }
+<# } #>
+
+<# foreach (var f in this.fields) {
+        if (payloadIsAnon) {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null));
+<# } else { #>
+            <#= f.Name #>_col[offset] = (<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null);
+<# } #>
+
+<#
+        } else {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString(payload.<#= f.OriginalName #>);
+<# } else { #>
+            <#= f.Name #>_col[count] = payload.<#= f.OriginalName #>;
+<# } #>
+<#
+      }
+#>
+
+<# } } #>
+<# if (this.payloadMightBeNull) { #>
+            BottomOfLoop:
+<# } #>
+            localOffset++;
+            count++;
+        }
+
+        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        } // end fixed <#= f.Name #>
+        <# } #>
+        } // end fixed vother
+        } // end fixed vsync
+
+        base.Count = count;
+        offset = localOffset;
+        return count == this.vsync.col.Length;
+    }
+
+    public unsafe override bool Add(
+        ArraySegment<<#= TPAYLOAD #>> largeBatch,
+        ref long currentTime,
+        ref int offset,
+        Func<<#= TPAYLOAD #>, long> startEdgeExtractor,
+        Func<<#= TPAYLOAD #>, long> endEdgeExtractor)
+    {
+        var n = largeBatch.Offset + largeBatch.Count;
+        var count = base.Count;
+        var localOffset = offset;
+        fixed (long* vsync = this.vsync.col) {
+        fixed (long* vother = this.vother.col) {
+
+<# foreach (var f in this.fields) { #>
+
+<# if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = this.<#= f.Name #>.col) {
+<# } else { #>
+
+        var <#= f.Name #>_col = this.<#= f.Name #>.col;
+<# } #>
+<# } #>
+
+        while ((count < Config.DataBatchSize) && (localOffset < n))
+        {
+            <# if (needsPolymorphismCheck) { #>
+            if (typeof(<#= TPAYLOAD #>) != largeBatch.Array[localOffset].GetType()) throw new StreamProcessingException("Cannot do columnar operation on polymorphic sets.  The value's type " + largeBatch.Array[localOffset].GetType().FullName + " does not match the declared payload type.");
+            <# } #>
+            var start = startEdgeExtractor(largeBatch.Array[localOffset]);
+            if (start < currentTime) {
+                throw new IngressException("Out-of-order event encountered during ingress, under a disorder policy of Throw");
+            }
+            currentTime = start;
+            vsync[count] = start;
+            vother[count] = endEdgeExtractor(largeBatch.Array[localOffset]);
+            var payload = largeBatch.Array[localOffset];
+<#
+  if (this.noPublicFields) {
+#>
+            this.payload.col[count] = payload;
+<# } else { #>
+<# if (this.payloadMightBeNull) { #>
+            if (payload == null) {
+                this._nullnessvector.col[count >> 6] |= (1L << (count & 0x3f));
+                goto BottomOfLoop;
+            }
+<# } #>
+
+<# foreach (var f in this.fields) {
+        if (payloadIsAnon) {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null));
+<# } else { #>
+            <#= f.Name #>_col[offset] = (<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null);
+<# } #>
+
+<#
+        } else {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString(payload.<#= f.OriginalName #>);
+<# } else { #>
+            <#= f.Name #>_col[count] = payload.<#= f.OriginalName #>;
+<# } #>
+<#
+      }
+#>
+
+<# } } #>
+<# if (this.payloadMightBeNull) { #>
+            BottomOfLoop:
+<# } #>
+            localOffset++;
+            count++;
+        }
+
+        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        } // end fixed <#= f.Name #>
+        <# } #>
+        } // end fixed vother
+        } // end fixed vsync
+
+        base.Count = count;
+        offset = localOffset;
+        return count == this.vsync.col.Length;
+    }
+
+    public unsafe override bool Add<T>(
+        ArraySegment<PartitionedStreamEvent<T, <#= TPAYLOAD #>>> largeBatch,
+        Func<T, <#= TKEY #>> partitionConstructor,
+        Dictionary<T, long> currentTime,
+        ref int offset)
+    {
+        var n = largeBatch.Offset + largeBatch.Count;
+        var count = base.Count;
+        var localOffset = offset;
+        fixed (long* vsync = this.vsync.col) {
+        fixed (long* vother = this.vother.col) {
+
+<# foreach (var f in this.fields) { #>
+
+<# if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = this.<#= f.Name #>.col) {
+<# } else { #>
+
+        var <#= f.Name #>_col = this.<#= f.Name #>.col;
+<# } #>
+<# } #>
+
+        while ((count < Config.DataBatchSize) && (localOffset < n))
+        {
+            <# if (needsPolymorphismCheck) { #>
+            if (typeof(<#= TPAYLOAD #>) != largeBatch.Array[localOffset].Payload.GetType()) throw new StreamProcessingException("Cannot do columnar operation on polymorphic sets.  The value's type " + largeBatch.Array[localOffset].GetType().FullName + " does not match the declared payload type.");
+            <# } #>
+            var partition = largeBatch.Array[localOffset].PartitionKey;
+            if (currentTime.ContainsKey(partition) && largeBatch.Array[localOffset].SyncTime < currentTime[partition]) {
+                throw new IngressException("Out-of-order event encountered during ingress, under a disorder policy of Throw");
+            }
+            currentTime[partition] = largeBatch.Array[localOffset].SyncTime;
+            vsync[count] = largeBatch.Array[localOffset].SyncTime;
+            vother[count] = largeBatch.Array[localOffset].OtherTime;
+            key.col[count] = partitionConstructor(partition);
+            hash.col[count] = partition.GetHashCode();
+            var payload = largeBatch.Array[localOffset].Payload;
+            if (largeBatch.Array[localOffset].OtherTime == long.MinValue) {
+                bitvector.col[count >> 6] |= (1L << (count & 0x3f));
+            }
+<#
+  if (this.noPublicFields) {
+#>
+            this.payload.col[count] = payload;
+<# } else { #>
+<# if (this.payloadMightBeNull) { #>
+            if (payload == null) {
+                this._nullnessvector.col[count >> 6] |= (1L << (count & 0x3f));
+                goto BottomOfLoop;
+            }
+<# } #>
+
+<# foreach (var f in this.fields) {
+        if (payloadIsAnon) {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null));
+<# } else { #>
+            <#= f.Name #>_col[offset] = (<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null);
+<# } #>
+
+<#
+        } else {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString(payload.<#= f.OriginalName #>);
+<# } else { #>
+            <#= f.Name #>_col[count] = payload.<#= f.OriginalName #>;
+<# } #>
+<#
+      }
+#>
+
+<# } } #>
+<# if (this.payloadMightBeNull) { #>
+            BottomOfLoop:
+<# } #>
+            localOffset++;
+            count++;
+        }
+
+        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        } // end fixed <#= f.Name #>
+        <# } #>
+        } // end fixed vother
+        } // end fixed vsync
+
+        base.Count = count;
+        offset = localOffset;
+        return count == this.vsync.col.Length;
+    }
+
+    public unsafe override bool Add<T>(
+        ArraySegment<<#= TPAYLOAD #>> largeBatch,
+        Func<<#= TPAYLOAD #>, T> partitionExtractor,
+        Func<T, <#= TKEY #>> partitionConstructor,
+        Dictionary<T, long> currentTime,
+        ref int offset,
+        Func<<#= TPAYLOAD #>, long> startEdgeExtractor)
+    {
+        var n = largeBatch.Offset + largeBatch.Count;
+        var count = base.Count;
+        var localOffset = offset;
+        fixed (long* vsync = this.vsync.col) {
+        fixed (long* vother = this.vother.col) {
+
+<# foreach (var f in this.fields) { #>
+
+<# if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = this.<#= f.Name #>.col) {
+<# } else { #>
+
+        var <#= f.Name #>_col = this.<#= f.Name #>.col;
+<# } #>
+<# } #>
+
+        while ((count < Config.DataBatchSize) && (localOffset < n))
+        {
+            <# if (needsPolymorphismCheck) { #>
+            if (typeof(<#= TPAYLOAD #>) != largeBatch.Array[localOffset].GetType()) throw new StreamProcessingException("Cannot do columnar operation on polymorphic sets.  The value's type " + largeBatch.Array[localOffset].GetType().FullName + " does not match the declared payload type.");
+            <# } #>
+            var partition = partitionExtractor(largeBatch.Array[localOffset]);
+            var start = startEdgeExtractor(largeBatch.Array[localOffset]);
+            if (currentTime.ContainsKey(partition) && start < currentTime[partition]) {
+                throw new IngressException("Out-of-order event encountered during ingress, under a disorder policy of Throw");
+            }
+            currentTime[partition] = start;
+            vsync[count] = start;
+            vother[count] = StreamEvent.InfinitySyncTime;
+            key.col[count] = partitionConstructor(partition);
+            hash.col[count] = partition.GetHashCode();
+            var payload = largeBatch.Array[localOffset];
+<#
+  if (this.noPublicFields) {
+#>
+            this.payload.col[count] = payload;
+<# } else { #>
+<# if (this.payloadMightBeNull) { #>
+            if (payload == null) {
+                this._nullnessvector.col[count >> 6] |= (1L << (count & 0x3f));
+                goto BottomOfLoop;
+            }
+<# } #>
+
+<# foreach (var f in this.fields) {
+        if (payloadIsAnon) {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null));
+<# } else { #>
+            <#= f.Name #>_col[offset] = (<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null);
+<# } #>
+
+<#
+        } else {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString(payload.<#= f.OriginalName #>);
+<# } else { #>
+            <#= f.Name #>_col[count] = payload.<#= f.OriginalName #>;
+<# } #>
+<#
+      }
+#>
+
+<# } } #>
+<# if (this.payloadMightBeNull) { #>
+            BottomOfLoop:
+<# } #>
+            localOffset++;
+            count++;
+        }
+
+        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        } // end fixed <#= f.Name #>
+        <# } #>
+        } // end fixed vother
+        } // end fixed vsync
+
+        base.Count = count;
+        offset = localOffset;
+        return count == this.vsync.col.Length;
+    }
+
+    public unsafe override bool Add<T>(
+        ArraySegment<<#= TPAYLOAD #>> largeBatch,
+        Func<<#= TPAYLOAD #>, T> partitionExtractor,
+        Func<T, <#= TKEY #>> partitionConstructor,
+        Dictionary<T, long> currentTime,
+        ref int offset,
+        Func<<#= TPAYLOAD #>, long> startEdgeExtractor,
+        Func<<#= TPAYLOAD #>, long> endEdgeExtractor)
+    {
+        var n = largeBatch.Offset + largeBatch.Count;
+        var count = base.Count;
+        var localOffset = offset;
+        fixed (long* vsync = this.vsync.col) {
+        fixed (long* vother = this.vother.col) {
+
+<# foreach (var f in this.fields) { #>
+
+<# if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = this.<#= f.Name #>.col) {
+<# } else { #>
+
+        var <#= f.Name #>_col = this.<#= f.Name #>.col;
+<# } #>
+<# } #>
+
+        while ((count < Config.DataBatchSize) && (localOffset < n))
+        {
+            <# if (needsPolymorphismCheck) { #>
+            if (typeof(<#= TPAYLOAD #>) != largeBatch.Array[localOffset].GetType()) throw new StreamProcessingException("Cannot do columnar operation on polymorphic sets.  The value's type " + largeBatch.Array[localOffset].GetType().FullName + " does not match the declared payload type.");
+            <# } #>
+            var partition = partitionExtractor(largeBatch.Array[localOffset]);
+            var start = startEdgeExtractor(largeBatch.Array[localOffset]);
+            if (currentTime.ContainsKey(partition) && start < currentTime[partition]) {
+                throw new IngressException("Out-of-order event encountered during ingress, under a disorder policy of Throw");
+            }
+            currentTime[partition] = start;
+            vsync[count] = start;
+            vother[count] = endEdgeExtractor(largeBatch.Array[localOffset]);
+            key.col[count] = partitionConstructor(partition);
+            hash.col[count] = partition.GetHashCode();
+            var payload = largeBatch.Array[localOffset];
+<#
+  if (this.noPublicFields) {
+#>
+            this.payload.col[count] = payload;
+<# } else { #>
+<# if (this.payloadMightBeNull) { #>
+            if (payload == null) {
+                this._nullnessvector.col[count >> 6] |= (1L << (count & 0x3f));
+                goto BottomOfLoop;
+            }
+<# } #>
+
+<# foreach (var f in this.fields) {
+        if (payloadIsAnon) {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null));
+<# } else { #>
+            <#= f.Name #>_col[offset] = (<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null);
+<# } #>
+
+<#
+        } else {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString(payload.<#= f.OriginalName #>);
+<# } else { #>
+            <#= f.Name #>_col[count] = payload.<#= f.OriginalName #>;
+<# } #>
+<#
+      }
+#>
+
+<# } } #>
+<# if (this.payloadMightBeNull) { #>
+            BottomOfLoop:
+<# } #>
+            localOffset++;
+            count++;
+        }
+
+        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        } // end fixed <#= f.Name #>
+        <# } #>
+        } // end fixed vother
+        } // end fixed vsync
+
+        base.Count = count;
+        offset = localOffset;
+        return count == this.vsync.col.Length;
+    }
+
+    public unsafe override bool Add(
+        ArraySegment<<#= TPAYLOAD #>> largeBatch,
+        ref long currentTime,
+        ref int offset)
+    {
+        var n = largeBatch.Offset + largeBatch.Count;
+        var count = base.Count;
+        var localOffset = offset;
+
+        fixed (long* vsync = this.vsync.col) {
+        fixed (long* vother = this.vother.col) {
+<# foreach (var f in this.fields) { #>
+
+<# if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = this.<#= f.Name #>.col) {
+<# } else { #>
+
+        var <#= f.Name #>_col = this.<#= f.Name #>.col;
+<# } #>
+<# } #>
+            while ((count < Config.DataBatchSize) && (localOffset < n))
+            {
+                var payload = largeBatch.Array[localOffset];
+                <# if (needsPolymorphismCheck) { #>
+                if (typeof(<#= TPAYLOAD #>) != payload.GetType()) throw new StreamProcessingException("Cannot do columnar operation on polymorphic sets.  The value's type " + largeBatch.Array[localOffset].GetType().FullName + " does not match the declared payload type.");
+                <# } #>
+                currentTime = DateTimeOffset.UtcNow.Ticks;
+                vsync[count] = currentTime;
+                vother[count] = StreamEvent.InfinitySyncTime;
+<#
+  if (this.noPublicFields) {
+#>
+            this.payload.col[count] = payload;
+<# } else { #>
+<# if (this.payloadMightBeNull) { #>
+            if (payload == null) {
+                this._nullnessvector.col[count >> 6] |= (1L << (count & 0x3f));
+                goto BottomOfLoop;
+            }
+<# } #>
+
+<# foreach (var f in this.fields) {
+        if (payloadIsAnon) {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null));
+<# } else { #>
+            <#= f.Name #>_col[offset] = (<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null);
+<# } #>
+
+<#
+        } else {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString(payload.<#= f.OriginalName #>);
+<# } else { #>
+            <#= f.Name #>_col[count] = payload.<#= f.OriginalName #>;
+<# } #>
+<#
+      }
+#>
+
+<# } } #>
+<# if (this.payloadMightBeNull) { #>
+            BottomOfLoop:
+<# } #>
+                localOffset++;
+                count++;
+            }
+        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        } // end fixed <#= f.Name #>
+        <# } #>
+        } // end fixed vother
+        } // end fixed vsync
+
+        base.Count = count;
+        offset = localOffset;
+        return count == this.vsync.col.Length;
+    }
+
+    public unsafe override bool Add(
+        ArraySegment<<#= TPAYLOAD #>> largeBatch,
+        ref long currentTime,
+        ref int offset,
+        int eventsPerSample,
+        ref int currentSync,
+        ref int eventCount,
+        out bool encounteredPunctuation)
+    {
+        var n = largeBatch.Offset + largeBatch.Count;
+        var count = base.Count;
+        var localOffset = offset;
+        encounteredPunctuation = false; // let's be optimistic!
+
+        fixed (long* vsync = this.vsync.col)  {
+        fixed (long* vother = this.vother.col) {
+<# foreach (var f in this.fields) { #>
+
+<# if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = this.<#= f.Name #>.col) {
+<# } else { #>
+
+        var <#= f.Name #>_col = this.<#= f.Name #>.col;
+<# } #>
+<# } #>
+            while ((count < Config.DataBatchSize) && (localOffset < n))
+            {
+                var payload = largeBatch.Array[localOffset];
+                <# if (needsPolymorphismCheck) { #>
+                if (typeof(<#= TPAYLOAD #>) != payload.GetType()) throw new StreamProcessingException("Cannot do columnar operation on polymorphic sets.  The value's type " + largeBatch.Array[localOffset].GetType().FullName + " does not match the declared payload type.");
+                <# } #>
+                currentTime = currentSync;
+                vsync[count] = currentTime;
+                vother[count] = StreamEvent.InfinitySyncTime;
+<#
+  if (this.noPublicFields) {
+#>
+            this.payload.col[count] = payload;
+<# } else { #>
+<# if (this.payloadMightBeNull) { #>
+            if (payload == null) {
+                this._nullnessvector.col[count >> 6] |= (1L << (count & 0x3f));
+                goto BottomOfLoop;
+            }
+<# } #>
+
+<# foreach (var f in this.fields) {
+        if (payloadIsAnon) {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null));
+<# } else { #>
+            <#= f.Name #>_col[offset] = (<#= f.Type.GetCSharpSourceSyntax() #>) this.<#= f.OriginalName #>_Property.GetValue(payload, null);
+<# } #>
+
+<#
+        } else {
+#>
+<# if (f.OptimizeString()) { #>
+            this.<#= f.Name #>.AddString(payload.<#= f.OriginalName #>);
+<# } else { #>
+            <#= f.Name #>_col[count] = payload.<#= f.OriginalName #>;
+<# } #>
+<#
+      }
+#>
+
+<# } } #>
+<# if (this.payloadMightBeNull) { #>
+            BottomOfLoop:
+<# } #>
+                localOffset++;
+                count++;
+                eventCount++;
+
+                if (eventCount == eventsPerSample)
+                {
+                    eventCount = 0;
+                    currentSync++;
+                    encounteredPunctuation = true;
+                    break;
+                }
+            }
+        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
+
+        } // end fixed <#= f.Name #>
+        <# } #>
+        } // end fixed vother
+        } // end fixed vsync
+
+        base.Count = count;
+        offset = localOffset;
+        return count == this.vsync.col.Length;
+    }
+
+  public override void Seal()
+  {
+    // Payload fields
+<# foreach (var f in this.fields) {#>
+<# if (f.OptimizeString()) { #>
+        if (this.<#= f.Name #> != null)
+            this.<#= f.Name #>.Seal();
+<# } else { #>
+        // this.<#= f.Name #>.UsedLength = Count;
+<# } #>
+
+<# } #>
+        base.Seal();
+  }
+
+  public override void EnsureConsistency()
+  {
+    // Payload fields
+<# foreach (var f in this.fields) {#>
+<# if (f.OptimizeString()) { #>
+        // this.<#= f.Name #>.Seal();
+<# } else { #>
+        if (this.<#= f.Name #> != null)
+            this.<#= f.Name #>.UsedLength = base.Count;
+<# } #>
+
+<# } #>
+<# if (this.payloadMightBeNull) { #>
+        if (this._nullnessvector != null)
+            this._nullnessvector.UsedLength = (1 + (base.Count >> 6));
+<# } #>
+        base.EnsureConsistency();
+  }
+
+public override <#= TPAYLOAD #> this[int index]
+{
+    get
+    {
+        <# if (this.payloadMightBeNull) { #>
+        if ((this._nullnessvector.col[index >> 6] & (1L << (index & 0x3f)))!=0) return default;
+        <# } #>
+        <# if (this.noPublicFields) { #>
+
+        return this.payload.col[index];
+
+        <# } else { #>
+
+        <# if (payloadIsAnon) {
+          var fieldArgs = this.fields.Select(f => f.OptimizeString() ? String.Format(", this.{0}[index]", f.Name) : String.Format(", this.{0}.col[index]", f.Name)).Aggregate((x, y) => x + y);
+        #>
+        var payload = (<#= TPAYLOAD #>)Activator.CreateInstance(typeof(<#= TPAYLOAD #>) <#= fieldArgs #> );
+        <# } else { #>
+        var payload = new <#= TPAYLOAD #>();
+        <# foreach (var f in this.fields) { #>
+        if (this.<#= f.Name #> != null)
+        <# if (f.OptimizeString()) { #>
+            payload.<#= f.OriginalName #> = this.<#= f.Name #>[index];
+        <# } else { #>
+            payload.<#= f.OriginalName #> = this.<#= f.Name #>.col[index];
+        <# } #>
+        <# } #>
+        <# } #>
+
+        return payload;
+        <# } #>
+
+    }
+    set
+    {
+        <# if (this.payloadMightBeNull) { #>
+
+        if (value == null) {
+            this._nullnessvector.col[index >> 6] |= (1L << (index & 0x3f));
+            return;
+        }
+        <# } #>
+        <# if (this.noPublicFields) { #>
+
+        this.payload.col[index] = value;
+        <# } else { #>
+
+        <# foreach (var f in this.fields) { #>
+        <# if (payloadIsAnon) { #>
+<# if (f.OptimizeString()) { #>
+
+        //if (index != Count) throw new Exception("Bad invocation of setter with multi-strings");
+        this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) <#= f.OriginalName #>_Property.GetValue(value, null));
+<# } else { #>
+
+        this.<#= f.Name #>.col[index] = (<#= f.Type.GetCSharpSourceSyntax() #>) <#= f.OriginalName #>_Property.GetValue(value, null);
+<# } #>
+
+        <# } else { #>
+<# if (f.OptimizeString()) { #>
+
+        //if (index != Count) throw new Exception("Bad invocation of setter with multi-strings");
+        this.<#= f.Name #>.AddString(value.<#= f.OriginalName #>);
+<# } else { #>
+
+        this.<#= f.Name #>.col[index] = value.<#= f.OriginalName #>;
+<# } #>
+        <# } #>
+        <# } #>
+        <# } #>
+
+    }
+}
+
+}

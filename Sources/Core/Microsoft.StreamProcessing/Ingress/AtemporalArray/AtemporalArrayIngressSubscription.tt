@@ -1,0 +1,112 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing.Internal;
+
+namespace Microsoft.StreamProcessing
+{
+<#
+    foreach (string timelinePolicy in new string[] { "WallClock", "Sequence" })
+    {
+        string className = "MonotonicArraySubscription" + timelinePolicy;
+#>
+    [DataContract]
+    internal sealed class <#= className #><TPayload> : ObserverSubscriptionBase<ArraySegment<TPayload>, TPayload, TPayload>
+    {
+<# if (timelinePolicy == "Sequence") { #>
+        [SchemaSerialization]
+        private readonly int eventsPerSample;
+        [DataMember]
+        private int currentSync = 0;
+        [DataMember]
+        private int eventCount = 0;
+<# } #>
+
+        public <#= className #>() { }
+
+        public <#= className #>(
+            IObservable<ArraySegment<TPayload>> observable,
+            string identifier,
+            Streamable<Empty, TPayload> streamable,
+            IStreamObserver<Empty, TPayload> observer,
+            OnCompletedPolicy onCompletedPolicy,
+            TimelinePolicy timelinePolicy)
+            : base(
+                observable,
+                identifier,
+                streamable,
+                observer,
+                DisorderPolicy.Throw(),
+                FlushPolicy.FlushOnPunctuation,
+                PeriodicPunctuationPolicy.None(),
+                onCompletedPolicy,
+                null)
+<# if (timelinePolicy != "WallClock") { #>
+            => this.eventsPerSample = timelinePolicy.sampleSize;
+<# } else {#>
+        { }
+<# } #>
+
+        public override void OnNext(ArraySegment<TPayload> value)
+        {
+            Contract.EnsuresOnThrow<IngressException>(true);
+
+            int n = value.Count + value.Offset;
+            // Sanity check
+            if (n > value.Array.Length) throw new IngressException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Invalid array segment. Offset: " + value.Offset +
+                    "Count: " + value.Count +
+                    "Length: " + value.Array.Length));
+            int offset = value.Offset;
+
+            while (offset < n)
+            {
+                var full = this.currentBatch.Add(
+                    value,
+                    ref this.currentTime,
+                    ref offset<# if (timelinePolicy == "Sequence") { #>,
+                    this.eventsPerSample,
+                    ref this.currentSync,
+                    ref this.eventCount,
+                    out bool hitAPunctuation);
+                if (hitAPunctuation)
+                {
+                    var current = StreamEvent.CreatePunctuation<TPayload>(this.currentTime);
+                    System.Array.Clear(this.currentBatch.hash.col, 0, this.currentBatch.hash.col.Length);
+                    OnPunctuation(current);
+                    offset++;
+                }
+                else if (full)
+<# } else { #>);
+
+                if (full)
+<# } #>
+                {
+                    System.Array.Clear(this.currentBatch.hash.col, 0, this.currentBatch.hash.col.Length);
+                    FlushContents();
+                }
+            }
+        }
+
+        protected override void OnCompleted(long punctuationTime)
+        {
+            FlushContents();
+            OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTime));
+        }
+    }
+
+<# } #>
+}

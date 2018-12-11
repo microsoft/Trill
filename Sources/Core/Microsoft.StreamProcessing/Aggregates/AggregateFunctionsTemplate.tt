@@ -1,0 +1,102 @@
+﻿<#@ template language="C#" visibility="internal" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="../Utilities/Templates.tt" #>
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using Microsoft.StreamProcessing.Internal;
+
+namespace Microsoft.StreamProcessing.Aggregates
+{
+    /// <summary>
+    /// Methods to combine individual aggregates into a single, state-efficient one
+    /// </summary>
+    public static partial class AggregateFunctions
+    {
+<#  int maxCombineCount = 15;
+    for (int count = 1; count <= maxCombineCount; count++)
+    {
+#>
+
+        /// <summary>
+        /// Performs multiple aggregations simultaneously
+        /// </summary>
+        /// <typeparam name="TInput">The input stream to aggregate</typeparam>
+<#= IterateCommaLine("        /// <typeparam name=\"TState$\">Aggregation state type for aggregate number $</typeparam>", count) #>,
+<#= IterateCommaLine("        /// <typeparam name=\"TResult$\">Result type for aggregate number $</typeparam>", count) #>,
+        /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
+<#= IterateCommaLine("        /// <param name=\"aggregate$\">Aggregation specification number $</param>", count) #>,
+        /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
+        /// <returns></returns>
+        public static IAggregate<TInput, StructTuple<<#= IterateComma("TState$", count) #>>, TResult> Combine<TInput, <#= IterateComma("TState$, TResult$", count) #>, TResult>(
+<#= IterateCommaLine("            IAggregate<TInput, TState$, TResult$> aggregate$", count) #>,
+            Expression<Func<<#= IterateComma("TResult$", count) #>, TResult>> merger)
+        {
+<#= IterateLine("            Contract.Requires(aggregate$ != null);", count) #>
+            Contract.Requires(merger != null);
+
+            var duplicate = new bool[<#= count #>];
+<# for (int i = 1; i <= count; i++) { #>
+            Expression<Func<StructTuple<<#= IterateComma("TState$", count) #>>, TState<#= i #>>> target<#= i #> = state => state.Item<#= i #>;
+<# } #>
+            var target = new System.Collections.Generic.List<LambdaExpression> { <#= IterateComma("target$", count) #> };
+
+<# for (int i = 2; i <= count; i++) for (int j = 1; j < i; j++) {
+   if (j == 1) { #>
+            if (aggregate<#= i #>.HasSameStateAs(aggregate<#= j #>))
+            {
+                duplicate[<#= i - 1 #>] = true; target[<#= i - 1 #>] = target[<#= j - 1 #>];
+            }
+<# } else { #>
+            else if (aggregate<#= i #>.HasSameStateAs(aggregate<#= j #>))
+            {
+                duplicate[<#= i - 1 #>] = true; target[<#= i - 1 #>] = target[<#= j - 1 #>];
+            }
+<# }
+   } #>
+
+            Expression<Func<StructTuple<<#= IterateComma("TState$", count) #>>>> newInitialState =
+                () => new StructTuple<<#= IterateComma("TState$", count) #>>
+                {
+<#= IterateCommaLine("                    Item$ = CallInliner.Call(!duplicate[$$] ? aggregate$.InitialState() : () => default)", count) #>
+                };
+
+            Expression<Func<StructTuple<<#= IterateComma("TState$", count) #>>, long, TInput, StructTuple<<#= IterateComma("TState$", count) #>>>> newAccumulate =
+                (oldState, timestamp, input) => new StructTuple<<#= IterateComma("TState$", count) #>>
+                {
+<#= IterateCommaLine("                    Item$ = CallInliner.Call(!duplicate[$$] ? aggregate$.Accumulate() : (s, a, b) => s, oldState.Item$, timestamp, input)", count) #>
+                };
+
+            Expression<Func<StructTuple<<#= IterateComma("TState$", count) #>>, long, TInput, StructTuple<<#= IterateComma("TState$", count) #>>>> newDeaccumulate =
+                (oldState, timestamp, input) => new StructTuple<<#= IterateComma("TState$", count) #>>
+                {
+<#= IterateCommaLine("                    Item$ = CallInliner.Call(!duplicate[$$] ? aggregate$.Deaccumulate() : (s, a, b) => s, oldState.Item$, timestamp, input)", count) #>
+                };
+
+            Expression<Func<StructTuple<<#= IterateComma("TState$", count) #>>, StructTuple<<#= IterateComma("TState$", count) #>>, StructTuple<<#= IterateComma("TState$", count) #>>>> newDifference =
+                (leftState, rightState) => new StructTuple<<#= IterateComma("TState$", count) #>>
+                {
+<#= IterateCommaLine("                    Item$ = CallInliner.Call(!duplicate[$$] ? aggregate$.Difference() : (l, r) => l, leftState.Item$, rightState.Item$)", count) #>
+                };
+
+            Expression<Func<StructTuple<<#= IterateComma("TState$", count) #>>, TResult>> newComputeResult =
+                state =>
+                CallInliner.Call(
+                    merger,
+<#= IterateCommaLine("                    CallInliner.Call(aggregate$.ComputeResult(), CallInliner.Call(target[$$] as Expression<Func<StructTuple<" + IterateComma("TState$", count) + ">, TState$>>, state))", count) #>);
+
+            return new GeneratedAggregate<TInput, StructTuple<<#= IterateComma("TState$", count) #>>, TResult>(
+                initialState: newInitialState.InlineCalls(),
+                accumulate: newAccumulate.InlineCalls(),
+                deaccumulate: newDeaccumulate.InlineCalls(),
+                difference: newDifference.InlineCalls(),
+                computeResult: newComputeResult.InlineCalls());
+        }
+<#
+    }
+#>
+    }
+}

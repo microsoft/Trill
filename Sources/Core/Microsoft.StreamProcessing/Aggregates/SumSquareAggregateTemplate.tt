@@ -1,0 +1,38 @@
+﻿<#@ include file="AggregateTemplates.tt" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Linq.Expressions;
+using System.Numerics;
+
+namespace Microsoft.StreamProcessing.Aggregates
+{
+<#
+    // Create sum aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+        var typeName = sumTypes.TypeName;
+#>
+
+    internal class SumSquare<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>, <#= typeName #>, <#= typeName #>>
+    {
+        public Expression<Func<<#= typeName #>>> InitialState() => () => 0;
+
+        public Expression<Func<<#= typeName #>, long, <#= typeName #>, <#= typeName #>>> Accumulate()
+            => (oldSum, timestamp, input) => (<#= typeName #>)(oldSum + input * input);
+
+        public Expression<Func<<#= typeName #>, long, <#= typeName #>, <#= typeName #>>> Deaccumulate()
+            => (oldSum, timestamp, input) => (<#= typeName #>)(oldSum - input * input);
+
+        public Expression<Func<<#= typeName #>, <#= typeName #>, <#= typeName #>>> Difference()
+            => (leftSum, rightSum) => (<#= typeName #>)(leftSum - rightSum);
+
+        public Expression<Func<<#= typeName #>, <#= typeName #>>> ComputeResult() => sum => sum;
+    }
+<#
+    }
+#>
+}

@@ -1,0 +1,282 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+/*\
+    * Spec:
+    *
+    * Apply punctuation policy first. This means that even dropped events
+    * count towards the number of events seen since the last punctuation.
+    * For a Time punctuation policy, insert the punctuation before the
+    * event whose start time causes the insertion.
+    *
+    * Most complicated part is the bookkeeping. If the disorder policy is
+    * not Throw, then any events that are dropped or adjusted must be kept
+    * track of so that matching end events are dealt with.
+    *
+    * DisorderPolicy.Throw:
+    *   Don't drop any events.
+    *
+    * DisorderPolicy.Drop:
+    *   Start event: drop if it is out of order and remember it so corresponding
+    *   end event is also dropped.
+    *   End event: drop if its corresponding start event was dropped or if it is out
+    *   of order (latter may leave dangling start events that never have an end event).
+    *   Interval event: drop if it is out of order
+    *   Punctuation event: ??
+    *
+    * DisorderPolicy.Adjust:
+    *   Start event: if out of order, update start time to start time of previous event.
+    *   Remember event so corresponding end event is also modified.
+    *   End event: if out of order, update start time to start time of previous event.
+    *   If not out of order, check to see if corresponding start event had been modified.
+    *   If so, then update its end time to the modified start time of the start event.
+    *   (This is needed so that its end time matches the start time of the corresponding
+    *   start event.)
+    *   Interval event: if out of order, update start time to start time of previous event.
+    *   If its updated start time is now equal to or greater than its end time, drop it.
+\*/
+
+using System;
+using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.Linq.Expressions;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing.Internal;
+
+namespace Microsoft.StreamProcessing
+{
+<#
+foreach (string partitionString in new string[] { string.Empty, "Partitioned" })
+foreach (string ingressType in new string[] { "StreamEvent", "Interval" })
+{
+    bool partitioned = (partitionString == "Partitioned");
+    string disorderPolicy = "Throw";
+    string punctuationPolicy = "None";
+    string genericArguments = !partitioned ? "TPayload" : "TKey, TPayload";
+    string keyType = !partitioned ? "Empty" : "PartitionKey<TKey>";
+    string ingress =
+          (ingressType == "StreamEvent" ? partitionString + "StreamEvent<" : string.Empty)
+        + (!partitioned || ingressType != "StreamEvent" ? "TPayload" : "TKey, TPayload")
+        + (ingressType == "StreamEvent" ? ">" : string.Empty);
+    string expressionArguments = null;
+    switch (ingressType) {
+        case "StreamEvent":
+            expressionArguments = string.Empty;
+            break;
+        case "Interval":
+            expressionArguments = ((!partitioned ? string.Empty : "partitionExtractor, ") + "startEdgeExtractor, endEdgeExtractor, ");
+            break;
+    }
+    string baseStructure = (ingressType != "StreamEvent") ? "TPayload" : (partitionString + "StreamEvent<" + genericArguments + ">");
+#>
+    internal static class <#= partitionString #><#= ingressType #>ArraySubscriptionCreator<<#= genericArguments #>>
+    {
+        public static <#= partitionString #>ObserverSubscriptionBase<<#= !partitioned ? string.Empty : "TKey, " #>ArraySegment<<#= baseStructure #>>, TPayload, TPayload> CreateSubscription(
+            IObservable<ArraySegment<<#= ingress #>>> observable,
+<# switch (ingressType) {
+       case "Interval":
+   if (partitioned) { #>
+            Expression<Func<TPayload, TKey>> partitionExtractor,
+<# } #>
+            Expression<Func<TPayload, long>> startEdgeExtractor,
+            Expression<Func<TPayload, long>> endEdgeExtractor,
+<#         break; #>
+<# } #>
+            string identifier,
+            Streamable<<#= keyType #>, TPayload> streamable,
+            IStreamObserver<<#= keyType #>, TPayload> observer,
+            OnCompletedPolicy onCompletedPolicy,
+            IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>> diagnosticOutput)
+        {
+            return new <#= partitionString #><#= ingressType #>ArraySubscription<#= disorderPolicy #><#= punctuationPolicy #><<#= genericArguments #>>(observable, <#= expressionArguments #>identifier, streamable, observer, onCompletedPolicy, diagnosticOutput);
+        }
+    }
+
+<# } #>
+<#
+    foreach (string partitionString in new string[] { string.Empty, "Partitioned" })
+    foreach (string ingressType in new string[] { "StreamEvent", "Interval" })
+    {
+        bool partitioned = (partitionString == "Partitioned");
+        string disorderPolicy = "Throw";
+        string punctuationPolicy = "None";
+        string latencyOption = string.Empty;
+        string diagnosticOption = string.Empty;
+        string className = partitionString + ingressType + "ArraySubscription" + disorderPolicy + punctuationPolicy + latencyOption + diagnosticOption;
+        string genericArguments = !partitioned ? "TPayload" : "TKey, TPayload";
+        string keyType = !partitioned ? "Empty" : "PartitionKey<TKey>";
+        string defaultKey = partitioned ? "new PartitionKey<TKey>(default)" : "default";
+        string ingress =
+              (ingressType == "StreamEvent" ? partitionString + "StreamEvent<" : string.Empty)
+            + (!partitioned || ingressType != "StreamEvent" ? "TPayload" : "TKey, TPayload")
+            + (ingressType == "StreamEvent" ? ">" : string.Empty);
+        string inheritBase = "ArraySegment<" + ((ingressType != "StreamEvent") ? "TPayload" : (partitionString + "StreamEvent<" + genericArguments + ">")) + ">";
+        string baseStructure = (ingressType != "StreamEvent" && string.IsNullOrEmpty(latencyOption))
+            ? "TPayload"
+            : (partitionString + "StreamEvent<" + genericArguments + ">");
+
+        bool needsStreamEvent = (ingressType == "StreamEvent" || !string.IsNullOrEmpty(latencyOption));
+        string diagnosticOutput = needsStreamEvent ? "value" :
+                (partitionString + "StreamEvent<" + genericArguments + ">.CreateInterval(" + (!partitioned ? string.Empty : "this.partitionFunction(value), ") + "this.startEdgeFunction(value), this.endEdgeFunction(value), value)");
+
+        string currentPartition = needsStreamEvent ? "value.PartitionKey" : "currentPartition";
+        string startTime = needsStreamEvent ? "value.SyncTime" : "startTime";
+        string endTime = needsStreamEvent ? "value.OtherTime" : "endTime";
+        string payloadValue = needsStreamEvent ? "value.Payload" : "value";
+        string globalPunctuation= partitioned ? "LowWatermark" : "Punctuation";
+#>
+    [DataContract]
+    internal sealed class <#= className #><<#= genericArguments #>> : <#= partitionString #>ObserverSubscriptionBase<<#= !partitioned ? string.Empty : "TKey, " #>ArraySegment<<#= baseStructure #>>, TPayload, TPayload>
+    {
+<# switch (ingressType) {
+       case "Interval":
+   if (partitioned) { #>
+        [SchemaSerialization]
+        private readonly Expression<Func<TPayload, TKey>> partitionExtractor;
+        private readonly Func<TPayload, TKey> partitionFunction;
+<# } #>
+        [SchemaSerialization]
+        private readonly Expression<Func<TPayload, long>> startEdgeExtractor;
+        private readonly Func<TPayload, long> startEdgeFunction;
+        [SchemaSerialization]
+        private readonly Expression<Func<TPayload, long>> endEdgeExtractor;
+        private readonly Func<TPayload, long> endEdgeFunction;
+<#         break; #>
+<# } #>
+        public <#= className #>() { }
+
+        public <#= className #>(
+            IObservable<ArraySegment<<#= ingress #>>> observable,
+<# switch (ingressType) {
+       case "Interval":
+   if (partitioned) { #>
+            Expression<Func<TPayload, TKey>> partitionExtractor,
+<# } #>
+            Expression<Func<TPayload, long>> startEdgeExtractor,
+            Expression<Func<TPayload, long>> endEdgeExtractor,
+<#         break; #>
+<# } #>
+            string identifier,
+            Streamable<<#= keyType #>, TPayload> streamable,
+            IStreamObserver<<#= keyType #>, TPayload> observer,
+            OnCompletedPolicy onCompletedPolicy,
+            IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>> diagnosticOutput)
+            : base(
+                observable,
+                identifier,
+                streamable,
+                observer,
+                DisorderPolicy.Throw(),
+                <#= partitionString #>FlushPolicy.FlushOn<#= (partitioned ? "LowWatermark" : "Punctuation") #>,
+                PeriodicPunctuationPolicy.None(),
+<#  if (partitioned) { #>
+                PeriodicLowWatermarkPolicy.None(),
+<#  } #>
+                onCompletedPolicy,
+                diagnosticOutput)
+        {
+<# switch (ingressType) {
+       case "Interval":
+            if (partitioned) { #>
+            this.partitionExtractor = partitionExtractor;
+            this.partitionFunction = partitionExtractor.Compile();
+<#          } #>
+            this.startEdgeExtractor = startEdgeExtractor;
+            this.startEdgeFunction = startEdgeExtractor.Compile();
+            this.endEdgeExtractor = endEdgeExtractor;
+            this.endEdgeFunction = endEdgeExtractor.Compile();
+<#         break;
+    } #>
+        }
+
+        [ContractInvariantMethod]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+        private void ObjectInvariant()
+        {
+            Contract.Invariant(this.startEventInformation != null);
+<# if (!partitioned) { #>
+            Contract.Invariant(this.currentTime >= StreamEvent.MinSyncTime);
+<# } #>
+        }
+
+        public override void OnNext(<#= inheritBase #> <#= (ingressType == "StreamEvent" || string.IsNullOrEmpty(latencyOption)) ? "value" : "inputValue" #>)
+        {
+            Contract.EnsuresOnThrow<IngressException>(true);
+
+            int n = value.Count + value.Offset;
+            // Sanity check
+            if (n > value.Array.Length) throw new IngressException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Invalid array segment. Offset: " + value.Offset +
+                    "Count: " + value.Count +
+                    "Length: " + value.Array.Length));
+            int offset = value.Offset;
+
+            while (offset < n)
+            {
+                var full = this.currentBatch.Add(
+                    value,
+<#  if (partitioned && ingressType != "StreamEvent") { #>
+                    this.partitionFunction,
+<#  } #>
+<#  if (partitioned) { #>
+                    (t) => new PartitionKey<TKey>(t),
+<#  } #>
+                        <#= !partitioned ? "ref " : string.Empty #>this.currentTime,
+                    ref offset<#
+    if (ingressType ==  "Interval") {#>,
+                    this.startEdgeFunction,
+                    this.endEdgeFunction<#
+    } #>
+<# if (!partitioned && (ingressType == "StreamEvent")) { #>,
+                    out bool hitAPunctuation);
+                if (hitAPunctuation)
+                {
+                    var current = value.Array[offset];
+                    if (current.SyncTime < this.currentTime) current = <#= partitionString #>StreamEvent.CreatePunctuation<<#= genericArguments #>>(this.currentTime);
+                    System.Array.Clear(this.currentBatch.hash.col, 0, this.currentBatch.hash.col.Length);
+                    OnPunctuation(current);
+                    offset++;
+                }
+                else if (full)
+<# } else { #>);
+
+                if (full)
+<# } #>
+                {
+                    System.Array.Clear(this.currentBatch.hash.col, 0, this.currentBatch.hash.col.Length);
+                    FlushContents();
+                }
+            }
+        }
+
+        protected override void OnCompleted(long punctuationTime)
+        {
+<# if (ingressType == "StreamEvent") { #>
+<#          if (partitioned)
+            {#>
+            OnNext(new ArraySegment<PartitionedStreamEvent<TKey, TPayload>>(new[] { PartitionedStreamEvent.CreateLowWatermark<TKey, TPayload>(punctuationTime) }));
+<#          }
+            else
+            { #>
+            OnNext(new ArraySegment<StreamEvent<TPayload>>(new[] { StreamEvent.CreatePunctuation<TPayload>(punctuationTime) }));
+<#          } #>
+<# } else { #>
+            this.currentBatch.Add<#= globalPunctuation #>(punctuationTime);
+            OnFlush();
+<# } #>
+        }
+    }
+
+<#
+    }
+#>
+}

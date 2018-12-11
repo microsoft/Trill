@@ -1,0 +1,56 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+
+<# if (this.keyType.Namespace != null) { #>
+using <#= this.keyType.Namespace #>;
+<# } #>
+<# if (this.payloadType.Namespace != null) { #>
+using <#= this.payloadType.Namespace #>;
+<# } #>
+
+<#
+  var typeInfos = types.Select(t =>
+     Tuple.Create(String.Format("_{0}_Pool", Transformer.GetValidIdentifier(t)), t.GetCSharpSourceSyntax()));
+#>
+
+public sealed class <#= className #><_Key, _Payload> : MemoryPool<_Key, _Payload>
+{
+<# foreach (var t in typeInfos) { #>
+
+    public ColumnPool<<#= t.Item2 #>> <#= t.Item1 #>;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Get(out ColumnBatch<<#= t.Item2 #>> result)
+    {
+        return <#= t.Item1 #>.Get(out result);
+    }
+<# } #>
+
+    public <#= className #>() : base(true)
+    {
+<# foreach (var t in typeInfos) { #>
+
+        <#= t.Item1 #> = MemoryManager.GetColumnPool<<#= t.Item2 #>>();
+<# } #>
+
+    }
+
+}

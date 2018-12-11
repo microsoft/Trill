@@ -1,0 +1,1314 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
+    <Platforms>x64;AnyCPU</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Microsoft.StreamProcessing</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.9.0" />
+    <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="AfaTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AggregateFunctionsTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Aggregates\AggregateFunctionsTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AggregateFunctionsTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="Aggregates\AggregateTemplates.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AggregateTemplates.cs</LastGenOutput>
+    </None>
+    <None Update="Aggregates\AverageAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AverageAggregateTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="AggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AggregateTemplates.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AlterLifetimeConstantDurationPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AlterLifetimeStartDependentDurationPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AlterLifetimeVariableDurationPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalArrayEgress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalArrayEgressObservable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalArrayEgressPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalArrayIngress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalArrayIngressStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalArrayIngressSubscription.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalEgress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalEgressObservable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalEgressPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalIngress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalIngressStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AtemporalIngressSubscription.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AverageAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="AverageSquareAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="BeatPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="BinaryPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ClipByConstantPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ClipJoinTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ColumnToRowTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="DiagnosticObservable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="DictionaryStateObject.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="DisjointUnionPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Egress\AtemporalArray\AtemporalArrayEgress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AtemporalArrayEgress.cs</LastGenOutput>
+    </None>
+    <None Update="Egress\Atemporal\AtemporalEgressPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AtemporalEgressPipe.cs</LastGenOutput>
+    </None>
+    <None Update="Egress\Binary\BinaryEgress.tt">
+      <LastGenOutput>BinaryEgress.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Egress\TemporalArray\TemporalArrayEgressPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalArrayEgressPipe.cs</LastGenOutput>
+    </None>
+    <None Update="Egress\TemporalArray\TemporalArrayEgressTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>TemporalArrayEgressTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Egress\Temporal\TemporalEgressPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalEgressPipe.cs</LastGenOutput>
+    </None>
+    <None Update="EndEdgeFreeOutputPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="EquiJoinPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="EquiJoinTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Events\StreamEvent.tt">
+      <LastGenOutput>StreamEvent.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ExtendLifetimeBaseTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ExtendLifetimeNegativePipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ExtendLifetimeNegativeTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ExtendLifetimePipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ExtendLifetimeTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="FilteredWindowTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="GroupAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="GroupedAfaTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="GroupedWindowPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="GroupedWindowTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="GroupPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="GroupStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="GroupTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ImpatienceSorter.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="IncreasingOrderEquiJoinPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="IncreasingOrderEquiJoinTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Ingress\Binary\BinaryIngress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>BinaryIngress.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\PeriodicPunctuationPolicy.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>PeriodicPunctuationPolicy.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\Policies\FlushPolicy.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FlushPolicy.cs</LastGenOutput>
+    </None>
+    <None Update="LeftAntiSemiJoinPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="LeftAntiSemiJoinTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Map2ReduceStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="MapDefinition.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="MapReduceStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Operators\QuantizeLifetime\QuantizeLifetimeTemplate.tt">
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+      <LastGenOutput>QuantizeLifetimeTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </None>
+    <None Update="Operators\SelectMany\SelectManyPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SelectManyPipe.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\SessionWindow\SessionWindowTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SessionWindowTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Shuffle\ShufflePipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ShufflePipe.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\SnapshotWindow\Hopping\SnapshotWindowHoppingTemplate.tt">
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+      <LastGenOutput>SnapshotWindowHoppingTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </None>
+    <None Update="Operators\Ungroup\UngroupPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>UngroupPipe.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\Ungroup\UngroupStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>UngroupStreamable.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\Ungroup\UngroupTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>UngroupTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Aggregates\SumAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SumAggregateTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="Egress\Atemporal\AtemporalEgress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AtemporalEgress.cs</LastGenOutput>
+    </None>
+    <None Update="Egress\Temporal\TemporalEgress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalEgress.cs</LastGenOutput>
+    </None>
+    <None Update="Egress\Temporal\TemporalEgressObservable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalEgressObservable.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\ImpatienceSorter.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ImpatienceSorter.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\Atemporal\AtemporalIngress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AtemporalIngress.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\Atemporal\AtemporalIngressSubscription.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AtemporalIngressSubscription.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\DiagnosticObservable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DiagnosticObservable.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\DisorderPolicy.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DisorderPolicy.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\TemporalArray\TemporalArrayIngressSubscription.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalArrayIngressSubscription.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\TemporalArray\TemporalArrayIngressStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalArrayIngressStreamable.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\TemporalArray\TemporalArrayIngress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalArrayIngress.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\Temporal\TemporalIngressTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>TemporalIngressTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Ingress\Temporal\TemporalIngressSubscription.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalIngressSubscription.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\SubscriptionBase.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SubscriptionBase.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\Temporal\TemporalIngress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalIngress.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\Temporal\TemporalIngressStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalIngressStreamable.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\MapReduce\MapDefinition.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>MapDefinition.cs</LastGenOutput>
+    </None>
+    <None Update="OrderedCollectionStateObject.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="PeriodicPunctuationPolicy.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="PointAtEndPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="PointAtEndTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ProductAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="RowToColumnTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SelectManyPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SelectManyTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SelectPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Serializer\GeneratedSubtypes\FastDictionaryGenerator.tt">
+      <LastGenOutput>FastDictionaryGenerator.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Serializer\GeneratedSubtypes\GeneratedFastDictionary.tt">
+      <CustomToolNamespace>Microsoft.StreamProcessing.Internal</CustomToolNamespace>
+      <LastGenOutput>GeneratedFastDictionary.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </None>
+    <None Update="Serializer\GeneratedSubtypes\GeneratedSortedDictionary.tt">
+      <CustomToolNamespace>Microsoft.StreamProcessing.Internal</CustomToolNamespace>
+      <LastGenOutput>GeneratedSortedDictionary.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </None>
+    <None Update="ShufflePipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ShuffleStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ShuffleTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SnapshotWindowBasicPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SnapshotWindowBasicTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SnapshotWindowPriorityQueuePipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SnapshotWindowPriorityQueueTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SnapshotWindowQueuePipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SnapshotWindowQueueTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SnapshotWindowTumblingPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SnapshotWindowTumblingTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SprayGroupImportPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="StartEdgeEquiJoinPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="StartEdgeEquiJoinTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="StitchPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="StitchTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="StreamableAPI\GroupAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GroupAggregateTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="StreamableAPI\StreamableExtensionsTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>StreamableExtensionsTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\Group\GroupStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GroupStreamable.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\MapReduce\Map2ReduceStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Map2ReduceStreamable.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\MapReduce\MapReduceStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>MapReduceStreamable.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\Shuffle\ShuffleStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ShuffleStreamable.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\Afa\AfaMultiEventListTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>AfaMultiEventListTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Afa\AfaTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>AfaTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Clip\ClipJoinTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ClipJoinTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Afa\GroupedAfaEventListTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>GroupedAfaEventListTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Afa\GroupedAfaMultiEventTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>GroupedAfaMultiEventTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Afa\GroupedAfaTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>GroupedAfaTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Group\GroupTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>GroupTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\EquiJoin\IncreasingOrder\IncreasingOrderEquiJoinTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+      <LastGenOutput>IncreasingOrderEquiJoinTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\SelectMany\SelectManyTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SelectManyTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Select\SelectTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SelectTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\ColumnToRow\ColumnToRowTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ColumnToRowTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\RowToColumn\RowToColumnTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>RowToColumnTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Afa\UngroupedAfaTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>UngroupedAfaTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Afa\UngroupedDAfaTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>UngroupedDAfaTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Where\WhereTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>WhereTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Shuffle\ShuffleTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ShuffleTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\EquiJoin\StartEdge\StartEdgeEquiJoinTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>StartEdgeEquiJoinTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="StreamableAPI\Templates.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Templates.cs</LastGenOutput>
+    </None>
+    <None Update="StreamableExtensionsTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SubscriptionBase.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SumAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="SumSquareAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Templates.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalArrayEgress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalArrayEgressObservable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalArrayEgressPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalArrayEgressTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalArrayIngress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalArrayIngressStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalArrayIngressSubscription.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalEgress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalEgressObservable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalEgressPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalEgressTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalIngress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalIngressDisorderedSubscription.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalIngressDisorderedTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalIngressStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalIngressSubscription.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="TemporalIngressTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Transformer\MemoryPoolTemplate.tt">
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+      <LastGenOutput>MemoryPoolTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </None>
+    <None Update="Transformer\SafeBatchTemplate.tt">
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+      <LastGenOutput>SafeBatchTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </None>
+    <None Update="UngroupedAfaTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="UngroupedDAfaTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="UngroupPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="UngroupStreamable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="UngroupTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="UnionPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="UnionTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Utilities\CallInlinerTemplate.tt">
+      <LastGenOutput>CallInlinerTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Utilities\StructTupleTemplate.tt">
+      <LastGenOutput>StructTupleTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Utilities\Templates.tt">
+      <LastGenOutput>Templates.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="WhereTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Windows\FilteredWindowTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FilteredWindowTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="Windows\WindowTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>WindowTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\Select\SelectPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SelectPipe.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\LeftAntiSemiJoin\LeftAntiSemiJoinTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>LeftAntiSemiJoinTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Egress\TemporalArray\TemporalArrayEgress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalArrayEgress.cs</LastGenOutput>
+    </None>
+    <None Update="Egress\TemporalArray\TemporalArrayEgressObservable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TemporalArrayEgressObservable.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\AtemporalArray\AtemporalArrayIngressSubscription.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AtemporalArrayIngressSubscription.cs</LastGenOutput>
+    </None>
+    <None Update="Ingress\AtemporalArray\AtemporalArrayIngress.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AtemporalArrayIngress.cs</LastGenOutput>
+    </None>
+    <None Update="Aggregates\AggregateCommon.txt" />
+    <None Update="Operators\Beat\BeatTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>BeatTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\EndEdgeFreeOutput\EndEdgeFreeOutputTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>EndEdgeFreeOutputTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\ClipByConstant\ClipByConstantTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ClipByConstantTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\ExtendLifetime\ExtendLifetimeBaseTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ExtendLifetimeBaseTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\ExtendLifetime\ExtendLifetimeNegativeTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ExtendLifetimeNegativeTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\ExtendLifetime\ExtendLifetimeTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>ExtendLifetimeTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Group\GroupPipe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GroupPipe.cs</LastGenOutput>
+    </None>
+    <None Update="Operators\GroupedWindow\GroupedWindowTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>GroupedWindowTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\PointAtEnd\PointAtEndTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>PointAtEndTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\SnapshotWindow\AggregateTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>AggregateTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\SnapshotWindow\StartEdge\SnapshotWindowStartEdgeTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SnapshotWindowStartEdgeTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\SnapshotWindow\Tumbling\SnapshotWindowTumblingTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SnapshotWindowTumblingTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\SnapshotWindow\PriorityQueue\SnapshotWindowPriorityQueueTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SnapshotWindowPriorityQueueTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\SnapshotWindow\Sliding\SnapshotWindowSlidingTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SnapshotWindowSlidingTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\EquiJoin\Basic\EquiJoinTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>EquiJoinTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Stitch\StitchTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>StitchTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Egress\Temporal\TemporalEgressTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>TemporalEgressTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Operators\Union\UnionTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>UnionTemplate.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+    </None>
+    <None Update="Aggregates\ProductAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ProductAggregateTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="Aggregates\AverageSquareAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AverageSquareAggregateTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="Aggregates\SumSquareAggregateTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SumSquareAggregateTemplate.cs</LastGenOutput>
+    </None>
+    <None Update="WindowTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Aggregates\AverageSquareAggregateTemplate.cs">
+      <DependentUpon>AverageSquareAggregateTemplate.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Aggregates\ProductAggregateTemplate.cs">
+      <DependentUpon>ProductAggregateTemplate.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Aggregates\SumSquareAggregateTemplate.cs">
+      <DependentUpon>SumSquareAggregateTemplate.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Egress\AtemporalArray\AtemporalArrayEgress.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AtemporalArrayEgress.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Egress\Binary\BinaryEgress.cs">
+      <DependentUpon>BinaryEgress.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Events\StreamEvent.cs">
+      <DependentUpon>StreamEvent.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Ingress\Binary\BinaryIngress.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>BinaryIngress.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\Policies\FlushPolicy.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FlushPolicy.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\Temporal\TemporalIngressSubscription.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TemporalIngressSubscription.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\Temporal\TemporalIngressTemplate.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TemporalIngressTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\QuantizeLifetime\QuantizeLifetimeTemplate.cs">
+      <DependentUpon>QuantizeLifetimeTemplate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Operators\SelectMany\SelectManyPipe.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SelectManyPipe.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\SessionWindow\SessionWindowTemplate.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SessionWindowTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Aggregates\AggregateFunctionsTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AggregateFunctionsTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Aggregates\AggregateTemplates.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AggregateTemplates.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Aggregates\AverageAggregateTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AverageAggregateTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Egress\Atemporal\AtemporalEgressPipe.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AtemporalEgressPipe.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Egress\TemporalArray\TemporalArrayEgressPipe.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>TemporalArrayEgressPipe.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Egress\TemporalArray\TemporalArrayEgressTemplate.cs">
+      <DependentUpon>TemporalArrayEgressTemplate.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Egress\Temporal\TemporalEgressPipe.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>TemporalEgressPipe.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\ClipByConstant\ClipByConstantTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ClipByConstantTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\EndEdgeFreeOutput\EndEdgeFreeOutputTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EndEdgeFreeOutputTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\EquiJoin\IncreasingOrder\IncreasingOrderEquiJoinTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IncreasingOrderEquiJoinTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\ExtendLifetime\ExtendLifetimeBaseTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ExtendLifetimeBaseTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\ExtendLifetime\ExtendLifetimeNegativeTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ExtendLifetimeNegativeTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\ExtendLifetime\ExtendLifetimeTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ExtendLifetimeTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\GroupedWindow\GroupedWindowTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GroupedWindowTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Group\GroupPipe.cs">
+      <DependentUpon>GroupPipe.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Operators\PointAtEnd\PointAtEndTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PointAtEndTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Shuffle\ShufflePipe.cs">
+      <DependentUpon>ShufflePipe.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Operators\SnapshotWindow\AggregateTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AggregateTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\SnapshotWindow\StartEdge\SnapshotWindowStartEdgeTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SnapshotWindowStartEdgeTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\SnapshotWindow\Hopping\SnapshotWindowHoppingTemplate.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SnapshotWindowHoppingTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\SnapshotWindow\Tumbling\SnapshotWindowTumblingTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SnapshotWindowTumblingTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\SnapshotWindow\PriorityQueue\SnapshotWindowPriorityQueueTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SnapshotWindowPriorityQueueTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\SnapshotWindow\Sliding\SnapshotWindowSlidingTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SnapshotWindowSlidingTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Ungroup\UngroupPipe.cs">
+      <DependentUpon>UngroupPipe.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Operators\Ungroup\UngroupStreamable.cs">
+      <DependentUpon>UngroupStreamable.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Operators\Ungroup\UngroupTemplate.cs">
+      <DependentUpon>UngroupTemplate.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Aggregates\SumAggregateTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SumAggregateTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Egress\Atemporal\AtemporalEgress.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AtemporalEgress.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Egress\TemporalArray\TemporalArrayEgress.cs">
+      <DependentUpon>TemporalArrayEgress.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Egress\Temporal\TemporalEgress.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>TemporalEgress.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Egress\TemporalArray\TemporalArrayEgressObservable.cs">
+      <DependentUpon>TemporalArrayEgressObservable.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Egress\Temporal\TemporalEgressObservable.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>TemporalEgressObservable.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\AtemporalArray\AtemporalArrayIngressSubscription.cs">
+      <DependentUpon>AtemporalArrayIngressSubscription.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Ingress\AtemporalArray\AtemporalArrayIngress.cs">
+      <DependentUpon>AtemporalArrayIngress.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Ingress\ImpatienceSorter.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ImpatienceSorter.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\Atemporal\AtemporalIngress.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AtemporalIngress.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\Atemporal\AtemporalIngressSubscription.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AtemporalIngressSubscription.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\DiagnosticObservable.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DiagnosticObservable.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\SubscriptionBase.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SubscriptionBase.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\TemporalArray\TemporalArrayIngressSubscription.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>TemporalArrayIngressSubscription.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\TemporalArray\TemporalArrayIngress.cs">
+      <DependentUpon>TemporalArrayIngress.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Ingress\Temporal\TemporalIngress.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>TemporalIngress.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Ingress\TemporalArray\TemporalArrayIngressStreamable.cs">
+      <DependentUpon>TemporalArrayIngressStreamable.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Egress\Temporal\TemporalEgressTemplate.cs">
+      <DependentUpon>TemporalEgressTemplate.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Ingress\Temporal\TemporalIngressStreamable.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>TemporalIngressStreamable.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\MapReduce\MapDefinition.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MapDefinition.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Serializer\GeneratedSubtypes\FastDictionaryGenerator.cs">
+      <DependentUpon>FastDictionaryGenerator.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Serializer\GeneratedSubtypes\GeneratedFastDictionary.cs">
+      <DependentUpon>GeneratedFastDictionary.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Serializer\GeneratedSubtypes\GeneratedSortedDictionary.cs">
+      <DependentUpon>GeneratedSortedDictionary.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="StreamableAPI\GroupAggregateTemplate.cs">
+      <DependentUpon>GroupAggregateTemplate.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="StreamableAPI\StreamableExtensionsTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>StreamableExtensionsTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Group\GroupStreamable.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GroupStreamable.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\MapReduce\Map2ReduceStreamable.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Map2ReduceStreamable.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\MapReduce\MapReduceStreamable.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MapReduceStreamable.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Select\SelectPipe.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SelectPipe.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Shuffle\ShuffleStreamable.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ShuffleStreamable.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Afa\AfaTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AfaTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Beat\BeatTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>BeatTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Clip\ClipJoinTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ClipJoinTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\EquiJoin\Basic\EquiJoinTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EquiJoinTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Afa\GroupedAfaEventListTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GroupedAfaEventListTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Afa\AfaMultiEventListTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AfaMultiEventListTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Afa\GroupedAfaMultiEventTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GroupedAfaMultiEventTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Afa\GroupedAfaTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GroupedAfaTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Group\GroupTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GroupTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\LeftAntiSemiJoin\LeftAntiSemiJoinTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LeftAntiSemiJoinTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\SelectMany\SelectManyTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SelectManyTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Select\SelectTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SelectTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\ColumnToRow\ColumnToRowTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnToRowTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\RowToColumn\RowToColumnTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RowToColumnTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Stitch\StitchTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>StitchTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Afa\UngroupedAfaTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>UngroupedAfaTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Afa\UngroupedDAfaTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>UngroupedDAfaTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Union\UnionTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>UnionTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Where\WhereTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>WhereTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\Shuffle\ShuffleTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ShuffleTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\EquiJoin\StartEdge\StartEdgeEquiJoinTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>StartEdgeEquiJoinTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="StreamableAPI\Templates.cs">
+      <DependentUpon>Templates.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Transformer\MemoryPoolTemplate.cs">
+      <DependentUpon>MemoryPoolTemplate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Transformer\SafeBatchTemplate.cs">
+      <DependentUpon>SafeBatchTemplate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Utilities\CallInlinerTemplate.cs">
+      <DependentUpon>CallInlinerTemplate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Utilities\StructTupleTemplate.cs">
+      <DependentUpon>StructTupleTemplate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Utilities\Templates.cs">
+      <DependentUpon>Templates.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Windows\FilteredWindowTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FilteredWindowTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Windows\WindowTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>WindowTemplate.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Egress\AtemporalArray\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Ingress\Policies\FlushPolicy.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FlushPolicy.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+  
+</Project>

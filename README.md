@@ -12,3 +12,24 @@ provided by the bot. You will only need to do this once across all repos using o
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+# Introduction
+
+Trill is a high-performance one-pass in-memory streaming analytics engine from Microsoft Research. It can handle both real-time and offline data, and is based on a temporal data and query model. Trill can be used as a streaming engine, a lightweight in-memory relational engine, and as a progressive query processor (for early query results on partial data).
+
+# Getting Started
+
+1. Of course, the sources are right here!
+2. You can get binaries from our [NuGet feed](https://www.nuget.org/packages/Trill/).
+
+# Learn More
+
+- The [Trill paper](http://research.microsoft.com/pubs/231690/trill-vldb2015.pdf) appeared at VLDB.
+- The [Trill technical report](http://research.microsoft.com/pubs/214609/trill-TR.pdf).
+- Additional documents located in the /Documentation directory:
+    - TrillQueryWritingGuide: introduces basic concepts of Trill query authoring
+    - Ingress: describes how data is ingressed into and egressed out of Trill
+    - TrillInternals: outlines Trill innovations and internals
+    - BestPractices: describes best practices low-memory real-time deployments 
+    - HighAvailability: details Trill high-availability support
+    - UserDefinedAggregates: introduces a framework for query authors to create custom aggregates

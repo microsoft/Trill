@@ -1,0 +1,37 @@
+﻿<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#
+var averageTypesToGenerate = new[] {
+    new { InputTypeFriendlyName = "SByte", TypeName = "sbyte", SumTypeName = "long", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Short", TypeName = "short", SumTypeName = "long", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Int", TypeName = "int", SumTypeName = "long", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Long", TypeName = "long", SumTypeName = "long", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Byte", TypeName = "byte", SumTypeName = "ulong", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "UShort", TypeName = "ushort", SumTypeName = "ulong", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "UInt", TypeName = "uint", SumTypeName = "ulong", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "ULong", TypeName = "ulong", SumTypeName = "ulong", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Float", TypeName = "float", SumTypeName = "float", ReturnTypeName = "float" },
+    new { InputTypeFriendlyName = "Double", TypeName = "double", SumTypeName = "double", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Decimal", TypeName = "decimal", SumTypeName = "decimal", ReturnTypeName = "decimal" },
+    new { InputTypeFriendlyName = "BigInteger", TypeName = "BigInteger", SumTypeName = "BigInteger", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Complex", TypeName = "Complex", SumTypeName = "Complex", ReturnTypeName = "Complex" }
+};
+
+var sumTypesToGenerate = new[] {
+    new { InputTypeFriendlyName = "SByte", TypeName = "sbyte" },
+    new { InputTypeFriendlyName = "Byte", TypeName = "byte" },
+    new { InputTypeFriendlyName = "Short", TypeName = "short" },
+    new { InputTypeFriendlyName = "UShort", TypeName = "ushort" },
+    new { InputTypeFriendlyName = "Int", TypeName = "int" },
+    new { InputTypeFriendlyName = "UInt", TypeName = "uint" },
+    new { InputTypeFriendlyName = "Long", TypeName = "long" },
+    new { InputTypeFriendlyName = "ULong", TypeName = "ulong" },
+    new { InputTypeFriendlyName = "Float", TypeName = "float" },
+    new { InputTypeFriendlyName = "Double", TypeName = "double" },
+    new { InputTypeFriendlyName = "Decimal", TypeName = "decimal" },
+    new { InputTypeFriendlyName = "BigInteger", TypeName = "BigInteger" },
+    new { InputTypeFriendlyName = "Complex", TypeName = "Complex" }
+};
+#>

@@ -1,0 +1,474 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+
+<#@ include file="..\..\Aggregates\AggregateCommon.txt" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+<#
+  var resultMessageMemoryPoolGenericParameters = string.Format("<{0}, {1}>", TKey, TResult);
+  if (resultType == typeof(int) || resultType == typeof(long) || resultType == typeof(string)) resultMessageMemoryPoolGenericParameters = string.Empty;
+
+  getOutputBatch = string.Format("this.pool.Get(out genericOutputbatch); this.batch = ({0}{1})genericOutputbatch;",
+          Transformer.GetBatchClassName(typeof(Empty), resultType),
+          UnitTResultGenericParameters);
+
+#>
+
+// TKey: <#= TKey #>
+// TInput: <#= TInput #>
+// TState: <#= TState #>
+// TOutput: <#= TOutput #>
+// TResult: <#= TResult #>
+
+/// <summary>
+/// Operator has has no support for ECQ
+/// </summary>
+[DataContract]
+internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<Microsoft.StreamProcessing.Empty, <#= TInput #>, <#= TResult #>>
+{
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+    private readonly MemoryPool<Microsoft.StreamProcessing.Empty, <#= TResult #>> pool;
+
+    <# if (this.useCompiledInitialState) { #>
+    private readonly Func<<#= TState #>> initialState;
+    <# } #>
+
+    <# if (this.useCompiledAccumulate) { #>
+    private readonly Func<<#= TState #>, long, <#= TInput #>, <#= TState #>> accumulate;
+    <# } #>
+
+    <# if (this.useCompiledDeaccumulate) { #>
+    private readonly Func<<#= TState #>, long, <#= TInput #>, <#= TState #>> deaccumulate;
+    <# } #>
+
+    <# if (this.useCompiledDifference) { #>
+    private readonly Func<<#= TState #>, <#= TState #>, <#= TState #>> difference;
+    <# } #>
+
+    <# if (this.useCompiledComputeResult) { #>
+    private readonly Func<<#= TState #>, <#= TOutput #>> computeResult;
+    <# } #>
+
+    private readonly IEqualityComparerExpression<<#= TKey #>> keyComparer;
+    private readonly Func<<#= TInput #>, <#= TKey #>> keySelector;
+
+    <# if (!this.isUngrouped) { #>
+    [DataMember]
+    private FastDictionary3<<#= TKey #>, HeldState> heldAggregates;
+    <# } else { #>
+
+    private HeldState currentState;
+    [DataMember]
+    private bool isDirty;
+    <# } #>
+
+    private StreamMessage<Microsoft.StreamProcessing.Empty, <#= TResult #>> genericOutputbatch;
+    [DataMember]
+    private <#= Transformer.GetBatchClassName(typeof(Empty), resultType) #><#= UnitTResultGenericParameters #> batch;
+
+    [DataMember]
+    private long lastSyncTime = long.MinValue;
+
+    private <#= TKey #> currentKey;
+
+    <#= staticCtor #>
+
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<Microsoft.StreamProcessing.Empty, <#= TResult #>> stream,
+        IStreamObserver<Microsoft.StreamProcessing.Empty, <#= TResult #>> observer,
+        IAggregate<<#= TInput #>, <#= TState #>, <#= TOutput #>> aggregate,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        this.queryPlanGenerator = queryPlanGenerator;
+
+        <# if (this.useCompiledInitialState) { #>
+        initialState = aggregate.InitialState().Compile();
+        <# } #>
+        <# if (this.useCompiledAccumulate) { #>
+        accumulate = aggregate.Accumulate().Compile();
+        <# } #>
+        <# if (this.useCompiledDeaccumulate) { #>
+        deaccumulate = aggregate.Deaccumulate().Compile();
+        <# } #>
+        <# if (this.useCompiledDifference) { #>
+        difference = aggregate.Difference().Compile();
+        <# } #>
+        <# if (this.useCompiledComputeResult) { #>
+        computeResult = aggregate.ComputeResult().Compile();
+        <# } #>
+
+        this.keyComparer = EqualityComparerExpression<<#= TKey #>>.Default;
+
+        this.pool = MemoryManager.GetMemoryPool<Microsoft.StreamProcessing.Empty, <#= TResult #>>(); // as <#= Transformer.GetMemoryPoolClassName(typeof(Empty), this.resultType) #><#= resultMessageMemoryPoolGenericParameters #>;
+        <#= getOutputBatch #>
+        this.batch.Allocate();
+
+        <# if (!this.isUngrouped) { #>
+        var generator = keyComparer.CreateFastDictionary3Generator<<#= TKey #>, HeldState>(1, keyComparer.GetEqualsExpr().Compile(), keyComparer.GetGetHashCodeExpr().Compile(), stream.Properties.QueryContainer);
+        heldAggregates = generator.Invoke();
+        <# } else { #>
+        isDirty = false;
+        <# } #>
+    }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    protected override void FlushContents()
+    {
+        if (this.batch == null || this.batch.Count == 0) return;
+        this.Observer.OnNext(this.batch);
+        <#= getOutputBatch #>
+        this.batch.Allocate();
+    }
+
+    protected override void DisposeState() => this.batch.Free();
+
+    public override int CurrentlyBufferedOutputCount => this.batch.Count;
+
+    public override int CurrentlyBufferedInputCount => <#= this.isUngrouped ? "0" : "heldAggregates.Count" #>;
+
+    public override unsafe void OnNext(StreamMessage<Microsoft.StreamProcessing.Empty, <#= TInput #>> inputBatch)
+    {
+        <# if (!this.isUngrouped) { #>
+        HeldState currentState = null;
+        <#= TKey #> currentKey = default;
+        int currentHash = 0;
+        <# } #>
+
+        <#= BatchGeneratedFrom_Unit_TInput #><#= UnitTInputGenericParameters #> batch = inputBatch as <#= BatchGeneratedFrom_Unit_TInput #><#= UnitTInputGenericParameters #>;
+
+
+        <# if (this.outputFields.Count() > 1) { #>
+        <#= TResult #> temporaryOutput;
+        <# } #>
+
+        // Create locals that point directly to the arrays within the columns in the input batch.
+<# foreach (var f in this.inputFields) { #>
+
+<# if (f.canBeFixed) { #>
+
+        fixed (<#= f.TypeName #>* <#= f.Name #>_col = batch.<#= f.Name #>.col)
+        {
+<# } else { #>
+
+        var <#= f.Name #>_col = batch.<#= f.Name #>.col;
+
+<# } #>
+<# } #>
+
+        // Create locals that point directly to the arrays within the columns in the output batch.
+<# foreach (var f in this.outputFields) { #>
+
+<# if (f.canBeFixed) { #>
+
+        fixed (<#= f.TypeName #>* dest_<#= f.Name #> = this.batch.<#= f.Name #>.col)
+        {
+<# } else { #>
+
+        var dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
+
+<# } #>
+<# } #>
+
+        fixed (long* col_vsync = batch.vsync.col)
+        fixed (long* col_vother = batch.vother.col)
+        fixed (long* col_bv = batch.bitvector.col)
+        {
+            for (int i = 0; i < batch.Count; i++)
+            {
+                if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                {
+                    if (col_vother[i] == long.MinValue)
+                    {
+                        // We have found a row that corresponds to punctuation
+                        OnPunctuation(col_vsync[i]);
+
+                        int c = this.batch.Count;
+                        this.batch.vsync.col[c] = col_vsync[i];
+                        this.batch.vother.col[c] = long.MinValue;
+                        this.batch.key.col[c] = default;
+                        this.batch[c] = default;
+                        this.batch.hash.col[c] = batch.key.col[i].GetHashCode();
+                        this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                        this.batch.Count++;
+                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                    }
+                    continue;
+                }
+
+                var col_key_i = <#= keySelector #>;
+                var col_hash_i = <#= keyComparerGetHashCode("col_key_i") #>;
+
+                var syncTime = col_vsync[i];
+
+                // Handle time moving forward
+                if (syncTime > this.lastSyncTime)
+                {
+                    <# if (this.isUngrouped) { #>
+                    if ((currentState != null) && isDirty)   // there exists earlier state
+                    {
+                        int _c = this.batch.Count;
+                        this.batch.vsync.col[_c] = currentState.timestamp;
+                        this.batch.vother.col[_c] = StreamEvent.InfinitySyncTime;
+                        {
+                            var currentStateStateState = currentState.state.state;
+                            <#= finalResultSelector("currentKey", computeResult("currentStateStateState")) #>
+                        }
+                        this.batch.hash.col[_c] = 0;
+                        this.batch.Count++;
+                        if (this.batch.Count == Config.DataBatchSize)
+                        {
+                            this.batch.Seal();
+                            this.Observer.OnNext(this.batch);
+                            <#= getOutputBatch #>
+                            this.batch.Allocate();
+                        }
+                    }
+                    isDirty = false;
+                    <# } else { #>
+                    int iter1 = FastDictionary3<<#= TKey #>, HeldState>.IteratorStart;
+                    while (this.heldAggregates.IterateDirty(ref iter1))
+                    {
+                        var iter1entry = this.heldAggregates.entries[iter1];
+
+                            int _c = this.batch.Count;
+                            this.batch.vsync.col[_c] = iter1entry.value.timestamp;
+                            this.batch.vother.col[_c] = StreamEvent.InfinitySyncTime;
+                            {
+                                var iter1entryValueStateState = iter1entry.value.state.state;
+                                <#= finalResultSelector("iter1entry.key", computeResult("iter1entryValueStateState")) #>
+                            }
+                            this.batch.hash.col[_c] = iter1entry.hash;
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize)
+                            {
+                                this.batch.Seal();
+                                this.Observer.OnNext(this.batch);
+                                <#= getOutputBatch #>
+                                this.batch.Allocate();
+                        }
+                    }
+
+                    // Time has moved forward, clean the held aggregates
+                    this.heldAggregates.Clean();
+
+                    // reset currentState so that we can later force a re-get and set it dirty
+                    currentState = null;
+                    <# } #>
+
+                    // Since sync time changed, set lastSyncTime
+                    this.lastSyncTime = syncTime;
+                }
+
+                <# if (this.isUngrouped) { #>
+                if (currentState == null)
+                {
+                    currentState = new HeldState();
+                    currentState.state.state = <#= initialState #>;
+                    currentState.state.active = 1; // start edge only
+                    currentState.timestamp = syncTime;
+                    isDirty = true;
+                }
+                else
+                {
+                    if (!isDirty)
+                    {
+                        // Output end edge
+                        int _c = this.batch.Count;
+                        this.batch.vsync.col[_c] = syncTime;
+                        this.batch.vother.col[_c] = currentState.timestamp;
+                        {
+                            var currentStateStateState = currentState.state.state;
+                            <#= finalResultSelector("currentKey", computeResult("currentStateStateState")) #>
+                        }
+                        this.batch.hash.col[_c] = 0;
+                        this.batch.Count++;
+                        if (this.batch.Count == Config.DataBatchSize)
+                        {
+                            this.batch.Seal();
+                            this.Observer.OnNext(this.batch);
+                            <#= getOutputBatch #>
+                            this.batch.Allocate();
+                        }
+                        currentState.timestamp = syncTime;
+                        isDirty = true;
+                    }
+                }
+                <# } else { #>
+
+                if (currentState == null || ((!<#= this.isUngrouped ? "true" : "false" #>) && (currentHash != col_hash_i || !(<#= this.keyComparerEquals("currentKey", "col_key_i") #>))))
+                {
+                    // Need to retrieve the key from the dictionary
+                    currentKey = col_key_i;
+                    currentHash = col_hash_i;
+
+                    int index;
+
+                    bool heldAggregatesLookup = false;
+                    {
+                        int num = currentHash & 0x7fffffff;
+                        index = num % this.heldAggregates.Size;
+
+                        do
+                        {
+                            if ((this.heldAggregates.bitvector[index >> 3] & (0x1 << (index & 0x7))) == 0)
+                            {
+                                heldAggregatesLookup = false;
+                                break;
+                            }
+
+                            if ((currentHash == this.heldAggregates.entries[index].hash) && (<#= this.keyComparerEquals("currentKey", "this.heldAggregates.entries[index].key") #>))
+                            {
+                                heldAggregatesLookup = true;
+                                break;
+                            }
+
+                            index++;
+                            if (index == this.heldAggregates.Size)
+                                index = 0;
+                        } while (true);
+                    }
+
+                    if (!heldAggregatesLookup)
+                    {
+                        // New group. Create new state
+                        currentState = new HeldState();
+                        currentState.state.state = <#= initialState #>;
+                        currentState.state.active = 1; // start edge only
+                        currentState.timestamp = syncTime;
+                        // No output because initial state is empty
+
+                        this.heldAggregates.Insert(ref index, currentKey, currentState, currentHash);
+                    }
+                    else
+                    {
+                        // read new currentState from _heldAgg index
+                        currentState = this.heldAggregates.entries[index].value;
+
+                        if (this.heldAggregates.IsClean(ref index))
+                        {
+                            // Output end edge
+                            int _c = this.batch.Count;
+                            this.batch.vsync.col[_c] = syncTime;
+                            this.batch.vother.col[_c] = currentState.timestamp;
+                            {
+                                var currentStateStateState = currentState.state.state;
+                                <#= finalResultSelector("currentKey", computeResult("currentStateStateState")) #>
+                            }
+                            this.batch.hash.col[_c] = currentHash;
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize)
+                            {
+                                this.batch.Seal();
+                                this.Observer.OnNext(this.batch);
+                                <#= getOutputBatch #>
+                                this.batch.Allocate();
+                            }
+                            currentState.timestamp = syncTime;
+                            this.heldAggregates.SetDirty(ref index);
+                        }
+                    }
+                }
+                <# } #>
+
+                currentState.state.state = <#= accumulate("currentState.state.state", "col_vsync[i]" /*, "col_payload[i]"*/) #>;
+            }
+        }
+
+        <# foreach (var f in this.inputFields.Where(fld => fld.canBeFixed)) { #>
+
+        }
+        <# } #>
+        <# foreach (var f in this.outputFields.Where(fld => fld.canBeFixed)) { #>
+
+        }
+        <# } #>
+
+        batch.Release();
+        batch.Return();
+    }
+
+    public void OnPunctuation(long syncTime)
+    {
+
+        <# if (this.outputFields.Count() > 1) { #>
+        <#= TResult #> temporaryOutput;
+        <# foreach (var f in this.outputFields) { #>
+
+        var dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
+        <# } #>
+        <# } #>
+
+        // Handle time moving forward
+        if (syncTime > this.lastSyncTime)
+        {
+            <# if (this.isUngrouped) { #>
+            if ((currentState != null) && isDirty) // need to send start edge if state is dirty
+            {
+                int _c = this.batch.Count;
+                this.batch.vsync.col[_c] = currentState.timestamp;
+                this.batch.vother.col[_c] = StreamEvent.InfinitySyncTime;
+                {
+                    var currentStateStateState = currentState.state.state;
+                    <#= finalResultSelector("currentKey", computeResult("currentStateStateState")) #>
+                }
+                this.batch.hash.col[_c] = 0;
+                this.batch.Count++;
+                if (this.batch.Count == Config.DataBatchSize)
+                {
+                    this.batch.Seal();
+                    this.Observer.OnNext(this.batch);
+                    <#= getOutputBatch #>
+                    this.batch.Allocate();
+                }
+            }
+            isDirty = false;
+            <# } else { #>
+            int iter1 = FastDictionary3<<#= TKey #>, HeldState>.IteratorStart;
+            while (this.heldAggregates.IterateDirty(ref iter1))
+            {
+                var iter1entry = this.heldAggregates.entries[iter1];
+
+                int _c = this.batch.Count;
+                this.batch.vsync.col[_c] = iter1entry.value.timestamp;
+                this.batch.vother.col[_c] = StreamEvent.InfinitySyncTime;
+                {
+                    var iter1entryValueStateState = iter1entry.value.state.state;
+                    <#= finalResultSelector("iter1entry.key", computeResult("iter1entryValueStateState")) #>
+                }
+                this.batch.hash.col[_c] = iter1entry.hash;
+                this.batch.Count++;
+                if (this.batch.Count == Config.DataBatchSize)
+                {
+                    this.batch.Seal();
+                    this.Observer.OnNext(this.batch);
+                    <#= getOutputBatch #>
+                    this.batch.Allocate();
+                }
+            }
+            // Time has moved forward, clean the held aggregates
+            this.heldAggregates.Clean();
+            <# } #>
+
+            // Since sync time changed, set lastSyncTime
+            this.lastSyncTime = syncTime;
+        }
+        if (this.batch.Count > 0)
+        {
+            this.batch.Seal();
+            this.Observer.OnNext(this.batch);
+            <#= getOutputBatch #>
+            this.batch.Allocate();
+        }
+    }
+}

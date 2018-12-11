@@ -1,0 +1,378 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Reflection.Emit" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
+using Microsoft.StreamProcessing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace SimpleTesting.DisorderedIngressAndEgress
+{<#
+foreach (var orientation in new [] { "Row", "Columnar" })
+foreach (var batch in new [] { string.Empty, "SmallBatch" })
+foreach (var disorder in new [] {"Drop", "Throw", "Adjust"})
+foreach (var punctuationpolicy in new [] {string.Empty, "Time"})
+foreach (var lag in new [] {5, 20})
+foreach (var dataDisorderAmount in new[] {10})
+foreach (var diagnostic in new[] {string.Empty, "Diagnostic"})
+{
+
+    var suffix = orientation + batch + disorder + dataDisorderAmount + (lag <= 0 ? String.Empty : lag.ToString()) +
+                 punctuationpolicy + diagnostic;
+#>
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Microsoft.StyleCop.CSharp.DocumentationRules",
+        "SA1028:CodeMustNotContainTrailingWhitespace",
+        Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
+    [TestClass]
+    public class DisorderedIngressAndEgressTests<#= suffix #> : <#= disorder == "Throw" ? "TestWithConfigSettingsWithoutMemoryLeakDetection" : "TestWithConfigSettingsAndMemoryLeakDetection" #>
+    {
+        public DisorderedIngressAndEgressTests<#= suffix #>() : base(
+            new ConfigModifier()
+<#  switch (orientation)
+    {
+        case "Row": #>
+            .ForceRowBasedExecution(true)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+        case "Columnar": #>
+            .ForceRowBasedExecution(false)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+    } #>
+<#  if (!string.IsNullOrEmpty(batch))
+    { #>
+            .DataBatchSize(100)
+<#  } #>
+            .UseMultiString(true)
+            .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
+        { }
+
+        [TestMethod, TestCategory("Gated")]
+        public void DisorderedStartEdgeTest<#= suffix #>()
+        {
+            double disorderFraction = 0.5;
+            int disorderAmount = <#= dataDisorderAmount #>;
+            const int inputsize = 30;
+            var rand = new Random(2);
+            var disorderedInputData =
+                Enumerable.Range(disorderAmount, inputsize).ToList()
+                .Select(e => rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e)
+                .ToList();
+
+<#  if (disorder == "Throw")
+    { #>
+            try
+            {
+<#      PushIndent("    ");
+    } #>
+            var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(
+                o => o,
+                <#= disorder != string.Empty ? "DisorderPolicy." + disorder + "(" +  lag + ")," : "null,"#>
+                FlushPolicy.FlushOnPunctuation,
+                <#= punctuationpolicy == "Time" ? "PeriodicPunctuationPolicy.Time(10)" : "null"#>);
+
+            var prog = ingress.ToStreamEventObservable();
+
+<#  if (diagnostic == "Diagnostic")
+    { #>
+            var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
+            var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
+            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+<#  } #>
+
+            var outevents = prog.ToEnumerable().ToList();
+            Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
+
+            var output = outevents.Where(o => !o.IsPunctuation).ToList();
+            var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime).ToList();
+<#  if (dataDisorderAmount < lag)
+    { #>
+            var expected = disorderedInputData.Select(i => StreamEvent.CreateStart(i, i)).OrderBy(i => i.StartTime).ToList();
+            Assert.IsTrue(output.SequenceEqual(expected));
+<#  }
+    else
+    { #>
+<#      switch (disorder)
+        {
+            case "Drop": #>
+            var latest = 0;
+            var expected = disorderedInputData.Where(i =>
+            {
+                var ret = i >= (latest - <#= lag #>);
+                latest = Math.Max(i, latest);
+                return ret;
+            }).Select(i => StreamEvent.CreateStart(i, i)).OrderBy(i => i.StartTime).ToList();
+            Assert.IsTrue(output.SequenceEqual(expected));
+<#              break;
+            case "Adjust":
+#>
+            var latest = 0;
+            var expected = disorderedInputData.Select(i =>
+            {
+                var outofwindow = i < (latest - <#= lag #>);
+                latest = Math.Max(i, latest);
+                if (outofwindow) return StreamEvent.CreateStart(latest - <#= lag #>, i); // adjust
+                return StreamEvent.CreateStart(i, i);
+            }).OrderBy(i => i.StartTime).ToList();
+            Assert.IsTrue(output.SequenceEqual(expected));
+<#              break;
+            case "Throw":
+#>
+            Assert.Fail("Expecting OutofOrderException");
+<#              break;
+        }
+    } #>
+
+<#  if (disorder != "Throw" || dataDisorderAmount < lag)
+    {
+        if (diagnostic == "Diagnostic")
+        { #>
+            {
+                var lt = 0;
+                var expectedOutOfOrder = disorderedInputData.Select(i =>
+                    {
+                        var outofwindow = i < (lt - <#= lag #>);
+                        lt = Math.Max(i, lt);
+                        if (outofwindow)
+                            return Tuple.Create<StreamEvent<int>, long?>(StreamEvent.CreateStart(i, i), <#= disorder == "Adjust" ? "lt - " + lag + " - i" : "null" #>);
+                        return null;
+                    }).Where(t => t != null).Select(t => new OutOfOrderStreamEvent<int>() { Event = t.Item1, TimeAdjustment = t.Item2 });
+                Assert.IsTrue(outOfOrderEvents.SequenceEqual(expectedOutOfOrder));
+            }
+
+<#      } 
+        if (punctuationpolicy == "Time")
+        { #>
+            var highmark = 0;
+            var lastPunc = 0;
+            var current = 0;
+            var queue = new PriorityQueue<int>();
+            var expectedPunctuations = disorderedInputData.Select(i =>
+            {
+                var outoforder = i < highmark - <#= lag #>;
+                if (outoforder)
+                {
+                    return null;
+                }
+                queue.Enqueue(i);
+                highmark = Math.Max(i, highmark);
+                while (queue.Peek() <= highmark - <#= lag #>)
+                {
+                    current = queue.Dequeue();
+                    if (current - lastPunc >= 10) {
+                        lastPunc = current;
+                        return Tuple.Create(i, current);
+                    }
+                }
+                return null;
+            }).Where(t => t != null).Select(t => StreamEvent.CreatePunctuation<int>(((long)(t.Item2)).SnapToLeftBoundary(10))).ToList();
+            while (queue.Count() > 0)
+            {
+                current = queue.Dequeue();
+                if (current - lastPunc >= 10) {
+                    lastPunc = current;
+                    expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
+                }
+            }
+            Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
+<#      }
+        else
+        { #>
+            Assert.IsTrue(!punctuations.Any());
+<#      }
+    }
+
+    if (disorder == "Throw")
+    { 
+        PopIndent(); #>
+            }
+            catch(Exception) {
+<#          if (dataDisorderAmount < lag)
+            { #>
+                Assert.Fail("no exception should be thrown since disorder: <#= dataDisorderAmount #> is always less than lag: <#= lag #>.");
+<#          }
+            else
+            { #>
+                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+<#          } #>
+            }
+<#
+    }
+#>
+        }
+
+        public struct TestStruct
+        {
+            public long start;
+            public long end;
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void DisorderedIntervalTest<#= suffix #>()
+        {
+            double disorderFraction = 0.5;
+            int disorderAmount = <#= dataDisorderAmount #>;
+            int maxInterval = 10;
+            const int inputsize = 30;
+            var rand = new Random(10);
+            var disorderedInputData =
+                Enumerable.Range(disorderAmount, inputsize).ToList()
+                .Select(e => rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e)
+                .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
+                .ToList();
+
+<#  if (disorder == "Throw")
+    { #>
+            try {
+<#      PushIndent("    ");
+    } #>
+            var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
+                <#= disorder != string.Empty ? "DisorderPolicy." + disorder + "(" +  lag + ")," : "null,"#>
+                FlushPolicy.FlushOnPunctuation,
+                <#= punctuationpolicy == "Time" ? "PeriodicPunctuationPolicy.Time(10)" : "null"#>);
+
+            var prog = ingress.ToStreamEventObservable();
+<#  if (diagnostic == "Diagnostic")
+    { #>
+
+            var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
+            var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
+            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+<#  } #>
+
+            var outevents = prog.ToEnumerable().ToList();
+            Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
+
+            var output = outevents.Where(o => !o.IsPunctuation).ToList();
+            var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime).ToList();
+<#  if (dataDisorderAmount < lag)
+    { #>
+            var expected = disorderedInputData.Select(i => i.start).OrderBy(i => i).ToList();
+            Assert.IsTrue(output.Select(i => i.StartTime).SequenceEqual(expected));
+<#  }
+    else
+    { #>
+<#      switch (disorder)
+        {
+            case "Drop": #>
+            var latest = 0L;
+            var expected = disorderedInputData.Where(i =>
+            {
+                var ret = i.start >= (latest - <#= lag #>);
+                latest = Math.Max(i.start, latest);
+                return ret;
+            }).OrderBy(i => i.start).Select(i => i.start).ToList();
+            Assert.IsTrue(output.Select(i => i.StartTime).SequenceEqual(expected)); // Not really checking for each interval but thats ok
+<#
+                break;
+            case "Adjust":
+#>
+            var latest = 0L;
+            var expected = disorderedInputData.Select(i =>
+            {
+                var outofwindow = i.start < (latest - <#= lag #>);
+                var endoutofwindow = i.end < (latest - <#= lag #>);
+
+                latest = Math.Max(i.start, latest);
+                if (endoutofwindow) return null;
+                if (outofwindow) return Tuple.Create(latest - <#= lag #>, i.end, i); // adjust
+                return Tuple.Create(i.start, i.end, i);
+            }).Where(t => t != null).Select(t => StreamEvent.CreateInterval(t.Item1, t.Item2, t.Item3)).OrderBy(i => i.StartTime).Select(i => i.StartTime).ToList();
+            Assert.IsTrue(output.Select(i => i.StartTime).SequenceEqual(expected));
+<#              break;
+            case "Throw":
+#>
+            Assert.Fail("Expecting OutofOrderException");
+<#              break;
+        }
+    } #>
+
+<#  if (disorder != "Throw" || dataDisorderAmount < lag)
+    {
+        if (diagnostic == "Diagnostic")
+        { #>
+            {
+                var lt = 0L;
+                var expectedOutOfOrder = disorderedInputData.Select(i =>
+                    {
+                        var outofwindow = i.start < (lt - <#= lag #>);
+                        lt = Math.Max(i.start, lt);
+                        if (outofwindow)
+                            return Tuple.Create<StreamEvent<TestStruct>, long?>(StreamEvent.CreateInterval(i.start, i.end, i), <#= disorder == "Adjust" ? "lt - " + lag + " - i.start" : "null" #>);
+                        return null;
+                    }).Where(t => t != null).Select(t => new OutOfOrderStreamEvent<TestStruct>() { Event = t.Item1, TimeAdjustment = t.Item2 });
+                Assert.IsTrue(outOfOrderEvents.SequenceEqual(expectedOutOfOrder));
+            }
+
+<#      } 
+        if (punctuationpolicy == "Time")
+        { #>
+            long highmark = 0L;
+            long lastPunc = 0L;
+            long current = 0L;
+            var queue = new PriorityQueue<long>();
+            var expectedPunctuations = disorderedInputData.Select(i =>
+            {
+                var outoforder = i.start < highmark - <#= lag #>;
+                if (outoforder)
+                {
+                    return null;
+                }
+                queue.Enqueue(i.start);
+                highmark = Math.Max(i.start, highmark);
+                while (queue.Peek() <= highmark - <#= lag #>)
+                {
+                    current = queue.Dequeue();
+                    if (current - lastPunc >= 10) {
+                        lastPunc = current;
+                        return Tuple.Create(i.start, current);
+                    }
+                }
+                return null;
+            }).Where(t => t != null).Select(t => StreamEvent.CreatePunctuation<TestStruct>(((long)(t.Item2)).SnapToLeftBoundary(10))).ToList();
+            while (queue.Count() > 0)
+            {
+                current = queue.Dequeue();
+                if (current - lastPunc >= 10) {
+                    lastPunc = current;
+                    expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
+                }
+            }
+            Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
+<#      }
+        else
+        { #>
+            Assert.IsTrue(!punctuations.Any());
+<#      }
+    } 
+    if (disorder == "Throw")
+    { 
+        PopIndent(); #>
+            }
+            catch(Exception) {
+<#      if (dataDisorderAmount < lag)
+        { #>
+                Assert.Fail("no exception should be thrown since disorder: <#= dataDisorderAmount #> is always less than lag: <#= lag #>.");
+<#      }
+        else
+        { #>
+                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+<#      } #>
+            }
+<#  } #>
+        }
+    }
+<# } #>
+}

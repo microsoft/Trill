@@ -1,0 +1,305 @@
+﻿<#@ template language="C#" visibility="internal" inherits="AfaTemplate" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
+using System.Reflection;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// CompiledUngroupedAfaPipe
+// TPayload: <#= TPayload #>
+// TRegister: <#= TRegister #>
+// TAccumulator: <#= TAccumulator #>
+
+[DataContract]
+public sealed class <#= className #> : CompiledAfaPipeBase<Microsoft.StreamProcessing.Empty, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>
+{
+    [DataMember]
+    private FastLinkedList<GroupedActiveState<Microsoft.StreamProcessing.Empty, <#= TRegister #>>> activeStates;
+    [DataMember]
+    private byte seenEvent;
+    [DataMember]
+    private FastLinkedList<OutputEvent<Microsoft.StreamProcessing.Empty, <#= TRegister #>>> tentativeOutput;
+    [DataMember]
+    private long lastSyncTime;
+
+    <#= staticCtor #>
+
+    public <#= className #>(
+        IStreamable<Microsoft.StreamProcessing.Empty, <#= TRegister #>> stream,
+        IStreamObserver<Microsoft.StreamProcessing.Empty, <#= TRegister #>> observer,
+        object afa,
+        long MaxDuration)
+        : base(stream, observer, afa, MaxDuration, true)
+    {
+        activeStates = new FastLinkedList<GroupedActiveState<Microsoft.StreamProcessing.Empty, <#= TRegister #>>>();
+
+        <# if (!this.isSyncTimeSimultaneityFree) { #>
+            seenEvent = 0;
+            tentativeOutput = new FastLinkedList<OutputEvent<Microsoft.StreamProcessing.Empty, <#= TRegister #>>>();
+            lastSyncTime = -1;
+        <# } #>
+    }
+
+    public override int CurrentlyBufferedInputCount => activeStates.Count;
+
+    public override unsafe void OnNext(StreamMessage<Microsoft.StreamProcessing.Empty, <#= TPayload #>> batch)
+    {
+        Stack<int> stack = new Stack<int>();
+        var activeFindTraverser = new FastLinkedList<GroupedActiveState<Microsoft.StreamProcessing.Empty, <#= TRegister #>>>.ListTraverser(activeStates);
+        var tentativeFindTraverser = new FastLinkedList<OutputEvent<Microsoft.StreamProcessing.Empty, <#= TRegister #>>>.ListTraverser(tentativeOutput);
+        var tentativeVisibleTraverser = new FastLinkedList<OutputEvent<Microsoft.StreamProcessing.Empty, <#= TRegister #>>>.VisibleTraverser(tentativeOutput);
+
+        <#= sourceBatchTypeName #> sourceBatch = batch as <#= sourceBatchTypeName #>;
+        <#= resultBatchTypeName #> resultBatch = this.batch as <#= resultBatchTypeName #>;
+
+        var count = batch.Count;
+
+        var dest_vsync = this.batch.vsync.col;
+        var dest_vother = this.batch.vother.col;
+        var destkey = this.batch.key.col;
+        var dest_hash = this.batch.hash.col;
+
+        var srckey = batch.key.col;
+
+        <# foreach (var f in this.sourceFields) { #>
+
+        <#= BeginColumnPointerDeclaration(f, "sourceBatch") #>
+        <# } #>
+        <# foreach (var f in this.resultFields) { #>
+
+        <#= BeginColumnPointerDeclaration(f, "resultBatch") #>
+        <# } #>
+
+        fixed (long* src_bv = batch.bitvector.col, src_vsync = batch.vsync.col, src_vother = batch.vother.col)
+        {
+            fixed (int* src_hash = batch.hash.col)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                    {
+                        long synctime = src_vsync[i];
+
+                        <# if (!this.isSyncTimeSimultaneityFree) { #>
+                        {
+                            int index, hash;
+
+                            if (synctime > lastSyncTime) // move time forward
+                            {
+                                seenEvent = 0;
+
+                                if (tentativeOutput.Count > 0)
+                                {
+                                    tentativeVisibleTraverser.currIndex = 0;
+
+                                    while (tentativeVisibleTraverser.Next(out index))
+                                    {
+                                        var elem = tentativeOutput.Values[index];
+
+                                        dest_vsync[iter] = lastSyncTime;
+                                        dest_vother[iter] = elem.other;
+                                        this.batch[iter] = elem.payload;
+                                        dest_hash[iter] = 0;
+                                        iter++;
+
+                                        if (iter == Config.DataBatchSize)
+                                        {
+                                            FlushContents();
+                                            resultBatch = this.batch as <#= resultBatchTypeName #>;
+                                            dest_vsync = this.batch.vsync.col;
+                                            dest_vother = this.batch.vother.col;
+                                            destkey = this.batch.key.col;
+                                            dest_hash = this.batch.hash.col;
+                                        }
+                                    }
+                                    tentativeOutput.Clear(); // Clear the tentative output list
+                                }
+                                lastSyncTime = synctime;
+                            }
+
+                            if (seenEvent > 0) // Incoming event is a simultaneous one
+                            {
+                                if (seenEvent == 1) // Detecting first duplicate, need to adjust state
+                                {
+                                    seenEvent = 2;
+
+                                    // Delete tentative output for that key
+                                    tentativeOutput.Clear();
+
+                                    // Delete active states for that key
+                                    activeStates.Clear();
+                                }
+
+                                // Dont process this event
+                                continue;
+                            }
+                            else
+                            {
+                                seenEvent = 1;
+                            }
+                        }
+                        <# } #>
+
+                        /* (1) Process currently active states */
+
+                        if (activeFindTraverser.Find())
+                        {
+                            int index, orig_index;
+
+                            while (activeFindTraverser.Next(out index))
+                            {
+                                orig_index = index;
+
+                                var state = activeStates.Values[index];
+
+                                if (state.PatternStartTimestamp + MaxDuration > synctime)
+                                {
+                                    switch (state.state) {
+                                        <# foreach (var sourceNodeInfo in this.currentlyActiveInfo) { #>
+
+                                        case <#= sourceNodeInfo.Item1 #> :
+                                            <# foreach (var edge in sourceNodeInfo.Item2) { #>
+
+                                            if (<#= edge.Fence("synctime", "batch[i]", "state.register") #>) {
+                                                // assign new register value
+                                                <# UpdateRegisterValue(edge, "state.register", "synctime", "batch[i]", "state.register"); #>
+                                                // target nodes
+                                                <# foreach (var ns in edge.EpsilonReachableNodes) { #>
+
+                                                // target state: <#= ns #> (<#= isFinal[ns] ? "final" : "not final" #>)
+                                                <# IfFinalStateProduceOutput(52, ns, string.Empty, "synctime", "state.PatternStartTimestamp", "srckey[i]", "src_hash[i]"); #>
+                                                <# if (hasOutgoingArcs[ns]) { #>
+
+                                                // target node has outgoing edges
+                                                if (index == -1) index = activeStates.Insert();
+                                                activeStates.Values[index].key = srckey[i];
+                                                activeStates.Values[index].state = <#= ns #>;
+                                                activeStates.Values[index].register = newReg;
+                                                activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+
+                                                index = -1;
+                                                <# } else { #>
+
+                                                // target node does not have any outgoing edges
+                                                <# } #>
+                                                <# } #>
+
+                                            }
+                                            <# } #>
+
+                                            break;
+
+                                        <# } #>
+
+                                    }
+
+                                }
+                                if (index == orig_index) activeFindTraverser.Remove();
+                            }
+                        }
+
+                        /* (2) Start new activations from the start state(s) */
+                        <# if (!this.AllowOverlappingInstances) { #>
+
+                        if (activeStates.Count > 0) continue;
+                        <# } #>
+
+                        <# foreach (var sourceNodeInfo in this.newActivationInfo) { #>
+
+                            // start node: <#= sourceNodeInfo.Item1 #>
+                            <# foreach (var edge in sourceNodeInfo.Item2) { #>
+
+                            if (<#= edge.Fence("synctime", "batch[i]", "defaultRegister") #>) {
+                                // initialize register
+                                <# UpdateRegisterValue(edge, "defaultRegister", "synctime", "batch[i]", "defaultRegister"); #>
+                                // target nodes
+                                <# foreach (var ns in edge.EpsilonReachableNodes) { #>
+
+                                // target state: <#= ns #> (<#= isFinal[ns] ? "final" : "not final" #>)
+                                <# IfFinalStateProduceOutput(52, ns, string.Empty, "synctime", "synctime", "srckey[i]", "src_hash[i]"); #>
+                                <# if (hasOutgoingArcs[ns]) { #>
+
+                                // target node has outgoing edges
+                                {
+                                    var index = activeStates.Insert();
+                                    activeStates.Values[index].key = srckey[i];
+                                    activeStates.Values[index].state = <#= ns #>;
+                                    activeStates.Values[index].register = newReg;
+                                    activeStates.Values[index].PatternStartTimestamp = synctime;
+                                }
+                                <# } else { #>
+
+                                // target node does not have any outgoing edges
+                                <# } #>
+                                <# } #>
+
+                            }
+                            <# } #>
+                        <# } #>
+
+                    }
+                    else if (src_vother[i] < 0 )
+                    {
+<#  if (!this.isSyncTimeSimultaneityFree)
+{ #>
+                        long synctime = src_vsync[i];
+                        if (synctime > lastSyncTime) // move time forward
+                        {
+                            int index, hash;
+                            seenEvent = 0;
+
+                            if (tentativeOutput.Count > 0)
+                            {
+                                tentativeVisibleTraverser.currIndex = 0;
+
+                                while (tentativeVisibleTraverser.Next(out index))
+                                {
+                                    var elem = tentativeOutput.Values[index];
+
+                                    this.batch.vsync.col[iter] = lastSyncTime;
+                                    this.batch.vother.col[iter] = elem.other;
+                                    this.batch[iter] = elem.payload;
+                                    this.batch.hash.col[iter] = 0;
+                                    iter++;
+
+                                    if (iter == Config.DataBatchSize)
+                                    {
+                                        FlushContents();
+                                        resultBatch = this.batch as <#= resultBatchTypeName #>;
+                                    }
+                                }
+                                tentativeOutput.Clear(); // Clear the tentative output list
+                            }
+                            lastSyncTime = synctime;
+                        }
+<#  } #>
+                        OnPunctuation(synctime);
+                    }
+                }
+            }
+        }
+        <# foreach (var f in this.sourceFields) { #>
+
+        <#= EndColumnPointerDeclaration(f) #>
+        <# } #>
+        <# foreach (var f in this.resultFields) { #>
+
+        <#= EndColumnPointerDeclaration(f) #>
+        <# } #>
+
+        batch.Free();
+    }
+}

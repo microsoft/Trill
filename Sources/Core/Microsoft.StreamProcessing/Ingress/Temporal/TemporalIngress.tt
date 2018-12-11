@@ -1,0 +1,259 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+
+namespace Microsoft.StreamProcessing
+{
+    public static partial class Streamable
+    {
+<#
+    foreach (string partitionString in new string[] { string.Empty, "Partitioned" })
+    foreach (string ingressType in new string[] { "StreamEvent", "StartEdge", "Interval" })
+    {
+        bool partitioned = partitionString == "Partitioned";
+        string genericArguments = !partitioned ? "TPayload" : "TPartitionKey, TPayload";
+        string ingress =
+              (ingressType == "StreamEvent" ? partitionString + "StreamEvent<" : string.Empty)
+            + (!partitioned || ingressType != "StreamEvent" ? "TPayload" : "TPartitionKey, TPayload")
+            + (ingressType == "StreamEvent" ? ">" : string.Empty);
+        string extractorArgument = null;
+        switch (ingressType)
+        {
+            case "StreamEvent":
+                extractorArgument = string.Empty;
+                break;
+            case "StartEdge":
+                extractorArgument = "startEdgeExtractor,\r\n(p) => StreamEvent.InfinitySyncTime, ";
+                break;
+            case "Interval":
+                extractorArgument = "startEdgeExtractor,\r\nendEdgeExtractor, ";
+                break;
+        }
+        string infixMethodName =
+            ingressType == "StreamEvent" ? string.Empty : (partitioned ? "Partitioned" : "Temporal");
+
+        foreach (var hasContainer in new [] { false, true })
+        {
+            string methodName = (hasContainer ? "Register" : "To") + infixMethodName + (hasContainer ? "Input" : "Streamable");
+            string flushPolicyDefault = partitionString + "FlushPolicy.FlushOn" + (partitionString == "Partitioned" ? "LowWatermark" : "Punctuation");
+#>
+        /// <summary>
+<#          switch (ingressType)
+            {
+                case "StartEdge":
+#>
+        /// Converts a sequence of data elements to an IStreamable, start-edge only<# if (partitioned) { #>, with a partition key<# } #>.
+<#
+                    break;
+                case "Interval":
+#>
+        /// Converts a sequence of data elements to an IStreamable, intervals and start-edges only<# if (partitioned) { #>, with a partition key<# } #>.
+<#
+                    break;
+                default:
+#>
+        /// Converts a sequence of <#= partitionString #>StreamEvents to an IStreamable.
+<#
+                    break;
+            }
+#>
+        /// The completion policy specifies what to do when the resulting stream completes.
+        /// The disorder policy specifies what to do with out of order events.
+        /// The punctuation policy specifies whether and how punctuations are created and injected
+        /// into the resulting stream. Since punctuations force output, this exposes a throughput/latency tradeoff.
+        /// </summary>
+<#          if (hasContainer)
+            { #>
+        /// <param name="container">The query container to which to register the ingress point.</param>
+<#          }
+            if (partitioned)
+            { #>
+        /// <typeparam name="TPartitionKey">The type of partition key for the stream.</typeparam>
+<#          } #>
+        /// <typeparam name="TPayload">The type of data for the stream.</typeparam>
+        /// <param name="streamEvents">A sequence of stream events created by the client.</param>
+<#          if (partitioned && ingressType != "StreamEvent")
+            { #>
+        /// <param name="partitionExtractor">An expresion that describes how to interpret the partition identifier for each data value.</param>
+<#          }
+            switch (ingressType)
+            {
+                case "StartEdge":
+#>
+        /// <param name="startEdgeExtractor">An expresion that describes how to interpret the start time for each data value.</param>
+<#
+                    break;
+                case "Interval":
+#>
+        /// <param name="startEdgeExtractor">An expresion that describes how to interpret the start time for each data value.</param>
+        /// <param name="endEdgeExtractor">An expresion that describes how to interpret the end time for each data value.  Return StreamEvent.InfinitySyncTime to indicate an event with no end time.</param>
+<#
+                break;
+            } #>
+        /// <param name="disorderPolicy">How to handle events that are not in time order.</param>
+        /// <param name="flushPolicy">When to flush batched output events.</param>
+        /// <param name="periodicPunctuationPolicy">Whether to add periodic punctuations to the resulting stream.</param>
+<#          if (partitioned) { #>
+        /// <param name="periodicLowWatermarkPolicy">Whether to add periodic low watermarks to the resulting stream.</param>
+<#          } #>
+        /// <param name="onCompletedPolicy">How to handle the completion of a stream.</param>
+<#          if (hasContainer)
+            { #>
+        /// <param name="identifier">If provided, a unique name to identify to point of ingress in the query.</param>
+<#          } #>
+        /// <returns>An IStreamable that can be used in queries.</returns>
+        /// <exception cref="IngressException">
+        /// Throws an exception if the <paramref name="disorderPolicy"/> is to throw and
+        /// an out-of-order stream event is encountered.
+        /// Also, an exception is thrown if any payload is null.
+        /// </exception>
+        public static I<#= !partitioned ? "Observable" : "Partitioned" #>IngressStreamable<<#= genericArguments #>> <#= methodName #><<#= genericArguments #>>(
+<#          if (hasContainer)
+            { #>
+            this QueryContainer container,
+<#          } #>
+            <# if (!hasContainer) { #>this <# } #>IObservable<<#= ingress #>> streamEvents,
+<#          switch (ingressType)
+            {
+                case "StartEdge":
+                    if (partitioned)
+                    { #>
+            Expression<Func<TPayload, TPartitionKey>> partitionExtractor,
+<#                  } #>
+            Expression<Func<TPayload, long>> startEdgeExtractor,
+<#                  break;
+                case "Interval":
+                    if (partitioned)
+                    { #>
+            Expression<Func<TPayload, TPartitionKey>> partitionExtractor,
+<#                  } #>
+            Expression<Func<TPayload, long>> startEdgeExtractor,
+            Expression<Func<TPayload, long>> endEdgeExtractor,
+<#              break;
+            }  #>
+            DisorderPolicy disorderPolicy = null,
+            <#= partitionString #>FlushPolicy flushPolicy = <#= flushPolicyDefault #>,
+            PeriodicPunctuationPolicy periodicPunctuationPolicy = null,
+<#  if (partitioned) { #>
+            PeriodicLowWatermarkPolicy periodicLowWatermarkPolicy = null,
+<#  } #>
+            OnCompletedPolicy onCompletedPolicy = OnCompletedPolicy.EndOfStream<#
+            if (hasContainer) { #>,
+            string identifier = null<# } #>)
+        {
+            return ToCheckpointable<#= infixMethodName #>Streamable(
+                streamEvents,
+<#          switch (ingressType)
+            {
+                case "StartEdge":
+                    if (partitioned)
+                    { #>
+                partitionExtractor,
+<#                  } #>
+                startEdgeExtractor,
+<#              break;
+                case "Interval":
+                    if (partitioned)
+                    { #>
+                partitionExtractor,
+<#                  } #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#                  break;
+            } #>
+                <#= hasContainer ? "container" : "null" #>,
+                <# if (hasContainer) { #>identifier ?? <# } #>Guid.NewGuid().ToString(),
+                disorderPolicy,
+                flushPolicy,
+                periodicPunctuationPolicy,
+<#  if (partitioned) { #>
+                periodicLowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy);
+        }
+
+<#      } #>
+        internal static I<#= !partitioned ? "Observable" : "Partitioned" #>IngressStreamable<<#= genericArguments #>> ToCheckpointable<#= infixMethodName #>Streamable<<#= genericArguments #>>(
+            this IObservable<<#= ingress #>> streamEvents,
+<#  switch (ingressType)
+    {
+        case "StartEdge":
+            if (partitioned)
+            { #>
+            Expression<Func<TPayload, TPartitionKey>> partitionExtractor,
+<#          } #>
+            Expression<Func<TPayload, long>> startEdgeExtractor,
+<#          break;
+        case "Interval":
+            if (partitioned)
+            { #>
+            Expression<Func<TPayload, TPartitionKey>> partitionExtractor,
+<#          } #>
+            Expression<Func<TPayload, long>> startEdgeExtractor,
+            Expression<Func<TPayload, long>> endEdgeExtractor,
+<#          break;
+    } #>
+            QueryContainer container,
+            string identifier,
+            DisorderPolicy disorderPolicy,
+            <#= partitionString #>FlushPolicy flushPolicy,
+            PeriodicPunctuationPolicy periodicPunctuationPolicy,
+<#  if (partitioned) { #>
+            PeriodicLowWatermarkPolicy lowWatermarkPolicy,
+<#  } #>
+            OnCompletedPolicy onCompletedPolicy)
+        {
+            Contract.EnsuresOnThrow<IngressException>(true);
+
+            if (disorderPolicy == null)
+                disorderPolicy = DisorderPolicy.Throw();
+
+            if (periodicPunctuationPolicy == null)
+                periodicPunctuationPolicy = PeriodicPunctuationPolicy.None();
+
+<#  if (partitioned) { #>
+            if (lowWatermarkPolicy == null)
+                lowWatermarkPolicy = PeriodicLowWatermarkPolicy.None();
+
+<#  } #>
+            var a = new <#= partitionString #><#= ingressType == "StartEdge" ? "Interval" : ingressType #>IngressStreamable<<#= genericArguments #>>(
+                streamEvents,
+<#  if (partitioned && ingressType != "StreamEvent") { #>
+                partitionExtractor,
+<#  }
+    if (ingressType == "StartEdge")
+    { #>
+                startEdgeExtractor,
+                (p) => StreamEvent.InfinitySyncTime,
+<#  }
+    else if (ingressType == "Interval")
+    { #>
+                startEdgeExtractor,
+                endEdgeExtractor,
+<#  } #>
+                disorderPolicy,
+                flushPolicy,
+                periodicPunctuationPolicy,
+<#  if (partitioned) { #>
+                lowWatermarkPolicy,
+<#  } #>
+                onCompletedPolicy,
+                container,
+                identifier);
+
+            return a;
+        }
+
+<#  } // end foreach loops #>
+    }
+}

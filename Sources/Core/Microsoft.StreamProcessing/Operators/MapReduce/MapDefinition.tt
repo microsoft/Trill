@@ -1,0 +1,135 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+
+namespace Microsoft.StreamProcessing
+{
+<# for (int i = 0; i < 2; i++) { #>
+<#
+    var declarationKey = i == 0 ? "TMapKey, " : string.Empty;
+    var memberKey = i == 0 ? "TMapKey" : "Empty";
+    var groupingKey = i == 0 ? "CompoundGroupKey<TMapKey, TReduceKey>" : "TReduceKey";
+    var inlineNested = i == 0 ? "Nested" : string.Empty;
+#>
+    internal sealed class MapDefinition<<#= declarationKey #>TMapInputLeft, TMapInputRight, TReduceKey, TReduceInput> : IMapDefinition<<#= declarationKey #>TMapInputLeft, TMapInputRight, TReduceKey, TReduceInput>
+    {
+        internal IStreamable<<#= memberKey #>, TMapInputLeft> sourceLeft;
+        internal IStreamable<<#= memberKey #>, TMapInputRight> sourceRight;
+        internal Func<IStreamable<<#= memberKey #>, TMapInputLeft>, IStreamable<<#= memberKey #>, TMapInputRight>, IStreamable<<#= memberKey #>, TReduceInput>> mapper;
+        internal Expression<Func<TReduceInput, TReduceKey>> keySelector;
+        internal IEqualityComparerExpression<TReduceKey> keyComparer;
+        internal bool leftAsymmetric;
+
+        public MapDefinition(
+            IStreamable<<#= memberKey #>, TMapInputLeft> sourceLeft,
+            IStreamable<<#= memberKey #>, TMapInputRight> sourceRight,
+            Func<IStreamable<<#= memberKey #>, TMapInputLeft>, IStreamable<<#= memberKey #>, TMapInputRight>, IStreamable<<#= memberKey #>, TReduceInput>> mapper,
+            Expression<Func<TReduceInput, TReduceKey>> keySelector,
+            IEqualityComparerExpression<TReduceKey> keyComparer,
+            bool leftAsymmetric = false)
+        {
+            this.sourceLeft = sourceLeft;
+            this.sourceRight = sourceRight;
+            this.mapper = mapper;
+            this.keySelector = keySelector;
+            this.keyComparer = keyComparer;
+            this.leftAsymmetric = leftAsymmetric;
+        }
+
+        public IStreamable<<#= memberKey #>, TOutput> CreateStreamable<TBind, TOutput>(
+            Func<IStreamable<<#= groupingKey #>, TReduceInput>, IStreamable<<#= groupingKey #>, TBind>> reducer,
+            Expression<Func<GroupSelectorInput<TReduceKey>, TBind, TOutput>> resultSelector)
+        {
+            Contract.Assume(sourceLeft != null);
+
+            var sourceL = sourceLeft;
+            var sourceR = sourceRight;
+
+            Expression<Func<TReduceKey, TBind, TOutput>> resultSelector2 = (k, b) =>
+            CallInliner.Call(resultSelector, new GroupSelectorInput<TReduceKey>(k), b);
+<# if (i == 1) { #>
+            var inlinedResultSelector = resultSelector2.InlineCalls();
+<# } else { #>
+            Expression<Func<TReduceKey, TBind, TOutput>> inlinedResultSelector = resultSelector2.InlineCalls();
+            inlinedResultSelector = GroupInputAndKeyInliner<TReduceKey, TBind, TOutput>.Transform(inlinedResultSelector);
+<# } #>
+
+            return new MapReduceStreamable<<#= declarationKey #>TMapInputLeft, TMapInputRight, TReduceKey, TReduceInput, TBind, TOutput>(
+                sourceL,
+                sourceR,
+                mapper,
+                keySelector,
+                keyComparer,
+                reducer,
+                inlinedResultSelector,
+                leftAsymmetric);
+        }
+
+        public IStreamable<<#= memberKey #>, TOutput> CreateStreamable<TBind, TOutput>()
+        {
+            Contract.Assume(sourceLeft != null);
+
+            var sourceL = sourceLeft;
+            var sourceR = sourceRight;
+
+            return new MapReduceStreamable<<#= declarationKey #>TMapInputLeft, TMapInputRight, TReduceKey, TReduceInput, TBind, TOutput>(
+                sourceL,
+                sourceR,
+                mapper,
+                keySelector,
+                keyComparer,
+                leftAsymmetric);
+        }
+
+        /* Create a streamable for a 2-input reducer, with two 2-input mappers */
+        public IStreamable<<#= memberKey #>, TOutput> CreateStreamable<TMapInputLeft2, TMapInputRight2, TReduceInput2, TBind, TOutput>(
+            IMapDefinition<<#= declarationKey #>TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput2> imapDefinitionRight,
+            Func<IStreamable<<#= groupingKey #>, TReduceInput>,
+                    IStreamable<<#= groupingKey #>, TReduceInput2>,
+                        IStreamable<<#= groupingKey #>, TBind>> reducer,
+            Expression<Func<GroupSelectorInput<TReduceKey>, TBind, TOutput>> resultSelector,
+            OperationalHint reduceOptions)
+        {
+            Contract.Assume(sourceLeft != null);
+            Contract.Assume(keyComparer == ((MapDefinition<<#= declarationKey #>TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput2>)imapDefinitionRight).keyComparer);
+
+            var mapDefinitionRight = (MapDefinition<<#= declarationKey #>TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput2>)imapDefinitionRight;
+            var sourceL1 = sourceLeft;
+            var sourceR1 = sourceRight;
+
+            var sourceL2 = mapDefinitionRight.sourceLeft;
+            var sourceR2 = mapDefinitionRight.sourceRight;
+
+            Expression<Func<TReduceKey, TBind, TOutput>> resultSelector2 = (k, b) =>
+                CallInliner.Call(resultSelector, new GroupSelectorInput<TReduceKey>(k), b);
+            var inlinedResultSelector = resultSelector2.InlineCalls();
+
+            return new Map2ReduceStreamable<<#= declarationKey #>TMapInputLeft, TMapInputRight, TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput, TReduceInput2, TBind, TOutput>(
+                sourceL1,
+                sourceR1,
+                mapper,
+                keySelector,
+                sourceL2,
+                sourceR2,
+                mapDefinitionRight.mapper,
+                mapDefinitionRight.keySelector,
+                keyComparer,
+                reducer,
+                inlinedResultSelector,
+                leftAsymmetric,
+                mapDefinitionRight.leftAsymmetric, reduceOptions);
+        }
+    }
+
+<# } #>
+}

@@ -1,0 +1,128 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Reflection" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq.Expressions;
+using System.Reflection;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+namespace Microsoft.StreamProcessing
+{<#
+foreach (string partitionString in new string[] { string.Empty, "Partitioned" })
+foreach (string ingressType in new string[] { "StreamEvent", "StartEdge", "Interval" })
+{
+    string genericArguments = string.IsNullOrEmpty(partitionString) ? "TPayload" : "TKey, TPayload";
+    string argumentSuffix = (ingressType != "StreamEvent") ? ", TResult" : string.Empty;
+    string egress = (ingressType != "StreamEvent")
+        ? "TResult"
+        : partitionString + "StreamEvent<" + genericArguments + ">";
+    string partitionKeyArgument = !string.IsNullOrEmpty(partitionString) ? "colkey[i].Key, " : string.Empty;
+    string partitionFunctionTypeArgument = !string.IsNullOrEmpty(partitionString) ? "TKey, " : string.Empty;
+    string singleFunctionConstructor = ingressType == "StartEdge"
+        ? "Expression<Func<" + partitionFunctionTypeArgument + "long, TPayload, TResult>>"
+        : "Expression<Func<" + partitionFunctionTypeArgument + "long, long, TPayload, TResult>>";
+    string singleFunction = ingressType == "StartEdge"
+        ? "Func<" + partitionFunctionTypeArgument + "long, TPayload, TResult>"
+        : "Func<" + partitionFunctionTypeArgument + "long, long, TPayload, TResult>";
+    string inputKey = string.IsNullOrEmpty(partitionString) ? "Empty" : "PartitionKey<TKey>"; #>
+
+    internal sealed class <#= partitionString #><#= ingressType #>Observable<<#= genericArguments #><#= argumentSuffix #>> : IObservable<<#= egress #>>
+    {
+        private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
+                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+
+        private string errorMessages;
+        internal readonly IStreamable<<#= inputKey #>, TPayload> source;
+        internal readonly QueryContainer container;
+        internal readonly string identifier;
+<#  if (ingressType == "StartEdge" || ingressType == "Interval")
+    { #>
+        internal readonly <#= singleFunctionConstructor #> constructor;
+<#  } #>
+
+        public <#= partitionString #><#= ingressType #>Observable(
+            IStreamable<<#= inputKey #>, TPayload> source,
+<#  if (ingressType == "StartEdge" || ingressType == "Interval")
+    { #>
+            <#= singleFunctionConstructor #> constructor,
+<#  } #>
+            QueryContainer container,
+            string identifier)
+        {
+            Contract.Requires(source != null);
+
+            this.source = source;
+<#  if (ingressType == "StartEdge" || ingressType == "Interval")
+    { #>
+            this.constructor = constructor;
+<#  } #>
+            this.container = container;
+            this.identifier = identifier;
+            if (this.container != null) this.container.RegisterEgressSite(this.identifier);
+        }
+
+        public IDisposable Subscribe(IObserver<<#= egress #>> observer)
+        {
+            EgressBoundary<<#= inputKey #>, TPayload, <#= egress #>> pipe;
+
+            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
+                pipe = GetPipe(observer);
+            else
+                pipe = new <#= partitionString #><#= ingressType #>EgressPipe<<#= genericArguments #><#= argumentSuffix #>>(
+<#  if (ingressType == "StartEdge" || ingressType == "Interval")
+    { #>
+                this.constructor,
+<#  } #>
+                observer,
+                this.container);
+            if (this.container != null) this.container.RegisterEgressPipe(this.identifier, pipe);
+            return this.source.Subscribe(pipe);
+        }
+
+        private bool CanGenerateColumnar()
+        {
+            if (<#= !string.IsNullOrEmpty(partitionString) ? "typeof(TKey).IsAnonymousTypeName() || " : string.Empty #>typeof(TPayload).IsAnonymousTypeName()<#= ingressType != "StreamEvent" ? " || typeof(TResult).IsAnonymousTypeName()" : string.Empty#>) return false;
+            if (<#= !string.IsNullOrEmpty(partitionString) ? "!typeof(TKey).GetTypeInfo().IsVisible || " : string.Empty #>!typeof(TPayload).GetTypeInfo().IsVisible<#= ingressType != "StreamEvent" ? " || !typeof(TResult).GetTypeInfo().IsVisible" : string.Empty#>) return false;
+
+            var lookupKey = CacheKey.Create(<#= ingressType == "StartEdge" || ingressType == "Interval"  ? "this.constructor.Body.ExpressionToCSharp(), " : string.Empty #>this.source.Properties.IsColumnar);
+
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
+
+            this.errorMessages = generatedPipeType.Item2;
+            return generatedPipeType.Item1 != null;
+        }
+
+        private EgressBoundary<<#= inputKey #>, TPayload, <#= egress #>> GetPipe(IObserver<<#= egress #>> observer)
+        {
+            var lookupKey = CacheKey.Create(<#= ingressType == "StartEdge" || ingressType == "Interval"  ? "this.constructor.Body.ExpressionToCSharp(), " : string.Empty #>this.source.Properties.IsColumnar);
+
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
+
+            var instance = Activator.CreateInstance(generatedPipeType.Item1, observer, this.container);
+            var returnValue = (EgressBoundary<<#= inputKey #>, TPayload, <#= egress #>>)instance;
+            return returnValue;
+        }
+<#  if (ingressType == "StreamEvent") { #>
+
+        public override string ToString()
+        {
+            if (this.container != null)
+                return "RegisterOutput({0})";
+            else
+                return "ToStreamEventObservable()";
+        }
+<#  } #>
+    }
+<#
+} #>
+}

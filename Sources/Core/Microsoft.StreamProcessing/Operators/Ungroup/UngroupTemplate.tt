@@ -1,0 +1,252 @@
+﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+[assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
+
+// OuterKey: <#= TOuterKey #>
+// InnerKey: <#= TInnerKey #>
+// InnerResult: <#= TInnerResult #>
+// TResult: <#= TResult #>
+
+<#
+    var memoryPoolGenericParameters = string.Format("<{0}, {1}>", TOuterKey, TResult);
+    if (resultType.MemoryPoolHasGetMethodFor())
+        memoryPoolGenericParameters = string.Empty;
+    var memoryPoolClassName = Transformer.GetMemoryPoolClassName(this.outerKeyType, this.resultType) + memoryPoolGenericParameters;
+
+    var inputKey = ungroupingFromCompound ? "CompoundGroupKey<" + TOuterKey + ", " + TInnerKey + ">" : TInnerKey;
+#>
+
+[DataContract]
+internal sealed class <#= CLASSNAME #><#= genericParameters #> :
+                       Pipe<<#= TOuterKey #>, <#= TResult #>>, IStreamObserver<<#= inputKey #>, <#= TInnerResult #>>
+{
+    private readonly <#= memoryPoolClassName #> outPool;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+<# if (ungroupingToUnit) { #>
+
+    private readonly ColumnBatch<Microsoft.StreamProcessing.Empty> unitColumn;
+    private readonly ColumnBatch<int> unitHashColumn;
+<# } #>
+<# foreach (var f in this.unassignedFields) { #>
+    private readonly ColumnBatch<<#= f.TypeName #>> sharedDefaultColumnFor_<#= f.Name #>;
+<# } #>
+
+    <#= staticCtor #>
+
+    public <#= CLASSNAME #>() { }
+
+    public <#= CLASSNAME #>(
+        IStreamable<<#= TOuterKey #>, <#= TResult #>> stream,
+        IStreamObserver<<#= TOuterKey #>, <#= TResult #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
+        : base(stream, observer)
+    {
+        outPool = MemoryManager.GetMemoryPool<<#= TOuterKey #>, <#= TResult #>>(true) as <#= memoryPoolClassName #>;
+        this.queryPlanGenerator = queryPlanGenerator;
+<# if (ungroupingToUnit) { #>
+
+        outPool.GetKey(out unitColumn);
+        outPool.Get(out unitHashColumn);
+        Array.Clear(unitHashColumn.col, 0, unitHashColumn.col.Length);
+<# } #>
+<# foreach (var f in this.unassignedFields) { #>
+        outPool.Get(out sharedDefaultColumnFor_<#= f.Name #>);
+        Array.Clear(sharedDefaultColumnFor_<#= f.Name #>.col, 0, sharedDefaultColumnFor_<#= f.Name #>.col.Length);
+<# } #>
+    }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    public override int CurrentlyBufferedOutputCount => 0;
+
+    public override int CurrentlyBufferedInputCount => 0;
+
+    protected override void DisposeState()
+    {
+<# if (ungroupingToUnit) { #>
+        this.unitColumn.Return();
+        this.unitHashColumn.Return();
+<# } #>
+<# foreach (var f in this.unassignedFields) { #>
+        this.sharedDefaultColumnFor_<#= f.Name #>.Return();
+<# } #>
+    }
+
+    public unsafe void OnNext(StreamMessage<<#= inputKey #>, <#= TInnerResult #>> batch)
+    {
+        <#= inputBatchClassType #><#= inputBatchGenericParameters #> inputBatch = batch as <#= inputBatchClassType #><#= inputBatchGenericParameters #>;
+
+        StreamMessage<<#= TOuterKey #>, <#= TResult #>> tmp; // Need this type to call Get with so the right subtype will be returned
+        outPool.Get(out tmp);
+
+        <#= resultBatchClassType #><#= resultBatchGenericParameters #> resultBatch = tmp as <#= resultBatchClassType #><#= resultBatchGenericParameters #>;
+
+<# foreach (var f in this.computedFields.Keys) { #>
+
+        outPool.Get(out resultBatch.<#= f.Name #>);
+<# } #>
+
+<# if (!ungroupingToUnit) { #>
+
+        tmp.hash = batch.hash.MakeWritable(outPool.intPool);
+<# } #>
+        var count = batch.Count;
+
+        tmp.vsync = batch.vsync;
+        tmp.vother = batch.vother;
+        tmp.bitvector = batch.bitvector;
+
+        // Assign the swinging fields
+<# foreach (var tuple in this.swingingFields) {
+        var destField = tuple.Item1.Name;
+        var sourceField = tuple.Item2.Name;
+#>
+
+        resultBatch.<#= destField #> = inputBatch.<#= sourceField #>;
+<# } #>
+
+<# if (resultType.CanContainNull()) { #>
+
+        outPool.GetBV(out resultBatch._nullnessvector);
+<# } #>
+
+        fixed (long *srcbv = batch.bitvector.col) {
+<# if (!ungroupingToUnit) { #>
+        fixed (int *desthash = tmp.hash.col) {
+<# } #>
+
+        // Get pointers to the arrays for the inner result fields
+<# foreach (var f in this.innerResultRepresentation.AllFields) { #>
+        var <#= f.Name #>_col = inputBatch.<#= f.Name #>.col;
+<# } #>
+
+        // Get pointers to the arrays for the result fields
+<# foreach (var f in this.computedFields.Keys) { #>
+<#     if (f.canBeFixed) { #>
+        fixed (<#= f.TypeName #>* dest_<#= f.Name #> = resultBatch.<#= f.Name #>.col) {
+<#     } else { #>
+<#       if (!f.OptimizeString()) { #>
+        var dest_<#= f.Name #> = resultBatch.<#= f.Name #>.col;
+<#       } else { #>
+        var dest_<#= f.Name #> = resultBatch.<#= f.Name #>;
+<#       } #>
+<#     } #>
+<# } #>
+
+<# if (ungroupingToUnit) { #>
+        this.unitColumn.IncrementRefCount(1);
+        tmp.key = unitColumn;
+        this.unitHashColumn.IncrementRefCount(1);
+        tmp.hash = unitHashColumn;
+<# } #>
+
+<# foreach (var f in this.unassignedFields) { #>
+        this.sharedDefaultColumnFor_<#= f.Name #>.IncrementRefCount(1);
+        resultBatch.<#= f.Name #> = this.sharedDefaultColumnFor_<#= f.Name #>;
+<# } #>
+
+<# if (!ungroupingToUnit || this.computedFields.Any()) { #>
+<#     if (!ungroupingToUnit) { #>
+            var srckey = batch.key.col;
+            var destkey = tmp.key.col;
+<#     } #>
+
+            for (int i = 0; i < count; i++)
+            {
+                if ((srcbv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                {
+                    // Need to add empty strings to keep multistring indexing consistent
+<#     foreach (var kv in this.computedFields) {
+            var field = kv.Key;
+            if (field.OptimizeString()) { #>
+                    dest_<#= field.Name #>.AddString(string.Empty);
+<#          } #>
+<#     } #>
+                    continue;
+                }
+<#     if (!ungroupingToUnit) { #>
+                destkey[i] = srckey[i].outerGroup;
+                desthash[i] = destkey[i].GetHashCode();
+<#     } #>
+<#     foreach (var kv in this.computedFields) {
+            var f = kv.Key;
+            string v;
+            var map = new Dictionary<System.Linq.Expressions.ParameterExpression, string>();
+            map.Add(this.keyParameter, "batch.key.col[i].InnerGroup");
+            v = kv.Value.ExpressionToCSharpStringWithParameterSubstitution(map);
+#>
+<#          if (f.OptimizeString()) { #>
+                        dest_<#= f.Name #>.AddString(<#= v #>);
+<#          } else { #>
+                        dest_<#= f.Name #>[i] = <#= v #>;
+<#          } #>
+<#     } #>
+            }
+<# } #>
+
+<# foreach (var f in this.computedFields.Keys.Where(fld => fld.canBeFixed)) { #>
+
+        } // end of fixed for <#= f.Name #>
+<# } #>
+
+<# if (!ungroupingToUnit) { #>
+
+        } // end of fixed for desthash
+<# } #>
+        } // end of fixed for srcbv
+
+        tmp.Count = count;
+
+
+        batch.ReleaseKey();
+<# if (ungroupingToUnit) { #>
+
+        batch.hash.Return();
+<# } #>
+
+        #region Return source columns as necessary.
+        // This is all fields from the input batch *except* for any swinging fields.
+<# foreach (var f in this.innerResultRepresentation.AllFields.Where(f => !this.swingingFields.Any(tup => tup.Item2.Name == f.Name))) { #>
+<#     if (f.OptimizeString()) { #>
+        inputBatch.<#= f.Name #>.Dispose();
+<#     } else { #>
+        inputBatch.<#= f.Name #>.Return();
+<#     } #>
+<# } #>
+        #endregion
+
+<# if (innerResultType.CanContainNull()) { #>
+
+        inputBatch._nullnessvector.ReturnClear();
+<# } #>
+
+        batch.Return();
+
+        tmp.Seal();
+        this.Observer.OnNext(tmp);
+    }
+
+    public void OnError(Exception error)
+    {
+        Observer.OnError(error);
+    }
+}

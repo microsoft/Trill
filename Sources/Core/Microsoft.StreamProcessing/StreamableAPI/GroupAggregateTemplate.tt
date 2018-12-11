@@ -1,0 +1,115 @@
+﻿<#@ template language="C#" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ include file="Templates.tt" #>
+<#
+int maxGroupAggregateParameters = 15;
+#>
+using System;
+using System.Linq.Expressions;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+
+namespace Microsoft.StreamProcessing
+{
+    public static partial class Streamable
+    {
+        /// <summary>
+        /// Groups input events by a key selector and applies an aggregate to "snapshot windows" (SI terminology) on each group.
+        /// </summary>
+        public static IStreamable<TOuterKey, TOutput> GroupAggregate<TOuterKey, TInput, TInnerKey, TState1, TOutput1, TOutput>(
+            this IStreamable<TOuterKey, TInput> source,
+            Expression<Func<TInput, TInnerKey>> keySelector,
+            Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>> aggregate1,
+            Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput>> merger)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(keySelector, nameof(keySelector));
+            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
+            Invariant.IsNotNull(merger, nameof(merger));
+
+            return source.Map(keySelector).Reduce(s => s.Aggregate(aggregate1), merger);
+        }
+
+        /// <summary>
+        /// Groups input events by a key selector and applies an aggregate to "snapshot windows" (SI terminology) on each group.
+        /// </summary>
+        internal static IStreamable<TOuterKey, TOutput> GroupAggregate<TOuterKey, TInput, TInnerKey, TState1, TOutput1, TOutput>(
+            this IStreamable<TOuterKey, TInput> source,
+            Expression<Func<TInput, TInnerKey>> keySelector,
+            IAggregate<TInput, TState1, TOutput1> aggregate1,
+            Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput>> merger)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(keySelector, nameof(keySelector));
+            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
+            Invariant.IsNotNull(merger, nameof(merger));
+
+            return source.Map(keySelector).Reduce(s => s.Aggregate(aggregate1), merger);
+        }
+<#
+    // Create group & aggregate varients. We skip count = 1 because single aggregate implementation is different and already implemented.
+    for (int count = 2; count <= maxGroupAggregateParameters; count++)
+    {
+#>
+
+        /// <summary>
+        /// Groups input events by a key selector and applies multiple aggregates to "snapshot windows" (SI terminology) on each group.
+        /// </summary>
+        public static IStreamable<TOuterKey, TOutput> GroupAggregate<TOuterKey, TInput, TInnerKey, <#= IterateComma("TState$, TOutput$", count) #>, TOutput>(
+            this IStreamable<TOuterKey, TInput> source,
+            Expression<Func<TInput, TInnerKey>> keySelector,
+<#= IterateLine("            Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState$, TOutput$>> aggregate$,", count) #>
+            Expression<Func<GroupSelectorInput<TInnerKey>, <#= IterateComma("TOutput$", count) #>, TOutput>> merger)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(keySelector, nameof(keySelector));
+<#= IterateLine("            Invariant.IsNotNull(aggregate$, nameof(aggregate$));", count) #>
+            Invariant.IsNotNull(merger, nameof(merger));
+
+            Expression<Func<<#= IterateComma("TOutput$", count) #>, StructTuple<<#= IterateComma("TOutput$", count) #>>>> aggregateMerger =
+                (<#= IterateComma("output$", count) #>) => new StructTuple<<#= IterateComma("TOutput$", count) #>> {
+<#= IterateCommaLine("                    Item$ = output$", count) #>
+                };
+            Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<<#= IterateComma("TOutput$", count) #>>, TOutput>> reducerTemplate =
+                (key, outputs) => CallInliner.Call(merger, key, <#= IterateComma("outputs.Item$", count) #>);
+
+            return source.Map(keySelector)
+                         .Reduce(
+                             s => s.Aggregate(<#= IterateComma("aggregate$", count) #>, aggregateMerger),
+                             reducerTemplate.InlineCalls());
+        }
+
+        /// <summary>
+        /// Groups input events by a key selector and applies multiple aggregates to "snapshot windows" (SI terminology) on each group.
+        /// </summary>
+        internal static IStreamable<TOuterKey, TOutput> GroupAggregate<TOuterKey, TInput, TInnerKey, <#= IterateComma("TState$, TOutput$", count) #>, TOutput>(
+            this IStreamable<TOuterKey, TInput> source,
+            Expression<Func<TInput, TInnerKey>> keySelector,
+<#= IterateLine("            IAggregate<TInput, TState$, TOutput$> aggregate$,", count) #>
+            Expression<Func<GroupSelectorInput<TInnerKey>, <#= IterateComma("TOutput$", count) #>, TOutput>> merger)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(keySelector, nameof(keySelector));
+<#= IterateLine("            Invariant.IsNotNull(aggregate$, nameof(aggregate$));", count) #>
+            Invariant.IsNotNull(merger, nameof(merger));
+
+            Expression<Func<<#= IterateComma("TOutput$", count) #>, StructTuple<<#= IterateComma("TOutput$", count) #>>>> aggregateMerger =
+                (<#= IterateComma("output$", count) #>) => new StructTuple<<#= IterateComma("TOutput$", count) #>> {
+<#= IterateCommaLine("                    Item$ = output$", count) #>
+                };
+            Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<<#= IterateComma("TOutput$", count) #>>, TOutput>> reducerTemplate =
+                (key, outputs) => CallInliner.Call(merger, key, <#= IterateComma("outputs.Item$", count) #>);
+
+            return source.Map(keySelector)
+                         .Reduce(
+                             s => s.Aggregate(<#= IterateComma("aggregate$", count) #>, aggregateMerger),
+                             reducerTemplate.InlineCalls());
+        }
+<#
+    }
+#>
+    }
+}
