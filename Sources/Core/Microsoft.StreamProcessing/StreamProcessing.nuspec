@@ -1,21 +1,20 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Trill</id>
+    <id>Microsoft.Azure.Trill</id>
     <version>$version$</version>
     <title>Trill</title>
-    <authors>Trill</authors>
-    <owners>Microsoft</owners>
-    <projectUrl>http://trill</projectUrl>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>The Trill engine</description>
-    <releaseNotes>See downloads section at http://codebox/trill</releaseNotes>
-    <copyright>Copyright (C) 2013 Microsoft Corporation</copyright>
+    <authors>Microsoft</authors>
+    <projectUrl>https://github.com/Microsoft/Trill</projectUrl>
+    <licenseUrl>https://github.com/Microsoft/Trill/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>Trill is a high-performance one-pass in-memory streaming analytics engine</description>
+    <copyright>Copyright (c) Microsoft Corporation. All rights reserved.</copyright>
     <language>en-US</language>
-    <tags>"MS Internal Only"</tags>
+    <tags>Streaming Temporal Data</tags>
     <dependencies>
       <group targetFramework="netstandard2.0">
-        <dependency id="Microsoft.CodeAnalysis.Scripting" version="2.6.1" />
+        <dependency id="Microsoft.CodeAnalysis.Scripting" version="2.9.0" />
         <dependency id="Microsoft.CSharp" version="4.3.0" />
         <dependency id="NETStandard.Library" version="2.0.0" />
         <dependency id="System.Diagnostics.Contracts" version="4.3.0" />
