@@ -90,7 +90,7 @@ internal sealed class <#= partitionString #><#= ingressType #>EgressPipe : Egres
     public override void OnCompleted()
     {
         OnFlush();
-        this.observer.OnCompleted();
+        base.OnCompleted();
     }
 
     public override void OnFlush()

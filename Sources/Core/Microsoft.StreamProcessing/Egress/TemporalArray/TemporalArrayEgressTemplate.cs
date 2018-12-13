@@ -141,7 +141,7 @@ internal sealed class ");
     public override void OnCompleted()
     {
         OnFlush();
-        this.observer.OnCompleted();
+        base.OnCompleted();
     }
 
     public override void OnFlush()
