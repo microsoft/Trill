@@ -76,24 +76,24 @@ namespace Microsoft.StreamProcessing.Internal
         public void OnError(Exception error)
         {
             if (this is IDisposable disposable) disposable.Dispose();
-            observer.OnError(error);
+            this.observer.OnError(error);
         }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void OnCompleted()
+        public virtual void OnCompleted()
         {
             if (this is IDisposable disposable) disposable.Dispose();
-            observer.OnCompleted();
+            this.observer.OnCompleted();
         }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void OnFlush() { }
+        public virtual void OnFlush() { }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

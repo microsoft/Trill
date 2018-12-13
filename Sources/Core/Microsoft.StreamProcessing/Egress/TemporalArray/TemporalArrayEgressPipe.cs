@@ -60,6 +60,23 @@ namespace Microsoft.StreamProcessing
                 batch.Free();
             }
 
+            public override void OnCompleted()
+            {
+                OnFlush();
+                this.observer.OnCompleted();
+            }
+
+            public override void OnFlush()
+            {
+                if (this.populationCount > 0)
+                {
+                    this.observer.OnNext(new ArraySegment<StreamEvent<TPayload>>(this.array, 0, this.populationCount));
+                    this.populationCount = 0;
+                    this.array = this.generator();
+                    this.arrayLength = this.array.Length;
+                }
+            }
+
             public override int CurrentlyBufferedOutputCount => this.populationCount;
 
             public override int CurrentlyBufferedInputCount => 0;
@@ -118,6 +135,23 @@ namespace Microsoft.StreamProcessing
                 batch.Free();
             }
 
+            public override void OnCompleted()
+            {
+                OnFlush();
+                this.observer.OnCompleted();
+            }
+
+            public override void OnFlush()
+            {
+                if (this.populationCount > 0)
+                {
+                    this.observer.OnNext(new ArraySegment<TResult>(this.array, 0, this.populationCount));
+                    this.populationCount = 0;
+                    this.array = this.generator();
+                    this.arrayLength = this.array.Length;
+                }
+            }
+
             public override int CurrentlyBufferedOutputCount => this.populationCount;
 
             public override int CurrentlyBufferedInputCount => 0;
@@ -172,6 +206,23 @@ namespace Microsoft.StreamProcessing
                     }
                 }
                 batch.Free();
+            }
+
+            public override void OnCompleted()
+            {
+                OnFlush();
+                this.observer.OnCompleted();
+            }
+
+            public override void OnFlush()
+            {
+                if (this.populationCount > 0)
+                {
+                    this.observer.OnNext(new ArraySegment<TResult>(this.array, 0, this.populationCount));
+                    this.populationCount = 0;
+                    this.array = this.generator();
+                    this.arrayLength = this.array.Length;
+                }
             }
 
             public override int CurrentlyBufferedOutputCount => this.populationCount;
@@ -230,6 +281,23 @@ namespace Microsoft.StreamProcessing
                     }
                 }
                 batch.Free();
+            }
+
+            public override void OnCompleted()
+            {
+                OnFlush();
+                this.observer.OnCompleted();
+            }
+
+            public override void OnFlush()
+            {
+                if (this.populationCount > 0)
+                {
+                    this.observer.OnNext(new ArraySegment<PartitionedStreamEvent<TKey, TPayload>>(this.array, 0, this.populationCount));
+                    this.populationCount = 0;
+                    this.array = this.generator();
+                    this.arrayLength = this.array.Length;
+                }
             }
 
             public override int CurrentlyBufferedOutputCount => this.populationCount;
@@ -291,6 +359,23 @@ namespace Microsoft.StreamProcessing
                 batch.Free();
             }
 
+            public override void OnCompleted()
+            {
+                OnFlush();
+                this.observer.OnCompleted();
+            }
+
+            public override void OnFlush()
+            {
+                if (this.populationCount > 0)
+                {
+                    this.observer.OnNext(new ArraySegment<TResult>(this.array, 0, this.populationCount));
+                    this.populationCount = 0;
+                    this.array = this.generator();
+                    this.arrayLength = this.array.Length;
+                }
+            }
+
             public override int CurrentlyBufferedOutputCount => this.populationCount;
 
             public override int CurrentlyBufferedInputCount => 0;
@@ -346,6 +431,23 @@ namespace Microsoft.StreamProcessing
                     }
                 }
                 batch.Free();
+            }
+
+            public override void OnCompleted()
+            {
+                OnFlush();
+                this.observer.OnCompleted();
+            }
+
+            public override void OnFlush()
+            {
+                if (this.populationCount > 0)
+                {
+                    this.observer.OnNext(new ArraySegment<TResult>(this.array, 0, this.populationCount));
+                    this.populationCount = 0;
+                    this.array = this.generator();
+                    this.arrayLength = this.array.Length;
+                }
             }
 
             public override int CurrentlyBufferedOutputCount => this.populationCount;

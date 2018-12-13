@@ -40,9 +40,9 @@ internal sealed class ");
             this.Write(this.ToStringHelper.ToStringWithCulture(inputKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
-            this.Write(">, IDisposable\r\n{\r\n    private readonly IObserver<ArraySegment<");
+            this.Write(", ArraySegment<");
             this.Write(this.ToStringHelper.ToStringWithCulture(egress));
-            this.Write(">> observer;\r\n    private readonly Func<");
+            this.Write(">\r\n{\r\n    private readonly Func<");
             this.Write(this.ToStringHelper.ToStringWithCulture(egress));
             this.Write("[]> generator;\r\n    [DataMember]\r\n    private ");
             this.Write(this.ToStringHelper.ToStringWithCulture(egress));
@@ -59,7 +59,7 @@ internal sealed class ");
             this.Write("[]> generator,\r\n        IObserver<ArraySegment<");
             this.Write(this.ToStringHelper.ToStringWithCulture(egress));
             this.Write(@">> observer)
-        : base()
+        : base(observer, null)
     {
         this.generator = generator;
         this.array = this.generator();
@@ -67,13 +67,7 @@ internal sealed class ");
         this.observer = observer;
     }
 
-    public void Dispose()
-    {
-        if (this.populationCount > 0) this.observer.OnNext(new ArraySegment<");
-            this.Write(this.ToStringHelper.ToStringWithCulture(egress));
-            this.Write(">(this.array, 0, this.populationCount));\r\n        this.populationCount = 0;\r\n    " +
-                    "    this.array = null;\r\n        this.arrayLength = 0;\r\n    }\r\n\r\n    public overr" +
-                    "ide void OnNext(StreamMessage<");
+    public override void OnNext(StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(inputKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
@@ -142,6 +136,25 @@ internal sealed class ");
             }
         }
         batch.Free();
+    }
+
+    public override void OnCompleted()
+    {
+        OnFlush();
+        this.observer.OnCompleted();
+    }
+
+    public override void OnFlush()
+    {
+        if (this.populationCount > 0)
+        {
+            this.observer.OnNext(new ArraySegment<");
+            this.Write(this.ToStringHelper.ToStringWithCulture(egress));
+            this.Write(@">(this.array, 0, this.populationCount));
+            this.populationCount = 0;
+            this.array = this.generator();
+            this.arrayLength = this.array.Length;
+        }
     }
 
     public override int CurrentlyBufferedOutputCount => this.populationCount;

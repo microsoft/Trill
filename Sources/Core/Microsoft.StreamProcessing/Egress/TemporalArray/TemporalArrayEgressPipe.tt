@@ -131,6 +131,23 @@ namespace Microsoft.StreamProcessing
                 batch.Free();
             }
 
+            public override void OnCompleted()
+            {
+                OnFlush();
+                this.observer.OnCompleted();
+            }
+
+            public override void OnFlush()
+            {
+                if (this.populationCount > 0)
+                {
+                    this.observer.OnNext(new ArraySegment<<#= egress #>>(this.array, 0, this.populationCount));
+                    this.populationCount = 0;
+                    this.array = this.generator();
+                    this.arrayLength = this.array.Length;
+                }
+            }
+
             public override int CurrentlyBufferedOutputCount => this.populationCount;
 
             public override int CurrentlyBufferedInputCount => 0;
