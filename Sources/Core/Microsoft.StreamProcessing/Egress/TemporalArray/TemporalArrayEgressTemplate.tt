@@ -11,9 +11,8 @@ using System.Runtime.Serialization;
 using Microsoft.StreamProcessing.Internal;
 
 [DataContract]
-internal sealed class <#= partitionString #><#= ingressType #>EgressPipe : EgressBoundary<<#= inputKey #>, <#= TPayload #>>, IDisposable
+internal sealed class <#= partitionString #><#= ingressType #>EgressPipe : EgressBoundary<<#= inputKey #>, <#= TPayload #>, ArraySegment<<#= egress #>>
 {
-    private readonly IObserver<ArraySegment<<#= egress #>>> observer;
     private readonly Func<<#= egress #>[]> generator;
     [DataMember]
     private <#= egress #>[] array;
@@ -28,20 +27,12 @@ internal sealed class <#= partitionString #><#= ingressType #>EgressPipe : Egres
     public <#= partitionString #><#= ingressType #>EgressPipe(
         Func<<#= egress #>[]> generator,
         IObserver<ArraySegment<<#= egress #>>> observer)
-        : base()
+        : base(observer, null)
     {
         this.generator = generator;
         this.array = this.generator();
         this.arrayLength = this.array.Length;
         this.observer = observer;
-    }
-
-    public void Dispose()
-    {
-        if (this.populationCount > 0) this.observer.OnNext(new ArraySegment<<#= egress #>>(this.array, 0, this.populationCount));
-        this.populationCount = 0;
-        this.array = null;
-        this.arrayLength = 0;
     }
 
     public override void OnNext(StreamMessage<<#= inputKey #>, <#= TPayload #>> batch)
@@ -94,6 +85,23 @@ internal sealed class <#= partitionString #><#= ingressType #>EgressPipe : Egres
             }
         }
         batch.Free();
+    }
+
+    public override void OnCompleted()
+    {
+        OnFlush();
+        base.OnCompleted();
+    }
+
+    public override void OnFlush()
+    {
+        if (this.populationCount > 0)
+        {
+            this.observer.OnNext(new ArraySegment<<#= egress #>>(this.array, 0, this.populationCount));
+            this.populationCount = 0;
+            this.array = this.generator();
+            this.arrayLength = this.array.Length;
+        }
     }
 
     public override int CurrentlyBufferedOutputCount => this.populationCount;

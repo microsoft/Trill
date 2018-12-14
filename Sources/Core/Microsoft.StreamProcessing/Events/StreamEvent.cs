@@ -144,15 +144,15 @@ namespace Microsoft.StreamProcessing
             switch (this.Kind)
             {
                 case StreamEventKind.Start:
-                    return string.Format(CultureInfo.InvariantCulture, "[Start: {0},{1}]", TimeAsString(this.SyncTime), this.Payload.ToString());
+                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)},{this.Payload}]";
                 case StreamEventKind.End:
-                    return string.Format(CultureInfo.InvariantCulture, "[End: {0},{1},{2}]", TimeAsString(this.SyncTime), TimeAsString(this.OtherTime), this.Payload.ToString());
+                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)},{TimeAsString(this.OtherTime)},{this.Payload}]";
                 case StreamEventKind.Interval:
-                    return string.Format(CultureInfo.InvariantCulture, "[Interval: {0}-{1},{2}]", TimeAsString(this.SyncTime), TimeAsString(this.OtherTime), this.Payload.ToString());
+                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)}-{TimeAsString(this.OtherTime)},{this.Payload}]";
                 case StreamEventKind.Punctuation:
-                    return string.Format(CultureInfo.InvariantCulture, "[Punc: {0}]", TimeAsString(this.SyncTime));
+                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)}]";
                 case StreamEventKind.LowWatermark:
-                    return string.Format(CultureInfo.InvariantCulture, "[Low Watermark: {0}]", TimeAsString(this.SyncTime));
+                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)}]";
             }
             return string.Empty;
         }
@@ -312,19 +312,18 @@ namespace Microsoft.StreamProcessing
         /// <returns>A string representing the event for display</returns>
         public override string ToString()
         {
-            string fragment = "(" + this.PartitionKey.ToString() + ")";
             switch (this.Kind)
             {
                 case StreamEventKind.Start:
-                    return string.Format(CultureInfo.InvariantCulture, fragment + "[Start: {0},{1}]", TimeAsString(this.SyncTime), this.Payload.ToString());
+                    return $"({this.PartitionKey})[{this.Kind}: {TimeAsString(this.SyncTime)},{this.Payload}]";
                 case StreamEventKind.End:
-                    return string.Format(CultureInfo.InvariantCulture, fragment + "[End: {0},{1},{2}]", TimeAsString(this.SyncTime), TimeAsString(this.OtherTime), this.Payload.ToString());
+                    return $"({this.PartitionKey})[{this.Kind}: {TimeAsString(this.SyncTime)},{TimeAsString(this.OtherTime)},{this.Payload}]";
                 case StreamEventKind.Interval:
-                    return string.Format(CultureInfo.InvariantCulture, fragment + "[Interval: {0}-{1},{2}]", TimeAsString(this.SyncTime), TimeAsString(this.OtherTime), this.Payload.ToString());
+                    return $"({this.PartitionKey})[{this.Kind}: {TimeAsString(this.SyncTime)}-{TimeAsString(this.OtherTime)},{this.Payload}]";
                 case StreamEventKind.Punctuation:
-                    return string.Format(CultureInfo.InvariantCulture, fragment + "[Punc: {0}]", TimeAsString(this.SyncTime));
+                    return $"({this.PartitionKey})[{this.Kind}: {TimeAsString(this.SyncTime)}]";
                 case StreamEventKind.LowWatermark:
-                    return string.Format(CultureInfo.InvariantCulture, "[Low Watermark: {0}]", TimeAsString(this.SyncTime));
+                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)}]";
             }
             return string.Empty;
         }

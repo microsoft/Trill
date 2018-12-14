@@ -21,7 +21,9 @@ namespace Microsoft.StreamProcessing
     string[] keyParameter = new string[] { string.Empty, "TKey key, " };
     string[] keyArgument = new string[] { string.Empty, "key, " };
     string[] toStringFragment = new string[] { string.Empty, "fragment + " };
-    for (int i = 0; i < classNames.Length; i++) {
+    for (int i = 0; i < classNames.Length; i++)
+    {
+        bool partitioned = (i == 1);
 #>
 
     internal class <#= classNames[i] #>SyncTimeComparer<<#= genericParameters[i] #>> : IComparer<<#= classNames[i] #><<#= genericParameters[i] #>>>
@@ -33,20 +35,24 @@ namespace Microsoft.StreamProcessing
     }
 
     /// <summary>
-    /// Represents <#= (i == 1) ? "a partitioned" : "an unpartitioned" #> Stream event
+    /// Represents <#= partitioned ? "a partitioned" : "an unpartitioned" #> Stream event
     /// </summary>
-<# if (i == 1) { #>    /// <typeparam name="TKey">Type of payload for the event</typeparam>
-<# } #>    /// <typeparam name="TPayload">Type of payload for the event</typeparam>
+<#  if (partitioned)
+    { #>
+    /// <typeparam name="TKey">Type of payload for the event</typeparam>
+<#  } #>
+    /// <typeparam name="TPayload">Type of payload for the event</typeparam>
     [DataContract]
     public struct <#= classNames[i] #><<#= genericParameters[i] #>>
     {
-<# if (i == 1) { #>
+<#  if (partitioned)
+    { #>
         /// <summary>
         /// Partition key for the event
         /// </summary>
         [DataMember]
         public TKey PartitionKey;
-<# } #>
+<#  } #>
 
         /// <summary>
         /// Start-time for the event
@@ -109,7 +115,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public bool IsPunctuation => this.OtherTime == StreamEvent.PunctuationOtherTime;
 
-<#  if (i == 1)
+<#  if (partitioned)
     { #>
         /// <summary>
         /// Check if the event is a punctuation
@@ -155,17 +161,19 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// Creates a new stream event with the given temporal parameters.
         /// </summary>
-<# if (i == 1) { #>
+<#  if (partitioned)
+    { #>
         /// <param name="key">The partition key value to which this event belongs.</param>
-<# } #>
+<#  } #>
         /// <param name="syncTime">The sync time for this event. This value corresponds to the start time for a start edge or interval and the end time for an end edge.</param>
         /// <param name="otherTime">The other associated time for this events. For intervals, this value is the end time. For an end edge, this value identifies when the value started.</param>
         /// <param name="payload">The actual event associated with these temporal parameters.</param>
         public <#= classNames[i] #>(<#= keyParameter[i] #>long syncTime, long otherTime, TPayload payload)
         {
-<# if (i == 1) { #>
+<#  if (partitioned)
+    { #>
             this.PartitionKey = key;
-<# } #>
+<#  } #>
             this.SyncTime = syncTime;
             this.OtherTime = otherTime;
             this.Payload = payload;
@@ -177,21 +185,18 @@ namespace Microsoft.StreamProcessing
         /// <returns>A string representing the event for display</returns>
         public override string ToString()
         {
-<# if (i == 1) { #>
-            string fragment = "(" + this.PartitionKey.ToString() + ")";
-<# } #>
             switch (this.Kind)
             {
                 case StreamEventKind.Start:
-                    return string.Format(CultureInfo.InvariantCulture, <#= toStringFragment[i] #>"[Start: {0},{1}]", TimeAsString(this.SyncTime), this.Payload.ToString());
+                    return $"<#= partitioned ? "({this.PartitionKey})" : "" #>[{this.Kind}: {TimeAsString(this.SyncTime)},{this.Payload}]";
                 case StreamEventKind.End:
-                    return string.Format(CultureInfo.InvariantCulture, <#= toStringFragment[i] #>"[End: {0},{1},{2}]", TimeAsString(this.SyncTime), TimeAsString(this.OtherTime), this.Payload.ToString());
+                    return $"<#= partitioned ? "({this.PartitionKey})" : "" #>[{this.Kind}: {TimeAsString(this.SyncTime)},{TimeAsString(this.OtherTime)},{this.Payload}]";
                 case StreamEventKind.Interval:
-                    return string.Format(CultureInfo.InvariantCulture, <#= toStringFragment[i] #>"[Interval: {0}-{1},{2}]", TimeAsString(this.SyncTime), TimeAsString(this.OtherTime), this.Payload.ToString());
+                    return $"<#= partitioned ? "({this.PartitionKey})" : "" #>[{this.Kind}: {TimeAsString(this.SyncTime)}-{TimeAsString(this.OtherTime)},{this.Payload}]";
                 case StreamEventKind.Punctuation:
-                    return string.Format(CultureInfo.InvariantCulture, <#= toStringFragment[i] #>"[Punc: {0}]", TimeAsString(this.SyncTime));
+                    return $"<#= partitioned ? "({this.PartitionKey})" : "" #>[{this.Kind}: {TimeAsString(this.SyncTime)}]";
                 case StreamEventKind.LowWatermark:
-                    return string.Format(CultureInfo.InvariantCulture, "[Low Watermark: {0}]", TimeAsString(this.SyncTime));
+                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)}]";
             }
             return string.Empty;
         }

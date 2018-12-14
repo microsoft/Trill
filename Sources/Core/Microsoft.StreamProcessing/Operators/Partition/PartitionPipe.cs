@@ -39,8 +39,15 @@ namespace Microsoft.StreamProcessing
         public unsafe void OnNext(StreamMessage<Empty, TPayload> batch)
         {
             this.l1Pool.Get(out StreamMessage<PartitionKey<TPartitionKey>, TPayload> outputBatch);
-            outputBatch.vsync = batch.vsync;
-            outputBatch.vother = batch.vother;
+            if (this.partitionLag > 0)
+            {
+                outputBatch.vsync = batch.vsync.MakeWritable(this.l1Pool.longPool);
+            }
+            else
+            {
+                outputBatch.vsync = batch.vsync;
+            }
+            outputBatch.vother = batch.vother.MakeWritable(this.l1Pool.longPool);
             outputBatch.payload = batch.payload;
             outputBatch.hash = batch.hash.MakeWritable(this.l1Pool.intPool);
             outputBatch.bitvector = batch.bitvector;
@@ -56,6 +63,17 @@ namespace Microsoft.StreamProcessing
             {
                 for (int i = 0; i < count; i++)
                 {
+                    if ((batch.bitvector.col[i >> 6] & (1L << (i & 0x3f))) != 0 &&
+                        batch.vother.col[i] == StreamEvent.PunctuationOtherTime)
+                    {
+                        if (this.partitionLag > 0)
+                        {
+                            outputBatch.vsync.col[i] = batch.vsync.col[i] - this.partitionLag;
+                        }
+                        outputBatch.vother.col[i] = PartitionedStreamEvent.LowWatermarkOtherTime;
+                        continue;
+                    }
+
                     var key = this.keySelectorFunc(destPayload[i]);
                     destKey[i] = new PartitionKey<TPartitionKey> { Key = key };
                     destHash[i] = key.GetHashCode();

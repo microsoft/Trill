@@ -111,6 +111,23 @@ namespace Microsoft.StreamProcessing
             queue.Add(payload);
         }
 
+        public override void OnCompleted()
+        {
+            OnFlush();
+            base.OnCompleted();
+        }
+
+        public override void OnFlush()
+        {
+            if (this.populationCount > 0)
+            {
+                this.observer.OnNext(new ArraySegment<TPayload>(this.array, 0, this.arrayLength));
+                this.populationCount = 0;
+                this.array = this.generator();
+                this.arrayLength = this.array.Length;
+            }
+        }
+
         public override int CurrentlyBufferedOutputCount => this.populationCount;
 
         public override int CurrentlyBufferedInputCount => this.toDelete.Values.Select(o => o.Count).Sum();

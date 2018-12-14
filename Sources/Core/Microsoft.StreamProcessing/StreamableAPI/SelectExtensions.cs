@@ -219,7 +219,7 @@ namespace Microsoft.StreamProcessing
                 o => Expression.Bind(newType.GetTypeInfo().GetMember(o).Single(), Expression.PropertyOrField(inputParameter, o)));
 
             var newFieldAssignments = newColumnFormulas.Select(
-                o => Expression.Bind(newType.GetTypeInfo().GetMember(o.Key).Single(), o.Value.ReplaceParametersInBody(inputParameter)));
+                o => Expression.Bind(newType.GetTypeInfo().GetMember(o.Key).Single(), o.Value.RemoveCastToObject().ReplaceParametersInBody(inputParameter)));
 
             var member = Expression.MemberInit(newExpression, commonFieldAssignments.Concat(newFieldAssignments).ToArray());
             var lambda = Expression.Lambda<Func<TOld, TNew>>(member, new ParameterExpression[] { inputParameter });

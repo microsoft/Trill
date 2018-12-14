@@ -115,6 +115,17 @@ namespace Microsoft.StreamProcessing
             return s;
         }
 
+        public static LambdaExpression RemoveCastToObject(this LambdaExpression lambda)
+        {
+            if (lambda.Body is UnaryExpression body &&
+                (body.NodeType == ExpressionType.Convert || body.NodeType == ExpressionType.TypeAs) &&
+                (body.Type == typeof(object)))
+            {
+                return Expression.Lambda(body.Operand, lambda.Parameters);
+            }
+            return lambda;
+        }
+
         public static Expression ReplaceParametersInBody(this LambdaExpression lambda, Expression exp0)
             => ParameterSubstituter.Replace(lambda.Parameters[0], exp0, lambda.Body);
 
@@ -222,10 +233,7 @@ namespace Microsoft.StreamProcessing
         private readonly Dictionary<ParameterExpression, int> parameterMap = new Dictionary<ParameterExpression, int>();
         private int uniqueParameterNumber;
 
-        private EqualityComparer(Expression e1, Expression e2)
-        {
-            this.uniqueParameterNumber = 0;
-        }
+        private EqualityComparer(Expression e1, Expression e2) => this.uniqueParameterNumber = 0;
 
         public static bool IsEqual(Expression e1, Expression e2)
         {
@@ -488,10 +496,7 @@ namespace Microsoft.StreamProcessing
             ExpressionType.Block
         };
 
-        public ConvertToCSharp(TextWriter writer)
-        {
-            this.writer = writer ?? throw new ArgumentNullException(nameof(writer));
-        }
+        public ConvertToCSharp(TextWriter writer) => this.writer = writer ?? throw new ArgumentNullException(nameof(writer));
 
         private new void Visit(ReadOnlyCollection<Expression> es)
         {
@@ -770,7 +775,7 @@ namespace Microsoft.StreamProcessing
         //     returns the original expression.
         protected override Expression VisitDynamic(DynamicExpression node)
         {
-            writer.Write(node.ToString());
+            this.writer.Write(node.ToString());
             return base.VisitDynamic(node);
         }
 #endif
