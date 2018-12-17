@@ -23,8 +23,13 @@ namespace Microsoft.StreamProcessing
         var typeName = sumTypes.TypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive sum aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive sum aggregate over <#= typeName #>s using snapshot semantics.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute a sum according to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= typeName #>> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -40,9 +45,14 @@ namespace Microsoft.StreamProcessing
         var typeName = sumTypes.TypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive sum aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
-        /// no affect on the sum.
+        /// Computes a time-sensitive sum aggregate over nullable <#= typeName #>s using snapshot semantics.
+        /// Note that nulls have no affect on the sum.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute a sum according to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= typeName #>> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -58,8 +68,13 @@ namespace Microsoft.StreamProcessing
         var typeName = sumTypes.TypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive sum of squares aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive sum of squares aggregate over <#= typeName #>s using snapshot semantics.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute a sum of squares according to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= typeName #>> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -75,9 +90,14 @@ namespace Microsoft.StreamProcessing
         var typeName = sumTypes.TypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive sum of squares aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
-        /// no affect on the sum.
+        /// Computes a time-sensitive sum of squares aggregate over nullable <#= typeName #>s using snapshot semantics.
+        /// Note that nulls have no affect on the sum.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute a sum of squares according to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= typeName #>> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -93,8 +113,13 @@ namespace Microsoft.StreamProcessing
         var typeName = sumTypes.TypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive product aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive product aggregate over <#= typeName #>s using snapshot semantics.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute a product to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= typeName #>> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -110,9 +135,14 @@ namespace Microsoft.StreamProcessing
         var typeName = sumTypes.TypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive product aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
-        /// no affect on the sum.
+        /// Computes a time-sensitive product aggregate over nullable <#= typeName #>s using snapshot semantics.
+        /// Note that nulls have no affect on the product.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute a product to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= typeName #>> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -130,9 +160,14 @@ namespace Microsoft.StreamProcessing
         var returnTypeName = averageTypes.ReturnTypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
-        /// internally is a <#= sumTypeName #> datatype.
+        /// Computes a time-sensitive average aggregate over <#= typeName #>s using snapshot semantics.
+        /// Note that the accumulator internally is a <#= sumTypeName #> datatype.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute an average to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= returnTypeName #>> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -150,9 +185,14 @@ namespace Microsoft.StreamProcessing
         var returnTypeName = averageTypes.ReturnTypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
-        /// internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
+        /// Computes a time-sensitive average aggregate over nullable <#= typeName #>s using snapshot semantics.
+        /// Note that the accumulator internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute an average to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= returnTypeName #>?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -170,9 +210,14 @@ namespace Microsoft.StreamProcessing
         var returnTypeName = averageTypes.ReturnTypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive average of squares aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
-        /// internally is a <#= sumTypeName #> datatype.
+        /// Computes a time-sensitive average of squares aggregate over <#= typeName #>s using snapshot semantics.
+        /// Note that the accumulator internally is a <#= sumTypeName #> datatype.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute an average of squares according to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= returnTypeName #>> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -190,9 +235,14 @@ namespace Microsoft.StreamProcessing
         var returnTypeName = averageTypes.ReturnTypeName; #>
 
         /// <summary>
-        /// Computes a time-sensitive average of squares aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
-        /// internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
+        /// Computes a time-sensitive average of squares aggregate over nullable <#= typeName #>s using snapshot semantics.
+        /// Note that the accumulator internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
         /// </summary>
+        /// <typeparam name="TKey">The grouping key type of the incoming stream of data.</typeparam>
+        /// <typeparam name="TPayload">The payload type of the incoming stream of data.</typeparam>
+        /// <param name="source">The stream over which to compute an average of squares according to snapshot semantics.</param>
+        /// <param name="selector">A selector expression describing what part of the incoming data is to be aggregated.</param>
+        /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, <#= returnTypeName #>?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, <#= typeName #>?>> selector)
         {
             Invariant.IsNotNull(source, nameof(source));
@@ -247,7 +297,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Applies multiple aggregates to "snapshot windows" (SI terminology) on the input stream.
+        /// Applies multiple aggregates to snapshot semantics on the input stream.
         /// </summary>
         internal static IStreamable<TKey, TOutput> Aggregate<TKey, TInput, <#= IterateComma("TState$, TOutput$", count) #>, TOutput>(
             this IStreamable<TKey, TInput> source,

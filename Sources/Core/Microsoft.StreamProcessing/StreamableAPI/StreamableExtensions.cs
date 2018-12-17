@@ -739,14 +739,14 @@ namespace Microsoft.StreamProcessing
 
         #region Aggregates
         /// <summary>
-        /// Computes a time-sensitive count aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive count aggregate using snapshot semantics.
         /// </summary>
         public static IStreamable<TKey, ulong> Count<TKey, TPayload>(
             this IStreamable<TKey, TPayload> source)
             => Aggregate(source, w => w.Count());
 
         /// <summary>
-        /// Computes a time-sensitive count aggregate of the non-null values using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive count aggregate of the non-null values using snapshot semantics.
         /// </summary>
         public static IStreamable<TKey, ulong> CountNotNull<TKey, TPayload, TValue>(
             this IStreamable<TKey, TPayload> source,
@@ -758,14 +758,14 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive minimum aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive minimum aggregate using snapshot semantics.
         /// </summary>
         public static IStreamable<TKey, TPayload> Min<TKey, TPayload>(
             this IStreamable<TKey, TPayload> source)
             => source.Aggregate(w => w.Min(v => v));
 
         /// <summary>
-        /// Computes a time-sensitive minimum aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive minimum aggregate using snapshot semantics.
         /// </summary>
         public static IStreamable<TKey, T> Min<TKey, TPayload, T>(
             this IStreamable<TKey, TPayload> source,
@@ -777,7 +777,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive minimum aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive minimum aggregate using snapshot semantics.
         /// </summary>
         public static IStreamable<TKey, TPayload> Min<TKey, TPayload>(
             this IStreamable<TKey, TPayload> source,
@@ -789,7 +789,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive minimum aggregate using "snapshot windows" (SI terminology) with the provided ordering comparer.
+        /// Computes a time-sensitive minimum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public static IStreamable<TKey, T> Min<TKey, TPayload, T>(
             this IStreamable<TKey, TPayload> source,
@@ -803,14 +803,14 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive maximum aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive maximum aggregate using snapshot semantics.
         /// </summary>
         public static IStreamable<TKey, TPayload> Max<TKey, TPayload>(
             this IStreamable<TKey, TPayload> source)
             => source.Aggregate(w => w.Max(v => v));
 
         /// <summary>
-        /// Computes a time-sensitive maximum aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive maximum aggregate using snapshot semantics.
         /// </summary>
         public static IStreamable<TKey, T> Max<TKey, TPayload, T>(
             this IStreamable<TKey, TPayload> source,
@@ -822,7 +822,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive maximum aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive maximum aggregate using snapshot semantics.
         /// </summary>
         public static IStreamable<TKey, TPayload> Max<TKey, TPayload>(
             this IStreamable<TKey, TPayload> source,
@@ -834,7 +834,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive maximum aggregate using "snapshot windows" (SI terminology) with the provided ordering comparer.
+        /// Computes a time-sensitive maximum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public static IStreamable<TKey, T> Max<TKey, TPayload, T>(
             this IStreamable<TKey, TPayload> source,
@@ -848,7 +848,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive top-k aggregate using "snapshot windows" (SI terminology) based on a key selector.
+        /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector.
         /// </summary>
         public static IStreamable<TKey, List<RankedEvent<TPayload>>> TopK<TKey, TPayload>(
             this IStreamable<TKey, TPayload> source,
@@ -860,7 +860,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive top-k aggregate using "snapshot windows" (SI terminology) based on a key selector.
+        /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector.
         /// </summary>
         public static IStreamable<TKey, List<RankedEvent<TPayload>>> TopK<TKey, TPayload, T>(
             this IStreamable<TKey, TPayload> source,
@@ -874,7 +874,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive top-k aggregate using "snapshot windows" (SI terminology) based on a key selector.
+        /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector.
         /// </summary>
         public static IStreamable<TKey, List<RankedEvent<TPayload>>> TopK<TKey, TPayload>(
             this IStreamable<TKey, TPayload> source,
@@ -888,7 +888,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive top-k aggregate using "snapshot windows" (SI terminology) based on a key selector with the provided ordering comparer.
+        /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector with the provided ordering comparer.
         /// </summary>
         public static IStreamable<TKey, List<RankedEvent<TPayload>>> TopK<TKey, TPayload, T>(
             this IStreamable<TKey, TPayload> source,
