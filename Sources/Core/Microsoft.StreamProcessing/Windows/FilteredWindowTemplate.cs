@@ -22,7 +22,7 @@ namespace Microsoft.StreamProcessing
         { }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over sbytes using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over sbytes using snapshot semantics. Note that the accumulator
         /// internally is a long datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> Average(Expression<Func<TSource, sbyte>> selector)
@@ -33,7 +33,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over shorts using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over shorts using snapshot semantics. Note that the accumulator
         /// internally is a long datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> Average(Expression<Func<TSource, short>> selector)
@@ -44,7 +44,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over ints using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over ints using snapshot semantics. Note that the accumulator
         /// internally is a long datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> Average(Expression<Func<TSource, int>> selector)
@@ -55,7 +55,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over longs using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over longs using snapshot semantics. Note that the accumulator
         /// internally is a long datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> Average(Expression<Func<TSource, long>> selector)
@@ -66,7 +66,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over bytes using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over bytes using snapshot semantics. Note that the accumulator
         /// internally is a ulong datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> Average(Expression<Func<TSource, byte>> selector)
@@ -77,7 +77,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over ushorts using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over ushorts using snapshot semantics. Note that the accumulator
         /// internally is a ulong datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> Average(Expression<Func<TSource, ushort>> selector)
@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over uints using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over uints using snapshot semantics. Note that the accumulator
         /// internally is a ulong datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> Average(Expression<Func<TSource, uint>> selector)
@@ -99,7 +99,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over ulongs using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over ulongs using snapshot semantics. Note that the accumulator
         /// internally is a ulong datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> Average(Expression<Func<TSource, ulong>> selector)
@@ -110,7 +110,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over floats using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over floats using snapshot semantics. Note that the accumulator
         /// internally is a float datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<float>, float?> Average(Expression<Func<TSource, float>> selector)
@@ -121,7 +121,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over doubles using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over doubles using snapshot semantics. Note that the accumulator
         /// internally is a double datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<double>, double?> Average(Expression<Func<TSource, double>> selector)
@@ -132,7 +132,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over decimals using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over decimals using snapshot semantics. Note that the accumulator
         /// internally is a decimal datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<decimal>, decimal?> Average(Expression<Func<TSource, decimal>> selector)
@@ -143,7 +143,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over BigIntegers using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over BigIntegers using snapshot semantics. Note that the accumulator
         /// internally is a BigInteger datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<BigInteger>, double?> Average(Expression<Func<TSource, BigInteger>> selector)
@@ -154,7 +154,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over Complexs using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over Complexs using snapshot semantics. Note that the accumulator
         /// internally is a Complex datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<Complex>, Complex?> Average(Expression<Func<TSource, Complex>> selector)
@@ -165,7 +165,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over sbytes using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over sbytes using snapshot semantics. Note that the accumulator
         /// internally is a long datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> AverageSquares(Expression<Func<TSource, sbyte>> selector)
@@ -176,7 +176,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over shorts using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over shorts using snapshot semantics. Note that the accumulator
         /// internally is a long datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> AverageSquares(Expression<Func<TSource, short>> selector)
@@ -187,7 +187,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over ints using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over ints using snapshot semantics. Note that the accumulator
         /// internally is a long datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> AverageSquares(Expression<Func<TSource, int>> selector)
@@ -198,7 +198,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over longs using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over longs using snapshot semantics. Note that the accumulator
         /// internally is a long datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> AverageSquares(Expression<Func<TSource, long>> selector)
@@ -209,7 +209,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over bytes using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over bytes using snapshot semantics. Note that the accumulator
         /// internally is a ulong datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> AverageSquares(Expression<Func<TSource, byte>> selector)
@@ -220,7 +220,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over ushorts using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over ushorts using snapshot semantics. Note that the accumulator
         /// internally is a ulong datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> AverageSquares(Expression<Func<TSource, ushort>> selector)
@@ -231,7 +231,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over uints using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over uints using snapshot semantics. Note that the accumulator
         /// internally is a ulong datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> AverageSquares(Expression<Func<TSource, uint>> selector)
@@ -242,7 +242,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over ulongs using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over ulongs using snapshot semantics. Note that the accumulator
         /// internally is a ulong datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> AverageSquares(Expression<Func<TSource, ulong>> selector)
@@ -253,7 +253,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over floats using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over floats using snapshot semantics. Note that the accumulator
         /// internally is a float datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<float>, float?> AverageSquares(Expression<Func<TSource, float>> selector)
@@ -264,7 +264,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over doubles using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over doubles using snapshot semantics. Note that the accumulator
         /// internally is a double datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<double>, double?> AverageSquares(Expression<Func<TSource, double>> selector)
@@ -275,7 +275,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over decimals using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over decimals using snapshot semantics. Note that the accumulator
         /// internally is a decimal datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<decimal>, decimal?> AverageSquares(Expression<Func<TSource, decimal>> selector)
@@ -286,7 +286,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over BigIntegers using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over BigIntegers using snapshot semantics. Note that the accumulator
         /// internally is a BigInteger datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<BigInteger>, double?> AverageSquares(Expression<Func<TSource, BigInteger>> selector)
@@ -297,7 +297,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive average squares aggregate over Complexs using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average squares aggregate over Complexs using snapshot semantics. Note that the accumulator
         /// internally is a Complex datatype.
         /// </summary>
         public new IAggregate<TSource, AverageState<Complex>, Complex?> AverageSquares(Expression<Func<TSource, Complex>> selector)

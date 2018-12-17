@@ -21,6 +21,7 @@ Trill is a high-performance one-pass in-memory streaming analytics engine from M
 
 1. Of course, the sources are right here!
 2. You can get binaries from our [NuGet feed](https://www.nuget.org/packages/Trill/).
+3. You can also check out samples of Trill usage at our [samples repository](https://github.com/Microsoft/TrillSamples).
 
 # Learn More
 

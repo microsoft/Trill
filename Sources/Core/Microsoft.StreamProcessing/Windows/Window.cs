@@ -53,7 +53,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive count aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive count aggregate using snapshot semantics.
         /// </summary>
         public IAggregate<TSource, ulong, ulong> Count()
         {
@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive single-or-default aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive single-or-default aggregate using snapshot semantics.
         /// </summary>
         public IAggregate<TSource, SortedMultiSet<TSource>, TSource> SingleOrDefault()
         {
@@ -71,7 +71,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive count aggregate of the non-null values using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive count aggregate of the non-null values using snapshot semantics.
         /// </summary>
         public IAggregate<TSource, ulong, ulong> CountNotNull<TValue>(Expression<Func<TSource, TValue>> selector)
         {
@@ -81,7 +81,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive minimum aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive minimum aggregate using snapshot semantics.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(Expression<Func<TSource, TValue>> selector)
         {
@@ -99,7 +99,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive minimum aggregate using "snapshot windows" (SI terminology) with the provided ordering comparer.
+        /// Computes a time-sensitive minimum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(Expression<Func<TSource, TValue>> selector, IComparerExpression<TValue> comparer)
         {
@@ -118,7 +118,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive minimum aggregate using "snapshot windows" (SI terminology) with the provided ordering comparer.
+        /// Computes a time-sensitive minimum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(Expression<Func<TSource, TValue>> selector, Expression<Comparison<TValue>> comparer)
         {
@@ -126,7 +126,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive maximum aggregate using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive maximum aggregate using snapshot semantics.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Max<TValue>(Expression<Func<TSource, TValue>> selector)
         {
@@ -144,7 +144,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive maximum aggregate using "snapshot windows" (SI terminology) with the provided ordering comparer.
+        /// Computes a time-sensitive maximum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Max<TValue>(Expression<Func<TSource, TValue>> selector, IComparerExpression<TValue> comparer)
         {
@@ -163,7 +163,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive maximum aggregate using "snapshot windows" (SI terminology) with the provided ordering comparer.
+        /// Computes a time-sensitive maximum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Max<TValue>(Expression<Func<TSource, TValue>> selector, Expression<Comparison<TValue>> comparer)
         {
@@ -171,7 +171,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive top-k aggregate using "snapshot windows" (SI terminology) based on a key selector.
+        /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector.
         /// </summary>
         public IAggregate<TSource, SortedMultiSet<TSource>, List<RankedEvent<TSource>>> TopK<TOrderValue>(Expression<Func<TSource, TOrderValue>> orderer, int k)
         {
@@ -183,7 +183,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Computes a time-sensitive top-k aggregate using "snapshot windows" (SI terminology) based on a key selector with the provided ordering comparer.
+        /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector with the provided ordering comparer.
         /// </summary>
         public IAggregate<TSource, SortedMultiSet<TSource>, List<RankedEvent<TSource>>> TopK<TOrderValue>(Expression<Func<TSource, TOrderValue>> orderer, IComparerExpression<TOrderValue> comparer, int k)
         {

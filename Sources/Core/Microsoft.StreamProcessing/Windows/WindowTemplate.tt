@@ -23,7 +23,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive sum aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive sum aggregate over <#= typeName #>s using snapshot semantics.
         /// </summary>
         public IAggregate<TSource, <#= typeName #>, <#= typeName #>> Sum(Expression<Func<TSource, <#= typeName #>>> selector)
         {
@@ -42,7 +42,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive sum aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
+        /// Computes a time-sensitive sum aggregate over nullable <#= typeName #>s using snapshot semantics. Note that nulls have
         /// no affect on the sum.
         /// </summary>
         public IAggregate<TSource, <#= typeName #>, <#= typeName #>> Sum(Expression<Func<TSource, <#= typeName #>?>> selector)
@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive sum-squares aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive sum-squares aggregate over <#= typeName #>s using snapshot semantics.
         /// </summary>
         public IAggregate<TSource, <#= typeName #>, <#= typeName #>> SumSquares(Expression<Func<TSource, <#= typeName #>>> selector)
         {
@@ -81,7 +81,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive sum-squares aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
+        /// Computes a time-sensitive sum-squares aggregate over nullable <#= typeName #>s using snapshot semantics. Note that nulls have
         /// no affect on the sum.
         /// </summary>
         public IAggregate<TSource, <#= typeName #>, <#= typeName #>> SumSquares(Expression<Func<TSource, <#= typeName #>?>> selector)
@@ -101,7 +101,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive product aggregate over <#= typeName #>s using "snapshot windows" (SI terminology).
+        /// Computes a time-sensitive product aggregate over <#= typeName #>s using snapshot semantics.
         /// </summary>
         public IAggregate<TSource, <#= typeName #>, <#= typeName #>> Product(Expression<Func<TSource, <#= typeName #>>> selector)
         {
@@ -120,7 +120,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive sum aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that nulls have
+        /// Computes a time-sensitive sum aggregate over nullable <#= typeName #>s using snapshot semantics. Note that nulls have
         /// no affect on the sum.
         /// </summary>
         public IAggregate<TSource, <#= typeName #>, <#= typeName #>> Product(Expression<Func<TSource, <#= typeName #>?>> selector)
@@ -142,7 +142,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over <#= typeName #>s using snapshot semantics. Note that the accumulator
         /// internally is a <#= sumTypeName #> datatype.
         /// </summary>
         public IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>> Average(Expression<Func<TSource, <#= typeName #>>> selector)
@@ -164,7 +164,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive average aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average aggregate over nullable <#= typeName #>s using snapshot semantics. Note that the accumulator
         /// internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
         /// </summary>
         public IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>?> Average(Expression<Func<TSource, <#= typeName #>?>> selector)
@@ -186,7 +186,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive average-squares aggregate over <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average-squares aggregate over <#= typeName #>s using snapshot semantics. Note that the accumulator
         /// internally is a <#= sumTypeName #> datatype.
         /// </summary>
         public IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>> AverageSquares(Expression<Func<TSource, <#= typeName #>>> selector)
@@ -208,7 +208,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         /// <summary>
-        /// Computes a time-sensitive average-squares aggregate over nullable <#= typeName #>s using "snapshot windows" (SI terminology). Note that the accumulator
+        /// Computes a time-sensitive average-squares aggregate over nullable <#= typeName #>s using snapshot semantics. Note that the accumulator
         /// internally is a <#= sumTypeName #> datatype and that nulls have no affect on the average.
         /// </summary>
         public IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>?> AverageSquares(Expression<Func<TSource, <#= typeName #>?>> selector)
