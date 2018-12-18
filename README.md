@@ -25,7 +25,7 @@ Trill is a high-performance one-pass in-memory streaming analytics engine from M
 
 # Learn More
 
-- The [Trill paper](http://research.microsoft.com/pubs/231690/trill-vldb2015.pdf) appeared at VLDB.
+- The [Trill paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/trill-vldb2015.pdf) appeared at VLDB.
 - An [article](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/07/trill-debull.pdf) on Trill appeared in the IEEE Data Engineering Bulletin.
 - The [Trill technical report](http://research.microsoft.com/pubs/214609/trill-TR.pdf).
 - Additional documents located in the /Documentation directory:
