@@ -10,13 +10,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AC9C5E98-3DA8-4382-9B97-09EC03F881E5}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		Build.Directory.props = Build.Directory.props
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{42433653-79B2-4044-9EF5-4C9E9A9FA3FC}"
 	ProjectSection(SolutionItems) = preProject
 		Test\app.config = Test\app.config
-		Test\Build.props = Test\Build.props
+		Test\Directory.Build.props = Test\Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleTesting", "Test\SimpleTesting\SimpleTesting.csproj", "{F88FBCF8-C33B-4089-8998-19E9CF901B99}"
