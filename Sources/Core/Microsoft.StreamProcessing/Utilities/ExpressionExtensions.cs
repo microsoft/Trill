@@ -205,9 +205,7 @@ namespace Microsoft.StreamProcessing
         //     BODY/(PARAMS->ARGS)
         // i.e. BODY expression where PARAMS are replaced with ARGS substitutions
         public static Expression<TDelegate> Inline<TDelegate>(LambdaExpression lambda)
-        {
-            return Expression.Lambda<TDelegate>(new CallInlinerCallRewriter().Visit(lambda.Body), lambda.Parameters);
-        }
+            => Expression.Lambda<TDelegate>(new CallInlinerCallRewriter().Visit(lambda.Body), lambda.Parameters);
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
@@ -264,8 +262,7 @@ namespace Microsoft.StreamProcessing
             if (e1 is ConstantExpression constant1)
             {
                 var constant2 = e2 as ConstantExpression;
-                if (constant1.Value == null) return (constant2.Value == null);
-                return constant1.Value.Equals(constant2.Value);
+                return constant1.Value == null ? constant2.Value == null : constant1.Value.Equals(constant2.Value);
             }
             if (e1 is ParameterExpression param1)
             {
@@ -2016,6 +2013,37 @@ namespace Microsoft.StreamProcessing
 
         public static Expression<Func<TReduceKey, TBind, TOutput>> Transform(LambdaExpression input)
             => new GroupInputAndKeyInliner<TReduceKey, TBind, TOutput>().Visit(input) as Expression<Func<TReduceKey, TBind, TOutput>>;
+    }
+
+    internal sealed class GroupInputInliner<TReduceKey, TBind, TOutput> : ExpressionVisitor
+    {
+        private readonly ParameterExpression parameter;
+        private readonly ParameterExpression newParameter;
+
+        private GroupInputInliner(ParameterExpression parameter, ParameterExpression newParameter)
+        {
+            this.parameter = parameter;
+            this.newParameter = newParameter;
+        }
+
+        protected override Expression VisitMember(MemberExpression node)
+        {
+            if (node.Member.Name == "Key" && node.Expression == parameter) return newParameter;
+            return base.VisitMember(node);
+        }
+
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            if (node == parameter) throw new InvalidOperationException("Cannot use a group key outside of accessing its key.");
+            return base.VisitParameter(node);
+        }
+
+        public static Expression<Func<TReduceKey, TBind, TOutput>> Transform(Expression<Func<GroupSelectorInput<TReduceKey>, TBind, TOutput>> input)
+        {
+            var newParameter = Expression.Parameter(typeof(TReduceKey), input.Parameters[0].Name);
+            var newBody = new GroupInputInliner<TReduceKey, TBind, TOutput>(input.Parameters[0], newParameter).Visit(input.Body);
+            return Expression.Lambda<Func<TReduceKey, TBind, TOutput>>(newBody, newParameter, input.Parameters[1]);
+        }
     }
 
     /// <summary>

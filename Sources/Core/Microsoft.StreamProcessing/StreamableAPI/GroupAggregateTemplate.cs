@@ -37,6 +37,16 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(aggregate1, nameof(aggregate1));
             Invariant.IsNotNull(merger, nameof(merger));
 
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var inlinedMerger = GroupInputInliner<TInnerKey, TOutput1, TOutput>.Transform(merger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, TState1, TOutput1, TOutput>
+                    (emptySource, emptyAggregate1(new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector))), keySelector, inlinedMerger);
+            }
+
             return source.Map(keySelector).Reduce(s => s.Aggregate(aggregate1), merger);
         }
 
@@ -103,8 +113,24 @@ namespace Microsoft.StreamProcessing
                     Item1 = output1,
                     Item2 = output2
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2>, StructTuple<TOutput1, TOutput2>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -197,8 +223,26 @@ namespace Microsoft.StreamProcessing
                     Item2 = output2,
                     Item3 = output3
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3>, StructTuple<TOutput1, TOutput2, TOutput3>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -303,8 +347,28 @@ namespace Microsoft.StreamProcessing
                     Item3 = output3,
                     Item4 = output4
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -421,8 +485,30 @@ namespace Microsoft.StreamProcessing
                     Item4 = output4,
                     Item5 = output5
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -551,8 +637,32 @@ namespace Microsoft.StreamProcessing
                     Item5 = output5,
                     Item6 = output6
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -693,8 +803,34 @@ namespace Microsoft.StreamProcessing
                     Item6 = output6,
                     Item7 = output7
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6, outputs.Item7);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+                var emptyAggregate7 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>>)aggregate7;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var agg7 = emptyAggregate7(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, agg7, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -847,8 +983,36 @@ namespace Microsoft.StreamProcessing
                     Item7 = output7,
                     Item8 = output8
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6, outputs.Item7, outputs.Item8);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+                var emptyAggregate7 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>>)aggregate7;
+                var emptyAggregate8 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState8, TOutput8>>)aggregate8;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var agg7 = emptyAggregate7(window);
+                var agg8 = emptyAggregate8(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, agg7, agg8, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -1013,8 +1177,38 @@ namespace Microsoft.StreamProcessing
                     Item8 = output8,
                     Item9 = output9
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6, outputs.Item7, outputs.Item8, outputs.Item9);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+                var emptyAggregate7 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>>)aggregate7;
+                var emptyAggregate8 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState8, TOutput8>>)aggregate8;
+                var emptyAggregate9 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState9, TOutput9>>)aggregate9;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var agg7 = emptyAggregate7(window);
+                var agg8 = emptyAggregate8(window);
+                var agg9 = emptyAggregate9(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, agg7, agg8, agg9, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -1191,8 +1385,40 @@ namespace Microsoft.StreamProcessing
                     Item9 = output9,
                     Item10 = output10
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6, outputs.Item7, outputs.Item8, outputs.Item9, outputs.Item10);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+                var emptyAggregate7 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>>)aggregate7;
+                var emptyAggregate8 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState8, TOutput8>>)aggregate8;
+                var emptyAggregate9 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState9, TOutput9>>)aggregate9;
+                var emptyAggregate10 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState10, TOutput10>>)aggregate10;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var agg7 = emptyAggregate7(window);
+                var agg8 = emptyAggregate8(window);
+                var agg9 = emptyAggregate9(window);
+                var agg10 = emptyAggregate10(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, agg7, agg8, agg9, agg10, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -1381,8 +1607,42 @@ namespace Microsoft.StreamProcessing
                     Item10 = output10,
                     Item11 = output11
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6, outputs.Item7, outputs.Item8, outputs.Item9, outputs.Item10, outputs.Item11);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+                var emptyAggregate7 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>>)aggregate7;
+                var emptyAggregate8 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState8, TOutput8>>)aggregate8;
+                var emptyAggregate9 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState9, TOutput9>>)aggregate9;
+                var emptyAggregate10 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState10, TOutput10>>)aggregate10;
+                var emptyAggregate11 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState11, TOutput11>>)aggregate11;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var agg7 = emptyAggregate7(window);
+                var agg8 = emptyAggregate8(window);
+                var agg9 = emptyAggregate9(window);
+                var agg10 = emptyAggregate10(window);
+                var agg11 = emptyAggregate11(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, agg7, agg8, agg9, agg10, agg11, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -1583,8 +1843,44 @@ namespace Microsoft.StreamProcessing
                     Item11 = output11,
                     Item12 = output12
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6, outputs.Item7, outputs.Item8, outputs.Item9, outputs.Item10, outputs.Item11, outputs.Item12);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+                var emptyAggregate7 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>>)aggregate7;
+                var emptyAggregate8 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState8, TOutput8>>)aggregate8;
+                var emptyAggregate9 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState9, TOutput9>>)aggregate9;
+                var emptyAggregate10 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState10, TOutput10>>)aggregate10;
+                var emptyAggregate11 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState11, TOutput11>>)aggregate11;
+                var emptyAggregate12 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState12, TOutput12>>)aggregate12;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var agg7 = emptyAggregate7(window);
+                var agg8 = emptyAggregate8(window);
+                var agg9 = emptyAggregate9(window);
+                var agg10 = emptyAggregate10(window);
+                var agg11 = emptyAggregate11(window);
+                var agg12 = emptyAggregate12(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, agg7, agg8, agg9, agg10, agg11, agg12, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -1797,8 +2093,46 @@ namespace Microsoft.StreamProcessing
                     Item12 = output12,
                     Item13 = output13
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6, outputs.Item7, outputs.Item8, outputs.Item9, outputs.Item10, outputs.Item11, outputs.Item12, outputs.Item13);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+                var emptyAggregate7 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>>)aggregate7;
+                var emptyAggregate8 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState8, TOutput8>>)aggregate8;
+                var emptyAggregate9 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState9, TOutput9>>)aggregate9;
+                var emptyAggregate10 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState10, TOutput10>>)aggregate10;
+                var emptyAggregate11 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState11, TOutput11>>)aggregate11;
+                var emptyAggregate12 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState12, TOutput12>>)aggregate12;
+                var emptyAggregate13 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState13, TOutput13>>)aggregate13;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var agg7 = emptyAggregate7(window);
+                var agg8 = emptyAggregate8(window);
+                var agg9 = emptyAggregate9(window);
+                var agg10 = emptyAggregate10(window);
+                var agg11 = emptyAggregate11(window);
+                var agg12 = emptyAggregate12(window);
+                var agg13 = emptyAggregate13(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, agg7, agg8, agg9, agg10, agg11, agg12, agg13, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -2023,8 +2357,48 @@ namespace Microsoft.StreamProcessing
                     Item13 = output13,
                     Item14 = output14
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6, outputs.Item7, outputs.Item8, outputs.Item9, outputs.Item10, outputs.Item11, outputs.Item12, outputs.Item13, outputs.Item14);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+                var emptyAggregate7 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>>)aggregate7;
+                var emptyAggregate8 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState8, TOutput8>>)aggregate8;
+                var emptyAggregate9 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState9, TOutput9>>)aggregate9;
+                var emptyAggregate10 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState10, TOutput10>>)aggregate10;
+                var emptyAggregate11 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState11, TOutput11>>)aggregate11;
+                var emptyAggregate12 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState12, TOutput12>>)aggregate12;
+                var emptyAggregate13 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState13, TOutput13>>)aggregate13;
+                var emptyAggregate14 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState14, TOutput14>>)aggregate14;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var agg7 = emptyAggregate7(window);
+                var agg8 = emptyAggregate8(window);
+                var agg9 = emptyAggregate9(window);
+                var agg10 = emptyAggregate10(window);
+                var agg11 = emptyAggregate11(window);
+                var agg12 = emptyAggregate12(window);
+                var agg13 = emptyAggregate13(window);
+                var agg14 = emptyAggregate14(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, agg7, agg8, agg9, agg10, agg11, agg12, agg13, agg14, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(
@@ -2261,8 +2635,50 @@ namespace Microsoft.StreamProcessing
                     Item14 = output14,
                     Item15 = output15
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, outputs.Item1, outputs.Item2, outputs.Item3, outputs.Item4, outputs.Item5, outputs.Item6, outputs.Item7, outputs.Item8, outputs.Item9, outputs.Item10, outputs.Item11, outputs.Item12, outputs.Item13, outputs.Item14, outputs.Item15);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var emptyAggregate2 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>>)aggregate2;
+                var emptyAggregate3 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>>)aggregate3;
+                var emptyAggregate4 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>>)aggregate4;
+                var emptyAggregate5 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>>)aggregate5;
+                var emptyAggregate6 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>>)aggregate6;
+                var emptyAggregate7 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>>)aggregate7;
+                var emptyAggregate8 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState8, TOutput8>>)aggregate8;
+                var emptyAggregate9 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState9, TOutput9>>)aggregate9;
+                var emptyAggregate10 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState10, TOutput10>>)aggregate10;
+                var emptyAggregate11 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState11, TOutput11>>)aggregate11;
+                var emptyAggregate12 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState12, TOutput12>>)aggregate12;
+                var emptyAggregate13 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState13, TOutput13>>)aggregate13;
+                var emptyAggregate14 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState14, TOutput14>>)aggregate14;
+                var emptyAggregate15 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState15, TOutput15>>)aggregate15;
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+                var agg1 = emptyAggregate1(window);
+                var agg2 = emptyAggregate2(window);
+                var agg3 = emptyAggregate3(window);
+                var agg4 = emptyAggregate4(window);
+                var agg5 = emptyAggregate5(window);
+                var agg6 = emptyAggregate6(window);
+                var agg7 = emptyAggregate7(window);
+                var agg8 = emptyAggregate8(window);
+                var agg9 = emptyAggregate9(window);
+                var agg10 = emptyAggregate10(window);
+                var agg11 = emptyAggregate11(window);
+                var agg12 = emptyAggregate12(window);
+                var agg13 = emptyAggregate13(window);
+                var agg14 = emptyAggregate14(window);
+                var agg15 = emptyAggregate15(window);
+                var compound = AggregateFunctions.Combine(agg1, agg2, agg3, agg4, agg5, agg6, agg7, agg8, agg9, agg10, agg11, agg12, agg13, agg14, agg15, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(

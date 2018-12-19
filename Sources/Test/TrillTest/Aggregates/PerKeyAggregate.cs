@@ -38,10 +38,10 @@ namespace ComponentTesting.Aggregates
             }.ToStreamable().SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
 
             var output = input
-                .AggregateByKey(
+                .GroupAggregate(
                 a => a / 100,
                 b => b.Count(),
-                (key, count) => key * 100 + (int)count * 10);
+                (key, count) => key.Key * 100 + (int)count * 10);
 
             var correct = new[]
             {
@@ -72,10 +72,10 @@ namespace ComponentTesting.Aggregates
 
             var output = input
                 .Select(e => new StructTuple<long, long> { Item1 = 0, Item2 = e })
-                .AggregateByKey(
+                .GroupAggregate(
                 a => (int)a.Item2 / 100,
                 b => b.Sum(s => (int)(s.Item2 & 0xffff)),
-                (key, sum) => new StructTuple<int, ulong> { Item1 = key, Item2 = (ulong)key * 100 + (ulong)sum * 10 })
+                (key, sum) => new StructTuple<int, ulong> { Item1 = key.Key, Item2 = (ulong)key.Key * 100 + (ulong)sum * 10 })
                 .Select(e => (int)e.Item2);
 
             var correct = new[]
@@ -107,12 +107,11 @@ namespace ComponentTesting.Aggregates
 
             var output = input
                 .Select(e => new StructTuple<long, long> { Item1 = 0, Item2 = e })
-                .AggregateByKey(
+                .GroupAggregate(
                 a => (int)a.Item2 / 100,
                 b => b.Sum(s => (int)(s.Item2 & 0xffff)),
                 c => c.Count(),
-                (sum, count) => new StructTuple<int, ulong> { Item1 = sum, Item2 = count * 34 },
-                (key, agg) => new StructTuple<int, ulong, ulong> { Item1 = key, Item2 = (ulong)key * 100 + (ulong)agg.Item1 * 10, Item3 = (ulong)key * 100 + (ulong)agg.Item2 * 0 })
+                (key, sum, count) => new StructTuple<int, ulong, ulong> { Item1 = key.Key, Item2 = (ulong)key.Key * 100 + (ulong)sum * 10, Item3 = (ulong)key.Key * 100 + (ulong)count * 34 * 0 })
                 .Select(e => (int)e.Item2);
 
             var correct = new[]

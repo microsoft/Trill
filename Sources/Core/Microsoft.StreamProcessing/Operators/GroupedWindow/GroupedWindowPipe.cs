@@ -214,7 +214,6 @@ namespace Microsoft.StreamProcessing
                         {
                             // First time group is active for this time
                             if (!this.aggregateByKey.Lookup(this.currentKey, this.currentHash, out int aggindex))
-
                             {
                                 // New group. Create new state
                                 this.currentState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
@@ -290,7 +289,6 @@ namespace Microsoft.StreamProcessing
 
         public void OnPunctuation(long syncTime)
         {
-
             // Handle time moving forward
             if (syncTime > this.lastSyncTime)
             {

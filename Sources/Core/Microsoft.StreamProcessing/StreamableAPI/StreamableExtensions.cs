@@ -936,26 +936,6 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Applies multiple aggregates to snapshot windows on the input stream relative to the selected grouping key.
-        /// </summary>
-        public static IStreamable<Empty, TOutput> AggregateByKey<TInput, TInnerKey, TState1, TOutput1, TOutput>(
-            this IStreamable<Empty, TInput> source,
-            Expression<Func<TInput, TInnerKey>> keySelector,
-            Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>> aggregate,
-            Expression<Func<TInnerKey, TOutput1, TOutput>> merger)
-        {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate, nameof(aggregate));
-            Invariant.IsNotNull(merger, nameof(merger));
-
-            if (source.Properties.IsStartEdgeOnly)
-                return new GroupedWindowStreamable<TInnerKey, TInput, TState1, TOutput1, TOutput>
-                    (source, aggregate(new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(source.Properties.GroupNested(keySelector))), keySelector, merger);
-            else throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Applies an aggregate to snapshot windows on the input stream.
         /// </summary>
         internal static IStreamable<TKey, TOutput> Aggregate<TKey, TInput, TState, TOutput>(
