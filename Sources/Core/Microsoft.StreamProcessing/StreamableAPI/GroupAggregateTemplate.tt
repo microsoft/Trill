@@ -41,6 +41,16 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(aggregate1, nameof(aggregate1));
             Invariant.IsNotNull(merger, nameof(merger));
 
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+                var emptyAggregate1 = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>>)aggregate1;
+                var inlinedMerger = GroupInputInliner<TInnerKey, TOutput1, TOutput>.Transform(merger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, TState1, TOutput1, TOutput>
+                    (emptySource, emptyAggregate1(new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector))), keySelector, inlinedMerger);
+            }
+
             return source.Map(keySelector).Reduce(s => s.Aggregate(aggregate1), merger);
         }
 
@@ -106,8 +116,22 @@ namespace Microsoft.StreamProcessing
                 (<#= IterateComma("output$", count) #>) => new StructTuple<<#= IterateComma("TOutput$", count) #>> {
 <#= IterateCommaLine("                    Item$ = output$", count) #>
                 };
+
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<<#= IterateComma("TOutput$", count) #>>, TOutput>> reducerTemplate =
                 (key, outputs) => CallInliner.Call(merger, key, <#= IterateComma("outputs.Item$", count) #>);
+
+            if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
+            {
+                var emptySource = (IStreamable<Empty, TInput>)source;
+<#= IterateLine("                var emptyAggregate$ = (Func<Window<CompoundGroupKey<Empty, TInnerKey>, TInput>, IAggregate<TInput, TState$, TOutput$>>)aggregate$;", count) #>
+
+                var window = new Window<CompoundGroupKey<Empty, TInnerKey>, TInput>(emptySource.Properties.GroupNested(keySelector));
+<#= IterateLine("                var agg$ = emptyAggregate$(window);", count) #>
+                var compound = AggregateFunctions.Combine(<#= IterateComma("agg$", count) #>, aggregateMerger);
+
+                return (IStreamable<TOuterKey, TOutput>)(object)new GroupedWindowStreamable<TInnerKey, TInput, StructTuple<<#= IterateComma("TState$", count) #>>, StructTuple<<#= IterateComma("TOutput$", count) #>>, TOutput>
+                        (emptySource, compound, keySelector, GroupInputInliner<TInnerKey, StructTuple<<#= IterateComma("TOutput$", count) #>>, TOutput>.Transform(reducerTemplate.InlineCalls()));
+            }
 
             return source.Map(keySelector)
                          .Reduce(

@@ -37,9 +37,9 @@ namespace Microsoft.StreamProcessing
         private List<Tuple<MyFieldInfo, MyFieldInfo>> swingingFields;
         private Dictionary<MyFieldInfo, Expression> computedFields;
         private bool noTransformation;
-        private ColumnarRepresentation resultTypeInformation;
+        private readonly ColumnarRepresentation resultTypeInformation;
         private readonly bool noSwingingFields;
-        private Dictionary<ParameterExpression, SelectParameterInformation> parameterInformation;
+        private readonly Dictionary<ParameterExpression, SelectParameterInformation> parameterInformation;
         private string ProjectionReturningResultInstance;
         private List<string> multiStringOperations;
         private List<MyFieldInfo> multiStringResultFields;

@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
                           = new SafeConcurrentDictionary<Tuple<Type, string>>();
 
-        private StreamProperties<Empty, TInput> sourceProps;
+        private readonly StreamProperties<Empty, TInput> sourceProps;
         internal Expression<Func<TInput, TKey>> KeySelector;
         internal Expression<Func<TKey, TOutput, TResult>> ResultSelector;
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Used to avoid creating redundant readonly property.")]
@@ -37,10 +37,7 @@ namespace Microsoft.StreamProcessing
         }
 
         internal override IStreamObserver<Empty, TInput> CreatePipe(IStreamObserver<Empty, TResult> observer)
-        {
-            if (this.Properties.IsColumnar) return GetPipe(observer);
-            else return new GroupedWindowPipe<TKey, TInput, TState, TOutput, TResult>(this, observer);
-        }
+            => this.Properties.IsColumnar ? GetPipe(observer) : new GroupedWindowPipe<TKey, TInput, TState, TOutput, TResult>(this, observer);
 
         protected override bool CanGenerateColumnar()
         {
