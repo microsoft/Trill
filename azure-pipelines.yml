@@ -1,0 +1,42 @@
+variables:
+  solution: 'Sources/Trill.sln'
+
+jobs:
+- job: 'CSharp_Windows'  
+  pool:
+    vmImage: vs2017-win2016    
+  displayName: 'C# (Windows)'
+
+  strategy:
+    maxParallel: 4
+    matrix:
+      AnyCPU-Debug:
+        buildPlatform: 'Any CPU'
+        buildConfiguration: 'Debug'
+      AnyCPU-Release:
+        buildPlatform: 'Any CPU'
+        buildConfiguration: 'Release'
+      x64-Debug:
+        buildPlatform: 'x64'
+        buildConfiguration: 'Debug'
+      x64-Release:
+        buildPlatform: 'x64'
+        buildConfiguration: 'Release'
+  
+  steps:
+  - task: NuGetToolInstaller@0
+
+  - task: NuGetCommand@2
+    inputs:
+      restoreSolution: '$(solution)'
+
+  - task: VSBuild@1
+    inputs:
+      solution: '$(solution)'
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
+
+  - task: VSTest@2
+    inputs:
+      platform: '$(buildPlatform)'
+      configuration: '$(buildConfiguration)'
