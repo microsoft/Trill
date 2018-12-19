@@ -9,7 +9,7 @@ Trill is a high-performance one-pass in-memory streaming analytics engine from M
 3. You can also check out samples of Trill usage at our [samples repository](https://github.com/Microsoft/TrillSamples).
 
 # Learn More
-- Announcement [blog post] (https://azure.microsoft.com/en-us/blog/microsoft-open-sources-trill-to-deliver-insights-on-a-trillion-events-a-day/).
+- Announcement [blog post](https://azure.microsoft.com/en-us/blog/microsoft-open-sources-trill-to-deliver-insights-on-a-trillion-events-a-day/).
 - The [Trill paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/trill-vldb2015.pdf) appeared at VLDB.
 - An [article](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/07/trill-debull.pdf) on Trill appeared in the IEEE Data Engineering Bulletin.
 - The [Trill technical report](http://research.microsoft.com/pubs/214609/trill-TR.pdf).
