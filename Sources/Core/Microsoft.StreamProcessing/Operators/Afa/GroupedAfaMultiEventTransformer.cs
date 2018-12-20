@@ -44,7 +44,6 @@ namespace Microsoft.StreamProcessing
             {
                 var className = string.Format("GeneratedGroupedAfaMultiEvent_{0}", AFASequenceNumber++);
                 var template = new GroupedAfaMultiEventTemplate(className, typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(TAccumulator));
-                var payloadRepresentation = new ColumnarRepresentation(typeof(TPayload));
 
                 template.isFinal = stream.afa.isFinal;
                 template.hasOutgoingArcs = stream.afa.hasOutgoingArcs;

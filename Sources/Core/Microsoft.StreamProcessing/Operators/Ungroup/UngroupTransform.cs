@@ -123,8 +123,6 @@ namespace Microsoft.StreamProcessing
 
                 var inputMessageType = StreamMessageManager.GetStreamMessageType<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult>();
 
-                ColumnarRepresentation innerKeyRepresentation;
-                innerKeyRepresentation = new ColumnarRepresentation(typeOfTInnerKey, "InnerGroup");
                 var innerResultRepresentation = new ColumnarRepresentation(typeofTInnerResult);
                 var resultRepresentation = new ColumnarRepresentation(typeofTResult);
 

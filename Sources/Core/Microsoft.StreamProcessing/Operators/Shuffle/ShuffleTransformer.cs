@@ -89,7 +89,6 @@ namespace Microsoft.StreamProcessing
                 var generatedClassName = string.Format(CultureInfo.InvariantCulture, "ShuffleStreamablePipeGeneratedFrom_{0}_{1}_{2}_{3}", typeOfTOuterKey.GetValidIdentifier(), typeOfTSource.GetValidIdentifier(), typeOfTInnerKey.GetValidIdentifier(), shuffleCounter++);
 
                 var inputMessageRepresentation = new ColumnarRepresentation(typeOfTSource);
-                var innerKeyRepresentation = keySelector == null ? new ColumnarRepresentation(typeOfTOuterKey) : new ColumnarRepresentation(typeOfTInnerKey);
 
                 var template = new ShuffleTemplate(
                     generatedClassName,
