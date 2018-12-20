@@ -74,10 +74,10 @@ namespace Microsoft.StreamProcessing
             while (current != null)
             {
                 this.lastDataTimeDictionary.Lookup(current.Value, out int cIndex);
-                var threshhold = this.lastDataTimeDictionary.entries[cIndex].value == long.MinValue
+                var threshold = this.lastDataTimeDictionary.entries[cIndex].value == long.MinValue
                     ? this.windowEndTimeDictionary.entries[cIndex].value
                     : Math.Min(this.lastDataTimeDictionary.entries[cIndex].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[cIndex].value);
-                if (timestamp >= threshhold)
+                if (timestamp >= threshold)
                 {
                     var queue = this.stateDictionary.entries[cIndex].value;
                     while (queue.Any())
@@ -85,7 +85,7 @@ namespace Microsoft.StreamProcessing
                         var active = queue.Dequeue();
 
                         int ind = this.output.Count++;
-                        this.output.vsync.col[ind] = threshhold;
+                        this.output.vsync.col[ind] = threshold;
                         this.output.vother.col[ind] = active.Sync;
                         this.output.key.col[ind] = active.Key;
                         this.output[ind] = active.Payload;
@@ -148,9 +148,9 @@ namespace Microsoft.StreamProcessing
                                 this.orderedKeys.AddLast(new LinkedListNode<TKey>(batch.key.col[i]));
                             else
                             {
-                                var oldThreshhold = Math.Min(this.lastDataTimeDictionary.entries[keyIndex].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[keyIndex].value);
-                                var newThreshhold = Math.Min(vsync[i] + this.sessionTimeout, this.windowEndTimeDictionary.entries[keyIndex].value);
-                                if (newThreshhold > oldThreshhold)
+                                var oldThreshold = Math.Min(this.lastDataTimeDictionary.entries[keyIndex].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[keyIndex].value);
+                                var newThreshold = Math.Min(vsync[i] + this.sessionTimeout, this.windowEndTimeDictionary.entries[keyIndex].value);
+                                if (newThreshold > oldThreshold)
                                 {
                                     var node = this.orderedKeys.Find(batch.key.col[i]);
                                     this.orderedKeys.Remove(node);
