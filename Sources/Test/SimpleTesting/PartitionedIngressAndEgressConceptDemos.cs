@@ -2,6 +2,7 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -13,7 +14,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SimpleTesting.PartitionedIngressAndEgress.ConceptualDemos
 {
     [TestClass]
-    public class ConceptualDemos : TestWithConfigSettingsAndMemoryLeakDetection
+    public sealed class ConceptualDemos : TestWithConfigSettingsAndMemoryLeakDetection, IDisposable
     {
         // Demonstrates how a DisorderPolicy.Drop can both drop and, with reorderLatency, reorder out-of-order events
         [TestMethod, TestCategory("Gated")]
@@ -578,5 +579,16 @@ namespace SimpleTesting.PartitionedIngressAndEgress.ConceptualDemos
 
             ValidateExpectedOutput(expected, this.output, this.validateByPartition);
         }
+
+        #region IDisposable Support
+        public void Dispose()
+        {
+            if (this.input != null)
+            {
+                this.input.Dispose();
+                this.input = null;
+            }
+        }
+        #endregion
     }
 }
