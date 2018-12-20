@@ -67,7 +67,6 @@ namespace Microsoft.StreamProcessing
 
                 template.className = string.Format("GeneratedClip_{0}", ClipSequenceNumber++);
 
-                var leftMessageRepresentation = new ColumnarRepresentation(leftType);
                 var resultRepresentation = new ColumnarRepresentation(leftType);
 
                 template.ActiveEventType = leftType.GetTypeInfo().IsValueType ? template.TLeft : "Active_Event";

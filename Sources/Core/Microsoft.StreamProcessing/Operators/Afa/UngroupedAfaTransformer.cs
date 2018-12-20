@@ -38,8 +38,6 @@ namespace Microsoft.StreamProcessing
             {
                 var className = string.Format("GeneratedUngroupedAfa_{0}", AFASequenceNumber++);
                 var template = new UngroupedAfaTemplate(className, typeof(Empty), typeof(TPayload), typeof(TRegister), typeof(TAccumulator));
-                var payloadRepresentation = new ColumnarRepresentation(typeof(TPayload));
-                var registerRepresentation = new ColumnarRepresentation(typeof(TRegister));
 
                 template.isFinal = stream.afa.isFinal;
                 template.hasOutgoingArcs = stream.afa.hasOutgoingArcs;

@@ -49,13 +49,7 @@ namespace Microsoft.StreamProcessing
                 {
                     TKey = typeof(TKey).GetCSharpSourceSyntax()
                 };
-                var payloadRepresentation =
-                    Config.ForceRowBasedExecution
-                    ?
-                    new ColumnarRepresentation(typeof(TPayload))
-                    :
-                    new ColumnarRepresentation(typeof(TPayload))
-                    ;
+                var payloadRepresentation = new ColumnarRepresentation(typeof(TPayload));
 
                 template.isFinal = stream.afa.isFinal;
                 template.hasOutgoingArcs = stream.afa.hasOutgoingArcs;

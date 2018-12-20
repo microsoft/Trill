@@ -86,7 +86,6 @@ namespace Microsoft.StreamProcessing
 
                 var inputMessageRepresentation = new ColumnarRepresentation(inputType);
 
-                var innerResultRepresentation = inputMessageRepresentation;
                 var resultRepresentation = new ColumnarRepresentation(resultType);
 
                 var assemblyReferences = new List<Assembly>();
