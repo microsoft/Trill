@@ -302,6 +302,31 @@ namespace Microsoft.StreamProcessing
         /// Represents an operator that is defined externally from the library
         /// </summary>
         UserDefined,
+
+        /// <summary>
+        /// Represents a signal processing operation for a DSP windowed user-defined operation
+        /// </summary>
+        WindowedPipeline,
+
+        /// <summary>
+        /// Represents a signal processing operation for digital filtration
+        /// </summary>
+        DigitalFilter,
+
+        /// <summary>
+        /// Represents a signal processing operation for IIR filtration
+        /// </summary>
+        FilterIIR,
+
+        /// <summary>
+        /// Represents a signal processing operation for interpolation
+        /// </summary>
+        Interpolate,
+
+        /// <summary>
+        /// Represents a signal processing operation for sampling
+        /// </summary>
+        Sample,
     }
 
     /// <summary>

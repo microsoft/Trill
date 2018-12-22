@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 
 #pragma warning disable 0436
 // Test
+[assembly: InternalsVisibleTo("Microsoft.StreamProcessing.Signals" + AssemblyRef.ProductPublicKey)]
 [assembly: InternalsVisibleTo("SimpleTesting" + AssemblyRef.ProductPublicKey)]
 [assembly: InternalsVisibleTo("ComponentTesting" + AssemblyRef.ProductPublicKey)]
 [assembly: InternalsVisibleTo("PerformanceTesting" + AssemblyRef.ProductPublicKey)]

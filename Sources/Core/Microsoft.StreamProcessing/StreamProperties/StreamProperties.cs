@@ -537,22 +537,19 @@ namespace Microsoft.StreamProcessing
         /// Clone
         /// </summary>
         internal StreamProperties<TKey, TNewPayload> CloneToNewPayloadType<TNewPayload>(
-            IEqualityComparerExpression<TNewPayload> newPayloadEqualityComparer,
-            IComparerExpression<TNewPayload> newPayloadComparer)
+            IEqualityComparerExpression<TNewPayload> newPayloadEqualityComparer = null,
+            IComparerExpression<TNewPayload> newPayloadComparer = null)
         {
             return new StreamProperties<TKey, TNewPayload>
                 (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer,
-                    newPayloadEqualityComparer, this.KeyComparer,
-                    newPayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
+                    newPayloadEqualityComparer ?? EqualityComparerExpression<TNewPayload>.Default, this.KeyComparer,
+                    newPayloadComparer ?? ComparerExpression<TNewPayload>.Default, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
         }
 
         /// <summary>
         /// Where
         /// </summary>
-        internal StreamProperties<TKey, TPayload> Where(Expression<Func<TPayload, bool>> predicate)
-        {
-            return this;
-        }
+        internal StreamProperties<TKey, TPayload> Where(Expression<Func<TPayload, bool>> predicate) => this;
 
         /// <summary>
         /// Select

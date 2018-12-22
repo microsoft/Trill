@@ -2,7 +2,6 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
-using System;
 using System.ComponentModel;
 
 namespace Microsoft.StreamProcessing
@@ -11,8 +10,7 @@ namespace Microsoft.StreamProcessing
     /// Currently for internal use only - do not use directly.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public abstract class UnaryPipe<TKey, TSource, TResult> : Pipe<TKey, TResult>,
-        IStreamObserver<TKey, TSource>
+    public abstract class UnaryPipe<TKey, TSource, TResult> : Pipe<TKey, TResult>, IStreamObserver<TKey, TSource>
     {
         /// <summary>
         /// Currently for internal use only - do not use directly.
