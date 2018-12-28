@@ -19,27 +19,28 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly long skip;
         [SchemaSerialization]
+        private readonly long progress;
+        [SchemaSerialization]
         private readonly long offset;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public StatelessQuantizeLifetimePipe() { }
 
-        public StatelessQuantizeLifetimePipe(IStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long width, long skip, long offset)
+        public StatelessQuantizeLifetimePipe(IStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long width, long skip, long progress, long offset)
             : base(stream, observer)
         {
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
             this.width = width;
             this.skip = skip;
+            this.progress = progress;
             this.offset = offset;
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new QuantizeLifetimePlanNode(
+            => this.Observer.ProduceQueryPlan(new QuantizeLifetimePlanNode(
                 previous, this,
-                typeof(TKey), typeof(TPayload), this.width, this.skip, this.offset,
+                typeof(TKey), typeof(TPayload), this.width, this.skip, this.progress, this.offset,
                 false, null, false));
-        }
 
         public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
         {
@@ -57,24 +58,24 @@ namespace Microsoft.StreamProcessing
                     {
                         if (vother[i] == StreamEvent.InfinitySyncTime) // start edge
                         {
-                            vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.skip);
+                            vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                         }
                         else if (vother[i] < vsync[i]) // end edge
                         {
                             var temp = Math.Max(vsync[i] + this.skip - 1, vother[i] + this.width);
                             vsync[i] = temp - ((temp - (this.offset + this.width)) % this.skip);
-                            vother[i] = vother[i] - ((vother[i] - this.offset) % this.skip);
+                            vother[i] = vother[i] - ((vother[i] - this.offset) % this.progress);
                         }
                         else // interval
                         {
                             var temp = Math.Max(vother[i] + this.skip - 1, vsync[i] + this.width);
                             vother[i] = temp - ((temp - (this.offset + this.width)) % this.skip);
-                            vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.skip);
+                            vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                         }
                     }
                     else if (vother[i] == long.MinValue) // Punctuation
                     {
-                        vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.skip);
+                        vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                     }
                 }
             }

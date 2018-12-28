@@ -20,6 +20,8 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly long skip;
         [SchemaSerialization]
+        private readonly long progress;
+        [SchemaSerialization]
         private readonly long offset;
 
         [DataMember]
@@ -35,7 +37,7 @@ namespace Microsoft.StreamProcessing
         [Obsolete("Used only by serialization. Do not call directly.")]
         public QuantizeLifetimePipe() { }
 
-        public QuantizeLifetimePipe(QuantizeLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long width, long skip, long offset)
+        public QuantizeLifetimePipe(QuantizeLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long width, long skip, long progress, long offset)
             : base(stream, observer)
         {
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
@@ -45,16 +47,15 @@ namespace Microsoft.StreamProcessing
 
             this.width = width;
             this.skip = skip;
+            this.progress = progress;
             this.offset = offset;
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new QuantizeLifetimePlanNode(
+            => this.Observer.ProduceQueryPlan(new QuantizeLifetimePlanNode(
                 previous, this,
-                typeof(TKey), typeof(TPayload), this.width, this.skip, this.offset,
+                typeof(TKey), typeof(TPayload), this.width, this.skip, this.progress, this.offset,
                 false, this.errorMessages, false));
-        }
 
         private void ReachTime(long timestamp)
         {
@@ -92,7 +93,7 @@ namespace Microsoft.StreamProcessing
                         if (vother[i] == StreamEvent.InfinitySyncTime) // Start edge
                         {
                             int ind = this.output.Count++;
-                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.skip);
+                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                             this.output.vother.col[ind] = StreamEvent.InfinitySyncTime;
                             this.output.key.col[ind] = batch.key.col[i];
                             this.output.payload.col[ind] = batch.payload.col[i];
@@ -102,7 +103,7 @@ namespace Microsoft.StreamProcessing
                         else if (vother[i] > vsync[i]) // Interval
                         {
                             int ind = this.output.Count++;
-                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.skip);
+                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                             var temp = Math.Max(vother[i] + this.skip - 1, vsync[i] + this.width);
                             this.output.vother.col[ind] = temp - ((temp - (this.offset + this.width)) % this.skip);
                             this.output.key.col[ind] = batch.key.col[i];
@@ -114,7 +115,7 @@ namespace Microsoft.StreamProcessing
                         {
                             var temp = Math.Max(vsync[i] + this.skip - 1, vother[i] + this.width);
                             int index = this.intervalMap.Insert(batch.hash.col[i]);
-                            this.intervalMap.Values[index].Populate(batch.key.col[i], batch[i], batch.hash.col[i], vother[i] - ((vother[i] - this.offset) % this.skip));
+                            this.intervalMap.Values[index].Populate(batch.key.col[i], batch[i], batch.hash.col[i], vother[i] - ((vother[i] - this.offset) % this.progress));
                             this.endPointHeap.Insert(temp - ((temp - (this.offset + this.width)) % this.skip), index);
                         }
                     }
@@ -123,7 +124,7 @@ namespace Microsoft.StreamProcessing
                         if (vsync[i] > this.lastSyncTime) ReachTime(vsync[i]);
 
                         int ind = this.output.Count++;
-                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.skip);
+                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                         this.output.vother.col[ind] = long.MinValue;
                         this.output.key.col[ind] = batch.key.col[i];
                         this.output.payload.col[ind] = default;

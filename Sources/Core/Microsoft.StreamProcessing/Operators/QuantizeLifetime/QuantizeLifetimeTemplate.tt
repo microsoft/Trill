@@ -29,6 +29,8 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
     [SchemaSerialization]
     private readonly long skip;
     [SchemaSerialization]
+    private readonly long progress;
+    [SchemaSerialization]
     private readonly long offset;
 
     private StreamMessage<<#= TKey #>, <#= TPayload #>> genericOutputBatch;
@@ -49,7 +51,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
 
     public <#= className #>(
         IStreamable<<#= TKey #>, <#= TPayload #>> stream,
-        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer, long width, long skip, long offset,
+        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer, long width, long skip, long progress, long offset,
         Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
         : base(stream, observer)
     {
@@ -57,6 +59,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
         this.queryPlanGenerator = queryPlanGenerator;
         GetOutputBatch();
         this.width = width;
+        this.progress = progress;
         this.skip = skip;
         this.offset = offset;
     }
@@ -122,7 +125,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                     if (batch.vother.col[i] == StreamEvent.InfinitySyncTime) // Start edge
                     {
                         int ind = output.Count++;
-                        output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % skip);
+                        output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % progress);
                         output.vother.col[ind] = StreamEvent.InfinitySyncTime;
                         output.key.col[ind] = batch.key.col[i];
                         output[ind] = batch[i];
@@ -133,7 +136,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                     else if (batch.vother.col[i] > batch.vsync.col[i]) // Interval
                     {
                         int ind = output.Count++;
-                        output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % skip);
+                        output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % progress);
                         var temp = Math.Max(vother[i] + skip - 1, vsync[i] + width);
                         output.vother.col[ind] = temp - ((temp - (offset + width)) % skip);
                         output.key.col[ind] = batch.key.col[i];
@@ -146,7 +149,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                     {
                         var temp = Math.Max(vsync[i] + skip - 1, vother[i] + width);
                         int index = intervalMap.Insert(batch.hash.col[i]);
-                        intervalMap.Values[index].Populate(batch.key.col[i], batch, i, batch.hash.col[i], vother[i] - ((vother[i] - offset) % skip));
+                        intervalMap.Values[index].Populate(batch.key.col[i], batch, i, batch.hash.col[i], vother[i] - ((vother[i] - offset) % progress));
                         endPointHeap.Insert(temp - ((temp - (offset + width)) % skip), index);
                     }
                 }
@@ -155,7 +158,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                     if (vsync[i] > lastSyncTime) ReachTime(vsync[i]);
 
                     int ind = output.Count++;
-                    output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % skip);
+                    output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % progress);
                     output.vother.col[ind] = long.MinValue;
                     output.key.col[ind] = default;
                     output[ind] = default;

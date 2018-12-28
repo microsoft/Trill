@@ -21,6 +21,8 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly long skip;
         [SchemaSerialization]
+        private readonly long progress;
+        [SchemaSerialization]
         private readonly long offset;
 
         [DataMember]
@@ -31,11 +33,9 @@ namespace Microsoft.StreamProcessing
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public PartitionedQuantizeLifetimePipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
-        public PartitionedQuantizeLifetimePipe(QuantizeLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long width, long skip, long offset)
+        public PartitionedQuantizeLifetimePipe(QuantizeLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long width, long skip, long progress, long offset)
             : base(stream, observer)
         {
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
@@ -46,16 +46,15 @@ namespace Microsoft.StreamProcessing
 
             this.width = width;
             this.skip = skip;
+            this.progress = progress;
             this.offset = offset;
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new QuantizeLifetimePlanNode(
+            => this.Observer.ProduceQueryPlan(new QuantizeLifetimePlanNode(
                 previous, this,
-                typeof(TKey), typeof(TPayload), this.width, this.skip, this.offset,
+                typeof(TKey), typeof(TPayload), this.width, this.skip, this.progress, this.offset,
                 false, this.errorMessages, false));
-        }
 
         private int AllocatePartition(TPartitionKey pKey, long timestamp)
         {
@@ -110,7 +109,7 @@ namespace Microsoft.StreamProcessing
                         if (batch.vother.col[i] == StreamEvent.InfinitySyncTime) // Start edge
                         {
                             int ind = this.output.Count++;
-                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.skip);
+                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                             this.output.vother.col[ind] = StreamEvent.InfinitySyncTime;
                             this.output.key.col[ind] = batch.key.col[i];
                             this.output[ind] = batch[i];
@@ -121,7 +120,7 @@ namespace Microsoft.StreamProcessing
                         else if (batch.vother.col[i] > batch.vsync.col[i]) // Interval
                         {
                             int ind = this.output.Count++;
-                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.skip);
+                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                             var temp = Math.Max(vother[i] + this.skip - 1, vsync[i] + this.width);
                             this.output.vother.col[ind] = temp - ((temp - (this.offset + this.width)) % this.skip);
                             this.output.key.col[ind] = batch.key.col[i];
@@ -137,7 +136,7 @@ namespace Microsoft.StreamProcessing
 
                             var temp = Math.Max(vsync[i] + this.skip - 1, vother[i] + this.width);
                             int index = intervalMap.Insert(batch.hash.col[i]);
-                            intervalMap.Values[index].Populate(batch.key.col[i], batch[i], batch.hash.col[i], vother[i] - ((vother[i] - this.offset) % this.skip));
+                            intervalMap.Values[index].Populate(batch.key.col[i], batch[i], batch.hash.col[i], vother[i] - ((vother[i] - this.offset) % this.progress));
                             endPointHeap.Insert(temp - ((temp - (this.offset + this.width)) % this.skip), index);
                         }
                     }
@@ -146,12 +145,12 @@ namespace Microsoft.StreamProcessing
                         ReachTime(batch.vsync.col[i]);
 
                         int ind = this.output.Count++;
-                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.skip) * this.skip;
+                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                         this.output.vother.col[ind] = PartitionedStreamEvent.LowWatermarkOtherTime;
                         this.output.key.col[ind] = default;
                         this.output[ind] = default;
                         this.output.hash.col[ind] = 0;
-                        this.output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
+                        this.output.bitvector.col[ind >> 6] |= 1L << (ind & 0x3f);
 
                         if (this.output.Count == Config.DataBatchSize) FlushContents();
                     }
@@ -162,7 +161,7 @@ namespace Microsoft.StreamProcessing
                         ReachTime(timeIndex, batch.vsync.col[i]);
 
                         int ind = this.output.Count++;
-                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.skip) * this.skip;
+                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
                         this.output.vother.col[ind] = long.MinValue;
                         this.output.key.col[ind] = batch.key.col[i];
                         this.output[ind] = default;

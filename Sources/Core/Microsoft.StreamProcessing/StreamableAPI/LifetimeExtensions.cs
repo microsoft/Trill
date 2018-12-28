@@ -106,7 +106,38 @@ namespace Microsoft.StreamProcessing
             Invariant.IsPositive(windowSize, nameof(windowSize));
             Invariant.IsPositive(period, nameof(period));
 
-            return new QuantizeLifetimeStreamable<TKey, TPayload>(source, windowSize, period, offset);
+            return new QuantizeLifetimeStreamable<TKey, TPayload>(source, windowSize, period, period, offset);
+        }
+
+        /// <summary>
+        /// Adjusts the lifetime of incoming events to snap the start and end time of each event to quantized boundaries,
+        /// except that the start times are progressively spaced through the window.
+        /// The function is similar to a hopping lifetime expression, except that all start edges are either moved
+        /// earlier or stay the same, and all end edges either move later or stay the same.
+        /// </summary>
+        /// <typeparam name="TKey">Type of (mapping) key in the stream</typeparam>
+        /// <typeparam name="TPayload">Type of payload in the stream</typeparam>
+        /// <param name="source">Input stream</param>
+        /// <param name="windowSize">Window size</param>
+        /// <param name="period">Period (or hop size)</param>
+        /// <param name="progress">Interval at which progressive results within a window are requested</param>
+        /// <param name="offset">Offset from the start of time</param>
+        /// <returns>Result (output) stream</returns>
+        public static IStreamable<TKey, TPayload> ProgressiveQuantizeLifetime<TKey, TPayload>(
+            this IStreamable<TKey, TPayload> source,
+            long windowSize,
+            long period,
+            long progress,
+            long offset = 0)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsPositive(windowSize, nameof(windowSize));
+            Invariant.IsPositive(period, nameof(period));
+            Invariant.IsPositive(progress, nameof(progress));
+            if (period % progress != 0) throw new ArgumentException("Progress interval must be a proper divisor of the period.");
+            if (period <= progress) throw new ArgumentException("Progress interval must be strickly smaller than the period.");
+
+            return new QuantizeLifetimeStreamable<TKey, TPayload>(source, windowSize, period, progress, offset);
         }
 
         /// <summary>
@@ -161,8 +192,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, long>> durationSelector)
         {
             Invariant.IsNotNull(source, nameof(source));
-
-            if (durationSelector == null) return source;
+            Invariant.IsNotNull(durationSelector, nameof(durationSelector));
 
             return new AlterLifetimeStreamable<TKey, TPayload>(source, null, durationSelector);
         }
@@ -177,8 +207,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, long, long>> durationSelector)
         {
             Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(durationSelector, nameof(durationSelector));
 
-            if (durationSelector == null) return source;
             return new AlterLifetimeStreamable<TKey, TPayload>(source, null, durationSelector);
         }
 
@@ -194,8 +224,9 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsPositive(duration, nameof(duration));
 
-            if (source is IFusibleStreamable<TKey, TPayload> s) return s.FuseSetDurationConstant(duration);
-            return new AlterLifetimeStreamable<TKey, TPayload>(source, null, Expression.Lambda<Func<long>>(Expression.Constant(duration)));
+            return source is IFusibleStreamable<TKey, TPayload> s
+                ? s.FuseSetDurationConstant(duration)
+                : (IStreamable<TKey, TPayload>)new AlterLifetimeStreamable<TKey, TPayload>(source, null, Expression.Lambda<Func<long>>(Expression.Constant(duration)));
         }
 
         /// <summary>
@@ -248,8 +279,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, long>> durationSelector)
         {
             Invariant.IsNotNull(source, nameof(source));
-
-            if (startTimeSelector == null && durationSelector == null) return source;
+            Invariant.IsNotNull(startTimeSelector, nameof(startTimeSelector));
+            Invariant.IsNotNull(durationSelector, nameof(durationSelector));
 
             return new AlterLifetimeStreamable<TKey, TPayload>(source, startTimeSelector, durationSelector);
         }
@@ -266,8 +297,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, long, long>> durationSelector)
         {
             Invariant.IsNotNull(source, nameof(source));
-
-            if (startTimeSelector == null && durationSelector == null) return source;
+            Invariant.IsNotNull(startTimeSelector, nameof(startTimeSelector));
+            Invariant.IsNotNull(durationSelector, nameof(durationSelector));
 
             return new AlterLifetimeStreamable<TKey, TPayload>(source, startTimeSelector, durationSelector);
         }
@@ -285,8 +316,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TPartition, long, long, long>> durationSelector)
         {
             Invariant.IsNotNull(source, nameof(source));
-
-            if (startTimeSelector == null && durationSelector == null) return source;
+            Invariant.IsNotNull(startTimeSelector, nameof(startTimeSelector));
+            Invariant.IsNotNull(durationSelector, nameof(durationSelector));
 
             return new AlterLifetimeStreamable<PartitionKey<TPartition>, TPayload>(source, startTimeSelector, durationSelector);
         }
@@ -306,9 +337,8 @@ namespace Microsoft.StreamProcessing
             long duration)
         {
             Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(startTimeSelector, nameof(startTimeSelector));
             Invariant.IsPositive(duration, nameof(duration));
-
-            if (startTimeSelector == null) return source;
 
             return new AlterLifetimeStreamable<TKey, TPayload>(source, startTimeSelector, Expression.Lambda<Func<long>>(Expression.Constant(duration)));
         }
@@ -323,9 +353,9 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsPositive(limit, nameof(limit));
 
-            if (source.Properties.IsConstantDuration && limit < source.Properties.ConstantDurationLength.Value)
-                return AlterEventDuration(source, limit);
-            return new ClipByConstantStreamable<TKey, TPayload>(source, limit);
+            return source.Properties.IsConstantDuration && limit < source.Properties.ConstantDurationLength.Value
+                ? AlterEventDuration(source, limit)
+                : new ClipByConstantStreamable<TKey, TPayload>(source, limit);
         }
     }
 }
