@@ -17,6 +17,7 @@ using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Aggregates;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Internal.Collections;
+[assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
 
 [DataContract]
 internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>>
@@ -40,7 +41,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
     [DataMember]
     private long lastSyncTime = long.MinValue;
     [DataMember]
-    private EndPointHeap endPointHeap = new EndPointHeap();
+    private IEndPointOrderer endPointHeap = new EndPointHeap();
     [DataMember]
     private FastMap<ActiveEvent> intervalMap = new FastMap<ActiveEvent>();
 
@@ -124,47 +125,45 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
 
                     if (batch.vother.col[i] == StreamEvent.InfinitySyncTime) // Start edge
                     {
-                        int ind = output.Count++;
-                        output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % progress);
-                        output.vother.col[ind] = StreamEvent.InfinitySyncTime;
-                        output.key.col[ind] = batch.key.col[i];
-                        output[ind] = batch[i];
-                        output.hash.col[ind] = batch.hash.col[i];
-
-                        if (output.Count == Config.DataBatchSize) FlushContents();
+                        int ind = this.output.Count++;
+                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
+                        this.output.vother.col[ind] = StreamEvent.InfinitySyncTime;
+                        this.output.key.col[ind] = batch.key.col[i];
+                        this.output[ind] = batch[i];
+                        this.output.hash.col[ind] = batch.hash.col[i];
+                        if (this.output.Count == Config.DataBatchSize) FlushContents();
                     }
                     else if (batch.vother.col[i] > batch.vsync.col[i]) // Interval
                     {
-                        int ind = output.Count++;
-                        output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % progress);
-                        var temp = Math.Max(vother[i] + skip - 1, vsync[i] + width);
-                        output.vother.col[ind] = temp - ((temp - (offset + width)) % skip);
-                        output.key.col[ind] = batch.key.col[i];
-                        output[ind] = batch[i];
-                        output.hash.col[ind] = batch.hash.col[i];
-
-                        if (output.Count == Config.DataBatchSize) FlushContents();
+                        int ind = this.output.Count++;
+                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
+                        var temp = Math.Max(vother[i] + this.skip - 1, vsync[i] + this.width);
+                        this.output.vother.col[ind] = temp - ((temp - (this.offset + this.width)) % this.skip + this.skip) % this.skip;
+                        this.output.key.col[ind] = batch.key.col[i];
+                        this.output[ind] = batch[i];
+                        this.output.hash.col[ind] = batch.hash.col[i];
+                        if (this.output.Count == Config.DataBatchSize) FlushContents();
                     }
                     else
                     {
-                        var temp = Math.Max(vsync[i] + skip - 1, vother[i] + width);
-                        int index = intervalMap.Insert(batch.hash.col[i]);
-                        intervalMap.Values[index].Populate(batch.key.col[i], batch, i, batch.hash.col[i], vother[i] - ((vother[i] - offset) % progress));
-                        endPointHeap.Insert(temp - ((temp - (offset + width)) % skip), index);
+                        var temp = Math.Max(vsync[i] + this.skip - 1, vother[i] + this.width);
+                        int index = this.intervalMap.Insert(batch.hash.col[i]);
+                        this.intervalMap.Values[index].Populate(batch.key.col[i], batch, i, batch.hash.col[i], vother[i] - ((vother[i] - this.offset) % this.progress + this.progress) % this.progress);
+                        this.endPointHeap.Insert(temp - ((temp - (this.offset + this.width)) % this.skip + this.skip) % this.skip, index);
                     }
                 }
                 else if (vother[i] == long.MinValue) // Punctuation
                 {
-                    if (vsync[i] > lastSyncTime) ReachTime(vsync[i]);
+                    if (vsync[i] > this.lastSyncTime) ReachTime(vsync[i]);
 
-                    int ind = output.Count++;
-                    output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % progress);
-                    output.vother.col[ind] = long.MinValue;
-                    output.key.col[ind] = default;
-                    output[ind] = default;
-                    output.hash.col[ind] = batch.hash.col[i];
-                    output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
-                    if (output.Count == Config.DataBatchSize) FlushContents();
+                    int ind = this.output.Count++;
+                    this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
+                    this.output.vother.col[ind] = long.MinValue;
+                    this.output.key.col[ind] = batch.key.col[i];
+                    this.output.payload.col[ind] = default;
+                    this.output.hash.col[ind] = batch.hash.col[i];
+                    this.output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
+                    if (this.output.Count == Config.DataBatchSize) FlushContents();
                 }
             }
         }

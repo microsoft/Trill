@@ -58,24 +58,24 @@ namespace Microsoft.StreamProcessing
                     {
                         if (vother[i] == StreamEvent.InfinitySyncTime) // start edge
                         {
-                            vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
+                            vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
                         }
                         else if (vother[i] < vsync[i]) // end edge
                         {
                             var temp = Math.Max(vsync[i] + this.skip - 1, vother[i] + this.width);
-                            vsync[i] = temp - ((temp - (this.offset + this.width)) % this.skip);
-                            vother[i] = vother[i] - ((vother[i] - this.offset) % this.progress);
+                            vsync[i] = temp - ((temp - (this.offset + this.width)) % this.skip + this.skip) % this.skip;
+                            vother[i] = vother[i] - ((vother[i] - this.offset) % this.progress + this.progress) % this.progress;
                         }
                         else // interval
                         {
                             var temp = Math.Max(vother[i] + this.skip - 1, vsync[i] + this.width);
-                            vother[i] = temp - ((temp - (this.offset + this.width)) % this.skip);
-                            vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
+                            vother[i] = temp - ((temp - (this.offset + this.width)) % this.skip + this.skip) % this.skip;
+                            vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
                         }
                     }
                     else if (vother[i] == long.MinValue) // Punctuation
                     {
-                        vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
+                        vsync[i] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
                     }
                 }
             }

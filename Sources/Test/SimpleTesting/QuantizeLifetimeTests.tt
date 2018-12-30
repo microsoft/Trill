@@ -1,0 +1,354 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
+using Microsoft.StreamProcessing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace SimpleTesting
+{
+<#
+foreach (var orientation in new [] { "Row", "Columnar" })
+foreach (var batch in new [] { string.Empty, "SmallBatch" })
+{
+    var suffix = orientation + batch;
+#>
+
+    [TestClass]
+    public class QuantizeLifetimeTests<#= suffix #> : TestWithConfigSettingsAndMemoryLeakDetection
+    {
+        public QuantizeLifetimeTests<#= suffix #>() : base(
+            new ConfigModifier()
+<#  switch (orientation)
+    {
+        case "Row": #>
+            .ForceRowBasedExecution(true)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+        case "Columnar": #>
+            .ForceRowBasedExecution(false)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+    } #>
+<# if (!string.IsNullOrEmpty(batch)) { #>
+            .DataBatchSize(100)
+<# } #>
+            .MapArity(1)
+            .ReduceArity(1))
+        { }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingPassthrough<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o * 10, o * 10 + 10, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(10, 10);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(input));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingPoints<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o * 10, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o * 10, o * 10 + 10, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(10, 10);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingPointsStateless<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000).Select(o => (long)o);
+
+            var expected = Enumerable.Range(0, 50000).Select(o => (long)o)
+                .Select(o => StreamEvent.CreateInterval(o * 10, o * 10 + 10, o));
+
+            var inputStream = input.ToObservable().ToTemporalStreamable(o => o * 10, o => o * 10 + 1);
+            var outputStream = inputStream.QuantizeLifetime(10, 10);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingConsecutive<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o - (o % 10), o - (o % 10) + 10, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(10, 10);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingProgressive<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o - (o % 5), o - (o % 10) + 10, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.ProgressiveQuantizeLifetime(10, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingPassthrough<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o * 10, o * 10 + 100, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(100, 10);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(input));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingPoints<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o * 10, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o * 10, o * 10 + 100, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(100, 10);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingPointsStateless<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000).Select(o => (long)o);
+
+            var expected = Enumerable.Range(0, 50000).Select(o => (long)o)
+                .Select(o => StreamEvent.CreateInterval(o * 10, o * 10 + 100, o));
+
+            var inputStream = input.ToObservable().ToTemporalStreamable(o => o * 10, o => o * 10 + 1);
+            var outputStream = inputStream.QuantizeLifetime(100, 10);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingConsecutive<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o - (o % 10), o - (o % 10) + 100, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(100, 10);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingProgressive<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o - (o % 5), o - (o % 10) + 100, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.ProgressiveQuantizeLifetime(100, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingOffsetPassthrough<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o * 10 + 5, o * 10 + 15, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(10, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(input));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingOffsetPoints<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o * 10 + 5, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o * 10 + 5, o * 10 + 15, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(10, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingOffsetPointsStateless<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000).Select(o => (long)o);
+
+            var expected = Enumerable.Range(0, 50000).Select(o => (long)o)
+                .Select(o => StreamEvent.CreateInterval(o * 10 + 5, o * 10 + 15, o));
+
+            var inputStream = input.ToObservable().ToTemporalStreamable(o => o * 10 + 5, o => (o * 10 + 5) + 1);
+            var outputStream = inputStream.QuantizeLifetime(10, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingOffsetConsecutive<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o - ((o + 5) % 10), o - ((o + 5) % 10) + 10, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(10, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeTumblingOffsetProgressive<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o - ((o + 5) % 5), o - ((o + 5) % 10) + 10, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.ProgressiveQuantizeLifetime(10, 10, 5, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingOffsetPassthrough<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o * 10 + 5, o * 10 + 105, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(100, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(input));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingOffsetPoints<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o * 10 + 5, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o * 10 + 5, o * 10 + 105, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(100, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingOffsetPointsStateless<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000).Select(o => (long)o);
+
+            var expected = Enumerable.Range(0, 50000).Select(o => (long)o)
+                .Select(o => StreamEvent.CreateInterval(o * 10 + 5, o * 10 + 105, o));
+
+            var inputStream = input.ToObservable().ToTemporalStreamable(o => o * 10 + 5, o => (o * 10 + 5) + 1);
+            var outputStream = inputStream.QuantizeLifetime(100, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingOffsetConsecutive<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o - ((o + 5) % 10), o - ((o + 5) % 10) + 100, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.QuantizeLifetime(100, 10, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void QuantizeLifetimeHoppingOffsetProgressive<#= suffix #>()
+        {
+            var input = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreatePoint(o, o));
+
+            var expected = Enumerable.Range(0, 50000)
+                .Select(o => StreamEvent.CreateInterval(o - ((o + 5) % 5), o - ((o + 5) % 10) + 100, o));
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var outputStream = inputStream.ProgressiveQuantizeLifetime(100, 10, 5, 5);
+            var output = outputStream.ToStreamEventObservable().Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(output.SequenceEqual(expected));
+        }
+    }
+<# } #>
+}

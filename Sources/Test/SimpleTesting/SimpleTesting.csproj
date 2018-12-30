@@ -83,6 +83,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>JoinTests.tt</DependentUpon>
     </Compile>
+    <Compile Include="QuantizeLifetimeTests.cs">
+      <DependentUpon>QuantizeLifetimeTests.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="LeftOuterJoinTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -177,6 +182,10 @@
     <Content Include="JoinTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JoinTests.cs</LastGenOutput>
+    </Content>
+    <Content Include="QuantizeLifetimeTests.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>QuantizeLifetimeTests.cs</LastGenOutput>
     </Content>
     <Content Include="LeftOuterJoinTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

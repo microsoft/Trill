@@ -93,7 +93,7 @@ namespace Microsoft.StreamProcessing
                         if (vother[i] == StreamEvent.InfinitySyncTime) // Start edge
                         {
                             int ind = this.output.Count++;
-                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
+                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
                             this.output.vother.col[ind] = StreamEvent.InfinitySyncTime;
                             this.output.key.col[ind] = batch.key.col[i];
                             this.output.payload.col[ind] = batch.payload.col[i];
@@ -103,9 +103,9 @@ namespace Microsoft.StreamProcessing
                         else if (vother[i] > vsync[i]) // Interval
                         {
                             int ind = this.output.Count++;
-                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
+                            this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
                             var temp = Math.Max(vother[i] + this.skip - 1, vsync[i] + this.width);
-                            this.output.vother.col[ind] = temp - ((temp - (this.offset + this.width)) % this.skip);
+                            this.output.vother.col[ind] = temp - ((temp - (this.offset + this.width)) % this.skip + this.skip) % this.skip;
                             this.output.key.col[ind] = batch.key.col[i];
                             this.output[ind] = batch[i];
                             this.output.hash.col[ind] = batch.hash.col[i];
@@ -115,8 +115,8 @@ namespace Microsoft.StreamProcessing
                         {
                             var temp = Math.Max(vsync[i] + this.skip - 1, vother[i] + this.width);
                             int index = this.intervalMap.Insert(batch.hash.col[i]);
-                            this.intervalMap.Values[index].Populate(batch.key.col[i], batch[i], batch.hash.col[i], vother[i] - ((vother[i] - this.offset) % this.progress));
-                            this.endPointHeap.Insert(temp - ((temp - (this.offset + this.width)) % this.skip), index);
+                            this.intervalMap.Values[index].Populate(batch.key.col[i], batch[i], batch.hash.col[i], vother[i] - ((vother[i] - this.offset) % this.progress + this.progress) % this.progress);
+                            this.endPointHeap.Insert(temp - ((temp - (this.offset + this.width)) % this.skip + this.skip) % this.skip, index);
                         }
                     }
                     else if (vother[i] == long.MinValue) // Punctuation
@@ -124,7 +124,7 @@ namespace Microsoft.StreamProcessing
                         if (vsync[i] > this.lastSyncTime) ReachTime(vsync[i]);
 
                         int ind = this.output.Count++;
-                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress);
+                        this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
                         this.output.vother.col[ind] = long.MinValue;
                         this.output.key.col[ind] = batch.key.col[i];
                         this.output.payload.col[ind] = default;
