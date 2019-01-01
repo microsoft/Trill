@@ -20,16 +20,24 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public long Skip { get; }
         /// <summary>
+        /// Represents the length whose multiples define the left (start) edge of each transformed lifetime
+        /// </summary>
+        public long Progress { get; }
+        /// <summary>
         /// Represents the "zero" from which the interval begins skipping
         /// </summary>
         public long Offset { get; }
 
         internal QuantizeLifetimePlanNode(
             PlanNode previous, IQueryObject pipe,
-            Type keyType, Type payloadType, long width, long skip, long offset,
+            Type keyType, Type payloadType, long width, long skip, long progress, long offset,
             bool isGenerated, string errorMessages, bool withStateManager)
             : base(previous, pipe, keyType, payloadType, payloadType, isGenerated, errorMessages)
         {
+            this.Width = width;
+            this.Skip = skip;
+            this.Progress = progress;
+            this.Offset = offset;
         }
 
         /// <summary>
