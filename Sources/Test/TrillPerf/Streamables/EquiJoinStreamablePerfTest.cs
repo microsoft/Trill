@@ -48,6 +48,7 @@ namespace PerformanceTesting.Streamables
             // Construct event batches from input.
             var batches = new List<StreamMessage<Empty, int>>();
             var batch = StreamMessageManager.GetStreamMessage(pool);
+            batch.Allocate();
             for (int i = 0; i < length; i++)
             {
                 batch.Add(0, DateTimeOffset.MaxValue.UtcTicks, Empty.Default, i);
@@ -55,6 +56,7 @@ namespace PerformanceTesting.Streamables
                 {
                     batches.Add(batch);
                     batch = StreamMessageManager.GetStreamMessage(pool);
+                    batch.Allocate();
                 }
             }
 
