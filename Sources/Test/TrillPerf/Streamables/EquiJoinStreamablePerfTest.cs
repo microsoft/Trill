@@ -60,14 +60,9 @@ namespace PerformanceTesting.Streamables
                 }
             }
 
-            if (batch.Count > 0)
-            {
-                batches.Add(batch);
-            }
-
             // Add last CTI of infinity.
-            // TODO: inline this punctuation
-            // batches.Add(new StreamMessage<Empty, int>(StreamMessageKind.Punctuation, DateTimeOffset.MaxValue.UtcTicks));
+            batch.AddPunctuation(StreamEvent.InfinitySyncTime);
+            batches.Add(batch);
 
             // Convert to IStreamable.
             return batches.ToObservable().CreateStreamable();
