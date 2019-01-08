@@ -19,13 +19,7 @@ Samples of Trill usage are available at our [samples repository](https://github.
 - The [Trill paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/trill-vldb2015.pdf) appeared at VLDB.
 - An [article](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/07/trill-debull.pdf) on Trill appeared in the IEEE Data Engineering Bulletin.
 - The [Trill technical report](http://research.microsoft.com/pubs/214609/trill-TR.pdf).
-- Additional documents located in the /Documentation directory:
-    - TrillQueryWritingGuide: introduces basic concepts of Trill query authoring
-    - Ingress: describes how data is ingressed into and egressed out of Trill
-    - TrillInternals: outlines Trill innovations and internals
-    - BestPractices: describes best practices low-memory real-time deployments 
-    - HighAvailability: details Trill high-availability support
-    - UserDefinedAggregates: introduces a framework for query authors to create custom aggregates
+- Additional documents located in the [/Documentation](./Documentation) directory
 
 # Contact/Feedback
 You can create Git issues in this repo, or contact the team using this [email](mailto:asktrill@microsoft.com).
