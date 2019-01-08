@@ -9,13 +9,13 @@ Here you can find documents that explain in more detail how Trill works, how it 
 - HighAvailability: details Trill high-availability support
 - UserDefinedAggregates: introduces a framework for query authors to create custom aggregates
 
-## Where do I start from?
+## Getting Started
 
 You should start by reading the `TrillQueryWritingGuide.pdf` that explains the basic of Trill usage, what is a stream in Trill terms, and how you can create your own application that uses it. This is a *must read* in order to understand how to use Trill.
 
 Once you are familiar with the basics, you can move to `Ingress.pdf` that explain more in detail how to get data in and out of Trill.
 
-## Where are some samples?
+## Examples
 
 All samples are available in the following dedicated repository:
 
