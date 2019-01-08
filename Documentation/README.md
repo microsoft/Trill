@@ -1,6 +1,6 @@
 # Trill Documentation
 
-Here you can find documents that explains in more detail how Trill works:
+Here you can find documents that explain in more detail how Trill works, how it can be used, best practices and also how Trill can be extended:
 
 - TrillQueryWritingGuide: introduces basic concepts of Trill query authoring
 - Ingress: describes how data is ingressed into and egressed out of Trill
