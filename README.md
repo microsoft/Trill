@@ -4,9 +4,15 @@ Trill is a high-performance one-pass in-memory streaming analytics engine from M
 
 # Getting Started
 
+## Building Trill
 1. Of course, the sources are right here!
-2. You can get binaries from our [NuGet feed](https://www.nuget.org/packages/Trill/).
-3. You can also check out samples of Trill usage at our [samples repository](https://github.com/Microsoft/TrillSamples).
+1. Clone the Repo and make sure you have Visual Studio 2017 installed
+1. Open `Trill.sln` solution available in `./Sources` with Visual Studio 2017 
+1. Build Trill
+
+## Samples using Trill
+If you don't want to compile Trill yourself, you can get binaries from our [NuGet feed](https://www.nuget.org/packages/Trill/).
+Samples of Trill usage are available at our [samples repository](https://github.com/Microsoft/TrillSamples). Make sure you start from the Hello World sample to get confident with Trill.
 
 # Learn More
 - Announcement [blog post](https://azure.microsoft.com/en-us/blog/microsoft-open-sources-trill-to-deliver-insights-on-a-trillion-events-a-day/).
