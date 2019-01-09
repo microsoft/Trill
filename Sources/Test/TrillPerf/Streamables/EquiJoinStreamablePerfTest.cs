@@ -70,12 +70,12 @@ namespace PerformanceTesting.Streamables
             batch.AddPunctuation(StreamEvent.InfinitySyncTime);
             batches.Add(batch);
 
-            // Convert to IStreamable.
             return batches;
         }
 
         private static IStreamable<Empty, int> CloneInputToStreamable(List<StreamMessage<Empty, int>> inputSequence)
         {
+            // Clone each batch in the input sequence
             var batches = new List<StreamMessage<Empty, int>>();
             foreach (var inputBatch in inputSequence)
             {
@@ -83,6 +83,8 @@ namespace PerformanceTesting.Streamables
                 batch.CloneFrom(inputBatch);
                 batches.Add(batch);
             }
+
+            // Convert the batches to IStreamable.
             return batches.ToObservable().CreateStreamable();
         }
     }
