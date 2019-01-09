@@ -6,9 +6,9 @@ Trill is a high-performance one-pass in-memory streaming analytics engine from M
 
 ## Building Trill
 1. Of course, the sources are right here!
-1. Clone the Repo and make sure you have Visual Studio 2017 installed
-1. Open `Trill.sln` solution available in `./Sources` with Visual Studio 2017 
-1. Build Trill
+2. Clone the Repo and make sure you have Visual Studio 2017 installed
+3. Open `Trill.sln` solution available in `./Sources` with Visual Studio 2017 
+4. Build Trill
 
 ## Samples using Trill
 If you don't want to compile Trill yourself, you can get binaries from our [NuGet feed](https://www.nuget.org/packages/Trill/).
