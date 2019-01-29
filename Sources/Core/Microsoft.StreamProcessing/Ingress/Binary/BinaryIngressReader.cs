@@ -56,25 +56,25 @@ namespace Microsoft.StreamProcessing
 
         private void Ingress(IStreamObserver<TKey, TPayload> observer)
         {
-            bool done = false;
             int messages = 0;
 
             try
             {
-                var serializer = StreamableSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(new SerializerSettings());
-                while (!done)
+                var serializer = StreamableSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(
+                    new SerializerSettings() { KnownTypes = StreamMessageManager.GeneratedTypes() });
+                while (true)
                 {
                     var message = serializer.Deserialize(this.stream);
-                    if (message.Kind == MessageKind.Completed) done = true;
-                    observer.OnNext(message.Message);
-                    messages++;
-                    if (this.numMessages != 0 && messages == this.numMessages)
+                    if (message.Kind != MessageKind.Completed)
                     {
-                        if (message.Kind != MessageKind.Completed)
-                        {
-                            observer.OnCompleted();
-                            break;
-                        }
+                        observer.OnNext(message.Message);
+                        messages++;
+                    }
+                    if (message.Kind == MessageKind.Completed ||
+                        (this.numMessages != 0 && messages == this.numMessages))
+                    {
+                        observer.OnCompleted();
+                        break;
                     }
                 }
             }
