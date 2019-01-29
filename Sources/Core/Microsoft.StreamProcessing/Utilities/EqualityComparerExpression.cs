@@ -489,7 +489,7 @@ namespace Microsoft.StreamProcessing
         public StringEqualityComparerExpression()
             : base(
                   equalsExpr: (x, y) => x == y,
-                  getHashCodeExpr: obj => obj == null ? 0 : obj.GetHashCode())
+                  getHashCodeExpr: obj => obj == null ? 0 : obj.StableHash())
         { }
     }
 

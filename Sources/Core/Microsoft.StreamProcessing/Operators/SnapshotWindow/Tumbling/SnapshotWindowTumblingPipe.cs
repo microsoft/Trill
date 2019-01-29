@@ -37,6 +37,9 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<TKey, TKey, bool>> keyComparerEqualsExpr;
         private readonly Func<TKey, TKey, bool> keyComparerEquals;
+        [SchemaSerialization]
+        private readonly Expression<Func<TKey, int>> keyHashCodeExpr;
+        private readonly Func<TKey, int> keyHashCode;
 
         [DataMember]
         private StreamMessage<TKey, TOutput> batch;
@@ -65,23 +68,22 @@ namespace Microsoft.StreamProcessing
             var comparer = stream.Properties.KeyEqualityComparer;
             this.keyComparerEqualsExpr = comparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparerEqualsExpr.Compile();
+            this.keyHashCodeExpr = comparer.GetGetHashCodeExpr();
+            this.keyHashCode = this.keyHashCodeExpr.Compile();
 
             this.errorMessages = stream.ErrorMessages;
             this.pool = MemoryManager.GetMemoryPool<TKey, TOutput>(false);
             this.pool.Get(out this.batch);
             this.batch.Allocate();
-            var getHashCode = comparer.GetGetHashCodeExpr().Compile();
-            this.heldAggregates = comparer.CreateFastDictionaryGenerator<TKey, TState>(1, this.keyComparerEquals, getHashCode, stream.Properties.QueryContainer).Invoke();
+            this.heldAggregates = comparer.CreateFastDictionaryGenerator<TKey, TState>(1, this.keyComparerEquals, this.keyHashCode, stream.Properties.QueryContainer).Invoke();
 
             this.hop = hop;
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(TKey), typeof(TInput), typeof(TOutput),
                 AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages, false));
-        }
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {
@@ -127,7 +129,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.vother.col[c] = this.lastSyncTime + this.hop;
                         this.batch.payload.col[c] = this.computeResult(iter1entry.value);
                         this.batch.key.col[c] = iter1entry.key;
-                        this.batch.hash.col[c] = iter1entry.key.GetHashCode();
+                        this.batch.hash.col[c] = this.keyHashCode(iter1entry.key);
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     }
@@ -165,7 +167,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.vother.col[c] = this.lastSyncTime + this.hop;
                     this.batch.payload.col[c] = this.computeResult(iter1entry.value);
                     this.batch.key.col[c] = iter1entry.key;
-                    this.batch.hash.col[c] = iter1entry.key.GetHashCode();
+                    this.batch.hash.col[c] = this.keyHashCode(iter1entry.key);
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
                 }

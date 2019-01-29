@@ -56,7 +56,7 @@ namespace Microsoft.StreamProcessing
         public static bool TryGetFirst<TKey, TValue>(this SortedDictionary<TKey, TValue> source, out TKey key, out TValue value)
         {
             // avoids boxing in LINQ to Objects First() call
-            foreach (KeyValuePair<TKey, TValue> pair in source)
+            foreach (var pair in source)
             {
                 key = pair.Key;
                 value = pair.Value;
@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="value">The value to add to the given list.</param>
         public static void Add<TKey, TValue>(this IDictionary<TKey, List<TValue>> dict, TKey key, TValue value)
         {
-            if (!dict.TryGetValue(key, out List<TValue> list))
+            if (!dict.TryGetValue(key, out var list))
             {
                 list = new List<TValue>();
                 dict.Add(key, list);
@@ -108,59 +108,25 @@ namespace Microsoft.StreamProcessing
             list.Add(value);
         }
 
-        internal static void QuickSort<T>(T[] keys, int left, int right, RefComparison<T> comparison)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static int StableHash(this string stringToHash)
         {
-            do
-            {
-                int a = left;
-                int b = right;
-                int mid = a + ((b - a) >> 1);
-                SwapIfGreaterWithItems(keys, comparison, a, mid);
-                SwapIfGreaterWithItems(keys, comparison, a, b);
-                SwapIfGreaterWithItems(keys, comparison, mid, b);
-                T y = keys[mid];
-                do
-                {
-                    while (comparison(ref keys[a], ref y) < 0)
-                    {
-                        a++;
-                    }
-                    while (comparison(ref y, ref keys[b]) < 0)
-                    {
-                        b--;
-                    }
-                    if (a > b) break;
-                    if (a < b)
-                    {
-                        T local2 = keys[a];
-                        keys[a] = keys[b];
-                        keys[b] = local2;
-                    }
-                    a++;
-                    b--;
-                }
-                while (a <= b);
-                if ((b - left) <= (right - a))
-                {
-                    if (left < b) QuickSort(keys, left, b, comparison);
-                    left = a;
-                }
-                else
-                {
-                    if (a < right) QuickSort(keys, a, right, comparison);
-                    right = b;
-                }
-            }
-            while (left < right);
-        }
+            const long magicno = 40343L;
+            int stringLength = stringToHash.Length;
+            ulong hashState = (ulong)stringLength;
 
-        private static void SwapIfGreaterWithItems<T>(T[] keys, RefComparison<T> comparison, int a, int b)
-        {
-            if ((a != b) && (comparison(ref keys[a], ref keys[b]) > 0))
+            unsafe
             {
-                T local = keys[a];
-                keys[a] = keys[b];
-                keys[b] = local;
+                fixed (char* str = stringToHash)
+                {
+                    var stringChars = str;
+                    for (int i = 0; i < stringLength; i++, stringChars++)
+                        hashState = magicno * hashState + *stringChars;
+                }
+
+                var rotate = magicno * hashState;
+                var rotated = (rotate >> 4) | (rotate << 60);
+                return (int)(rotated ^ (rotated >> 32));
             }
         }
 
