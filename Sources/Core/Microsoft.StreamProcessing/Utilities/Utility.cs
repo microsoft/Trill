@@ -130,35 +130,6 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        internal static Expression<Comparison<CompoundGroupKey<T1, T2>>>
-            CreateCompoundComparerPredicate<T1, T2>(Expression<Comparison<T1>> comparerOnT1, Expression<Comparison<T2>> comparerOnT2)
-        {
-            Contract.Requires(comparerOnT2 != null);
-
-            var e1 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e1");
-            var e2 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e2");
-            if ((comparerOnT1 == null) || typeof(T1) == typeof(Empty))
-            {
-                // (e1,e2) => comparerOnT2(e1.innerGroup, e2.innerGroup)
-                return Expression.Lambda<Comparison<CompoundGroupKey<T1, T2>>>(
-                        Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup")),
-                        new ParameterExpression[] { e1, e2 });
-            }
-            else
-            {
-                // (e1,e2) => comparerOnT1(e1.outerGroup, e2.outerGroup) != 0 ? (comparerOnT1(e1.outerGroup, e2.outerGroup)) : comparerOnT2(e1.innerGroup, e2.innerGroup)
-
-                return Expression.Lambda<Comparison<CompoundGroupKey<T1, T2>>>(
-                    Expression.Condition(
-                    Expression.NotEqual(
-                    Expression.Invoke(comparerOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
-                    Expression.Constant(0, typeof(int))),
-                    Expression.Invoke(comparerOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
-                    Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
-                    new ParameterExpression[] { e1, e2 });
-            }
-        }
-
         internal static Expression<Comparison<T2>> CreateCompoundComparer<T1, T2>(Expression<Func<T2, T1>> selector, Expression<Comparison<T1>> comparer)
         {
             var newParam1 = Expression.Parameter(selector.Parameters[0].Type, selector.Parameters[0].Name + "_1");
@@ -167,37 +138,6 @@ namespace Microsoft.StreamProcessing
             var copy2 = ParameterInliner.Inline(selector, newParam2);
             var result = ParameterInliner.Inline(comparer, copy1, copy2);
             return Expression.Lambda<Comparison<T2>>(result, newParam1, newParam2);
-        }
-
-        internal static Expression<Func<CompoundGroupKey<T1, T2>, CompoundGroupKey<T1, T2>, bool>>
-            CreateCompoundEqualityPredicate<T1, T2>(Expression<Func<T1, T1, bool>> equalityOnT1, Expression<Func<T2, T2, bool>> equalityOnT2)
-        {
-            Contract.Requires(equalityOnT1 != null);
-            Contract.Requires(equalityOnT2 != null);
-
-            // (e1,e2) => equalityOnT1(e1.outerGroup, e2.outerGroup) && equalityOnT2(e1.innerGroup, e2.innerGroup)
-            var e1 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e1");
-            var e2 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e2");
-            return Expression.Lambda<Func<CompoundGroupKey<T1, T2>, CompoundGroupKey<T1, T2>, bool>>(
-                Expression.AndAlso(
-                    Expression.Invoke(equalityOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
-                    Expression.Invoke(equalityOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
-                    new ParameterExpression[] { e1, e2 });
-        }
-
-        internal static Expression<Func<CompoundGroupKey<T1, T2>, int>>
-            CreateCompoundHashPredicate<T1, T2>(Expression<Func<T1, int>> hashOnT1, Expression<Func<T2, int>> hashOnT2)
-        {
-            Contract.Requires(hashOnT1 != null);
-            Contract.Requires(hashOnT2 != null);
-
-            // (e1) => hashOnT1(e1.outerGroup) && hashOnT2(e1.innerGroup)
-            var e1 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e1");
-            return Expression.Lambda<Func<CompoundGroupKey<T1, T2>, int>>(
-                Expression.ExclusiveOr(
-                    Expression.Invoke(hashOnT1, Expression.Field(e1, "outerGroup")),
-                    Expression.Invoke(hashOnT2, Expression.Field(e1, "innerGroup"))),
-                    new ParameterExpression[] { e1 });
         }
 
         private sealed class CompoundDisposable : IDisposable

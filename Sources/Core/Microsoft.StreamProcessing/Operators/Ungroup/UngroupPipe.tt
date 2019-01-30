@@ -35,6 +35,11 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelectorExpr;
         private readonly Func<TInnerKey, TInnerResult, TResult> resultSelector;
+<# if (i == 0) { #>
+        [SchemaSerialization]
+        private readonly Expression<Func<TOuterKey, int>> keyComparer;
+        private readonly Func<TOuterKey, int> outerHashCode;
+<# } #>
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public <#= j == 0 ? "Partitioned" : string.Empty #>Ungroup<#= nestedInfix #>Pipe() { }
@@ -44,10 +49,14 @@ namespace Microsoft.StreamProcessing
             IStreamObserver<<#= outerKey #>, TResult> observer)
             : base(stream, observer)
         {
-            resultSelectorExpr = stream.ResultSelector;
-            resultSelector = resultSelectorExpr.Compile();
-            outPool = MemoryManager.GetMemoryPool<<#= outerKey #>, TResult>(stream.Properties.IsColumnar);
-            errorMessages = stream.ErrorMessages;
+            this.resultSelectorExpr = stream.ResultSelector;
+            this.resultSelector = this.resultSelectorExpr.Compile();
+            this.outPool = MemoryManager.GetMemoryPool<<#= outerKey #>, TResult>(stream.Properties.IsColumnar);
+            this.errorMessages = stream.ErrorMessages;
+<# if (i == 0) { #>
+            this.keyComparer = stream.Properties.KeyEqualityComparer.GetGetHashCodeExpr();
+            this.outerHashCode = this.keyComparer.Compile();
+<# } #>
         }
 
         public unsafe void OnNext(StreamMessage<<#= innerKey #>, TInnerResult> batch)
@@ -78,7 +87,7 @@ namespace Microsoft.StreamProcessing
                         {
                             destkey[i] = srckey[i].outerGroup;
                             desthash[i] = batch.hash.col[i];
-                            tmp.bitvector.col[i >> 6] |= (1L << (i & 0x3f));
+                            tmp.bitvector.col[i >> 6] |= 1L << (i & 0x3f);
                         }
                         continue;
                     }
@@ -87,7 +96,7 @@ namespace Microsoft.StreamProcessing
 <# } #>
                     destkey[i] = srckey[i].outerGroup;
                     tmp[i] = resultSelector(srckey[i].innerGroup, batch[i]);
-                    desthash[i] = destkey[i].GetHashCode();
+                    desthash[i] = this.outerHashCode(destkey[i]);
                 }
 <# } else { #>
                 Array.Clear(tmp.hash.col, 0, count);
@@ -114,8 +123,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            Observer.ProduceQueryPlan(new UngroupPlanNode(
+            => Observer.ProduceQueryPlan(new UngroupPlanNode(
                 previous,
                 this,
                 typeof(<#= innerKey #>),
@@ -125,7 +133,6 @@ namespace Microsoft.StreamProcessing
                 resultSelectorExpr,
                 false,
                 errorMessages));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 

@@ -27,9 +27,9 @@ namespace Microsoft.StreamProcessing.Internal
             var equalsExp = comparerExp.GetEqualsExpr();
             var getHashCodeExp = comparerExp.GetGetHashCodeExpr();
             var vars = VariableFinder.Find(equalsExp).Select(o => o.GetHashCode()).ToList();
-            if (!vars.Any()) vars.Add(string.Empty.GetHashCode());
+            if (!vars.Any()) vars.Add(string.Empty.StableHash());
             var hashvars = VariableFinder.Find(getHashCodeExp).Select(o => o.GetHashCode()).ToList();
-            if (!hashvars.Any()) hashvars.Add(string.Empty.GetHashCode());
+            if (!hashvars.Any()) hashvars.Add(string.Empty.StableHash());
             var key =
                 Tuple.Create(
                     equalsExp.ToString() + getHashCodeExp.ToString() + string.Concat(vars.Aggregate((a, i) => a ^ i)) + string.Concat(hashvars.Aggregate((a, i) => a ^ i)),
@@ -74,9 +74,9 @@ namespace Microsoft.StreamProcessing.Internal
             var equalsExp = comparerExp.GetEqualsExpr();
             var getHashCodeExp = comparerExp.GetGetHashCodeExpr();
             var vars = VariableFinder.Find(equalsExp).Select(o => o.GetHashCode()).ToList();
-            if (!vars.Any()) vars.Add(string.Empty.GetHashCode());
+            if (!vars.Any()) vars.Add(string.Empty.StableHash());
             var hashvars = VariableFinder.Find(getHashCodeExp).Select(o => o.GetHashCode()).ToList();
-            if (!hashvars.Any()) hashvars.Add(string.Empty.GetHashCode());
+            if (!hashvars.Any()) hashvars.Add(string.Empty.StableHash());
             var key =
                 Tuple.Create(
                     equalsExp.ToString() + getHashCodeExp.ToString() + string.Concat(vars.Aggregate((a, i) => a ^ i)) + string.Concat(hashvars.Aggregate((a, i) => a ^ i)),
@@ -121,9 +121,9 @@ namespace Microsoft.StreamProcessing.Internal
             var equalsExp = comparerExp.GetEqualsExpr();
             var getHashCodeExp = comparerExp.GetGetHashCodeExpr();
             var vars = VariableFinder.Find(equalsExp).Select(o => o.GetHashCode()).ToList();
-            if (!vars.Any()) vars.Add(string.Empty.GetHashCode());
+            if (!vars.Any()) vars.Add(string.Empty.StableHash());
             var hashvars = VariableFinder.Find(getHashCodeExp).Select(o => o.GetHashCode()).ToList();
-            if (!hashvars.Any()) hashvars.Add(string.Empty.GetHashCode());
+            if (!hashvars.Any()) hashvars.Add(string.Empty.StableHash());
             var key =
                 Tuple.Create(
                     equalsExp.ToString() + getHashCodeExp.ToString() + string.Concat(vars.Aggregate((a, i) => a ^ i)) + string.Concat(hashvars.Aggregate((a, i) => a ^ i)),

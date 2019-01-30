@@ -69,7 +69,7 @@ namespace Microsoft.StreamProcessing
 
         public static bool TryGetCachedEqualsFunction<T>(out Func<T, T, bool> equalsFunction)
         {
-            Type t = typeof(T);
+            var t = typeof(T);
             equalsFunction = null;
             if (equalsCache.TryGetValue(t, out object temp))
             {
@@ -147,7 +147,7 @@ namespace Microsoft.StreamProcessing
         {
             get
             {
-                Type type = typeof(T);
+                var type = typeof(T);
 
                 lock (sentinel)
                 {
@@ -228,6 +228,21 @@ namespace Microsoft.StreamProcessing
                         EqualityComparerExpressionCache.Add(comparer);
                         return comparer;
                     }
+                    if (type.GetTypeInfo().IsGenericType && type.GenericTypeArguments.Length == 1 && type.GetGenericTypeDefinition() == typeof(PartitionKey<>))
+                    {
+                        var t1 = type.GenericTypeArguments[0];
+                        var equalityComparerExpressionOfT1 = typeof(EqualityComparerExpression<>).MakeGenericType(t1);
+                        var defaultPropertyForT1 = equalityComparerExpressionOfT1.GetTypeInfo().GetProperty("Default");
+                        var default1 = defaultPropertyForT1.GetValue(null);
+
+                        var cgkec = typeof(ComparerExpressionForPartitionKey<>);
+                        var genericInstance = cgkec.MakeGenericType(t1);
+                        var ctor = genericInstance.GetTypeInfo().GetConstructor(new Type[] { equalityComparerExpressionOfT1, });
+                        var result = ctor.Invoke(new object[] { default1, });
+                        comparer = (IEqualityComparerExpression<T>)result;
+                        EqualityComparerExpressionCache.Add(comparer);
+                        return comparer;
+                    }
                     if (type.IsAnonymousTypeName())
                     {
                         var tup = ExpressionsForAnonymousType(type);
@@ -304,9 +319,7 @@ namespace Microsoft.StreamProcessing
             if (typeInfo.GetMethod("GetHashCode").DeclaringType != typeof(ValueType)) return false;
             if (typeInfo.GetMethod("Equals").DeclaringType != typeof(ValueType)) return false;
             if (typeInfo.GetProperties().Length > 0) return false;
-            var fields = typeInfo.GetFields();
-            if (fields.Any(f => !f.IsPublic)) return false;
-            return true;
+            return !typeInfo.GetFields().Any(f => !f.IsPublic);
         }
 
         private static bool Recursive(Type type)
@@ -484,7 +497,7 @@ namespace Microsoft.StreamProcessing
         }
     }
 
-    internal class StringEqualityComparerExpression : EqualityComparerExpression<string>
+    internal sealed class StringEqualityComparerExpression : EqualityComparerExpression<string>
     {
         public StringEqualityComparerExpression()
             : base(
@@ -493,7 +506,7 @@ namespace Microsoft.StreamProcessing
         { }
     }
 
-    internal class ComparerExpressionForIEqualityComparer<T> : EqualityComparerExpression<T> where T : IEqualityComparer<T>
+    internal sealed class ComparerExpressionForIEqualityComparer<T> : EqualityComparerExpression<T> where T : IEqualityComparer<T>
     {
         public ComparerExpressionForIEqualityComparer(T t)
             : base(
@@ -502,12 +515,42 @@ namespace Microsoft.StreamProcessing
         { }
     }
 
-    internal class ComparerExpressionForIEquatable<T> : EqualityComparerExpression<T> where T : IEquatable<T>
+    internal sealed class ComparerExpressionForIEquatable<T> : EqualityComparerExpression<T> where T : IEquatable<T>
     {
         public ComparerExpressionForIEquatable()
             : base(
                 equalsExpr: (x, y) => x.Equals(y),
                 getHashCodeExpr: (obj) => obj.GetHashCode())
         { }
+    }
+
+    internal sealed class ComparerExpressionForPartitionKey<T> : IEqualityComparerExpression<PartitionKey<T>>
+    {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Comparer is a function and thus immutable")]
+        public readonly IEqualityComparerExpression<T> baseComparer;
+
+        public ComparerExpressionForPartitionKey(IEqualityComparerExpression<T> comparer) => this.baseComparer = comparer;
+
+        public Expression<Func<PartitionKey<T>, PartitionKey<T>, bool>> GetEqualsExpr()
+        {
+            Expression<Func<PartitionKey<T>, T>> keyExtractor1 = o => o.Key;
+            Expression<Func<PartitionKey<T>, T>> keyExtractor2 = o => o.Key;
+            var baseGetEqualsExpr = baseComparer.GetEqualsExpr();
+            var newExpressionBody = baseGetEqualsExpr.ReplaceParametersInBody(keyExtractor1.Body, keyExtractor2.Body);
+            return Expression.Lambda<Func<PartitionKey<T>, PartitionKey<T>, bool>>(
+                newExpressionBody,
+                keyExtractor1.Parameters[0],
+                keyExtractor2.Parameters[0]);
+        }
+
+        public Expression<Func<PartitionKey<T>, int>> GetGetHashCodeExpr()
+        {
+            Expression<Func<PartitionKey<T>, T>> keyExtractor = o => o.Key;
+            var baseGetEqualsExpr = baseComparer.GetGetHashCodeExpr();
+            var newExpressionBody = baseGetEqualsExpr.ReplaceParametersInBody(keyExtractor.Body);
+            return Expression.Lambda<Func<PartitionKey<T>, int>>(
+                newExpressionBody,
+                keyExtractor.Parameters[0]);
+        }
     }
 }

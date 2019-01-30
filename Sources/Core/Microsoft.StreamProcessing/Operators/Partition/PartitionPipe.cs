@@ -31,8 +31,7 @@ namespace Microsoft.StreamProcessing
             IStreamObserver<PartitionKey<TPartitionKey>, TPayload> observer)
             : base(stream, observer)
         {
-            var keyComparerGetHashCodeExpr = EqualityComparerExpression<TPartitionKey>.Default.GetGetHashCodeExpr();
-            this.keyComparerGetHashCode = keyComparerGetHashCodeExpr.Compile();
+            this.keyComparerGetHashCode = EqualityComparerExpression<TPartitionKey>.DefaultGetHashCodeFunction;
             this.keySelector = stream.KeySelector;
             this.keySelectorFunc = this.keySelector.Compile();
             this.partitionLag = stream.PartitionLag;

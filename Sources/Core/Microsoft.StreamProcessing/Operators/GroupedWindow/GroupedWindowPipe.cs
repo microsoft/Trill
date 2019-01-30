@@ -82,9 +82,9 @@ namespace Microsoft.StreamProcessing
 
             var comparer = EqualityComparerExpression<TKey>.Default;
             this.keyComparerEqualsExpr = comparer.GetEqualsExpr();
-            this.keyComparerEquals = this.keyComparerEqualsExpr.Compile();
+            this.keyComparerEquals = EqualityComparerExpression<TKey>.DefaultEqualsFunction;
             this.keyComparerGetHashCodeExpr = comparer.GetGetHashCodeExpr();
-            this.keyComparerGetHashCode = this.keyComparerGetHashCodeExpr.Compile();
+            this.keyComparerGetHashCode = EqualityComparerExpression<TKey>.DefaultGetHashCodeFunction;
 
             this.keySelectorExpr = stream.KeySelector;
             this.keySelector = this.keySelectorExpr.Compile();

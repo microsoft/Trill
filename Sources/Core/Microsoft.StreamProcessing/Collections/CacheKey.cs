@@ -37,10 +37,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     {
         private T keyData;
 
-        public CacheKey(T keyData)
-        {
-            this.keyData = keyData;
-        }
+        public CacheKey(T keyData) => this.keyData = keyData;
 
         public override int GetHashCode() => this.keyData.GetHashCode() ^ this.batchSize ^ this.useMultiString.GetHashCode();
 
