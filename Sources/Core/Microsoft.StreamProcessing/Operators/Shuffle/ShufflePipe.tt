@@ -299,8 +299,7 @@ for (int i = 0; i < 3; i++)
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
+            => this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
                 previous,
                 this,
                 typeof(TOuterKey),
@@ -312,7 +311,6 @@ for (int i = 0; i < 3; i++)
                 true,
                 false,
                 this.errorMessages)));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 

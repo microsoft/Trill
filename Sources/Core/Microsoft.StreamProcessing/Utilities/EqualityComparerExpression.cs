@@ -57,7 +57,7 @@ namespace Microsoft.StreamProcessing
 
         public static bool TryGetCachedComparer<T>(out IEqualityComparerExpression<T> comparer)
         {
-            Type t = typeof(T);
+            var t = typeof(T);
             comparer = null;
             if (typeComparerCache.TryGetValue(t, out object temp))
             {
@@ -81,7 +81,7 @@ namespace Microsoft.StreamProcessing
 
         public static bool TryGetCachedGetHashCodeFunction<T>(out Func<T, int> getHashCodeFunction)
         {
-            Type t = typeof(T);
+            var t = typeof(T);
             getHashCodeFunction = null;
             if (getHashCodeCache.TryGetValue(t, out object temp))
             {
@@ -443,7 +443,7 @@ namespace Microsoft.StreamProcessing
         }
     }
 
-    internal class GenericEqualityComparerExpression<T> : EqualityComparerExpression<T>
+    internal sealed class GenericEqualityComparerExpression<T> : EqualityComparerExpression<T>
     {
         public GenericEqualityComparerExpression()
             : base(
