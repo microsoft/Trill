@@ -91,10 +91,10 @@ namespace SimpleTesting
             for (int j = 0; j < 11; j++)
             {
                 var targetString = j < 10 ? j.ToString() : "x"; // something not found for the last iteration
-                CharArrayPool cap = new CharArrayPool();
-                ColumnPool<int> intPool = new ColumnPool<int>();
-                ColumnPool<short> shortPool = new ColumnPool<short>();
-                ColumnPool<long> bitvectorPool = new ColumnPool<long>(1 + (Config.DataBatchSize >> 6));
+                var cap = new CharArrayPool();
+                var intPool = new ColumnPool<int>();
+                var shortPool = new ColumnPool<short>();
+                var bitvectorPool = new ColumnPool<long>(1 + (Config.DataBatchSize >> 6));
 
                 var ms = new MultiString(cap, intPool, shortPool, bitvectorPool);
                 var input = new string[20];
@@ -105,7 +105,7 @@ namespace SimpleTesting
                     ms.AddString(s);
                 }
                 ms.Seal();
-                bitvectorPool.Get(out ColumnBatch<long> inBV);
+                bitvectorPool.Get(out var inBV);
                 var result = ms.Contains(targetString, inBV, false);
                 var output = new List<string>();
                 for (int i = 0; i < 20; i++)
@@ -126,10 +126,10 @@ namespace SimpleTesting
             for (int j = 0; j < 21; j++)
             {
                 var targetString = j < 20 ? j.ToString() : "x"; // something not found for the last iteration
-                CharArrayPool cap = new CharArrayPool();
-                ColumnPool<int> intPool = new ColumnPool<int>();
-                ColumnPool<short> shortPool = new ColumnPool<short>();
-                ColumnPool<long> bitvectorPool = new ColumnPool<long>(1 + (Config.DataBatchSize >> 6));
+                var cap = new CharArrayPool();
+                var intPool = new ColumnPool<int>();
+                var shortPool = new ColumnPool<short>();
+                var bitvectorPool = new ColumnPool<long>(1 + (Config.DataBatchSize >> 6));
                 var ms = new MultiString(cap, intPool, shortPool, bitvectorPool);
                 var input = new string[20];
                 for (int i = 0; i < 20; i++)
@@ -139,7 +139,7 @@ namespace SimpleTesting
                     ms.AddString(s);
                 }
                 ms.Seal();
-                bitvectorPool.Get(out ColumnBatch<long> inBV);
+                bitvectorPool.Get(out var inBV);
                 var result = ms.Equals(targetString, inBV, false);
                 var output = new List<string>();
                 for (int i = 0; i < 20; i++)
@@ -532,10 +532,7 @@ namespace SimpleTesting
             Assert.IsTrue(expected.SequenceEqual(a));
         }
 
-        private void TestSelect<TSource, TResult>(IEnumerable<TSource> enumerable, Expression<Func<TSource, TResult>> function)
-        {
-            Assert.IsTrue(enumerable.TestSelect<TSource, TResult>(function));
-        }
+        private static void TestSelect<TSource, TResult>(IEnumerable<TSource> enumerable, Expression<Func<TSource, TResult>> function) => Assert.IsTrue(enumerable.TestSelect(function));
 
         [TestMethod, TestCategory("Gated")]
         public void MultiString_Select_AnonymousType_Result_01()
@@ -578,10 +575,10 @@ namespace SimpleTesting
 
             try
             {
-                CharArrayPool cap = new CharArrayPool();
-                ColumnPool<int> intPool = new ColumnPool<int>();
-                ColumnPool<short> shortPool = new ColumnPool<short>();
-                ColumnPool<long> bitvectorPool = new ColumnPool<long>(1 + (Config.DataBatchSize >> 6));
+                var cap = new CharArrayPool();
+                var intPool = new ColumnPool<int>();
+                var shortPool = new ColumnPool<short>();
+                var bitvectorPool = new ColumnPool<long>(1 + (Config.DataBatchSize >> 6));
 
                 string[] patterns = new string[] { "bb*?abb", "bb*abb", "ab*?a", "aba", "ab+a" };
 
@@ -590,7 +587,7 @@ namespace SimpleTesting
                     int numStrings = 10000 + r * 500;
                     int maxStringLen = 10 + r * 10;
 
-                    Random rand = new Random(300 + r);
+                    var rand = new Random(300 + r);
 
                     var ms = new MultiString(cap, intPool, shortPool, bitvectorPool);
                     var input = new string[numStrings];
@@ -609,7 +606,7 @@ namespace SimpleTesting
                     foreach (var pattern in patterns)
                     {
                         // contains test
-                        bitvectorPool.Get(out ColumnBatch<long> inBV);
+                        bitvectorPool.Get(out var inBV);
                         var result = ms.Contains(pattern, inBV, false);
                         for (int i = 0; i < numStrings; i++)
                         {
@@ -626,7 +623,7 @@ namespace SimpleTesting
                         result.ReturnClear();
 
                         // regex test
-                        System.Text.RegularExpressions.Regex reg = new System.Text.RegularExpressions.Regex(pattern);
+                        var reg = new System.Text.RegularExpressions.Regex(pattern);
                         bitvectorPool.Get(out inBV);
                         var result2 = ms.IsMatch(reg, 0, inBV, false);
                         for (int i = 0; i < numStrings; i++)
@@ -656,10 +653,10 @@ namespace SimpleTesting
         {
             for (int j = 0; j < 11; j++)
             {
-                CharArrayPool cap = new CharArrayPool();
-                ColumnPool<int> intPool = new ColumnPool<int>();
-                ColumnPool<short> shortPool = new ColumnPool<short>();
-                ColumnPool<long> bitvectorPool = new ColumnPool<long>(1 + (Config.DataBatchSize >> 6));
+                var cap = new CharArrayPool();
+                var intPool = new ColumnPool<int>();
+                var shortPool = new ColumnPool<short>();
+                var bitvectorPool = new ColumnPool<long>(1 + (Config.DataBatchSize >> 6));
                 var ms = new MultiString(cap, intPool, shortPool, bitvectorPool);
                 var input = Enumerable.Range(0, 20).Select(i => i.ToString());
                 foreach (var s in input)
@@ -667,9 +664,9 @@ namespace SimpleTesting
                     ms.AddString(s);
                 }
                 ms.Seal();
-                bitvectorPool.Get(out ColumnBatch<long> inBV);
+                bitvectorPool.Get(out var inBV);
                 var result = ms.GetHashCode(inBV);
-                List<int> output = new List<int>();
+                var output = new List<int>();
                 for (int i = 0; i < input.Count(); i++)
                     output.Add(result.col[i]);
                 var expected = input.Select(s => s.GetHashCode());

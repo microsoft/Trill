@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Microsoft.Azure.Trill</id>
+    <id>Trill</id>
     <version>$version$</version>
     <title>Trill</title>
     <authors>Microsoft</authors>

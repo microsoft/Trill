@@ -87,26 +87,12 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public MultiString()
-        {
-            Contract.Ensures(this.State == MultiStringState.Unsealed);
-
-            this.charArrayPool = MemoryManager.GetCharArrayPool();
-            this.intPool = MemoryManager.GetColumnPool<int>();
-            this.shortPool = MemoryManager.GetColumnPool<short>();
-            this.bitvectorPool = MemoryManager.GetBVPool(1 + (Config.DataBatchSize >> 6));
-
-            this.Count = 0;
-            this.MaxStringSize = 0;
-            this.EndOffset = 0;
-            this.state = MultiStringState.Unsealed;
-        }
+            : this(MemoryManager.GetCharArrayPool(), MemoryManager.GetColumnPool<int>(), MemoryManager.GetColumnPool<short>(), MemoryManager.GetBVPool(1 + (Config.DataBatchSize >> 6)))
+        { }
 
         internal MultiString(CharArrayPool caPool, ColumnPool<int> intPool, ColumnPool<short> shortPool, ColumnPool<long> bitvectorPool)
         {
             Contract.Ensures(this.State == MultiStringState.Unsealed);
-
-            if (CultureInfo.CurrentCulture.Name != "en-US")
-                throw new NotSupportedException("Only en-us is supported");
 
             this.charArrayPool = caPool;
             this.intPool = intPool;
@@ -131,7 +117,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static unsafe ColumnBatch<long> GreaterThan(ColumnBatch<int> left, int right, ColumnBatch<long> inBV, ColumnPool<long> pool)
         {
-            pool.Get(out ColumnBatch<long> result);
+            pool.Get(out var result);
 
             var bv = inBV.col;
             var leftCol = left.col;
@@ -143,7 +129,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 {
                     if (!(leftCol[i] > right))
                     {
-                        resultCol[i >> 6] |= (1L << (i & 0x3f));
+                        resultCol[i >> 6] |= 1L << (i & 0x3f);
                     }
                 }
             }
@@ -163,7 +149,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static unsafe ColumnBatch<int> Subtract(ColumnBatch<int> left, int right, ColumnBatch<long> inBV, ColumnPool<int> pool)
         {
-            pool.Get(out ColumnBatch<int> result);
+            pool.Get(out var result);
 
             fixed (long* bv = inBV.col)
             fixed (int* leftCol = left.col)
@@ -237,15 +223,17 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(right != null);
             Contract.Requires(left.UsedLength == right.UsedLength);
 
-            pool.Get(out ColumnBatch<long> result);
+            pool.Get(out var result);
 
             fixed (long* leftCol = left.col)
             fixed (long* rightCol = right.col)
             fixed (long* resultCol = result.col)
+            {
                 for (int i = 0; i < left.UsedLength; i++)
                 {
                     resultCol[i] = ~leftCol[i] | rightCol[i];
                 }
+            }
             result.UsedLength = left.UsedLength;
             return result;
         }
@@ -264,10 +252,12 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
             fixed (long* leftCol = left.col)
             fixed (long* rightCol = right.col)
+            {
                 for (int i = 0; i < left.UsedLength; i++)
                 {
                     leftCol[i] &= rightCol[i];
                 }
+            }
             return;
         }
 
@@ -387,10 +377,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
             if (this.msb == null)
             {
-                if (size < 1)
-                    this.msb = new MyStringBuilder(this.charArrayPool);
-                else
-                    this.msb = new MyStringBuilder(size, this.charArrayPool);
+                this.msb = size < 1
+                    ? new MyStringBuilder(this.charArrayPool)
+                    : new MyStringBuilder(size, this.charArrayPool);
             }
         }
 
@@ -415,7 +404,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Assume(this.msb != null);
 
             var otherLength = other.lengths.col[index];
-            fixed (char* c = &other.col.charArray.content[other.starts.col[index]]) {
+            fixed (char* c = &other.col.charArray.content[other.starts.col[index]])
+            {
                 this.msb.Append(c, otherLength);
             }
 
@@ -473,7 +463,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(stringPool != null);
             Contract.Requires(this.State == MultiStringState.Sealed);
 
-            stringPool.Get(out ColumnBatch<string> stringColumn);
+            stringPool.Get(out var stringColumn);
             var col = stringColumn.col;
             var n = this.Count;
             fixed (long* src_bv = livenessBitVector.col)
@@ -520,7 +510,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public string this[int index]
         {
-            get {
+            get
+            {
                 Contract.Requires(this.State == MultiStringState.Sealed);
                 Contract.Ensures(this.State == MultiStringState.Sealed);
 
@@ -755,7 +746,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(this.State == MultiStringState.Sealed);
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
-            this.intPool.Get(out ColumnBatch<int> result);
+            this.intPool.Get(out var result);
 
             var bv = inBV.col;
             var startscol = this.starts.col;
@@ -790,7 +781,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(this.State == MultiStringState.Sealed);
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
-            this.intPool.Get(out ColumnBatch<int> result);
+            this.intPool.Get(out var result);
 
             var bv = inBV.col;
             var startscol = this.starts.col;
@@ -827,7 +818,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(this.State == MultiStringState.Sealed);
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
-            this.intPool.Get(out ColumnBatch<int> result);
+            this.intPool.Get(out var result);
 
             var bv = inBV.col;
             var startscol = this.starts.col;
@@ -862,7 +853,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(this.State == MultiStringState.Sealed);
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
-            this.intPool.Get(out ColumnBatch<int> result);
+            this.intPool.Get(out var result);
 
             var bv = inBV.col;
             var startscol = this.starts.col;
@@ -898,7 +889,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(this.State == MultiStringState.Sealed);
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
-            this.intPool.Get(out ColumnBatch<int> result);
+            this.intPool.Get(out var result);
 
             var bv = inBV.col;
             var startscol = this.starts.col;
@@ -938,12 +929,12 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
             var isGreedy = new Regex(@"([\*\+\}](?!\?))|([^\*\+\}\?]\?(?!\?))");
 
-            bool mayBeGreedy = isGreedy.IsMatch(pattern);
-
-            if (mayBeGreedy || pattern.StartsWith("^", StringComparison.Ordinal) || pattern.EndsWith("$", StringComparison.Ordinal) || pattern.Contains("\\A") || pattern.Contains("\\Z") || pattern.Contains("\\z"))
-                return false;
-
-            return true;
+            return !isGreedy.IsMatch(pattern)
+                && !pattern.StartsWith("^", StringComparison.Ordinal)
+                && !pattern.EndsWith("$", StringComparison.Ordinal)
+                && !pattern.Contains("\\A")
+                && !pattern.Contains("\\Z")
+                && !pattern.Contains("\\z");
         }
 
         private unsafe ColumnBatch<long> IsMatchBackoff(Regex regex, int startat, ColumnBatch<long> inBV, bool inPlace = true)
@@ -1076,12 +1067,11 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                         break;
                     }
 
-
                     if ((bv[end_index >> 6] & (1L << (end_index & 0x3f))) == 0)
                     {
                         if (start_index != end_index)
                         {
-                            Match newM = regex.Match(largestr, startscol[end_index] + 2 + startat, lengthscol[end_index] - startat);
+                            var newM = regex.Match(largestr, startscol[end_index] + 2 + startat, lengthscol[end_index] - startat);
                             if (!newM.Success)
                             {
                                 rbv[end_index >> 6] |= (1L << (end_index & 0x3f));
@@ -1156,21 +1146,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                         char* end = src + this.EndOffset;
                         while (p < end)
                         {
-                            if (*p < '\x0080') // ascii
-                            {
-                                if ((*p <= 'Z') && (*p >= 'A'))
-                                {
-                                    *q = (char)(*p | ' ');
-                                }
-                                else
-                                {
-                                    *q = *p;
-                                }
-                            }
-                            else
-                            {
-                                *q = textInfo.ToLower(*p);
-                            }
+                            *q = *p < '\x0080' ? (*p <= 'Z') && (*p >= 'A') ? (char)(*p | ' ') : *p : textInfo.ToLower(*p);
                             p++;
                             q++;
                         }
@@ -1230,21 +1206,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                         char* end = src + this.EndOffset;
                         while (p < end)
                         {
-                            if (*p < '\x0080') // ascii
-                            {
-                                if ((*p >= 'a') && (*p <= 'z'))
-                                {
-                                    *q = (char)(*p & '￟');
-                                }
-                                else
-                                {
-                                    *q = *p;
-                                }
-                            }
-                            else
-                            {
-                                *q = textInfo.ToUpper(*p);
-                            }
+                            *q = *p < '\x0080'
+                                ? (*p >= 'a') && (*p <= 'z') ? (char)(*p & '￟') : *p
+                                : textInfo.ToUpper(*p);
                             p++;
                             q++;
                         }
@@ -1624,70 +1588,66 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
             int length;
             fixed (char* dest = this.stage)
+            fixed (char* charContent = this.col.charArray.content)
+            fixed (char* otherContent = otherString)
             {
-                fixed (char* charContent = this.col.charArray.content)
+                for (int i = 0; i < this.Count; i++)
                 {
-                    fixed (char* otherContent = otherString)
+                    if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
                     {
-                        for (int i = 0; i < this.Count; i++)
+                        length = lengthscol[i];
+                        if (length != otherlength)
                         {
-                            if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                            rbv[i >> 6] |= 1L << (i & 0x3f);
+                        }
+                        else
+                        {
+                            char* charIter = charContent + startscol[i];
+                            char* otherIter = otherContent;
+                            bool done = false;
+                            while (length >= 12)
                             {
-                                length = lengthscol[i];
-                                if (length != otherlength)
+                                if (*(long*)charIter != *(long*)otherIter)
                                 {
-                                    rbv[i >> 6] |= (1L << (i & 0x3f));
+                                    rbv[i >> 6] |= 1L << (i & 0x3f);
+                                    done = true;
+                                    break;
                                 }
-                                else
+                                if (*(long*)(charIter + 4) != *(long*)(otherIter + 4))
                                 {
-                                    char* charIter = charContent + startscol[i];
-                                    char* otherIter = otherContent;
-                                    bool done = false;
-                                    while (length >= 12)
-                                    {
-                                        if (*(((long*)charIter)) != *(((long*)otherIter)))
-                                        {
-                                            rbv[i >> 6] |= (1L << (i & 0x3f));
-                                            done = true;
-                                            break;
-                                        }
-                                        if (*(((long*)(charIter + 4))) != *(((long*)(otherIter + 4))))
-                                        {
-                                            rbv[i >> 6] |= (1L << (i & 0x3f));
-                                            done = true;
-                                            break;
-                                        }
-                                        if (*(((long*)(charIter + 8))) != *(((long*)(otherIter + 8))))
-                                        {
-                                            rbv[i >> 6] |= (1L << (i & 0x3f));
-                                            done = true;
-                                            break;
-                                        }
-                                        charIter += 12;
-                                        otherIter += 12;
-                                        length -= 12;
-                                    }
-                                    if (done) continue;
-                                    while (length > 1)
-                                    {
-                                        if (*(((int*)charIter)) != *(((int*)otherIter)))
-                                        {
-                                            break;
-                                        }
-                                        charIter += 2;
-                                        otherIter += 2;
-                                        length -= 2;
-                                    }
-                                    if (length == 1)
-                                    {
-                                        if (*charIter != *otherIter)
-                                            rbv[i >> 6] |= (1L << (i & 0x3f));
-                                    }
-                                    else if (length > 0)
-                                    {
-                                        rbv[i >> 6] |= (1L << (i & 0x3f));
-                                    }
+                                    rbv[i >> 6] |= 1L << (i & 0x3f);
+                                    done = true;
+                                    break;
                                 }
+                                if (*(long*)(charIter + 8) != *(long*)(otherIter + 8))
+                                {
+                                    rbv[i >> 6] |= 1L << (i & 0x3f);
+                                    done = true;
+                                    break;
+                                }
+                                charIter += 12;
+                                otherIter += 12;
+                                length -= 12;
+                            }
+                            if (done) continue;
+                            while (length > 1)
+                            {
+                                if (*(int*)charIter != *(int*)otherIter)
+                                {
+                                    break;
+                                }
+                                charIter += 2;
+                                otherIter += 2;
+                                length -= 2;
+                            }
+                            if (length == 1)
+                            {
+                                if (*charIter != *otherIter)
+                                    rbv[i >> 6] |= 1L << (i & 0x3f);
+                            }
+                            else if (length > 0)
+                            {
+                                rbv[i >> 6] |= 1L << (i & 0x3f);
                             }
                         }
                     }
@@ -1710,7 +1670,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(this.State == MultiStringState.Sealed);
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
-            this.intPool.Get(out ColumnBatch<int> result);
+            this.intPool.Get(out var result);
             var bv = inBV.col;
             var startscol = this.starts.col;
             var lengthscol = this.lengths.col;
@@ -1809,7 +1769,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             this.lengths.IncrementRefCount(1);
             return this.lengths;
         }
-
         #endregion
 
         /// <summary>
@@ -2109,7 +2068,5 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             }
             #endregion
         }
-
     }
-
 }

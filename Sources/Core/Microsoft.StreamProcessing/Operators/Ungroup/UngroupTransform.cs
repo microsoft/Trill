@@ -126,13 +126,13 @@ namespace Microsoft.StreamProcessing
                 var innerResultRepresentation = new ColumnarRepresentation(typeofTInnerResult);
                 var resultRepresentation = new ColumnarRepresentation(typeofTResult);
 
-                var parameterSubsitutions = new List<Tuple<ParameterExpression, SelectParameterInformation>>
+                var parameterSubstitutions = new List<Tuple<ParameterExpression, SelectParameterInformation>>
                 {
                     // Leave the key parameter to the selector unchanged, so no substitution for parameters[0]
                     Tuple.Create(resultSelector.Parameters[1], new SelectParameterInformation() { BatchName = "inputBatch", BatchType = inputMessageType, IndexVariableName = "i", parameterRepresentation = innerResultRepresentation, })
                 };
-                var result = SelectTransformer.Transform(resultSelector, parameterSubsitutions, resultRepresentation);
-                if (result.Error) return Tuple.Create((Type)null, errorMessages); ;
+                var result = SelectTransformer.Transform(resultSelector, parameterSubstitutions, resultRepresentation);
+                if (result.Error) return Tuple.Create((Type)null, errorMessages);
 
                 var template = new UngroupTemplate(generatedClassName, !isFirstLevelGroup, typeOfTOuterKey, typeOfTInnerKey, typeofTInnerResult, typeofTResult)
                 {

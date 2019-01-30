@@ -514,13 +514,41 @@ namespace SimpleTesting
             Assert.IsTrue(expected.SequenceEqual(output));
         }
 
-        public void Test()
+        [TestMethod, TestCategory("Gated")]
+        public void FileStreamPassthrough()
         {
-            var data = new List<Tuple<long, int>> {
-               Tuple.Create(0L, 0),
-               Tuple.Create(1L, 1),
-               Tuple.Create(100L, 100) };
-            var output = data.ToObservable().ToTemporalStreamable(o => o.Item1).ToStreamEventObservable().ToArray();
+            // Including stream properties must be consistent across serialization/deserialization
+            const bool serializeStreamProperties = true;
+
+            var inputData = new StreamEvent<long>[]
+            {
+                StreamEvent.CreateInterval(1, 2, 0L),
+                StreamEvent.CreateInterval(2, 3, 20L),
+                StreamEvent.CreateInterval(3, 4, 15L),
+                StreamEvent.CreateInterval(4, 5, 30L),
+                StreamEvent.CreateInterval(5, 6, 45L),
+                StreamEvent.CreateInterval(6, 7, 50L),
+                StreamEvent.CreateInterval(7, 8, 30L),
+                StreamEvent.CreateInterval(8, 9, 35L),
+                StreamEvent.CreateInterval(9, 10, 60L),
+                StreamEvent.CreateInterval(10, 11, 20L),
+            };
+
+            var input = inputData.ToObservable().ToStreamable();
+
+            // Stream to file
+            string filePath = $"{Path.GetTempPath()}\\{nameof(FileStreamPassthrough)}.bin";
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                input.ToBinaryStream(fileStream, writePropertiesToStream: serializeStreamProperties);
+            }
+
+            // Stream from file
+            var fromFile = filePath.ToStreamableFromFile<long>(readPropertiesFromStream: serializeStreamProperties);
+            var output = new List<StreamEvent<long>>();
+            fromFile.ToStreamEventObservable().Where(e => e.IsData).ForEachAsync(r => output.Add(r)).Wait();
+
+            Assert.IsTrue(inputData.SequenceEqual(output));
         }
     }
 

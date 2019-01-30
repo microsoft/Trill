@@ -336,10 +336,7 @@ namespace Microsoft.StreamProcessing
 
         public int Capacity
         {
-            get
-            {
-                return (this.m_ChunkChars.Length + this.m_ChunkOffset);
-            }
+            get => this.m_ChunkChars.Length + this.m_ChunkOffset;
 
             set
             {
@@ -361,10 +358,7 @@ namespace Microsoft.StreamProcessing
 
         public int Length
         {
-            get
-            {
-                return (this.m_ChunkOffset + this.m_ChunkLength);
-            }
+            get => this.m_ChunkOffset + this.m_ChunkLength;
 
             set
             {
@@ -420,37 +414,37 @@ namespace Microsoft.StreamProcessing
                     }
                     if (((((int)dmem) & 4) != 0) && (charCount >= 2))
                     {
-                        *((uint*)dmem) = *((uint*)smem);
+                        *(uint*)dmem = *(uint*)smem;
                         dmem += 2;
                         smem += 2;
                         charCount -= 2;
                     }
                     while (charCount >= 0x10)
                     {
-                        *((long*)dmem) = *((long*)smem);
-                        *((long*)(dmem + 4)) = *((long*)(smem + 4));
-                        *((long*)(dmem + 8)) = *((long*)(smem + 8));
-                        *((long*)(dmem + 12)) = *((long*)(smem + 12));
+                        *(long*)dmem = *(long*)smem;
+                        *(long*)(dmem + 4) = *(long*)(smem + 4);
+                        *(long*)(dmem + 8) = *(long*)(smem + 8);
+                        *(long*)(dmem + 12) = *(long*)(smem + 12);
                         dmem += 0x10;
                         smem += 0x10;
                         charCount -= 0x10;
                     }
                     if ((charCount & 8) != 0)
                     {
-                        *((long*)dmem) = *((long*)smem);
-                        *((long*)(dmem + 4)) = *((long*)(smem + 4));
+                        *(long*)dmem = *(long*)smem;
+                        *(long*)(dmem + 4) = *(long*)(smem + 4);
                         dmem += 8;
                         smem += 8;
                     }
                     if ((charCount & 4) != 0)
                     {
-                        *((long*)dmem) = *((long*)smem);
+                        *(long*)dmem = *(long*)smem;
                         dmem += 4;
                         smem += 4;
                     }
                     if ((charCount & 2) != 0)
                     {
-                        *((uint*)dmem) = *((uint*)smem);
+                        *(uint*)dmem = *(uint*)smem;
                         dmem += 2;
                         smem += 2;
                     }
@@ -463,8 +457,8 @@ namespace Microsoft.StreamProcessing
                 {
                     do
                     {
-                        *((byte*)dmem) = *((byte*)smem);
-                        *((byte*)(dmem + 1)) = *((byte*)(smem + 1));
+                        *(byte*)dmem = *(byte*)smem;
+                        *(byte*)(dmem + 1) = *(byte*)(smem + 1);
                         charCount--;
                         dmem++;
                         smem++;

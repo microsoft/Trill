@@ -39,6 +39,7 @@ using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Aggregates;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Internal.Collections;
+[assembly: IgnoresAccessChecksTo(""Microsoft.StreamProcessing"")]
 
 [DataContract]
 internal sealed class ");
@@ -62,6 +63,8 @@ internal sealed class ");
     [SchemaSerialization]
     private readonly long skip;
     [SchemaSerialization]
+    private readonly long progress;
+    [SchemaSerialization]
     private readonly long offset;
 
     private StreamMessage<");
@@ -76,7 +79,7 @@ internal sealed class ");
     [DataMember]
     private long lastSyncTime = long.MinValue;
     [DataMember]
-    private EndPointHeap endPointHeap = new EndPointHeap();
+    private IEndPointOrderer endPointHeap = new EndPointHeap();
     [DataMember]
     private FastMap<ActiveEvent> intervalMap = new FastMap<ActiveEvent>();
 
@@ -95,9 +98,9 @@ internal sealed class ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
-            this.Write("> observer, long width, long skip, long offset,\r\n        Func<PlanNode, IQueryObj" +
-                    "ect, PlanNode> queryPlanGenerator)\r\n        : base(stream, observer)\r\n    {\r\n   " +
-                    "     pool = MemoryManager.GetMemoryPool<");
+            this.Write("> observer, long width, long skip, long progress, long offset,\r\n        Func<Plan" +
+                    "Node, IQueryObject, PlanNode> queryPlanGenerator)\r\n        : base(stream, observ" +
+                    "er)\r\n    {\r\n        pool = MemoryManager.GetMemoryPool<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
@@ -105,6 +108,7 @@ internal sealed class ");
         this.queryPlanGenerator = queryPlanGenerator;
         GetOutputBatch();
         this.width = width;
+        this.progress = progress;
         this.skip = skip;
         this.offset = offset;
     }
@@ -179,43 +183,48 @@ internal sealed class ");
                     "          {\r\n                    if (batch.vsync.col[i] > lastSyncTime) ReachTim" +
                     "e(batch.vsync.col[i]);\r\n\r\n                    if (batch.vother.col[i] == StreamE" +
                     "vent.InfinitySyncTime) // Start edge\r\n                    {\r\n                   " +
-                    "     int ind = output.Count++;\r\n                        output.vsync.col[ind] = " +
-                    "vsync[i] - ((vsync[i] - offset) % skip);\r\n                        output.vother." +
-                    "col[ind] = StreamEvent.InfinitySyncTime;\r\n                        output.key.col" +
-                    "[ind] = batch.key.col[i];\r\n                        output[ind] = batch[i];\r\n    " +
-                    "                    output.hash.col[ind] = batch.hash.col[i];\r\n\r\n               " +
-                    "         if (output.Count == Config.DataBatchSize) FlushContents();\r\n           " +
-                    "         }\r\n                    else if (batch.vother.col[i] > batch.vsync.col[i" +
-                    "]) // Interval\r\n                    {\r\n                        int ind = output." +
-                    "Count++;\r\n                        output.vsync.col[ind] = vsync[i] - ((vsync[i] " +
-                    "- offset) % skip);\r\n                        var temp = Math.Max(vother[i] + skip" +
-                    " - 1, vsync[i] + width);\r\n                        output.vother.col[ind] = temp " +
-                    "- ((temp - (offset + width)) % skip);\r\n                        output.key.col[in" +
-                    "d] = batch.key.col[i];\r\n                        output[ind] = batch[i];\r\n       " +
-                    "                 output.hash.col[ind] = batch.hash.col[i];\r\n\r\n                  " +
-                    "      if (output.Count == Config.DataBatchSize) FlushContents();\r\n              " +
-                    "      }\r\n                    else\r\n                    {\r\n                      " +
-                    "  var temp = Math.Max(vsync[i] + skip - 1, vother[i] + width);\r\n                " +
-                    "        int index = intervalMap.Insert(batch.hash.col[i]);\r\n                    " +
-                    "    intervalMap.Values[index].Populate(batch.key.col[i], batch, i, batch.hash.co" +
-                    "l[i], vother[i] - ((vother[i] - offset) % skip));\r\n                        endPo" +
-                    "intHeap.Insert(temp - ((temp - (offset + width)) % skip), index);\r\n             " +
-                    "       }\r\n                }\r\n                else if (vother[i] == long.MinValue" +
-                    ") // Punctuation\r\n                {\r\n                    if (vsync[i] > lastSync" +
-                    "Time) ReachTime(vsync[i]);\r\n\r\n                    int ind = output.Count++;\r\n   " +
-                    "                 output.vsync.col[ind] = vsync[i] - ((vsync[i] - offset) % skip)" +
-                    ";\r\n                    output.vother.col[ind] = long.MinValue;\r\n                " +
-                    "    output.key.col[ind] = default;\r\n                    output[ind] = default;\r\n" +
-                    "                    output.hash.col[ind] = batch.hash.col[i];\r\n                 " +
-                    "   output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));\r\n                    " +
-                    "if (output.Count == Config.DataBatchSize) FlushContents();\r\n                }\r\n " +
-                    "           }\r\n        }\r\n        batch.Free();\r\n    }\r\n\r\n    protected override " +
-                    "void FlushContents()\r\n    {\r\n        if (output.Count == 0) return;\r\n        out" +
-                    "put.Seal();\r\n        this.Observer.OnNext(output);\r\n        GetOutputBatch();\r\n " +
-                    "   }\r\n\r\n    protected override void DisposeState() => output.Free();\r\n\r\n    publ" +
-                    "ic override int CurrentlyBufferedOutputCount => output.Count;\r\n\r\n    public over" +
-                    "ride int CurrentlyBufferedInputCount => intervalMap.Count;\r\n\r\n    [DataContract]" +
-                    "\r\n    private struct ActiveEvent\r\n    {\r\n");
+                    "     int ind = this.output.Count++;\r\n                        this.output.vsync.c" +
+                    "ol[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) " +
+                    "% this.progress;\r\n                        this.output.vother.col[ind] = StreamEv" +
+                    "ent.InfinitySyncTime;\r\n                        this.output.key.col[ind] = batch." +
+                    "key.col[i];\r\n                        this.output[ind] = batch[i];\r\n             " +
+                    "           this.output.hash.col[ind] = batch.hash.col[i];\r\n                     " +
+                    "   if (this.output.Count == Config.DataBatchSize) FlushContents();\r\n            " +
+                    "        }\r\n                    else if (batch.vother.col[i] > batch.vsync.col[i]" +
+                    ") // Interval\r\n                    {\r\n                        int ind = this.out" +
+                    "put.Count++;\r\n                        this.output.vsync.col[ind] = vsync[i] - ((" +
+                    "vsync[i] - this.offset) % this.progress + this.progress) % this.progress;\r\n     " +
+                    "                   var temp = Math.Max(vother[i] + this.skip - 1, vsync[i] + thi" +
+                    "s.width);\r\n                        this.output.vother.col[ind] = temp - ((temp -" +
+                    " (this.offset + this.width)) % this.skip + this.skip) % this.skip;\r\n            " +
+                    "            this.output.key.col[ind] = batch.key.col[i];\r\n                      " +
+                    "  this.output[ind] = batch[i];\r\n                        this.output.hash.col[ind" +
+                    "] = batch.hash.col[i];\r\n                        if (this.output.Count == Config." +
+                    "DataBatchSize) FlushContents();\r\n                    }\r\n                    else" +
+                    "\r\n                    {\r\n                        var temp = Math.Max(vsync[i] + " +
+                    "this.skip - 1, vother[i] + this.width);\r\n                        int index = thi" +
+                    "s.intervalMap.Insert(batch.hash.col[i]);\r\n                        this.intervalM" +
+                    "ap.Values[index].Populate(batch.key.col[i], batch, i, batch.hash.col[i], vother[" +
+                    "i] - ((vother[i] - this.offset) % this.progress + this.progress) % this.progress" +
+                    ");\r\n                        this.endPointHeap.Insert(temp - ((temp - (this.offse" +
+                    "t + this.width)) % this.skip + this.skip) % this.skip, index);\r\n                " +
+                    "    }\r\n                }\r\n                else if (vother[i] == long.MinValue) /" +
+                    "/ Punctuation\r\n                {\r\n                    if (vsync[i] > this.lastSy" +
+                    "ncTime) ReachTime(vsync[i]);\r\n\r\n                    int ind = this.output.Count+" +
+                    "+;\r\n                    this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - thi" +
+                    "s.offset) % this.progress + this.progress) % this.progress;\r\n                   " +
+                    " this.output.vother.col[ind] = long.MinValue;\r\n                    this.output.k" +
+                    "ey.col[ind] = batch.key.col[i];\r\n                    this.output.payload.col[ind" +
+                    "] = default;\r\n                    this.output.hash.col[ind] = batch.hash.col[i];" +
+                    "\r\n                    this.output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f)" +
+                    ");\r\n                    if (this.output.Count == Config.DataBatchSize) FlushCont" +
+                    "ents();\r\n                }\r\n            }\r\n        }\r\n        batch.Free();\r\n   " +
+                    " }\r\n\r\n    protected override void FlushContents()\r\n    {\r\n        if (output.Cou" +
+                    "nt == 0) return;\r\n        output.Seal();\r\n        this.Observer.OnNext(output);\r" +
+                    "\n        GetOutputBatch();\r\n    }\r\n\r\n    protected override void DisposeState() " +
+                    "=> output.Free();\r\n\r\n    public override int CurrentlyBufferedOutputCount => out" +
+                    "put.Count;\r\n\r\n    public override int CurrentlyBufferedInputCount => intervalMap" +
+                    ".Count;\r\n\r\n    [DataContract]\r\n    private struct ActiveEvent\r\n    {\r\n");
  foreach (var f in this.fields) { 
             this.Write("        [DataMember]\r\n        public ");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Type.GetCSharpSourceSyntax()));

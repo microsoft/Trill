@@ -1709,7 +1709,7 @@ namespace Microsoft.StreamProcessing
         private ColumnOriented() { }
 
         /// <summary>
-        /// Tranforms a row-oriented lambda into a column-oriented lambda.
+        /// Transforms a row-oriented lambda into a column-oriented lambda.
         /// For each parameter, e, that is referenced in the body of the lambda as
         /// "e.f" (i.e., a field/property dereference for decomposable types or else
         /// just "e" for atomic types like ints), the reference is changed into "b.f.col[i]"

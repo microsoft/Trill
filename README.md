@@ -4,22 +4,22 @@ Trill is a high-performance one-pass in-memory streaming analytics engine from M
 
 # Getting Started
 
+## Building Trill
 1. Of course, the sources are right here!
-2. You can get binaries from our [NuGet feed](https://www.nuget.org/packages/Trill/).
-3. You can also check out samples of Trill usage at our [samples repository](https://github.com/Microsoft/TrillSamples).
+2. Clone the Repo and make sure you have Visual Studio 2017 installed
+3. Open `Trill.sln` solution available in `./Sources` with Visual Studio 2017 
+4. Build Trill
+
+## Samples using Trill
+If you don't want to compile Trill yourself, you can get binaries from our [NuGet feed](https://www.nuget.org/packages/Trill/).
+Samples of Trill usage are available at our [samples repository](https://github.com/Microsoft/TrillSamples). Make sure you start from the Hello World sample to get confident with Trill.
 
 # Learn More
 - Announcement [blog post](https://azure.microsoft.com/en-us/blog/microsoft-open-sources-trill-to-deliver-insights-on-a-trillion-events-a-day/).
 - The [Trill paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/trill-vldb2015.pdf) appeared at VLDB.
 - An [article](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/07/trill-debull.pdf) on Trill appeared in the IEEE Data Engineering Bulletin.
 - The [Trill technical report](http://research.microsoft.com/pubs/214609/trill-TR.pdf).
-- Additional documents located in the /Documentation directory:
-    - TrillQueryWritingGuide: introduces basic concepts of Trill query authoring
-    - Ingress: describes how data is ingressed into and egressed out of Trill
-    - TrillInternals: outlines Trill innovations and internals
-    - BestPractices: describes best practices low-memory real-time deployments 
-    - HighAvailability: details Trill high-availability support
-    - UserDefinedAggregates: introduces a framework for query authors to create custom aggregates
+- Additional documents located in the [/Documentation](./Documentation) directory
 
 # Contact/Feedback
 You can create Git issues in this repo, or contact the team using this [email](mailto:asktrill@microsoft.com).
