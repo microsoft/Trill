@@ -226,7 +226,7 @@ namespace Microsoft.StreamProcessing
                     if (Config.CodegenOptions.SuperStrictColumnar || outputType.IsAnonymousType())
                     {
                         // second disjunct is because if we aren't inlining the computeResult function and
-                        // the outupt type is anonymous, calling the compiled computeResult function returns
+                        // the output type is anonymous, calling the compiled computeResult function returns
                         // a value of the anonymous type and since the generated operator represents the anonymous
                         // type as a generic parameter, it can't use the "field" (i.e., property) names to
                         // get the individual pieces to assign to each column of the output message.
@@ -282,7 +282,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// The comupte result function is e => new { f1 = e1, f2 = e2, ...}), i.e., creating an anonymous type
+        /// The compute result function is e => new { f1 = e1, f2 = e2, ...}), i.e., creating an anonymous type
         /// Transform it into { dest_f1[c] := e1; dest_f2[c] := e2; ... }
         /// </summary>
         private static Expression/*?*/ Transform(NewExpression newExpression, Type outputBatchType)

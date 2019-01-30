@@ -107,11 +107,11 @@ namespace Microsoft.StreamProcessing
                     pseudoLambdaParameters[pseudoLambdaIndex] = payloadParameter;
                     var pseudoLambda = Expression.Lambda(tuple.Item1, pseudoLambdaParameters);
 
-                    var parameterSubsitutions = new List<Tuple<ParameterExpression, SelectParameterInformation>>
+                    var parameterSubstitutions = new List<Tuple<ParameterExpression, SelectParameterInformation>>
                     {
                         Tuple.Create(payloadParameter, new SelectParameterInformation() { BatchName = "batch", BatchType = sourceMessageType, IndexVariableName = "i", parameterRepresentation = new ColumnarRepresentation(payloadType) })
                     };
-                    var projectionResult = SelectTransformer.Transform(pseudoLambda, parameterSubsitutions, template.resultPayloadRepresentation, true, stream.HasStartEdge);
+                    var projectionResult = SelectTransformer.Transform(pseudoLambda, parameterSubstitutions, template.resultPayloadRepresentation, true, stream.HasStartEdge);
                     template.computedFields = projectionResult.ComputedFields;
                     template.useEnumerator = false;
                     var loopCounter = tuple.Item2;

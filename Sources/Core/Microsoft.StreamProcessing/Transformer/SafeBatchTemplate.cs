@@ -30,9 +30,9 @@ namespace Microsoft.StreamProcessing
     var TKEY = keyType.GetCSharpSourceSyntax(ref genericParamList);
     var keyGenericParameterCount = genericParamList.Count;
     var TPAYLOAD = payloadType.GetCSharpSourceSyntax(ref genericParamList);
-    var payloadGenericParmeterList = genericParamList.Skip(keyGenericParameterCount);
+    var payloadGenericParameterList = genericParamList.Skip(keyGenericParameterCount);
     var genericParameters = 0 < genericParamList.Count ? "<" + String.Join(",", genericParamList) + ">" : string.Empty;
-    var payloadGenericParameters = 0 < payloadGenericParmeterList.Count() ? "<" + String.Join(",", payloadGenericParmeterList) + ">" : string.Empty;
+    var payloadGenericParameters = 0 < payloadGenericParameterList.Count() ? "<" + String.Join(",", payloadGenericParameterList) + ">" : string.Empty;
     var payloadIsAnon = payloadType.IsAnonymousType();
     if (payloadIsAnon) TPAYLOAD = TPAYLOAD.CleanUpIdentifierName();
 

@@ -29,7 +29,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Serialize streamble into a binary file
+        /// Serialize streamable into a binary file
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
         /// <typeparam name="TPayload"></typeparam>
@@ -65,7 +65,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Serialize streamble into a binary file
+        /// Serialize streamable into a binary file
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
         /// <typeparam name="TPayload"></typeparam>

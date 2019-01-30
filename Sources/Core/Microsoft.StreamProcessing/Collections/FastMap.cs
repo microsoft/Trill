@@ -50,7 +50,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         // including the free list - this makes those element have a negative
         // next field.
         // Note I did not use a structure because of performance reasons and
-        // apparantly you cannot use 'fixed' on an array of structures.
+        // apparently you cannot use 'fixed' on an array of structures.
         [DataMember]
         private long[] hashAndNext;
 
