@@ -36,6 +36,9 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<TKey, TKey, bool>> keyComparerEqualsExpr;
         private readonly Func<TKey, TKey, bool> keyComparerEquals;
+        [SchemaSerialization]
+        private readonly Expression<Func<TKey, int>> keyComparerGetHashCodeExpr;
+        private readonly Func<TKey, int> keyComparerGetHashCode;
 
         [DataMember]
         private StreamMessage<TKey, TOutput> batch;
@@ -66,22 +69,21 @@ namespace Microsoft.StreamProcessing
             var comparer = stream.Properties.KeyEqualityComparer;
             this.keyComparerEqualsExpr = comparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparerEqualsExpr.Compile();
+            this.keyComparerGetHashCodeExpr = comparer.GetGetHashCodeExpr();
+            this.keyComparerGetHashCode = this.keyComparerGetHashCodeExpr.Compile();
 
             this.errorMessages = stream.ErrorMessages;
             this.pool = MemoryManager.GetMemoryPool<TKey, TOutput>(false);
             this.pool.Get(out this.batch);
             this.batch.Allocate();
 
-            var hashCodeFunction = comparer.GetGetHashCodeExpr().Compile();
-            this.aggregateByKey = comparer.CreateFastDictionary2Generator<TKey, HeldState<TState>>(1, this.keyComparerEquals, hashCodeFunction, stream.Properties.QueryContainer).Invoke();
+            this.aggregateByKey = comparer.CreateFastDictionary2Generator<TKey, HeldState<TState>>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer).Invoke();
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(TKey), typeof(TInput), typeof(TOutput),
                 AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages, false));
-        }
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {
@@ -128,7 +130,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
                         this.batch.payload.col[c] = this.computeResult(iter1entry.value.state);
                         this.batch.key.col[c] = iter1entry.key;
-                        this.batch.hash.col[c] = iter1entry.key.GetHashCode();
+                        this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     }
@@ -159,7 +161,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.vother.col[c] = heldState.timestamp;
                         this.batch.payload.col[c] = this.computeResult(heldState.state);
                         this.batch.key.col[c] = colkey[i];
-                        this.batch.hash.col[c] = colkey[i].GetHashCode();
+                        this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         heldState.timestamp = syncTime;
@@ -192,7 +194,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
                     this.batch.payload.col[c] = this.computeResult(iter1entry.value.state);
                     this.batch.key.col[c] = iter1entry.key;
-                    this.batch.hash.col[c] = iter1entry.key.GetHashCode();
+                    this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
                 }

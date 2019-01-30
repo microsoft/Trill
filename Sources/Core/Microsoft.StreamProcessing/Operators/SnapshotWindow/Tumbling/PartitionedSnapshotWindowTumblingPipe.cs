@@ -39,8 +39,8 @@ namespace Microsoft.StreamProcessing
         private readonly Expression<Func<TKey, TKey, bool>> keyComparerEqualsExpr;
         private readonly Func<TKey, TKey, bool> keyComparerEquals;
         [SchemaSerialization]
-        private readonly Expression<Func<TKey, int>> keyHashCodeExpr;
-        private readonly Func<TKey, int> keyHashCode;
+        private readonly Expression<Func<TKey, int>> keyComparerGetHashCodeExpr;
+        private readonly Func<TKey, int> keyComparerGetHashCode;
 
         [DataMember]
         private StreamMessage<TKey, TOutput> batch;
@@ -71,14 +71,14 @@ namespace Microsoft.StreamProcessing
             var comparer = stream.Properties.KeyEqualityComparer;
             this.keyComparerEqualsExpr = comparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparerEqualsExpr.Compile();
-            this.keyHashCodeExpr = comparer.GetGetHashCodeExpr();
-            this.keyHashCode = this.keyHashCodeExpr.Compile();
+            this.keyComparerGetHashCodeExpr = comparer.GetGetHashCodeExpr();
+            this.keyComparerGetHashCode = this.keyComparerGetHashCodeExpr.Compile();
 
             this.errorMessages = stream.ErrorMessages;
             this.pool = MemoryManager.GetMemoryPool<TKey, TOutput>(false);
             this.pool.Get(out this.batch);
             this.batch.Allocate();
-            this.dictionaryGenerator = comparer.CreateFastDictionaryGenerator<TKey, TState>(1, this.keyComparerEquals, this.keyHashCode, stream.Properties.QueryContainer);
+            this.dictionaryGenerator = comparer.CreateFastDictionaryGenerator<TKey, TState>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer);
 
             this.hop = hop;
         }
@@ -167,7 +167,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.vother.col[c] = entry.lastSyncTime + this.hop;
                         this.batch.payload.col[c] = this.computeResult(iter1entry.value);
                         this.batch.key.col[c] = iter1entry.key;
-                        this.batch.hash.col[c] = this.keyHashCode(iter1entry.key);
+                        this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
 
@@ -227,7 +227,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.vother.col[c] = partitionSyncTime + this.hop;
                     this.batch.payload.col[c] = this.computeResult(iter1entry.value);
                     this.batch.key.col[c] = iter1entry.key;
-                    this.batch.hash.col[c] = this.keyHashCode(iter1entry.key);
+                    this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
 

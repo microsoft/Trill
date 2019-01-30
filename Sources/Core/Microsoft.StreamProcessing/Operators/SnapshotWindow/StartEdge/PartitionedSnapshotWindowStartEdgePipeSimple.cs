@@ -63,11 +63,9 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(PartitionKey<TPartitionKey>), typeof(TInput), typeof(TOutput),
                 AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages, false));
-        }
 
         public override unsafe void OnNext(StreamMessage<PartitionKey<TPartitionKey>, TInput> batch)
         {
@@ -112,7 +110,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.vsync.col[c] = col_vsync[i];
                         this.batch.vother.col[c] = long.MinValue;
                         this.batch.key.col[c] = colkey[i];
-                        this.batch.hash.col[c] = colkey[i].GetHashCode();
+                        this.batch.hash.col[c] = partitionEntry.currentHash;
                         this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
@@ -138,7 +136,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
                         this.batch.payload.col[c] = this.computeResult(cstate.state);
                         this.batch.key.col[c] = entry.currentKey;
-                        this.batch.hash.col[c] = entry.currentKey.GetHashCode();
+                        this.batch.hash.col[c] = entry.currentHash;
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         entry.held = false;
@@ -163,7 +161,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.vother.col[c] = entry.currentState.timestamp;
                         this.batch.payload.col[c] = this.computeResult(entry.currentState.state);
                         this.batch.key.col[c] = entry.currentKey;
-                        this.batch.hash.col[c] = entry.currentKey.GetHashCode();
+                        this.batch.hash.col[c] = entry.currentHash;
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
 
