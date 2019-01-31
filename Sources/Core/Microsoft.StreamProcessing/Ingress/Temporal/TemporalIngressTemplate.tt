@@ -54,7 +54,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
 <#  bool partitioned = (partitionString == "Partitioned");
     string baseStructure = partitionString + "StreamEvent<" + adjustedGenericArgs + ">";
-    string globalPunctuation= partitioned ? "LowWatermark" : "Punctuation";
+    string globalPunctuation = partitioned ? "LowWatermark" : "Punctuation";
     string highWatermark = partitioned ? "partitionHighWatermarks[value.PartitionKey]" : "highWatermark";
     string keyType = !partitioned ? "Microsoft.StreamProcessing.Empty" : "PartitionKey<TKey>";
     string streamEventFromValue = fusionOption == "Disordered" ? ("new " + partitionString + "StreamEvent<" + genericArguments + ">(" + (!partitioned ? string.Empty : "value.PartitionKey, ") + "value.SyncTime, value.OtherTime, default)") : "value";
@@ -64,6 +64,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
 internal sealed class <#= className #><#= genericParameters #> : <#= partitionString #><#= fusionOption == "Disordered" ? "Disordered" : string.Empty #>ObserverSubscriptionBase<<#= keyOrNothing #><#= inheritBase #>, <#= TPayload #>, <#= TResult #>>
 {
     <#= staticCtor #>
+<#  if (partitioned) { #>
+    private static readonly Func<TKey, int> GetHashCode = EqualityComparerExpression<TKey>.DefaultGetHashCodeFunction;
+<#  } #>
 
     public <#= className #>() { }
 
@@ -80,7 +83,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
 <#  } #>
         OnCompletedPolicy onCompletedPolicy,
         IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>> diagnosticOutput)
-        : base(observable,
+            : base(observable,
                 identifier,
                 streamable,
                 observer,
@@ -88,7 +91,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
                 flushPolicy,
                 punctuationPolicy,
 <#  if (partitioned) { #>
-                    lowWatermarkPolicy,
+                lowWatermarkPolicy,
 <#  } #>
                 onCompletedPolicy,
                 diagnosticOutput)
@@ -672,7 +675,7 @@ private void AddToGeneratedBatch()
     currentBatch.vsync.col[count] = value.SyncTime;
     currentBatch.vother.col[count] = <#= generatedEndTimeVariable #>;
     currentBatch.key.col[count] = <#= emptyOrPartition #>;
-    currentBatch.hash.col[count] = <#= partitionString == "Partitioned" ? "value.PartitionKey.GetHashCode()" : "0" #>;
+    currentBatch.hash.col[count] = <#= partitionString == "Partitioned" ? "GetHashCode(value.PartitionKey)" : "0" #>;
 <#+ if (resultRepresentation.noFields)
     { #>
     generatedBatch.payload.col[count] = <#= valueString #>;

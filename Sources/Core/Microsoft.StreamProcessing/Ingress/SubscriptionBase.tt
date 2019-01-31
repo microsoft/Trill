@@ -415,13 +415,8 @@ foreach (bool disordered in new[] { true, false })
             }
 
             var count = this.currentBatch.Count;
-            this.currentBatch.vsync.col[count] = value.SyncTime;
-            this.currentBatch.vother.col[count] = value.OtherTime;
+            this.currentBatch.Add(value.SyncTime, value.OtherTime, new PartitionKey<TKey>(value.PartitionKey), default);
             this.currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
-            this.currentBatch.key.col[count] = new PartitionKey<TKey>(value.PartitionKey);
-            this.currentBatch.hash.col[count] = value.PartitionKey.GetHashCode();
-            this.currentBatch[count] = default;
-            this.currentBatch.Count = count + 1;
             if (this.currentBatch.Count == Config.DataBatchSize)
             {
                 if (this.flushPolicy == PartitionedFlushPolicy.FlushOnBatchBoundary) OnFlush();

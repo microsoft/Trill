@@ -171,7 +171,7 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", int> keyComparerGetHashCode;\r\n\r\n    ");
  if (!this.isUngrouped) { 
-            this.Write("\r\n    [DataMember]\r\n    private FastDictionary3<");
+            this.Write("\r\n    [DataMember]\r\n    private FastDictionary<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", HeldState> heldAggregates;\r\n    ");
  } else { 
@@ -230,7 +230,7 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write(this.ToStringHelper.ToStringWithCulture(getOutputBatch));
             this.Write("\r\n        this.batch.Allocate();\r\n\r\n        ");
  if (!this.isUngrouped) { 
-            this.Write("        var generator = this.keyComparer.CreateFastDictionary3Generator<");
+            this.Write("        var generator = this.keyComparer.CreateFastDictionaryGenerator<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", HeldState>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Prope" +
                     "rties.QueryContainer);\r\n        this.heldAggregates = generator.Invoke();\r\n     " +
@@ -365,7 +365,7 @@ using Microsoft.StreamProcessing.Aggregates;
                     "shContents();\r\n                    currentState = null;\r\n                }\r\n    " +
                     "            ");
  } else { 
-            this.Write("\r\n                    int iter1 = FastDictionary3<");
+            this.Write("\r\n                    int iter1 = FastDictionary<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(@", HeldState>.IteratorStart;
                     while (this.heldAggregates.Iterate(ref iter1))
@@ -379,7 +379,7 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write(this.ToStringHelper.ToStringWithCulture(assignToOutput(computeResult("iter1entry.value.state.state"))));
             this.Write(@"
                         this.batch.key.col[c] = iter1entry.key;
-                        this.batch.hash.col[c] = iter1entry.hash;
+                        this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     }
@@ -420,7 +420,7 @@ using Microsoft.StreamProcessing.Aggregates;
                     currentState.timestamp = syncTime;
                     // No output because initial state is empty
 
-                    this.heldAggregates.Insert(ref index, currentKey, currentState, currentHash);
+                    this.heldAggregates.Insert(ref index, currentKey, currentState);
                 }
                 else
                 {
@@ -478,7 +478,7 @@ using Microsoft.StreamProcessing.Aggregates;
                     "++;\r\n                if (this.batch.Count == Config.DataBatchSize) FlushContents" +
                     "();\r\n                currentState = null;\r\n            }\r\n            ");
  } else { 
-            this.Write("\r\n            int iter1 = FastDictionary3<");
+            this.Write("\r\n            int iter1 = FastDictionary<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(@", HeldState>.IteratorStart;
             while (this.heldAggregates.Iterate(ref iter1))
@@ -493,7 +493,7 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write(@"
 
                 this.batch.key.col[c] = iter1entry.key;
-                this.batch.hash.col[c] = iter1entry.hash;
+                this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                 this.batch.Count++;
                 if (this.batch.Count == Config.DataBatchSize) FlushContents();
             }

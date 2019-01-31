@@ -56,7 +56,7 @@ namespace Microsoft.StreamProcessing
         public static bool TryGetFirst<TKey, TValue>(this SortedDictionary<TKey, TValue> source, out TKey key, out TValue value)
         {
             // avoids boxing in LINQ to Objects First() call
-            foreach (KeyValuePair<TKey, TValue> pair in source)
+            foreach (var pair in source)
             {
                 key = pair.Key;
                 value = pair.Value;
@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="value">The value to add to the given list.</param>
         public static void Add<TKey, TValue>(this IDictionary<TKey, List<TValue>> dict, TKey key, TValue value)
         {
-            if (!dict.TryGetValue(key, out List<TValue> list))
+            if (!dict.TryGetValue(key, out var list))
             {
                 list = new List<TValue>();
                 dict.Add(key, list);
@@ -108,88 +108,25 @@ namespace Microsoft.StreamProcessing
             list.Add(value);
         }
 
-        internal static void QuickSort<T>(T[] keys, int left, int right, RefComparison<T> comparison)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static int StableHash(this string stringToHash)
         {
-            do
+            const long magicno = 40343L;
+            int stringLength = stringToHash.Length;
+            ulong hashState = (ulong)stringLength;
+
+            unsafe
             {
-                int a = left;
-                int b = right;
-                int mid = a + ((b - a) >> 1);
-                SwapIfGreaterWithItems(keys, comparison, a, mid);
-                SwapIfGreaterWithItems(keys, comparison, a, b);
-                SwapIfGreaterWithItems(keys, comparison, mid, b);
-                T y = keys[mid];
-                do
+                fixed (char* str = stringToHash)
                 {
-                    while (comparison(ref keys[a], ref y) < 0)
-                    {
-                        a++;
-                    }
-                    while (comparison(ref y, ref keys[b]) < 0)
-                    {
-                        b--;
-                    }
-                    if (a > b) break;
-                    if (a < b)
-                    {
-                        T local2 = keys[a];
-                        keys[a] = keys[b];
-                        keys[b] = local2;
-                    }
-                    a++;
-                    b--;
+                    var stringChars = str;
+                    for (int i = 0; i < stringLength; i++, stringChars++)
+                        hashState = magicno * hashState + *stringChars;
                 }
-                while (a <= b);
-                if ((b - left) <= (right - a))
-                {
-                    if (left < b) QuickSort(keys, left, b, comparison);
-                    left = a;
-                }
-                else
-                {
-                    if (a < right) QuickSort(keys, a, right, comparison);
-                    right = b;
-                }
-            }
-            while (left < right);
-        }
 
-        private static void SwapIfGreaterWithItems<T>(T[] keys, RefComparison<T> comparison, int a, int b)
-        {
-            if ((a != b) && (comparison(ref keys[a], ref keys[b]) > 0))
-            {
-                T local = keys[a];
-                keys[a] = keys[b];
-                keys[b] = local;
-            }
-        }
-
-        internal static Expression<Comparison<CompoundGroupKey<T1, T2>>>
-            CreateCompoundComparerPredicate<T1, T2>(Expression<Comparison<T1>> comparerOnT1, Expression<Comparison<T2>> comparerOnT2)
-        {
-            Contract.Requires(comparerOnT2 != null);
-
-            var e1 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e1");
-            var e2 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e2");
-            if ((comparerOnT1 == null) || typeof(T1) == typeof(Empty))
-            {
-                // (e1,e2) => comparerOnT2(e1.innerGroup, e2.innerGroup)
-                return Expression.Lambda<Comparison<CompoundGroupKey<T1, T2>>>(
-                        Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup")),
-                        new ParameterExpression[] { e1, e2 });
-            }
-            else
-            {
-                // (e1,e2) => comparerOnT1(e1.outerGroup, e2.outerGroup) != 0 ? (comparerOnT1(e1.outerGroup, e2.outerGroup)) : comparerOnT2(e1.innerGroup, e2.innerGroup)
-
-                return Expression.Lambda<Comparison<CompoundGroupKey<T1, T2>>>(
-                    Expression.Condition(
-                    Expression.NotEqual(
-                    Expression.Invoke(comparerOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
-                    Expression.Constant(0, typeof(int))),
-                    Expression.Invoke(comparerOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
-                    Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
-                    new ParameterExpression[] { e1, e2 });
+                var rotate = magicno * hashState;
+                var rotated = (rotate >> 4) | (rotate << 60);
+                return (int)(rotated ^ (rotated >> 32));
             }
         }
 
@@ -201,37 +138,6 @@ namespace Microsoft.StreamProcessing
             var copy2 = ParameterInliner.Inline(selector, newParam2);
             var result = ParameterInliner.Inline(comparer, copy1, copy2);
             return Expression.Lambda<Comparison<T2>>(result, newParam1, newParam2);
-        }
-
-        internal static Expression<Func<CompoundGroupKey<T1, T2>, CompoundGroupKey<T1, T2>, bool>>
-            CreateCompoundEqualityPredicate<T1, T2>(Expression<Func<T1, T1, bool>> equalityOnT1, Expression<Func<T2, T2, bool>> equalityOnT2)
-        {
-            Contract.Requires(equalityOnT1 != null);
-            Contract.Requires(equalityOnT2 != null);
-
-            // (e1,e2) => equalityOnT1(e1.outerGroup, e2.outerGroup) && equalityOnT2(e1.innerGroup, e2.innerGroup)
-            var e1 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e1");
-            var e2 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e2");
-            return Expression.Lambda<Func<CompoundGroupKey<T1, T2>, CompoundGroupKey<T1, T2>, bool>>(
-                Expression.AndAlso(
-                    Expression.Invoke(equalityOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
-                    Expression.Invoke(equalityOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
-                    new ParameterExpression[] { e1, e2 });
-        }
-
-        internal static Expression<Func<CompoundGroupKey<T1, T2>, int>>
-            CreateCompoundHashPredicate<T1, T2>(Expression<Func<T1, int>> hashOnT1, Expression<Func<T2, int>> hashOnT2)
-        {
-            Contract.Requires(hashOnT1 != null);
-            Contract.Requires(hashOnT2 != null);
-
-            // (e1) => hashOnT1(e1.outerGroup) && hashOnT2(e1.innerGroup)
-            var e1 = Expression.Parameter(typeof(CompoundGroupKey<T1, T2>), "e1");
-            return Expression.Lambda<Func<CompoundGroupKey<T1, T2>, int>>(
-                Expression.ExclusiveOr(
-                    Expression.Invoke(hashOnT1, Expression.Field(e1, "outerGroup")),
-                    Expression.Invoke(hashOnT2, Expression.Field(e1, "innerGroup"))),
-                    new ParameterExpression[] { e1 });
         }
 
         private sealed class CompoundDisposable : IDisposable

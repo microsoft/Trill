@@ -51,7 +51,7 @@ namespace Microsoft.StreamProcessing
         }
 
         private int GetSchemaHashCode()
-            => this.schemaFields.Value.Aggregate(GetType().ToString().GetHashCode(), (a, f) => a ^ (f.GetValue(this) ?? string.Empty).ToString().GetHashCode());
+            => this.schemaFields.Value.Aggregate(GetType().ToString().StableHash(), (a, f) => a ^ (f.GetValue(this) ?? string.Empty).ToString().StableHash());
 
         private object Serializer => this.container?.GetOrCreateSerializer(GetType());
 

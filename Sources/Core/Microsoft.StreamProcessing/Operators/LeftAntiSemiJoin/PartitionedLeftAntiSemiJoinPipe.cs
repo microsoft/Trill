@@ -225,8 +225,8 @@ namespace Microsoft.StreamProcessing
                 while (true)
                 {
                     var old = partition.currTime;
-                    bool hasLeftBatch = leftWorking.TryPeekFirst(out LEntry leftEntry);
-                    bool hasRightBatch = rightWorking.TryPeekFirst(out REntry rightEntry);
+                    bool hasLeftBatch = leftWorking.TryPeekFirst(out var leftEntry);
+                    bool hasRightBatch = rightWorking.TryPeekFirst(out var rightEntry);
                     if (hasLeftBatch && hasRightBatch)
                     {
                         partition.nextLeftTime = leftEntry.Sync;
@@ -922,9 +922,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Start=" + this.Start + ", CurrentStart=" + this.CurrentStart + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[Start=" + this.Start + ", CurrentStart=" + this.CurrentStart + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         [DataContract]
@@ -943,9 +941,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Key='" + this.Key + "', Count=" + this.Count + "]";
-            }
+                => "[Key='" + this.Key + "', Count=" + this.Count + "]";
         }
 
         [DataContract]
@@ -964,9 +960,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Key='" + this.Key + "', Hash=" + this.Hash + "]";
-            }
+                => "[Key='" + this.Key + "', Hash=" + this.Hash + "]";
         }
 
         public override bool LeftInputHasState

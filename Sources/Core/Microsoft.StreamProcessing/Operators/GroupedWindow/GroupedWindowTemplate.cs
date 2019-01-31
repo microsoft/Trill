@@ -367,7 +367,7 @@ using Microsoft.StreamProcessing.Aggregates;
                         this.batch.vother.col[c] = long.MinValue;
                         this.batch.key.col[c] = default;
                         this.batch[c] = default;
-                        this.batch.hash.col[c] = batch.key.col[i].GetHashCode();
+                        this.batch.hash.col[c] = 0;
                         this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();

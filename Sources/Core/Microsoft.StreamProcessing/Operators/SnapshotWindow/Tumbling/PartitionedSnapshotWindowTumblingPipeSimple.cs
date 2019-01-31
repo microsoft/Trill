@@ -67,11 +67,9 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(PartitionKey<TPartitionKey>), typeof(TInput), typeof(TOutput),
                 AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages, false));
-        }
 
         public override unsafe void OnNext(StreamMessage<PartitionKey<TPartitionKey>, TInput> batch)
         {
@@ -125,7 +123,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.vother.col[c] = long.MinValue;
                             this.batch.key.col[c] = colkey[i];
                             this.batch.hash.col[c] = col_hash[i];
-                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                            this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }

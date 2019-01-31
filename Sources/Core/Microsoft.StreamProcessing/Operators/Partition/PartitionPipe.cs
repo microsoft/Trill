@@ -20,6 +20,7 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly long partitionLag;
 
+        private readonly Func<TPartitionKey, int> keyComparerGetHashCode;
         private readonly MemoryPool<PartitionKey<TPartitionKey>, TPayload> l1Pool;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
@@ -30,6 +31,7 @@ namespace Microsoft.StreamProcessing
             IStreamObserver<PartitionKey<TPartitionKey>, TPayload> observer)
             : base(stream, observer)
         {
+            this.keyComparerGetHashCode = EqualityComparerExpression<TPartitionKey>.DefaultGetHashCodeFunction;
             this.keySelector = stream.KeySelector;
             this.keySelectorFunc = this.keySelector.Compile();
             this.partitionLag = stream.PartitionLag;
@@ -39,14 +41,9 @@ namespace Microsoft.StreamProcessing
         public unsafe void OnNext(StreamMessage<Empty, TPayload> batch)
         {
             this.l1Pool.Get(out StreamMessage<PartitionKey<TPartitionKey>, TPayload> outputBatch);
-            if (this.partitionLag > 0)
-            {
-                outputBatch.vsync = batch.vsync.MakeWritable(this.l1Pool.longPool);
-            }
-            else
-            {
-                outputBatch.vsync = batch.vsync;
-            }
+            outputBatch.vsync = this.partitionLag > 0
+                ? batch.vsync.MakeWritable(this.l1Pool.longPool)
+                : batch.vsync;
             outputBatch.vother = batch.vother.MakeWritable(this.l1Pool.longPool);
             outputBatch.payload = batch.payload;
             outputBatch.hash = batch.hash.MakeWritable(this.l1Pool.intPool);
@@ -76,7 +73,7 @@ namespace Microsoft.StreamProcessing
 
                     var key = this.keySelectorFunc(destPayload[i]);
                     destKey[i] = new PartitionKey<TPartitionKey> { Key = key };
-                    destHash[i] = key.GetHashCode();
+                    destHash[i] = this.keyComparerGetHashCode(key);
                 }
             }
 
@@ -86,13 +83,11 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new PartitionPlanNode(
+            => this.Observer.ProduceQueryPlan(new PartitionPlanNode(
                 previous,
                 this,
                 typeof(PartitionKey<TPartitionKey>),
                 typeof(TPayload), this.keySelector, this.partitionLag));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 

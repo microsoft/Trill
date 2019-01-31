@@ -22,6 +22,9 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelectorExpr;
         private readonly Func<TInnerKey, TInnerResult, TResult> resultSelector;
+        [SchemaSerialization]
+        private readonly Expression<Func<TOuterKey, int>> keyComparer;
+        private readonly Func<TOuterKey, int> outerHashCode;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public PartitionedUngroupNestedPipe() { }
@@ -31,10 +34,12 @@ namespace Microsoft.StreamProcessing
             IStreamObserver<TOuterKey, TResult> observer)
             : base(stream, observer)
         {
-            resultSelectorExpr = stream.ResultSelector;
-            resultSelector = resultSelectorExpr.Compile();
-            outPool = MemoryManager.GetMemoryPool<TOuterKey, TResult>(stream.Properties.IsColumnar);
-            errorMessages = stream.ErrorMessages;
+            this.resultSelectorExpr = stream.ResultSelector;
+            this.resultSelector = this.resultSelectorExpr.Compile();
+            this.outPool = MemoryManager.GetMemoryPool<TOuterKey, TResult>(stream.Properties.IsColumnar);
+            this.errorMessages = stream.ErrorMessages;
+            this.keyComparer = stream.Properties.KeyEqualityComparer.GetGetHashCodeExpr();
+            this.outerHashCode = this.keyComparer.Compile();
         }
 
         public unsafe void OnNext(StreamMessage<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> batch)
@@ -63,13 +68,13 @@ namespace Microsoft.StreamProcessing
                         {
                             destkey[i] = srckey[i].outerGroup;
                             desthash[i] = batch.hash.col[i];
-                            tmp.bitvector.col[i >> 6] |= (1L << (i & 0x3f));
+                            tmp.bitvector.col[i >> 6] |= 1L << (i & 0x3f);
                         }
                         continue;
                     }
                     destkey[i] = srckey[i].outerGroup;
                     tmp[i] = resultSelector(srckey[i].innerGroup, batch[i]);
-                    desthash[i] = destkey[i].GetHashCode();
+                    desthash[i] = this.outerHashCode(destkey[i]);
                 }
             }
 
@@ -84,8 +89,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            Observer.ProduceQueryPlan(new UngroupPlanNode(
+            => Observer.ProduceQueryPlan(new UngroupPlanNode(
                 previous,
                 this,
                 typeof(CompoundGroupKey<TOuterKey, TInnerKey>),
@@ -95,7 +99,6 @@ namespace Microsoft.StreamProcessing
                 resultSelectorExpr,
                 false,
                 errorMessages));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 
@@ -112,6 +115,9 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelectorExpr;
         private readonly Func<TInnerKey, TInnerResult, TResult> resultSelector;
+        [SchemaSerialization]
+        private readonly Expression<Func<TOuterKey, int>> keyComparer;
+        private readonly Func<TOuterKey, int> outerHashCode;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public UngroupNestedPipe() { }
@@ -121,10 +127,12 @@ namespace Microsoft.StreamProcessing
             IStreamObserver<TOuterKey, TResult> observer)
             : base(stream, observer)
         {
-            resultSelectorExpr = stream.ResultSelector;
-            resultSelector = resultSelectorExpr.Compile();
-            outPool = MemoryManager.GetMemoryPool<TOuterKey, TResult>(stream.Properties.IsColumnar);
-            errorMessages = stream.ErrorMessages;
+            this.resultSelectorExpr = stream.ResultSelector;
+            this.resultSelector = this.resultSelectorExpr.Compile();
+            this.outPool = MemoryManager.GetMemoryPool<TOuterKey, TResult>(stream.Properties.IsColumnar);
+            this.errorMessages = stream.ErrorMessages;
+            this.keyComparer = stream.Properties.KeyEqualityComparer.GetGetHashCodeExpr();
+            this.outerHashCode = this.keyComparer.Compile();
         }
 
         public unsafe void OnNext(StreamMessage<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> batch)
@@ -150,7 +158,7 @@ namespace Microsoft.StreamProcessing
                     if ((srcbv[i >> 6] & (1L << (i & 0x3f))) != 0) continue;
                     destkey[i] = srckey[i].outerGroup;
                     tmp[i] = resultSelector(srckey[i].innerGroup, batch[i]);
-                    desthash[i] = destkey[i].GetHashCode();
+                    desthash[i] = this.outerHashCode(destkey[i]);
                 }
             }
 
@@ -165,8 +173,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            Observer.ProduceQueryPlan(new UngroupPlanNode(
+            => Observer.ProduceQueryPlan(new UngroupPlanNode(
                 previous,
                 this,
                 typeof(CompoundGroupKey<TOuterKey, TInnerKey>),
@@ -176,7 +183,6 @@ namespace Microsoft.StreamProcessing
                 resultSelectorExpr,
                 false,
                 errorMessages));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 
@@ -202,10 +208,10 @@ namespace Microsoft.StreamProcessing
             IStreamObserver<Empty, TResult> observer)
             : base(stream, observer)
         {
-            resultSelectorExpr = stream.ResultSelector;
-            resultSelector = resultSelectorExpr.Compile();
-            outPool = MemoryManager.GetMemoryPool<Empty, TResult>(stream.Properties.IsColumnar);
-            errorMessages = stream.ErrorMessages;
+            this.resultSelectorExpr = stream.ResultSelector;
+            this.resultSelector = this.resultSelectorExpr.Compile();
+            this.outPool = MemoryManager.GetMemoryPool<Empty, TResult>(stream.Properties.IsColumnar);
+            this.errorMessages = stream.ErrorMessages;
         }
 
         public unsafe void OnNext(StreamMessage<TInnerKey, TInnerResult> batch)
@@ -249,8 +255,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            Observer.ProduceQueryPlan(new UngroupPlanNode(
+            => Observer.ProduceQueryPlan(new UngroupPlanNode(
                 previous,
                 this,
                 typeof(TInnerKey),
@@ -260,7 +265,6 @@ namespace Microsoft.StreamProcessing
                 resultSelectorExpr,
                 false,
                 errorMessages));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 

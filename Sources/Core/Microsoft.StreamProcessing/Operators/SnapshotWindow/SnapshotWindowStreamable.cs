@@ -100,11 +100,11 @@ namespace Microsoft.StreamProcessing
 
         private static int GetAggregateFunctionsHashCode(IAggregate<TInput, TState, TOutput> a)
         {
-            int x = a.Accumulate().ExpressionToCSharp().GetHashCode();
-            x = x << 3 ^ a.ComputeResult().ExpressionToCSharp().GetHashCode();
-            x = x << 3 ^ a.Deaccumulate().ExpressionToCSharp().GetHashCode();
-            x = x << 3 ^ a.Difference().ExpressionToCSharp().GetHashCode();
-            x = x << 3 ^ a.InitialState().ExpressionToCSharp().GetHashCode();
+            int x = a.Accumulate().ExpressionToCSharp().StableHash();
+            x = x << 3 ^ a.ComputeResult().ExpressionToCSharp().StableHash();
+            x = x << 3 ^ a.Deaccumulate().ExpressionToCSharp().StableHash();
+            x = x << 3 ^ a.Difference().ExpressionToCSharp().StableHash();
+            x = x << 3 ^ a.InitialState().ExpressionToCSharp().StableHash();
             return x;
         }
 

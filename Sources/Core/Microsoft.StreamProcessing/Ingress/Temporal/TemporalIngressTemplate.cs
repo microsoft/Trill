@@ -57,7 +57,7 @@ namespace Microsoft.StreamProcessing
                     "ections;\r\n\r\n");
   bool partitioned = (partitionString == "Partitioned");
     string baseStructure = partitionString + "StreamEvent<" + adjustedGenericArgs + ">";
-    string globalPunctuation= partitioned ? "LowWatermark" : "Punctuation";
+    string globalPunctuation = partitioned ? "LowWatermark" : "Punctuation";
     string highWatermark = partitioned ? "partitionHighWatermarks[value.PartitionKey]" : "highWatermark";
     string keyType = !partitioned ? "Microsoft.StreamProcessing.Empty" : "PartitionKey<TKey>";
     string streamEventFromValue = fusionOption == "Disordered" ? ("new " + partitionString + "StreamEvent<" + genericArguments + ">(" + (!partitioned ? string.Empty : "value.PartitionKey, ") + "value.SyncTime, value.OtherTime, default)") : "value";
@@ -78,7 +78,12 @@ namespace Microsoft.StreamProcessing
             this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(">\r\n{\r\n    ");
             this.Write(this.ToStringHelper.ToStringWithCulture(staticCtor));
-            this.Write("\r\n\r\n    public ");
+            this.Write("\r\n");
+  if (partitioned) { 
+            this.Write("    private static readonly Func<TKey, int> GetHashCode = EqualityComparerExpress" +
+                    "ion<TKey>.DefaultGetHashCodeFunction;\r\n");
+  } 
+            this.Write("\r\n    public ");
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write("() { }\r\n\r\n    public ");
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
@@ -102,11 +107,11 @@ namespace Microsoft.StreamProcessing
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent<");
             this.Write(this.ToStringHelper.ToStringWithCulture(genericArguments));
-            this.Write(">> diagnosticOutput)\r\n        : base(observable,\r\n                identifier,\r\n  " +
-                    "              streamable,\r\n                observer,\r\n                disorderPo" +
-                    "licy,\r\n                flushPolicy,\r\n                punctuationPolicy,\r\n");
+            this.Write(">> diagnosticOutput)\r\n            : base(observable,\r\n                identifier," +
+                    "\r\n                streamable,\r\n                observer,\r\n                disord" +
+                    "erPolicy,\r\n                flushPolicy,\r\n                punctuationPolicy,\r\n");
   if (partitioned) { 
-            this.Write("                    lowWatermarkPolicy,\r\n");
+            this.Write("                lowWatermarkPolicy,\r\n");
   } 
             this.Write("                onCompletedPolicy,\r\n                diagnosticOutput)\r\n    {\r\n   " +
                     "     ");
@@ -784,7 +789,7 @@ this.Write(this.ToStringHelper.ToStringWithCulture(emptyOrPartition));
 
 this.Write(";\r\n    currentBatch.hash.col[count] = ");
 
-this.Write(this.ToStringHelper.ToStringWithCulture(partitionString == "Partitioned" ? "value.PartitionKey.GetHashCode()" : "0"));
+this.Write(this.ToStringHelper.ToStringWithCulture(partitionString == "Partitioned" ? "GetHashCode(value.PartitionKey)" : "0"));
 
 this.Write(";\r\n");
 

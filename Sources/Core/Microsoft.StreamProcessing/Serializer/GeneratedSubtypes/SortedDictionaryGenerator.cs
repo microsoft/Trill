@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing.Internal
 
             var expression = expr.ToString();
             var vars = VariableFinder.Find(expr).Select(o => o.GetHashCode());
-            var captures = vars.Aggregate(expression.GetHashCode(), (a, i) => a ^ i);
+            var captures = vars.Aggregate(expression.StableHash(), (a, i) => a ^ i);
             var key = Tuple.Create(expression + string.Concat(vars.Select(o => o.ToString(CultureInfo.InvariantCulture))), typeof(TKey), typeof(TValue));
 
             Type temp;
@@ -42,8 +42,8 @@ namespace Microsoft.StreamProcessing.Internal
                 {
                     string typeName = Prefix
                         + captures.ToString(CultureInfo.InvariantCulture)
-                        + typeof(TKey).ToString().GetHashCode().ToString(CultureInfo.InvariantCulture)
-                        + typeof(TValue).ToString().GetHashCode().ToString(CultureInfo.InvariantCulture);
+                        + typeof(TKey).ToString().StableHash().ToString(CultureInfo.InvariantCulture)
+                        + typeof(TValue).ToString().StableHash().ToString(CultureInfo.InvariantCulture);
                     typeName = typeName.Replace("-", "_");
                     var builderCode = new GeneratedSortedDictionary(typeName).TransformText();
                     var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeof(SortedDictionary<,>));
