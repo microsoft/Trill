@@ -90,6 +90,8 @@ namespace Microsoft.StreamProcessing
                     this.timer.Dispose();
                     this.timer = null;
                 }
+
+                base.DisposeState();
             }
         }
 
