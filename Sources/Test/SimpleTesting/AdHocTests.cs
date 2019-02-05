@@ -11,6 +11,8 @@ using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Serializer;
@@ -116,7 +118,7 @@ namespace SimpleTesting
 
             for (int x = 0; x < 100; x++)
             {
-                pool.Get(out ColumnBatch<string> inputStr);
+                pool.Get(out var inputStr);
 
                 var toss1 = rand.NextDouble();
                 inputStr.UsedLength = toss1 < 0.1 ? 0 : rand.Next(Config.DataBatchSize);
@@ -129,7 +131,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                var s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream
                 {
                     Position = 0
@@ -549,6 +551,54 @@ namespace SimpleTesting
             fromFile.ToStreamEventObservable().Where(e => e.IsData).ForEachAsync(r => output.Add(r)).Wait();
 
             Assert.IsTrue(inputData.SequenceEqual(output));
+        }
+    }
+
+    [TestClass]
+    public class AdHocWithoutMemoryLeakDetection : TestWithConfigSettingsWithoutMemoryLeakDetection
+    {
+        public AdHocWithoutMemoryLeakDetection() : base(new ConfigModifier()
+            .ForceRowBasedExecution(false)
+            .DontFallBackToRowBasedExecution(true))
+        { }
+
+        [TestMethod, TestCategory("Gated")]
+        public async Task DisposeTest1()
+        {
+            var cancelTokenSource = new CancellationTokenSource();
+            var inputSubject = new Subject<int>();
+            var lastSeenSubscription = 0;
+            var observableInput = inputSubject.AsObservable();
+
+            var inputTask = new Task(() =>
+            {
+                var n = 0;
+                while (!cancelTokenSource.Token.IsCancellationRequested)
+                {
+                    inputSubject.OnNext(++n);
+                    Thread.Sleep(10);
+                }
+                inputSubject.OnCompleted();
+            });
+
+            var semaphore = new SemaphoreSlim(0, 1);
+            var subscription = observableInput.ToAtemporalStreamable(TimelinePolicy.Sequence(1)).Count().ToStreamEventObservable().Where(c => c.IsData).Subscribe(c =>
+            {
+                Interlocked.Exchange(ref lastSeenSubscription, (int)c.Payload);
+                if (semaphore.CurrentCount == 0) semaphore.Release();
+            });
+            // Start the input feed.
+            inputTask.Start();
+            // Wait until we have at least one output data event.
+            await semaphore.WaitAsync();
+            // Dispose the subscription.
+            subscription.Dispose();
+            // Keep the input feed going, before cancel. This should behave properly if the subscription is disposed of properly.
+            await Task.Delay(200);
+            cancelTokenSource.Cancel();
+            await inputTask;
+            // Make sure we really got an output data event.
+            Assert.IsTrue(lastSeenSubscription > 0);
         }
     }
 

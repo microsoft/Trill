@@ -100,11 +100,6 @@ namespace Microsoft.StreamProcessing.Internal
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class DisorderedSubscriptionBase<TIngressStructure, TPayload, TResult> : Pipe<Empty, TResult>, IIngressStreamObserver
     {
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected IDisposable disposer;
         private readonly string errorMessages;
         private new readonly bool isColumnar;
 
@@ -365,10 +360,10 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void DisposeState()
         {
+            this.subscription?.Dispose();
+            this.impatienceSorter?.Dispose();
             this.currentBatch?.Free();
             this.currentBatch = null;
-            this.impatienceSorter?.Dispose();
-            this.disposer?.Dispose();
         }
 
         /// <summary>
@@ -595,11 +590,6 @@ namespace Microsoft.StreamProcessing.Internal
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class SubscriptionBase<TIngressStructure, TPayload, TResult> : Pipe<Empty, TResult>, IIngressStreamObserver
     {
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected IDisposable disposer;
         private readonly string errorMessages;
         private new readonly bool isColumnar;
 
@@ -860,10 +850,10 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void DisposeState()
         {
+            this.subscription?.Dispose();
+            this.impatienceSorter?.Dispose();
             this.currentBatch?.Free();
             this.currentBatch = null;
-            this.impatienceSorter?.Dispose();
-            this.disposer?.Dispose();
         }
 
         /// <summary>
@@ -1095,11 +1085,6 @@ namespace Microsoft.StreamProcessing.Internal
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class DisorderedPartitionedSubscriptionBase<TKey, TIngressStructure, TPayload, TResult> : Pipe<PartitionKey<TKey>, TResult>, IIngressStreamObserver
     {
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected IDisposable disposer;
         private readonly string errorMessages;
         private new readonly bool isColumnar;
 
@@ -1406,10 +1391,10 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void DisposeState()
         {
+            this.subscription?.Dispose();
+            this.impatienceSorter?.Dispose();
             this.currentBatch?.Free();
             this.currentBatch = null;
-            this.impatienceSorter?.Dispose();
-            this.disposer?.Dispose();
         }
 
         /// <summary>
@@ -1641,11 +1626,6 @@ namespace Microsoft.StreamProcessing.Internal
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class PartitionedSubscriptionBase<TKey, TIngressStructure, TPayload, TResult> : Pipe<PartitionKey<TKey>, TResult>, IIngressStreamObserver
     {
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected IDisposable disposer;
         private readonly string errorMessages;
         private new readonly bool isColumnar;
 
@@ -1952,10 +1932,10 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void DisposeState()
         {
+            this.subscription?.Dispose();
+            this.impatienceSorter?.Dispose();
             this.currentBatch?.Free();
             this.currentBatch = null;
-            this.impatienceSorter?.Dispose();
-            this.disposer?.Dispose();
         }
 
         /// <summary>

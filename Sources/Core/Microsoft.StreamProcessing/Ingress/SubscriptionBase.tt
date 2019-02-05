@@ -137,11 +137,6 @@ foreach (bool disordered in new[] { true, false })
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>SubscriptionBase<<#= genericArgument #>TIngressStructure, TPayload, TResult> : Pipe<<#= baseType #>, TResult>, IIngressStreamObserver
     {
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected IDisposable disposer;
         private readonly string errorMessages;
         private new readonly bool isColumnar;
 
@@ -511,10 +506,10 @@ foreach (bool disordered in new[] { true, false })
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void DisposeState()
         {
+            this.subscription?.Dispose();
+            this.impatienceSorter?.Dispose();
             this.currentBatch?.Free();
             this.currentBatch = null;
-            this.impatienceSorter?.Dispose();
-            this.disposer?.Dispose();
         }
 
         /// <summary>
