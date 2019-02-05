@@ -17,6 +17,7 @@ namespace Microsoft.StreamProcessing
         private readonly int numMessages;
         private readonly Stream stream;
         private readonly IIngressScheduler scheduler;
+        private readonly Action onSubscriptionCompleted;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public BinaryIngressReader() { }
@@ -28,13 +29,15 @@ namespace Microsoft.StreamProcessing
             int numMessages,
             Stream stream,
             IIngressScheduler scheduler,
-            bool delayed)
+            bool delayed,
+            Action onSubscriptionCompleted)
             : base(identifier, streamable, observer)
         {
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>();
             this.numMessages = numMessages;
             this.stream = stream;
             this.scheduler = scheduler;
+            this.onSubscriptionCompleted = onSubscriptionCompleted;
 
             if (!delayed) this.subscription.Enable();
         }
@@ -82,6 +85,8 @@ namespace Microsoft.StreamProcessing
             {
                 observer.OnError(e);
             }
+
+            this.onSubscriptionCompleted();
         }
     }
 }
