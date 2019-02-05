@@ -203,6 +203,178 @@ namespace SimpleTesting
             Assert.IsTrue(result.Length == 200);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin1RowMultiString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin2RowMultiString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin3RowMultiString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin4RowMultiString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
     }
 
     [TestClass]
@@ -393,6 +565,178 @@ namespace SimpleTesting
 
             Assert.IsTrue(result.Length == 200);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin1RowRegularString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin2RowRegularString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin3RowRegularString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin4RowRegularString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
         }
     }
 
@@ -586,6 +930,178 @@ namespace SimpleTesting
             Assert.IsTrue(result.Length == 200);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin1RowSmallBatchMultiString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin2RowSmallBatchMultiString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin3RowSmallBatchMultiString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin4RowSmallBatchMultiString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
     }
 
     [TestClass]
@@ -778,6 +1294,178 @@ namespace SimpleTesting
             Assert.IsTrue(result.Length == 200);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin1RowSmallBatchRegularString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin2RowSmallBatchRegularString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin3RowSmallBatchRegularString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin4RowSmallBatchRegularString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
     }
 
     [TestClass]
@@ -969,6 +1657,178 @@ namespace SimpleTesting
             Assert.IsTrue(result.Length == 200);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin1ColumnarMultiString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin2ColumnarMultiString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin3ColumnarMultiString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin4ColumnarMultiString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
     }
 
     [TestClass]
@@ -1159,6 +2019,178 @@ namespace SimpleTesting
 
             Assert.IsTrue(result.Length == 200);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin1ColumnarRegularString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin2ColumnarRegularString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin3ColumnarRegularString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin4ColumnarRegularString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
         }
     }
 
@@ -1352,6 +2384,178 @@ namespace SimpleTesting
             Assert.IsTrue(result.Length == 200);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin1ColumnarSmallBatchMultiString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin2ColumnarSmallBatchMultiString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin3ColumnarSmallBatchMultiString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin4ColumnarSmallBatchMultiString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
     }
 
     [TestClass]
@@ -1543,6 +2747,178 @@ namespace SimpleTesting
 
             Assert.IsTrue(result.Length == 200);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin1ColumnarSmallBatchRegularString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin2ColumnarSmallBatchRegularString()
+        {
+            var result = new List<StreamEvent<int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<StreamEvent<int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreatePoint(i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<StreamEvent<int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => StreamEvent.CreateInterval(i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin3ColumnarSmallBatchRegularString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoin4ColumnarSmallBatchRegularString()
+        {
+            var result = new List<PartitionedStreamEvent<int, int>>();
+
+            var container = new QueryContainer(null);
+
+            var data1 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 50, i))
+                .ToObservable();
+            var d1Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var data2 = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreatePoint(i, i + 100, i))
+                .ToObservable();
+            var d2Subject = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var dataExpected = Enumerable.Range(0, 200)
+                .Select(i => PartitionedStreamEvent.CreateInterval(i, i + 100, i + 150, i));
+
+            var input1 = container.RegisterInput(d1Subject).AlterEventDuration(100);
+            var input2 = container.RegisterInput(d2Subject).AlterEventDuration(100);
+
+            var query = input1.Join(input2, e => e, e => e, (l, r) => l);
+
+            var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
+            var resultAsync = output.ForEachAsync(o => result.Add(o));
+
+            container.Restore(null); // start the query
+
+            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
+            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+
+            Task.WaitAll(i1async, i2async); // wait for data to be processed.
+
+            d1Subject.OnCompleted(); // send onCompleted event.
+            d2Subject.OnCompleted();
+
+            resultAsync.Wait(); // wait for results.
+
+            Assert.IsTrue(result.Where(e => e.IsData).SequenceEqual(dataExpected));
         }
     }
 

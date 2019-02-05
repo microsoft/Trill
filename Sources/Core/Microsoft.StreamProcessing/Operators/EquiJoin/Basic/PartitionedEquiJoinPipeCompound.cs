@@ -133,7 +133,8 @@ namespace Microsoft.StreamProcessing
             this.leftQueue.Insert(pKey, new Queue<LEntry>());
             this.rightQueue.Insert(pKey, new Queue<REntry>());
 
-            if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(ref index, pKey, new PartitionEntry(this, pKey));
+            if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(
+                ref index, pKey, new PartitionEntry { endPointHeap = this.endpointGenerator(), key = pKey });
         }
 
         protected override void ProcessBothBatches(StreamMessage<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TLeft> leftBatch, StreamMessage<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TRight> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
@@ -1196,15 +1197,6 @@ namespace Microsoft.StreamProcessing
             public bool isRightComplete = false;
             [DataMember]
             public long currTime = long.MinValue;
-
-            [Obsolete("Used only by serialization, do not use directly")]
-            public PartitionEntry() { }
-
-            public PartitionEntry(PartitionedEquiJoinPipeCompound<TGroupKey, TLeft, TRight, TResult, TPartitionKey> parent, TPartitionKey key)
-            {
-                this.endPointHeap = parent.endpointGenerator();
-                this.key = key;
-            }
         }
     }
 }

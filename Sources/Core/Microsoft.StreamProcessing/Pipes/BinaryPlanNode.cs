@@ -159,9 +159,14 @@ namespace Microsoft.StreamProcessing
         Clip,
 
         /// <summary>
-        /// An equijoin between two stream.
+        /// An equijoin between two streams.
         /// </summary>
         EquiJoin,
+
+        /// <summary>
+        /// An equijoin where both streams are guaranteed to only contain intervals.
+        /// </summary>
+        FixedIntervalEquiJoin,
 
         /// <summary>
         /// An equijoin where both streams are guaranteed to only contain start edges.

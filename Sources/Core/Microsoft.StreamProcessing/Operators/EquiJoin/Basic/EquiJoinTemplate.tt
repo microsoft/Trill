@@ -1020,12 +1020,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         <#= rightBatchSelector("leftInterval.Payload", "rightBatch", "rightIndex") #>
         output.hash.col[index] = hash;
 
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
+        if (output.Count == Config.DataBatchSize) FlushContents();
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddToBatch(long start, long end, ref <#= TKey #> key, ref ActiveEdgeLeft leftEdge, <#= RightBatchType #> rightBatch, int rightIndex, int hash)
@@ -1038,12 +1033,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         <#= rightBatchSelector("leftEdge.Payload", "rightBatch", "rightIndex") #>
         output.hash.col[index] = hash;
 
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
+        if (output.Count == Config.DataBatchSize) FlushContents();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1057,12 +1047,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         <#= leftBatchSelector("leftBatch", "leftIndex", "rightInterval.Payload") #>
         output.hash.col[index] = hash;
 
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
+        if (output.Count == Config.DataBatchSize) FlushContents();
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddToBatch(long start, long end, ref <#= TKey #> key, ref ActiveIntervalLeft leftInterval, ref ActiveIntervalRight rightInterval, int hash)
@@ -1075,12 +1060,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         <#= activeSelector("leftInterval.Payload", "rightInterval.Payload") #>
         output.hash.col[index] = hash;
 
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
+        if (output.Count == Config.DataBatchSize) FlushContents();
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddToBatch(long start, long end, ref <#= TKey #> key, ref ActiveIntervalLeft leftInterval, ref ActiveEdgeRight rightEdge, int hash)
@@ -1093,12 +1073,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         <#= activeSelector("leftInterval.Payload", "rightEdge.Payload") #>
         output.hash.col[index] = hash;
 
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
+        if (output.Count == Config.DataBatchSize) FlushContents();
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddToBatch(long start, long end, ref <#= TKey #> key, ref ActiveEdgeLeft leftEdge, ref ActiveIntervalRight rightInterval, int hash)

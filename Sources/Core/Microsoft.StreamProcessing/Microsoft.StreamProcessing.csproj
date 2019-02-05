@@ -239,6 +239,11 @@
     <None Update="MapReduceStreamable.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
+    <None Update="Operators\EquiJoin\FixedInterval\FixedIntervalEquiJoinTemplate.tt">
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+      <LastGenOutput>FixedIntervalEquiJoinTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </None>
     <None Update="Operators\QuantizeLifetime\QuantizeLifetimeTemplate.tt">
       <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
       <LastGenOutput>QuantizeLifetimeTemplate.cs</LastGenOutput>
@@ -856,6 +861,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>TemporalIngressTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\EquiJoin\FixedInterval\FixedIntervalEquiJoinTemplate.cs">
+      <DependentUpon>FixedIntervalEquiJoinTemplate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
     </Compile>
     <Compile Update="Operators\QuantizeLifetime\QuantizeLifetimeTemplate.cs">
       <DependentUpon>QuantizeLifetimeTemplate.tt</DependentUpon>

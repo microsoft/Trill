@@ -249,7 +249,7 @@ namespace Microsoft.StreamProcessing
             while (batch.iter < batch.Count && (batch.bitvector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0 && batch.vother.col[batch.iter] >= 0)
                 batch.iter++;
 
-            return (batch.iter != batch.Count);
+            return batch.iter != batch.Count;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
