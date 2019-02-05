@@ -552,6 +552,39 @@ namespace SimpleTesting
 
             Assert.IsTrue(inputData.SequenceEqual(output));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FileStreamDoubleQuery()
+        {
+            const bool serializeStreamProperties = true;
+
+            string filePath = $"{Path.GetTempPath()}\\{nameof(FileStreamDoubleQuery)}.bin";
+            const int inputEventCount = 100;
+            var inputData = Enumerable.Range(0, inputEventCount)
+                .Select(e => StreamEvent.CreatePoint<long>(0, e))
+                .ToList();
+            var input = inputData.ToObservable().ToStreamable();
+
+            // Stream to file
+            using (var stream = File.Create(filePath))
+            {
+                input.ToBinaryStream(stream, writePropertiesToStream: serializeStreamProperties);
+            }
+
+            // Stream from file, twice. This should be supported for streams that support Seek.
+            using (var stream = File.OpenRead(filePath))
+            {
+                Assert.IsTrue(stream.CanSeek);
+
+                var streamable = stream.ToStreamable<long>(readPropertiesFromStream: serializeStreamProperties);
+                for (int i = 0; i < 2; i++)
+                {
+                    var output = new List<StreamEvent<long>>();
+                    streamable.ToStreamEventObservable().Where(e => e.IsData).ForEachAsync(e => output.Add(e)).Wait();
+                    Assert.IsTrue(inputData.SequenceEqual(output));
+                }
+            }
+        }
     }
 
     [TestClass]
