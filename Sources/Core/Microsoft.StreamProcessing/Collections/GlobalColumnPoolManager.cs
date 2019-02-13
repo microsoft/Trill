@@ -41,7 +41,7 @@ namespace Microsoft.StreamProcessing
         public static ColumnPool<T> GetColumnPool<T>(int size = -1)
             => (ColumnPool<T>)columnPools.GetOrAdd(
                 size < 0 || size == Config.DataBatchSize
-                    ? (CacheKey)CacheKey.Create(typeof(T))
+                    ? CacheKey.Create(typeof(T))
                     : CacheKey.Create(typeof(T), size),
                 new ColumnPool<T>(size < 0 ? Config.DataBatchSize : size));
 

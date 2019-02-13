@@ -34,8 +34,6 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastMap<ActiveInterval<TLeft>> leftIntervalMap = new FastMap<ActiveInterval<TLeft>>();
         [DataMember]
-        private IEndPointOrderer endPointHeap;
-        [DataMember]
         private FastMap<ActiveInterval<TRight>> rightIntervalMap = new FastMap<ActiveInterval<TRight>>();
         [DataMember]
         private long nextLeftTime = long.MinValue;
@@ -62,16 +60,6 @@ namespace Microsoft.StreamProcessing
 
             this.rightComparer = stream.Right.Properties.PayloadEqualityComparer.GetEqualsExpr();
             this.rightComparerEquals = this.rightComparer.Compile();
-
-            if (stream.Left.Properties.IsConstantDuration && stream.Right.Properties.IsConstantDuration &&
-                stream.Left.Properties.ConstantDurationLength == stream.Right.Properties.ConstantDurationLength)
-            {
-                this.endPointHeap = new EndPointQueue();
-            }
-            else
-            {
-                this.endPointHeap = new EndPointHeap();
-            }
 
             this.pool = MemoryManager.GetMemoryPool<TKey, TResult>(stream.Properties.IsColumnar);
             this.pool.Get(out this.output);
@@ -104,7 +92,7 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
+            this.nextLeftTime = leftBatch.vsync.col[leftBatch.iter];
             if (!GoToVisibleRow(rightBatch))
             {
                 leftBatchDone = false;
@@ -112,7 +100,7 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
+            this.nextRightTime = rightBatch.vsync.col[rightBatch.iter];
 
             while (true)
             {
@@ -135,7 +123,7 @@ namespace Microsoft.StreamProcessing
                         return;
                     }
 
-                    UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
+                    this.nextLeftTime = leftBatch.vsync.col[leftBatch.iter];
                 }
                 else
                 {
@@ -156,7 +144,7 @@ namespace Microsoft.StreamProcessing
                         return;
                     }
 
-                    UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
+                    this.nextRightTime = rightBatch.vsync.col[rightBatch.iter];
                 }
             }
         }
@@ -173,7 +161,7 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateNextLeftTime(batch.vsync.col[batch.iter]);
+                this.nextLeftTime = batch.vsync.col[batch.iter];
 
                 if (this.nextLeftTime > this.nextRightTime)
                 {
@@ -206,7 +194,7 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateNextRightTime(batch.vsync.col[batch.iter]);
+                this.nextRightTime = batch.vsync.col[batch.iter];
 
                 if (this.nextRightTime > this.nextLeftTime)
                 {
@@ -243,20 +231,7 @@ namespace Microsoft.StreamProcessing
             {
                 LeaveTime();
                 this.currTime = time;
-                ReachTime();
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateNextLeftTime(long time)
-        {
-            this.nextLeftTime = time;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void UpdateNextRightTime(long time)
-        {
-            this.nextRightTime = time;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -271,7 +246,6 @@ namespace Microsoft.StreamProcessing
                     int index = this.leftIntervalMap.Insert(hash);
                     this.leftIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
                     CreateOutputForStartInterval(start, end, ref key, ref payload, hash);
-                    this.endPointHeap.Insert(end, index);
                 }
                 else
                 {
@@ -298,7 +272,6 @@ namespace Microsoft.StreamProcessing
                     this.rightIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
 
                     CreateOutputForStartInterval(start, end, ref key, ref payload, hash);
-                    this.endPointHeap.Insert(end, ~index);
                 }
                 else
                 {
@@ -331,7 +304,6 @@ namespace Microsoft.StreamProcessing
                     hash);
 
                 leftIntervals.MakeVisible();
-                this.endPointHeap.Insert(end, index);
             }
 
             var rightIntervals = this.rightIntervalMap.TraverseInvisible();
@@ -347,26 +319,6 @@ namespace Microsoft.StreamProcessing
                     hash);
 
                 rightIntervals.MakeVisible();
-                this.endPointHeap.Insert(end, ~index);
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ReachTime()
-        {
-            while (this.endPointHeap.TryGetNextInclusive(this.currTime, out long endPointTime, out int index))
-            {
-                if (index >= 0)
-                {
-                    // Endpoint is left interval ending.
-                    this.leftIntervalMap.Remove(index);
-                }
-                else
-                {
-                    // Endpoint is right interval ending.
-                    index = ~index;
-                    this.rightIntervalMap.Remove(index);
-                }
             }
         }
 

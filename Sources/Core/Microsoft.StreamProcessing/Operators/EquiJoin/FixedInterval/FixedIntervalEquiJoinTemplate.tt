@@ -43,8 +43,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     [DataMember]
     private FastMap<ActiveIntervalLeft> leftIntervalMap = new FastMap<ActiveIntervalLeft>();
     [DataMember]
-    private IEndPointOrderer endPointHeap;
-    [DataMember]
     private FastMap<ActiveIntervalRight> rightIntervalMap = new FastMap<ActiveIntervalRight>();
     [DataMember]
     private long nextLeftTime = long.MinValue;
@@ -70,8 +68,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
 
         keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
         keyComparerEquals = keyComparer.Compile();
-
-        endPointHeap = new <#= this.endPointHeap #>();
 
         pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TResult #>>(true /*stream.Properties.IsColumnar*/);
         GetOutputBatch();
@@ -113,7 +109,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
             return;
         }
 
-        UpdateNextLeftTime(genericLeftBatch.vsync.col[genericLeftBatch.iter]);
+        this.nextLeftTime = genericLeftBatch.vsync.col[genericLeftBatch.iter];
 
         if (!GoToVisibleRow(genericRightBatch))
         {
@@ -122,7 +118,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
             return;
         }
 
-        UpdateNextRightTime(genericRightBatch.vsync.col[genericRightBatch.iter]);
+        this.nextRightTime = genericRightBatch.vsync.col[genericRightBatch.iter];
 
         while (true)
         {
@@ -146,7 +142,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                     break;
                 }
 
-                UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
+                this.nextLeftTime = leftBatch.vsync.col[leftBatch.iter];
             }
             else
             {
@@ -168,7 +164,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                     break;
                 }
 
-                UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
+                this.nextRightTime = rightBatch.vsync.col[rightBatch.iter];
             }
         }
 
@@ -188,7 +184,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                 break;
             }
 
-            UpdateNextLeftTime(batch.vsync.col[batch.iter]);
+            this.nextLeftTime = batch.vsync.col[batch.iter];
 
             if (nextLeftTime > nextRightTime)
             {
@@ -226,7 +222,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                 break;
             }
 
-            UpdateNextRightTime(batch.vsync.col[batch.iter]);
+            this.nextRightTime = batch.vsync.col[batch.iter];
 
             if (nextRightTime > nextLeftTime)
             {
@@ -268,20 +264,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         {
             LeaveTime();
             currTime = time;
-            ReachTime();
         }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void UpdateNextLeftTime(long time)
-    {
-        nextLeftTime = time;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void UpdateNextRightTime(long time)
-    {
-        nextRightTime = time;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -295,7 +278,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                 int index = leftIntervalMap.Insert(hash);
                 leftIntervalMap.Values[index].Populate(start, end, ref key, leftBatch, leftIndex);
                 CreateOutputForLeftStartInterval(start, end, ref key, leftBatch, leftIndex, hash);
-                endPointHeap.Insert(end, index);
             }
             else
             {
@@ -320,7 +302,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                 int index = rightIntervalMap.Insert(hash);
                 rightIntervalMap.Values[index].Populate(start, end, ref key, rightBatch, rightRowIndex);
                 CreateOutputForRightStartInterval(start, end, ref key, rightBatch, rightRowIndex, hash);
-                endPointHeap.Insert(end, ~index);
             }
             else
             {
@@ -350,7 +331,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                 ref leftIntervalMap.Values[index],
                 hash);
             leftIntervals.MakeVisible();
-            endPointHeap.Insert(end, index);
         }
 
         var rightIntervals = rightIntervalMap.TraverseInvisible();
@@ -364,28 +344,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                 ref rightIntervalMap.Values[index],
                 hash);
             rightIntervals.MakeVisible();
-            endPointHeap.Insert(end, ~index);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReachTime()
-    {
-        long endPointTime;
-        int index;
-        while (endPointHeap.TryGetNextInclusive(currTime, out endPointTime, out index))
-        {
-            if (index >= 0)
-            {
-                // Endpoint is left interval ending.
-                leftIntervalMap.Remove(index);
-            }
-            else
-            {
-                // Endpoint is right interval ending.
-                index = ~index;
-                rightIntervalMap.Remove(index);
-            }
         }
     }
 

@@ -19,7 +19,6 @@ namespace Microsoft.StreamProcessing
     {
         private readonly Func<TLeft, TRight, TResult> selector;
         private readonly MemoryPool<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TResult> pool;
-        private readonly Func<IEndPointOrderer> endpointGenerator;
 
         [SchemaSerialization]
         private readonly Expression<Func<TGroupKey, TGroupKey, bool>> keyComparer;
@@ -74,27 +73,9 @@ namespace Microsoft.StreamProcessing
             this.rightComparer = stream.Right.Properties.PayloadEqualityComparer.GetEqualsExpr();
             this.rightComparerEquals = this.rightComparer.Compile();
 
-            if (stream.Left.Properties.IsConstantDuration && stream.Right.Properties.IsConstantDuration &&
-                stream.Left.Properties.ConstantDurationLength == stream.Right.Properties.ConstantDurationLength)
-                this.endpointGenerator = () => new EndPointQueue();
-            else
-                this.endpointGenerator = () => new EndPointHeap();
-
             this.pool = MemoryManager.GetMemoryPool<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TResult>(stream.Properties.IsColumnar);
             this.pool.Get(out this.output);
             this.output.Allocate();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void UpdateNextLeftTime(PartitionEntry partition, long time)
-        {
-            partition.nextLeftTime = time;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void UpdateNextRightTime(PartitionEntry partition, long time)
-        {
-            partition.nextRightTime = time;
         }
 
         protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)
@@ -116,7 +97,7 @@ namespace Microsoft.StreamProcessing
             this.rightQueue.Insert(pKey, new Queue<REntry>());
 
             if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(
-                ref index, pKey, new PartitionEntry { endPointHeap = this.endpointGenerator(), key = pKey });
+                ref index, pKey, new PartitionEntry { key = pKey });
         }
 
         protected override void ProcessBothBatches(StreamMessage<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TLeft> leftBatch, StreamMessage<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TRight> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
@@ -247,8 +228,8 @@ namespace Microsoft.StreamProcessing
                     {
                         leftEntry = leftWorking.Peek();
                         rightEntry = rightWorking.Peek();
-                        UpdateNextLeftTime(partition, leftEntry.Sync);
-                        UpdateNextRightTime(partition, rightEntry.Sync);
+                        partition.nextLeftTime = leftEntry.Sync;
+                        partition.nextRightTime = rightEntry.Sync;
 
                         if (partition.nextLeftTime < partition.nextRightTime)
                         {
@@ -312,7 +293,7 @@ namespace Microsoft.StreamProcessing
                     else if (hasLeftBatch)
                     {
                         leftEntry = leftWorking.Peek();
-                        UpdateNextLeftTime(partition, leftEntry.Sync);
+                        partition.nextLeftTime = leftEntry.Sync;
                         partition.nextRightTime = Math.Max(partition.nextRightTime, this.lastRightCTI);
                         if (partition.nextLeftTime > partition.nextRightTime) break;
 
@@ -346,7 +327,7 @@ namespace Microsoft.StreamProcessing
                     else if (hasRightBatch)
                     {
                         rightEntry = rightWorking.Peek();
-                        UpdateNextRightTime(partition, rightEntry.Sync);
+                        partition.nextRightTime = rightEntry.Sync;
                         partition.nextLeftTime = Math.Max(partition.nextLeftTime, this.lastLeftCTI);
                         if (partition.nextLeftTime < partition.nextRightTime) break;
 
@@ -379,10 +360,8 @@ namespace Microsoft.StreamProcessing
                     }
                     else
                     {
-                        if (partition.nextLeftTime < this.lastLeftCTI)
-                            UpdateNextLeftTime(partition, this.lastLeftCTI);
-                        if (partition.nextRightTime < this.lastRightCTI)
-                            UpdateNextRightTime(partition, this.lastRightCTI);
+                        if (partition.nextLeftTime < this.lastLeftCTI) partition.nextLeftTime = this.lastLeftCTI;
+                        if (partition.nextRightTime < this.lastRightCTI) partition.nextRightTime = this.lastRightCTI;
 
                         UpdateTime(partition, Math.Min(this.lastLeftCTI, this.lastRightCTI));
                         this.cleanKeys.Add(pKey);
@@ -422,7 +401,6 @@ namespace Microsoft.StreamProcessing
             {
                 LeaveTime(partition);
                 partition.currTime = time;
-                ReachTime(partition);
             }
         }
 
@@ -435,7 +413,6 @@ namespace Microsoft.StreamProcessing
                 int index = partition.leftIntervalMap.Insert(hash);
                 partition.leftIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
                 CreateOutputForStartInterval(partition, start, end, ref key, ref payload, hash);
-                partition.endPointHeap.Insert(end, index);
             }
             else
             {
@@ -453,7 +430,6 @@ namespace Microsoft.StreamProcessing
                 int index = partition.rightIntervalMap.Insert(hash);
                 partition.rightIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
                 CreateOutputForStartInterval(partition, start, end, ref key, ref payload, hash);
-                partition.endPointHeap.Insert(end, ~index);
             }
             else
             {
@@ -477,7 +453,6 @@ namespace Microsoft.StreamProcessing
                     ref partition.leftIntervalMap.Values[index].Payload,
                     hash);
                 leftIntervals.MakeVisible();
-                partition.endPointHeap.Insert(end, index);
             }
 
             var rightIntervals = partition.rightIntervalMap.TraverseInvisible();
@@ -492,26 +467,6 @@ namespace Microsoft.StreamProcessing
                     ref partition.rightIntervalMap.Values[index].Payload,
                     hash);
                 rightIntervals.MakeVisible();
-                partition.endPointHeap.Insert(end, ~index);
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ReachTime(PartitionEntry partition)
-        {
-            while (partition.endPointHeap.TryGetNextInclusive(partition.currTime, out long endPointTime, out int index))
-            {
-                if (index >= 0)
-                {
-                    // Endpoint is left interval ending.
-                    partition.leftIntervalMap.Remove(index);
-                }
-                else
-                {
-                    // Endpoint is right interval ending.
-                    index = ~index;
-                    partition.rightIntervalMap.Remove(index);
-                }
             }
         }
 
@@ -750,8 +705,6 @@ namespace Microsoft.StreamProcessing
             public TPartitionKey key;
             [DataMember]
             public FastMap<ActiveInterval<TLeft>> leftIntervalMap = new FastMap<ActiveInterval<TLeft>>();
-            [DataMember]
-            public IEndPointOrderer endPointHeap;
             [DataMember]
             public FastMap<ActiveInterval<TRight>> rightIntervalMap = new FastMap<ActiveInterval<TRight>>();
             [DataMember]

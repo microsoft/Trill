@@ -35,7 +35,6 @@ namespace Microsoft.StreamProcessing
         private Func<string, string, string, string> leftBatchSelector;
         private Func<string, string, string, string> rightBatchSelector;
         private Func<string, string, string> activeSelector;
-        private string endPointHeap;
         private string LeftBatchType;
         private string RightBatchType;
         private ColumnarRepresentation leftMessageRepresentation;
@@ -267,25 +266,6 @@ namespace Microsoft.StreamProcessing
                     #endregion
                 }
                 #endregion
-
-                if (stream.Left.Properties.IsIntervalFree && stream.Right.Properties.IsConstantDuration)
-                {
-                    template.endPointHeap = "EndPointQueue";
-                }
-                else if (stream.Right.Properties.IsIntervalFree && stream.Left.Properties.IsConstantDuration)
-                {
-                    template.endPointHeap = "EndPointQueue";
-                }
-                else if (stream.Left.Properties.IsConstantDuration && stream.Right.Properties.IsConstantDuration &&
-                            stream.Left.Properties.ConstantDurationLength == stream.Right.Properties.ConstantDurationLength)
-                {
-                    template.endPointHeap = "EndPointQueue";
-                }
-                else
-                {
-                    template.endPointHeap = "EndPointHeap";
-                }
-
 
                 template.staticCtor = Transformer.StaticCtor(template.className);
                 var expandedCode = template.TransformText();
