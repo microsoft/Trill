@@ -54,26 +54,17 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class ColumnPool<T> : ColumnPoolBase
     {
-        private ConcurrentQueue<ColumnBatch<T>> queue;
+        private readonly ConcurrentQueue<ColumnBatch<T>> queue;
         private long createdObjects;
         private readonly int size;
 
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public ColumnPool()
+        internal ColumnPool()
         {
             this.queue = new ConcurrentQueue<ColumnBatch<T>>();
             this.size = Config.DataBatchSize;
         }
 
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        /// <param name="size"></param>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public ColumnPool(int size)
+        internal ColumnPool(int size)
         {
             this.queue = new ConcurrentQueue<ColumnBatch<T>>();
             this.size = size;
@@ -85,10 +76,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <param name="item"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Return(ColumnBatch<T> item)
-        {
-            this.queue.Enqueue(item);
-        }
+        public void Return(ColumnBatch<T> item) => this.queue.Enqueue(item);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -116,10 +104,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <returns></returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override string GetStatusReport()
-        {
-            return string.Format(CultureInfo.InvariantCulture, "[{0}] Objects Created - {1,5} - Queue Size - {2,5}\t{3}",
+            => string.Format(CultureInfo.InvariantCulture, "[{0}] Objects Created - {1,5} - Queue Size - {2,5}\t{3}",
                 !SomethingIsWrong() ? " " : "X", this.createdObjects, this.queue.Count, typeof(T).GetCSharpSourceSyntax());
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -129,9 +115,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             => ((!Config.DisableMemoryPooling) && SomethingIsWrong()) ? this : null;
 
         private bool SomethingIsWrong()
-        {
-            return (this.createdObjects != this.queue.Count) || this.queue.Any(cb => cb.RefCount != 0);
-        }
+            => (this.createdObjects != this.queue.Count) || this.queue.Any(cb => cb.RefCount != 0);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
