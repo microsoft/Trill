@@ -307,7 +307,6 @@ namespace Microsoft.StreamProcessing
                     {
                         int index = this.leftEdgeMap.InsertInvisible(hash);
                         this.leftEdgeMap.Values[index].Populate(start, ref key, ref payload);
-
                     }
                 }
                 else
