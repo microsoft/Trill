@@ -239,7 +239,7 @@ namespace Microsoft.StreamProcessing
                 batch.iter++;
             }
 
-            return (batch.iter != batch.Count);
+            return batch.iter != batch.Count;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -424,7 +424,7 @@ namespace Microsoft.StreamProcessing
                             end,
                             ref leftIntervalItem.Key,
                             ref leftIntervalItem.Payload,
-                hash);
+                            hash);
                         leftEvents.Remove();
 
                     }
@@ -437,7 +437,7 @@ namespace Microsoft.StreamProcessing
                             StreamEvent.InfinitySyncTime,
                             ref leftIntervalItem.Key,
                             ref leftIntervalItem.Payload,
-                hash);
+                            hash);
 
                         this.leftEndPointHeap.Insert(end, index);
                     }

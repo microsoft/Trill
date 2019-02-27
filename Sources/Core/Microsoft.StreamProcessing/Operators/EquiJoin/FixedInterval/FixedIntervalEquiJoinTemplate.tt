@@ -27,8 +27,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
 // TResult: <#= TResult #>
 
 [DataContract]
-[KnownType(typeof(EndPointHeap))]
-[KnownType(typeof(EndPointQueue))]
 internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= TKey #>, <#= TLeft #>, <#= TRight #>, <#= TResult #>>
 {
     private readonly MemoryPool<<#= TKey #>, <#= TResult #>> pool;

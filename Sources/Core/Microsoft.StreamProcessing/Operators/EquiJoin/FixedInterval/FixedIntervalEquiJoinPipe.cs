@@ -12,8 +12,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
 namespace Microsoft.StreamProcessing
 {
     [DataContract]
-    [KnownType(typeof(EndPointHeap))]
-    [KnownType(typeof(EndPointQueue))]
     internal sealed class FixedIntervalEquiJoinPipe<TKey, TLeft, TRight, TResult> : BinaryPipe<TKey, TLeft, TRight, TResult>
     {
         private readonly Func<TLeft, TRight, TResult> selector;
@@ -221,7 +219,7 @@ namespace Microsoft.StreamProcessing
             while (batch.iter < batch.Count && (batch.bitvector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0 && batch.vother.col[batch.iter] >= 0)
                 batch.iter++;
 
-            return (batch.iter != batch.Count);
+            return batch.iter != batch.Count;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

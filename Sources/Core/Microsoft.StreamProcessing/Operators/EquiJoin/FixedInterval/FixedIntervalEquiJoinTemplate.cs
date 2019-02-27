@@ -51,8 +51,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(TRight));
             this.Write("\r\n// TResult: ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
-            this.Write("\r\n\r\n[DataContract]\r\n[KnownType(typeof(EndPointHeap))]\r\n[KnownType(typeof(EndPoint" +
-                    "Queue))]\r\ninternal sealed class ");
+            this.Write("\r\n\r\n[DataContract]\r\ninternal sealed class ");
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write(this.ToStringHelper.ToStringWithCulture(genericParameters));
             this.Write(" : BinaryPipe<");

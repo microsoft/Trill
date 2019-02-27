@@ -13,8 +13,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
 namespace Microsoft.StreamProcessing
 {
     [DataContract]
-    [KnownType(typeof(EndPointHeap))]
-    [KnownType(typeof(EndPointQueue))]
     internal sealed class PartitionedFixedIntervalEquiJoinPipeCompound<TGroupKey, TLeft, TRight, TResult, TPartitionKey> : BinaryPipe<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TLeft, TRight, TResult>, IBinaryObserver
     {
         private readonly Func<TLeft, TRight, TResult> selector;

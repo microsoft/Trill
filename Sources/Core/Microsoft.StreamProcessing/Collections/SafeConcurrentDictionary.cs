@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue GetOrAdd(CacheKey key, Func<CacheKey, TValue> valueFactory)
         {
-            if (this.dictionary.TryGetValue(key, out TValue value))
+            if (this.dictionary.TryGetValue(key, out var value))
             {
                 return value;
             }
@@ -37,12 +37,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 return this.dictionary.GetOrAdd(key, valueFactory);
             }
         }
-
-        /// <summary>
-        /// Adds a key/value pair to the dictionary if it does not exist.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TValue GetOrAdd(CacheKey key, TValue value) => this.dictionary.GetOrAdd(key, value);
 
         /// <summary>
         /// Returns an enumerator of the elements in the dictionary.
