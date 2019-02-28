@@ -27,6 +27,10 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<TRight, TRight, bool>> rightComparer;
         private readonly Func<TRight, TRight, bool> rightComparerEquals;
+        [SchemaSerialization]
+        private readonly long leftDuration;
+        [SchemaSerialization]
+        private readonly long rightDuration;
 
         [DataMember]
         private FastDictionary2<TPartitionKey, Queue<LEntry>> leftQueue = new FastDictionary2<TPartitionKey, Queue<LEntry>>();
@@ -61,6 +65,8 @@ namespace Microsoft.StreamProcessing
             : base(stream, observer)
         {
             this.selector = selector.Compile();
+            this.leftDuration = stream.Left.Properties.ConstantDurationLength.Value;
+            this.rightDuration = stream.Right.Properties.ConstantDurationLength.Value;
 
             this.keyComparer = EqualityComparerExpression<TGroupKey>.Default.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparer.Compile();
@@ -139,7 +145,7 @@ namespace Microsoft.StreamProcessing
                 {
                     Key = batch.key.col[i].InnerGroup,
                     Sync = batch.vsync.col[i],
-                    Other = batch.vother.col[i],
+                    IsPunctuation = batch.vother.col[i] == StreamEvent.PunctuationOtherTime,
                     Payload = batch.payload.col[i],
                     Hash = batch.hash.col[i],
                 };
@@ -186,7 +192,7 @@ namespace Microsoft.StreamProcessing
                 {
                     Key = batch.key.col[i].InnerGroup,
                     Sync = batch.vsync.col[i],
-                    Other = batch.vother.col[i],
+                    IsPunctuation = batch.vother.col[i] == StreamEvent.PunctuationOtherTime,
                     Payload = batch.payload.col[i],
                     Hash = batch.hash.col[i],
                 };
@@ -233,12 +239,11 @@ namespace Microsoft.StreamProcessing
                         {
                             UpdateTime(partition, partition.nextLeftTime);
 
-                            if (leftEntry.Other != long.MinValue)
+                            if (!leftEntry.IsPunctuation)
                             {
                                 ProcessLeftEvent(
                                     partition,
                                     partition.nextLeftTime,
-                                    leftEntry.Other,
                                     ref leftEntry.Key,
                                     leftEntry.Payload,
                                     leftEntry.Hash);
@@ -248,7 +253,7 @@ namespace Microsoft.StreamProcessing
                                 var r = default(TRight);
                                 AddToBatch(
                                     partition.currTime,
-                                    long.MinValue,
+                                    StreamEvent.PunctuationOtherTime,
                                     ref leftEntry.Key,
                                     ref partition.key,
                                     ref leftEntry.Payload,
@@ -262,12 +267,11 @@ namespace Microsoft.StreamProcessing
                         {
                             UpdateTime(partition, partition.nextRightTime);
 
-                            if (rightEntry.Other != long.MinValue)
+                            if (!rightEntry.IsPunctuation)
                             {
                                 ProcessRightEvent(
                                     partition,
                                     partition.nextRightTime,
-                                    rightEntry.Other,
                                     ref rightEntry.Key,
                                     rightEntry.Payload,
                                     rightEntry.Hash);
@@ -277,7 +281,7 @@ namespace Microsoft.StreamProcessing
                                 var l = default(TLeft);
                                 AddToBatch(
                                     partition.currTime,
-                                    long.MinValue,
+                                    StreamEvent.PunctuationOtherTime,
                                     ref rightEntry.Key,
                                     ref partition.key,
                                     ref l,
@@ -297,12 +301,11 @@ namespace Microsoft.StreamProcessing
 
                         UpdateTime(partition, partition.nextLeftTime);
 
-                        if (leftEntry.Other != long.MinValue)
+                        if (!leftEntry.IsPunctuation)
                         {
                             ProcessLeftEvent(
                                 partition,
                                 partition.nextLeftTime,
-                                leftEntry.Other,
                                 ref leftEntry.Key,
                                 leftEntry.Payload,
                                 leftEntry.Hash);
@@ -312,7 +315,7 @@ namespace Microsoft.StreamProcessing
                             var r = default(TRight);
                             AddToBatch(
                                 partition.currTime,
-                                long.MinValue,
+                                StreamEvent.PunctuationOtherTime,
                                 ref leftEntry.Key,
                                 ref partition.key,
                                 ref leftEntry.Payload,
@@ -331,12 +334,11 @@ namespace Microsoft.StreamProcessing
 
                         UpdateTime(partition, partition.nextRightTime);
 
-                        if (rightEntry.Other != long.MinValue)
+                        if (!rightEntry.IsPunctuation)
                         {
                             ProcessRightEvent(
                                 partition,
                                 partition.nextRightTime,
-                                rightEntry.Other,
                                 ref rightEntry.Key,
                                 rightEntry.Payload,
                                 rightEntry.Hash);
@@ -346,7 +348,7 @@ namespace Microsoft.StreamProcessing
                             var l = default(TLeft);
                             AddToBatch(
                                 partition.currTime,
-                                long.MinValue,
+                                StreamEvent.PunctuationOtherTime,
                                 ref rightEntry.Key,
                                 ref partition.key,
                                 ref l,
@@ -403,36 +405,36 @@ namespace Microsoft.StreamProcessing
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessLeftEvent(PartitionEntry partition, long start, long end, ref TGroupKey key, TLeft payload, int hash)
+        private void ProcessLeftEvent(PartitionEntry partition, long start, ref TGroupKey key, TLeft payload, int hash)
         {
             bool processable = partition.nextRightTime > start;
             if (processable)
             {
                 int index = partition.leftIntervalMap.Insert(hash);
-                partition.leftIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
-                CreateOutputForStartInterval(partition, start, end, ref key, ref payload, hash);
+                partition.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
+                CreateOutputForStartInterval(partition, start, ref key, ref payload, hash);
             }
             else
             {
                 int index = partition.leftIntervalMap.InsertInvisible(hash);
-                partition.leftIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
+                partition.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessRightEvent(PartitionEntry partition, long start, long end, ref TGroupKey key, TRight payload, int hash)
+        private void ProcessRightEvent(PartitionEntry partition, long start, ref TGroupKey key, TRight payload, int hash)
         {
             bool processable = partition.nextLeftTime > start;
             if (processable)
             {
                 int index = partition.rightIntervalMap.Insert(hash);
-                partition.rightIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
-                CreateOutputForStartInterval(partition, start, end, ref key, ref payload, hash);
+                partition.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
+                CreateOutputForStartInterval(partition, start, ref key, ref payload, hash);
             }
             else
             {
                 int index = partition.rightIntervalMap.InsertInvisible(hash);
-                partition.rightIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
+                partition.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
             }
         }
 
@@ -442,11 +444,9 @@ namespace Microsoft.StreamProcessing
             var leftIntervals = partition.leftIntervalMap.TraverseInvisible();
             while (leftIntervals.Next(out int index, out int hash))
             {
-                long end = partition.leftIntervalMap.Values[index].End;
                 CreateOutputForStartInterval(
                     partition,
                     partition.currTime,
-                    end,
                     ref partition.leftIntervalMap.Values[index].Key,
                     ref partition.leftIntervalMap.Values[index].Payload,
                     hash);
@@ -456,11 +456,9 @@ namespace Microsoft.StreamProcessing
             var rightIntervals = partition.rightIntervalMap.TraverseInvisible();
             while (rightIntervals.Next(out int index, out int hash))
             {
-                long end = partition.rightIntervalMap.Values[index].End;
                 CreateOutputForStartInterval(
                     partition,
                     partition.currTime,
-                    end,
                     ref partition.rightIntervalMap.Values[index].Key,
                     ref partition.rightIntervalMap.Values[index].Payload,
                     hash);
@@ -469,7 +467,7 @@ namespace Microsoft.StreamProcessing
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForStartInterval(PartitionEntry partition, long currentTime, long end, ref TGroupKey key, ref TLeft payload, int hash)
+        private void CreateOutputForStartInterval(PartitionEntry partition, long currentTime, ref TGroupKey key, ref TLeft payload, int hash)
         {
             // Create end edges for all joined right intervals.
             var intervals = partition.rightIntervalMap.Find(hash);
@@ -477,10 +475,11 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.keyComparerEquals(key, partition.rightIntervalMap.Values[index].Key))
                 {
-                    long rightEnd = partition.rightIntervalMap.Values[index].End;
+                    long leftEnd = currentTime + leftDuration;
+                    long rightEnd = partition.rightIntervalMap.Values[index].Start + rightDuration;
                     AddToBatch(
                         currentTime,
-                        end < rightEnd ? end : rightEnd,
+                        leftEnd < rightEnd ? leftEnd : rightEnd,
                         ref key,
                         ref partition.key,
                         ref payload,
@@ -491,7 +490,7 @@ namespace Microsoft.StreamProcessing
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForStartInterval(PartitionEntry partition, long currentTime, long end, ref TGroupKey key, ref TRight payload, int hash)
+        private void CreateOutputForStartInterval(PartitionEntry partition, long currentTime, ref TGroupKey key, ref TRight payload, int hash)
         {
             // Create end edges for all joined left intervals.
             var intervals = partition.leftIntervalMap.Find(hash);
@@ -499,10 +498,11 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.keyComparerEquals(key, partition.leftIntervalMap.Values[index].Key))
                 {
-                    long leftEnd = partition.leftIntervalMap.Values[index].End;
+                    long rightEnd = currentTime + rightDuration;
+                    long leftEnd = partition.leftIntervalMap.Values[index].Start + leftDuration;
                     AddToBatch(
                         currentTime,
-                        end < leftEnd ? end : leftEnd,
+                        rightEnd < leftEnd ? rightEnd : leftEnd,
                         ref key,
                         ref partition.key,
                         ref partition.leftIntervalMap.Values[index].Payload,
@@ -628,22 +628,19 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public long Start;
             [DataMember]
-            public long End;
-            [DataMember]
             public TGroupKey Key;
             [DataMember]
             public TPayload Payload;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Populate(long start, long end, ref TGroupKey key, ref TPayload payload)
+            public void Populate(long start, ref TGroupKey key, ref TPayload payload)
             {
                 this.Start = start;
-                this.End = end;
                 this.Key = key;
                 this.Payload = payload;
             }
 
-            public override string ToString() => "[Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
+            public override string ToString() => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         public override bool LeftInputHasState
@@ -672,7 +669,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public long Sync;
             [DataMember]
-            public long Other;
+            public bool IsPunctuation;
             [DataMember]
             public int Hash;
             [DataMember]
@@ -687,7 +684,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public long Sync;
             [DataMember]
-            public long Other;
+            public bool IsPunctuation;
             [DataMember]
             public int Hash;
             [DataMember]

@@ -132,9 +132,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
     public override int CurrentlyBufferedRightInputCount => base.CurrentlyBufferedRightInputCount + rightIntervalMap.Count;
 
     protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)
-    {
-        Observer.ProduceQueryPlan(queryPlanGenerator(left, right, this));
-    }
+        => Observer.ProduceQueryPlan(queryPlanGenerator(left, right, this));
 
     protected override void DisposeState() => this.output.Free();
 
@@ -177,26 +175,30 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "       rightBatchDone = true;\r\n            return;\r\n        }\r\n\r\n        this.ne" +
                     "xtRightTime = genericRightBatch.vsync.col[genericRightBatch.iter];\r\n\r\n        wh" +
                     "ile (true)\r\n        {\r\n            if (nextLeftTime <= nextRightTime)\r\n         " +
-                    "   {\r\n                UpdateTime(nextLeftTime);\r\n                ProcessLeftEven" +
-                    "t(\r\n                    nextLeftTime,\r\n                    leftBatch.vother.col[" +
-                    "leftBatch.iter],\r\n                    ref leftBatch.key.col[leftBatch.iter],\r\n  " +
-                    "                  leftBatch,\r\n                    leftBatch.iter,\r\n             " +
-                    "       leftBatch.hash.col[leftBatch.iter]);\r\n\r\n                leftBatch.iter++;" +
-                    "\r\n\r\n                if (!GoToVisibleRow(leftBatch))\r\n                {\r\n        " +
-                    "            leftBatchDone = true;\r\n                    rightBatchDone = false;\r\n" +
-                    "                    break;\r\n                }\r\n\r\n                this.nextLeftTi" +
-                    "me = leftBatch.vsync.col[leftBatch.iter];\r\n            }\r\n            else\r\n    " +
-                    "        {\r\n                UpdateTime(nextRightTime);\r\n                ProcessRi" +
-                    "ghtEvent(\r\n                    nextRightTime,\r\n                    rightBatch.vo" +
-                    "ther.col[rightBatch.iter],\r\n                    ref rightBatch.key.col[rightBatc" +
-                    "h.iter],\r\n                    rightBatch,\r\n                    rightBatch.iter,\r" +
-                    "\n                    rightBatch.hash.col[rightBatch.iter]);\r\n\r\n                r" +
-                    "ightBatch.iter++;\r\n\r\n                if (!GoToVisibleRow(rightBatch))\r\n         " +
-                    "       {\r\n                    leftBatchDone = false;\r\n                    rightB" +
-                    "atchDone = true;\r\n                    break;\r\n                }\r\n\r\n             " +
-                    "   this.nextRightTime = rightBatch.vsync.col[rightBatch.iter];\r\n            }\r\n " +
-                    "       }\r\n\r\n        return;\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions.Aggressi" +
-                    "veInlining)]\r\n    protected override void ProcessLeftBatch(StreamMessage<");
+                    "   {\r\n                UpdateTime(this.nextLeftTime);\r\n                if (leftBa" +
+                    "tch.vother.col[leftBatch.iter] == StreamEvent.PunctuationOtherTime)\r\n           " +
+                    "         AddPunctuationToBatch(this.nextLeftTime);\r\n                else\r\n      " +
+                    "              ProcessLeftEvent(\r\n                        nextLeftTime,\r\n        " +
+                    "                ref leftBatch.key.col[leftBatch.iter],\r\n                        " +
+                    "leftBatch,\r\n                        leftBatch.iter,\r\n                        lef" +
+                    "tBatch.hash.col[leftBatch.iter]);\r\n\r\n                leftBatch.iter++;\r\n\r\n      " +
+                    "          if (!GoToVisibleRow(leftBatch))\r\n                {\r\n                  " +
+                    "  leftBatchDone = true;\r\n                    rightBatchDone = false;\r\n          " +
+                    "          break;\r\n                }\r\n\r\n                this.nextLeftTime = leftB" +
+                    "atch.vsync.col[leftBatch.iter];\r\n            }\r\n            else\r\n            {\r" +
+                    "\n                UpdateTime(nextRightTime);\r\n                if (rightBatch.voth" +
+                    "er.col[rightBatch.iter] == StreamEvent.PunctuationOtherTime)\r\n                  " +
+                    "  AddPunctuationToBatch(this.nextRightTime);\r\n                else\r\n            " +
+                    "        ProcessRightEvent(\r\n                        nextRightTime,\r\n            " +
+                    "            ref rightBatch.key.col[rightBatch.iter],\r\n                        ri" +
+                    "ghtBatch,\r\n                        rightBatch.iter,\r\n                        rig" +
+                    "htBatch.hash.col[rightBatch.iter]);\r\n\r\n                rightBatch.iter++;\r\n\r\n   " +
+                    "             if (!GoToVisibleRow(rightBatch))\r\n                {\r\n              " +
+                    "      leftBatchDone = false;\r\n                    rightBatchDone = true;\r\n      " +
+                    "              break;\r\n                }\r\n\r\n                this.nextRightTime = " +
+                    "rightBatch.vsync.col[rightBatch.iter];\r\n            }\r\n        }\r\n\r\n        retu" +
+                    "rn;\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\r\n    protec" +
+                    "ted override void ProcessLeftBatch(StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TLeft));
@@ -222,13 +224,15 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
             UpdateTime(nextLeftTime);
 
-            ProcessLeftEvent(
-                nextLeftTime,
-                batch.vother.col[batch.iter],
-                ref batch.key.col[batch.iter],
-                batch,
-                batch.iter,
-                batch.hash.col[batch.iter]);
+            if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+                AddPunctuationToBatch(this.nextLeftTime);
+            else
+                ProcessLeftEvent(
+                    nextLeftTime,
+                    ref batch.key.col[batch.iter],
+                    batch,
+                    batch.iter,
+                    batch.hash.col[batch.iter]);
 
             batch.iter++;
         }
@@ -264,13 +268,15 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
             UpdateTime(nextRightTime);
 
-            ProcessRightEvent(
-                nextRightTime,
-                batch.vother.col[batch.iter],
-                ref batch.key.col[batch.iter],
-                batch,
-                batch.iter,
-                batch.hash.col[batch.iter]);
+            if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+                AddPunctuationToBatch(this.nextRightTime);
+            else
+                ProcessRightEvent(
+                    nextRightTime,
+                    ref batch.key.col[batch.iter],
+                    batch,
+                    batch.iter,
+                    batch.hash.col[batch.iter]);
 
             batch.iter++;
         }
@@ -302,64 +308,51 @@ using Microsoft.StreamProcessing.Internal.Collections;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ProcessLeftEvent(long start, long end, ref ");
+    private void ProcessLeftEvent(long start, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(LeftBatchType));
             this.Write(@" leftBatch, int leftIndex, int hash)
     {
-        if (start < end)
+        if (nextRightTime > start)
         {
-            // Row is an interval.
-            if (nextRightTime > start)
-            {
-                int index = leftIntervalMap.Insert(hash);
-                leftIntervalMap.Values[index].Populate(start, end, ref key, leftBatch, leftIndex);
-                CreateOutputForLeftStartInterval(start, end, ref key, leftBatch, leftIndex, hash);
-            }
-            else
-            {
-                int index = leftIntervalMap.InsertInvisible(hash);
-                leftIntervalMap.Values[index].Populate(start, end, ref key, leftBatch, leftIndex);
-            }
+            int index = leftIntervalMap.Insert(hash);
+            leftIntervalMap.Values[index].Populate(start, ref key, leftBatch, leftIndex);
+            CreateOutputForLeftStartInterval(start, ref key, leftBatch, leftIndex, hash);
         }
-        else if (end == StreamEvent.PunctuationOtherTime)
+        else
         {
-            AddPunctuationToBatch(start);
+            int index = leftIntervalMap.InsertInvisible(hash);
+            leftIntervalMap.Values[index].Populate(start, ref key, leftBatch, leftIndex);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ProcessRightEvent(long start, long end, ref ");
+    private void ProcessRightEvent(long start, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(RightBatchType));
-            this.Write(" rightBatch, int rightRowIndex, int hash)\r\n    {\r\n        if (start < end)\r\n     " +
-                    "   {\r\n            // Row is an interval.\r\n            if (nextLeftTime > start)\r" +
-                    "\n            {\r\n                int index = rightIntervalMap.Insert(hash);\r\n    " +
-                    "            rightIntervalMap.Values[index].Populate(start, end, ref key, rightBa" +
-                    "tch, rightRowIndex);\r\n                CreateOutputForRightStartInterval(start, e" +
-                    "nd, ref key, rightBatch, rightRowIndex, hash);\r\n            }\r\n            else\r" +
-                    "\n            {\r\n                int index = rightIntervalMap.InsertInvisible(has" +
-                    "h);\r\n                rightIntervalMap.Values[index].Populate(start, end, ref key" +
-                    ", rightBatch, rightRowIndex);\r\n            }\r\n        }\r\n        else if (end ==" +
-                    " StreamEvent.PunctuationOtherTime)\r\n        {\r\n            AddPunctuationToBatch" +
-                    "(start);\r\n        }\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions.AggressiveInlini" +
-                    "ng)]\r\n    private void LeaveTime()\r\n    {\r\n        int index;\r\n        int hash;" +
-                    "\r\n        var leftIntervals = leftIntervalMap.TraverseInvisible();\r\n        whil" +
-                    "e (leftIntervals.Next(out index, out hash))\r\n        {\r\n            long end = l" +
-                    "eftIntervalMap.Values[index].End;\r\n            CreateOutputForLeftStartInterval(" +
-                    "\r\n                currTime,\r\n                end,\r\n                ref leftInter" +
-                    "valMap.Values[index].Key,\r\n                ref leftIntervalMap.Values[index],\r\n " +
-                    "               hash);\r\n            leftIntervals.MakeVisible();\r\n        }\r\n\r\n  " +
-                    "      var rightIntervals = rightIntervalMap.TraverseInvisible();\r\n        while " +
-                    "(rightIntervals.Next(out index, out hash))\r\n        {\r\n            long end = ri" +
-                    "ghtIntervalMap.Values[index].End;\r\n            CreateOutputForRightStartInterval" +
-                    "(\r\n                currTime,\r\n                end,\r\n                ref rightInt" +
-                    "ervalMap.Values[index].Key,\r\n                ref rightIntervalMap.Values[index]," +
-                    "\r\n                hash);\r\n            rightIntervals.MakeVisible();\r\n        }\r\n" +
-                    "    }\r\n\r\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\r\n    private voi" +
-                    "d CreateOutputForLeftStartInterval(long currentTime, long end, ref ");
+            this.Write(" rightBatch, int rightRowIndex, int hash)\r\n    {\r\n        // Row is an interval.\r" +
+                    "\n        if (nextLeftTime > start)\r\n        {\r\n            int index = rightInte" +
+                    "rvalMap.Insert(hash);\r\n            rightIntervalMap.Values[index].Populate(start" +
+                    ", ref key, rightBatch, rightRowIndex);\r\n            CreateOutputForRightStartInt" +
+                    "erval(start, ref key, rightBatch, rightRowIndex, hash);\r\n        }\r\n        else" +
+                    "\r\n        {\r\n            int index = rightIntervalMap.InsertInvisible(hash);\r\n  " +
+                    "          rightIntervalMap.Values[index].Populate(start, ref key, rightBatch, ri" +
+                    "ghtRowIndex);\r\n        }\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions.AggressiveI" +
+                    "nlining)]\r\n    private void LeaveTime()\r\n    {\r\n        int index;\r\n        int " +
+                    "hash;\r\n        var leftIntervals = leftIntervalMap.TraverseInvisible();\r\n       " +
+                    " while (leftIntervals.Next(out index, out hash))\r\n        {\r\n            CreateO" +
+                    "utputForLeftStartInterval(\r\n                currTime,\r\n                ref leftI" +
+                    "ntervalMap.Values[index].Key,\r\n                ref leftIntervalMap.Values[index]" +
+                    ",\r\n                hash);\r\n            leftIntervals.MakeVisible();\r\n        }\r\n" +
+                    "\r\n        var rightIntervals = rightIntervalMap.TraverseInvisible();\r\n        wh" +
+                    "ile (rightIntervals.Next(out index, out hash))\r\n        {\r\n            CreateOut" +
+                    "putForRightStartInterval(\r\n                currTime,\r\n                ref rightI" +
+                    "ntervalMap.Values[index].Key,\r\n                ref rightIntervalMap.Values[index" +
+                    "],\r\n                hash);\r\n            rightIntervals.MakeVisible();\r\n        }" +
+                    "\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\r\n    private v" +
+                    "oid CreateOutputForLeftStartInterval(long currentTime, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(LeftBatchType));
@@ -367,12 +360,14 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "joined right intervals.\r\n        var intervals = rightIntervalMap.Find(hash);\r\n " +
                     "       while (intervals.Next(out var index))\r\n        {\r\n            if (");
             this.Write(this.ToStringHelper.ToStringWithCulture(keyComparerEquals("key", "rightIntervalMap.Values[index].Key")));
-            this.Write(@")
-            {
-                long rightEnd = rightIntervalMap.Values[index].End;
+            this.Write(")\r\n            {\r\n                long leftEnd = currentTime + ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(leftDuration));
+            this.Write(";\r\n                long rightEnd = rightIntervalMap.Values[index].Start + ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(rightDuration));
+            this.Write(@";
                 AddToBatch(
                     currentTime,
-                    end < rightEnd ? end : rightEnd,
+                    leftEnd < rightEnd ? leftEnd : rightEnd,
                     ref key,
                     leftBatch, leftIndex,
                     ref rightIntervalMap.Values[index],
@@ -382,19 +377,21 @@ using Microsoft.StreamProcessing.Internal.Collections;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CreateOutputForLeftStartInterval(long currentTime, long end, ref ");
+    private void CreateOutputForLeftStartInterval(long currentTime, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ref ActiveIntervalLeft leftInterval, int hash)\r\n    {\r\n        // Create en" +
                     "d edges for all joined right intervals.\r\n        var intervals = rightIntervalMa" +
                     "p.Find(hash);\r\n        while (intervals.Next(out var index))\r\n        {\r\n       " +
                     "     if (");
             this.Write(this.ToStringHelper.ToStringWithCulture(keyComparerEquals("key", "rightIntervalMap.Values[index].Key")));
-            this.Write(@")
-            {
-                long rightEnd = rightIntervalMap.Values[index].End;
+            this.Write(")\r\n            {\r\n                long leftEnd = currentTime + ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(leftDuration));
+            this.Write(";\r\n                long rightEnd = rightIntervalMap.Values[index].Start + ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(rightDuration));
+            this.Write(@";
                 AddToBatch(
                     currentTime,
-                    end < rightEnd ? end : rightEnd,
+                    leftEnd < rightEnd ? leftEnd : rightEnd,
                     ref key,
                     ref leftInterval,
                     ref rightIntervalMap.Values[index],
@@ -404,7 +401,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CreateOutputForRightStartInterval(long currentTime, long end, ref ");
+    private void CreateOutputForRightStartInterval(long currentTime, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(RightBatchType));
@@ -412,12 +409,14 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "l joined left intervals.\r\n        var intervals = leftIntervalMap.Find(hash);\r\n " +
                     "       while (intervals.Next(out var index))\r\n        {\r\n            if (");
             this.Write(this.ToStringHelper.ToStringWithCulture(keyComparerEquals("key", "leftIntervalMap.Values[index].Key")));
-            this.Write(@")
-            {
-                long leftEnd = leftIntervalMap.Values[index].End;
+            this.Write(")\r\n            {\r\n                long rightEnd = currentTime + ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(rightDuration));
+            this.Write(";\r\n                long leftEnd = leftIntervalMap.Values[index].Start + ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(leftDuration));
+            this.Write(@";
                 AddToBatch(
                     currentTime,
-                    end < leftEnd ? end : leftEnd,
+                    rightEnd < leftEnd ? rightEnd : leftEnd,
                     ref key,
                     ref leftIntervalMap.Values[index],
                     rightBatch, rightIndex,
@@ -427,19 +426,21 @@ using Microsoft.StreamProcessing.Internal.Collections;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CreateOutputForRightStartInterval(long currentTime, long end, ref ");
+    private void CreateOutputForRightStartInterval(long currentTime, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ref ActiveIntervalRight rightInterval, int hash)\r\n    {\r\n        // Create " +
                     "end edges for all joined left intervals.\r\n        var intervals = leftIntervalMa" +
                     "p.Find(hash);\r\n        while (intervals.Next(out var index))\r\n        {\r\n       " +
                     "     if (");
             this.Write(this.ToStringHelper.ToStringWithCulture(keyComparerEquals("key", "leftIntervalMap.Values[index].Key")));
-            this.Write(@")
-            {
-                long leftEnd = leftIntervalMap.Values[index].End;
+            this.Write(")\r\n            {\r\n                long rightEnd = currentTime + ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(rightDuration));
+            this.Write(";\r\n                long leftEnd = leftIntervalMap.Values[index].Start + ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(leftDuration));
+            this.Write(@";
                 AddToBatch(
                     currentTime,
-                    end < leftEnd ? end : leftEnd,
+                    rightEnd < leftEnd ? rightEnd : leftEnd,
                     ref key,
                     ref leftIntervalMap.Values[index],
                     ref rightInterval,
@@ -551,18 +552,17 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write("    }\r\n");
  } 
             this.Write("\r\n    [DataContract]\r\n    private struct ActiveIntervalLeft\r\n    {\r\n        [Data" +
-                    "Member]\r\n        public long Start;\r\n        [DataMember]\r\n        public long E" +
-                    "nd;\r\n        [DataMember]\r\n        public ");
+                    "Member]\r\n        public long Start;\r\n        [DataMember]\r\n        public ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" Key;\r\n\r\n        [DataMember]\r\n        public ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ActiveEventTypeLeft));
             this.Write(" Payload;\r\n\r\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\r\n        " +
-                    "public void Populate(long start, long end, ref ");
+                    "public void Populate(long start, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(LeftBatchType));
-            this.Write(" batch, int index)\r\n        {\r\n            Start = start;\r\n            End = end;" +
-                    "\r\n            Key = key;\r\n\r\n");
+            this.Write(" batch, int index)\r\n        {\r\n            Start = start;\r\n            Key = key;" +
+                    "\r\n\r\n");
  if (this.leftMessageRepresentation.noFields) { 
             this.Write("            this.Payload = batch.payload.col[index];\r\n");
  } else { 
@@ -577,10 +577,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(@"
         }
 
-        public override string ToString()
-        {
-            return ""[Start="" + Start + "", End="" + End + "", Key='"" + Key + ""', Payload='"" + ""']"";
-        }
+        public override string ToString() => ""[Start="" + Start + "", Key='"" + Key + ""', Payload='"" + ""']"";
     }
 
     [DataContract]
@@ -589,19 +586,17 @@ using Microsoft.StreamProcessing.Internal.Collections;
         [DataMember]
         public long Start;
         [DataMember]
-        public long End;
-        [DataMember]
         public ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" Key;\r\n\r\n        [DataMember]\r\n        public ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ActiveEventTypeRight));
             this.Write(" Payload;\r\n\r\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\r\n        " +
-                    "public void Populate(long start, long end, ref ");
+                    "public void Populate(long start, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(RightBatchType));
-            this.Write(" batch, int index)\r\n        {\r\n            Start = start;\r\n            End = end;" +
-                    "\r\n            Key = key;\r\n\r\n");
+            this.Write(" batch, int index)\r\n        {\r\n            Start = start;\r\n            Key = key;" +
+                    "\r\n\r\n");
  if (this.rightMessageRepresentation.noFields) { 
             this.Write("            this.Payload = batch.payload.col[index];\r\n");
  } else { 
@@ -613,9 +608,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(";\r\n");
  } 
  } 
-            this.Write("\r\n        }\r\n\r\n        public override string ToString()\r\n        {\r\n            " +
-                    "return \"[Start=\" + Start + \", End=\" + End + \", Key=\'\" + Key + \"\', Payload=\'\" + \"" +
-                    "\']\";\r\n        }\r\n    }\r\n}\r\n");
+            this.Write("\r\n        }\r\n\r\n        public override string ToString() => \"[Start=\" + Start + \"" +
+                    ", Key=\'\" + Key + \"\', Payload=\'\" + \"\']\";\r\n    }\r\n}\r\n");
             return this.GenerationEnvironment.ToString();
         }
     }

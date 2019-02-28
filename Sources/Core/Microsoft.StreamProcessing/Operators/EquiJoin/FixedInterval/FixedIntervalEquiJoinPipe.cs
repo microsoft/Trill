@@ -26,6 +26,10 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<TRight, TRight, bool>> rightComparer;
         private readonly Func<TRight, TRight, bool> rightComparerEquals;
+        [SchemaSerialization]
+        private readonly long leftDuration;
+        [SchemaSerialization]
+        private readonly long rightDuration;
 
         [DataMember]
         private StreamMessage<TKey, TResult> output;
@@ -39,6 +43,7 @@ namespace Microsoft.StreamProcessing
         private long nextRightTime = long.MinValue;
         [DataMember]
         private long currTime = long.MinValue;
+
         [Obsolete("Used only by serialization. Do not call directly.")]
         public FixedIntervalEquiJoinPipe() { }
 
@@ -49,6 +54,8 @@ namespace Microsoft.StreamProcessing
             : base(stream, observer)
         {
             this.selector = selector.Compile();
+            this.leftDuration = stream.Left.Properties.ConstantDurationLength.Value;
+            this.rightDuration = stream.Right.Properties.ConstantDurationLength.Value;
 
             this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparer.Compile();
@@ -105,12 +112,14 @@ namespace Microsoft.StreamProcessing
                 if (this.nextLeftTime <= this.nextRightTime)
                 {
                     UpdateTime(this.nextLeftTime);
-                    ProcessLeftEvent(
-                        this.nextLeftTime,
-                        leftBatch.vother.col[leftBatch.iter],
-                        ref leftBatch.key.col[leftBatch.iter],
-                        leftBatch[leftBatch.iter],
-                        leftBatch.hash.col[leftBatch.iter]);
+                    if (leftBatch.vother.col[leftBatch.iter] == StreamEvent.PunctuationOtherTime)
+                        AddPunctuationToBatch(this.nextLeftTime);
+                    else
+                        ProcessLeftEvent(
+                            this.nextLeftTime,
+                            ref leftBatch.key.col[leftBatch.iter],
+                            leftBatch[leftBatch.iter],
+                            leftBatch.hash.col[leftBatch.iter]);
 
                     leftBatch.iter++;
 
@@ -126,12 +135,14 @@ namespace Microsoft.StreamProcessing
                 else
                 {
                     UpdateTime(this.nextRightTime);
-                    ProcessRightEvent(
-                        this.nextRightTime,
-                        rightBatch.vother.col[rightBatch.iter],
-                        ref rightBatch.key.col[rightBatch.iter],
-                        rightBatch[rightBatch.iter],
-                        rightBatch.hash.col[rightBatch.iter]);
+                    if (rightBatch.vother.col[rightBatch.iter] == StreamEvent.PunctuationOtherTime)
+                        AddPunctuationToBatch(this.nextRightTime);
+                    else
+                        ProcessRightEvent(
+                            this.nextRightTime,
+                            ref rightBatch.key.col[rightBatch.iter],
+                            rightBatch[rightBatch.iter],
+                            rightBatch.hash.col[rightBatch.iter]);
 
                     rightBatch.iter++;
 
@@ -169,12 +180,14 @@ namespace Microsoft.StreamProcessing
 
                 UpdateTime(this.nextLeftTime);
 
-                ProcessLeftEvent(
-                    this.nextLeftTime,
-                    batch.vother.col[batch.iter],
-                    ref batch.key.col[batch.iter],
-                    batch[batch.iter],
-                    batch.hash.col[batch.iter]);
+                if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+                    AddPunctuationToBatch(this.nextLeftTime);
+                else
+                    ProcessLeftEvent(
+                        this.nextLeftTime,
+                        ref batch.key.col[batch.iter],
+                        batch[batch.iter],
+                        batch.hash.col[batch.iter]);
 
                 batch.iter++;
             }
@@ -202,12 +215,14 @@ namespace Microsoft.StreamProcessing
 
                 UpdateTime(this.nextRightTime);
 
-                ProcessRightEvent(
-                    this.nextRightTime,
-                    batch.vother.col[batch.iter],
-                    ref batch.key.col[batch.iter],
-                    batch[batch.iter],
-                    batch.hash.col[batch.iter]);
+                if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+                    AddPunctuationToBatch(this.nextRightTime);
+                else
+                    ProcessRightEvent(
+                        this.nextRightTime,
+                        ref batch.key.col[batch.iter],
+                        batch[batch.iter],
+                        batch.hash.col[batch.iter]);
 
                 batch.iter++;
             }
@@ -233,53 +248,37 @@ namespace Microsoft.StreamProcessing
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessLeftEvent(long start, long end, ref TKey key, TLeft payload, int hash)
+        private void ProcessLeftEvent(long start, ref TKey key, TLeft payload, int hash)
         {
-            if (start < end)
+            bool processable = this.nextRightTime > start;
+            if (processable)
             {
-                // Row is a start edge or interval.
-                bool processable = this.nextRightTime > start;
-                if (processable)
-                {
-                    int index = this.leftIntervalMap.Insert(hash);
-                    this.leftIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
-                    CreateOutputForStartInterval(start, end, ref key, ref payload, hash);
-                }
-                else
-                {
-                    int index = this.leftIntervalMap.InsertInvisible(hash);
-                    this.leftIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
-                }
+                int index = this.leftIntervalMap.Insert(hash);
+                this.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
+                CreateOutputForStartInterval(start, ref key, ref payload, hash);
             }
-            else if (end == StreamEvent.PunctuationOtherTime)
+            else
             {
-                AddPunctuationToBatch(start);
+                int index = this.leftIntervalMap.InsertInvisible(hash);
+                this.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessRightEvent(long start, long end, ref TKey key, TRight payload, int hash)
+        private void ProcessRightEvent(long start, ref TKey key, TRight payload, int hash)
         {
-            if (start < end)
+            bool processable = this.nextLeftTime > start;
+            if (processable)
             {
-                // Row is a start edge or interval.
-                bool processable = this.nextLeftTime > start;
-                if (processable)
-                {
-                    int index = this.rightIntervalMap.Insert(hash);
-                    this.rightIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
+                int index = this.rightIntervalMap.Insert(hash);
+                this.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
 
-                    CreateOutputForStartInterval(start, end, ref key, ref payload, hash);
-                }
-                else
-                {
-                    int index = this.rightIntervalMap.InsertInvisible(hash);
-                    this.rightIntervalMap.Values[index].Populate(start, end, ref key, ref payload);
-                }
+                CreateOutputForStartInterval(start, ref key, ref payload, hash);
             }
-            else if (end == StreamEvent.PunctuationOtherTime)
+            else
             {
-                AddPunctuationToBatch(start);
+                int index = this.rightIntervalMap.InsertInvisible(hash);
+                this.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
             }
         }
 
@@ -293,10 +292,8 @@ namespace Microsoft.StreamProcessing
             while (leftIntervals.Next(out index, out hash))
             {
                 var intrvl = this.leftIntervalMap.Values[index];
-                long end = intrvl.End;
                 CreateOutputForStartInterval(
                     this.currTime,
-                    end,
                     ref intrvl.Key,
                     ref intrvl.Payload,
                     hash);
@@ -308,10 +305,8 @@ namespace Microsoft.StreamProcessing
             while (rightIntervals.Next(out index, out hash))
             {
                 var intrvl = this.rightIntervalMap.Values[index];
-                long end = intrvl.End;
                 CreateOutputForStartInterval(
                     this.currTime,
-                    end,
                     ref intrvl.Key,
                     ref intrvl.Payload,
                     hash);
@@ -321,7 +316,7 @@ namespace Microsoft.StreamProcessing
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForStartInterval(long currentTime, long end, ref TKey key, ref TLeft payload, int hash)
+        private void CreateOutputForStartInterval(long currentTime, ref TKey key, ref TLeft payload, int hash)
         {
             // Create end edges for all joined right intervals.
             var intervals = this.rightIntervalMap.Find(hash);
@@ -330,10 +325,11 @@ namespace Microsoft.StreamProcessing
                 var rin = this.rightIntervalMap.Values[index];
                 if (this.keyComparerEquals(key, rin.Key))
                 {
-                    long rightEnd = rin.End;
+                    long leftEnd = currentTime + leftDuration;
+                    long rightEnd = rin.Start + rightDuration;
                     AddToBatch(
                         currentTime,
-                        end < rightEnd ? end : rightEnd,
+                        leftEnd < rightEnd ? leftEnd : rightEnd,
                         ref key,
                         ref payload,
                         ref rin.Payload,
@@ -343,7 +339,7 @@ namespace Microsoft.StreamProcessing
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForStartInterval(long currentTime, long end, ref TKey key, ref TRight payload, int hash)
+        private void CreateOutputForStartInterval(long currentTime, ref TKey key, ref TRight payload, int hash)
         {
             // Create end edges for all joined left intervals.
             var intervals = this.leftIntervalMap.Find(hash);
@@ -352,10 +348,11 @@ namespace Microsoft.StreamProcessing
                 var lin = this.leftIntervalMap.Values[index];
                 if (this.keyComparerEquals(key, lin.Key))
                 {
-                    long leftEnd = lin.End;
+                    long rightEnd = currentTime + rightDuration;
+                    long leftEnd = lin.Start + leftDuration;
                     AddToBatch(
                         currentTime,
-                        end < leftEnd ? end : leftEnd,
+                        rightEnd < leftEnd ? rightEnd : leftEnd,
                         ref key,
                         ref lin.Payload,
                         ref payload,
@@ -415,22 +412,19 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public long Start;
             [DataMember]
-            public long End;
-            [DataMember]
             public TKey Key;
             [DataMember]
             public TPayload Payload;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Populate(long start, long end, ref TKey key, ref TPayload payload)
+            public void Populate(long start, ref TKey key, ref TPayload payload)
             {
                 this.Start = start;
-                this.End = end;
                 this.Key = key;
                 this.Payload = payload;
             }
 
-            public override string ToString() => "[Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
+            public override string ToString() => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
     }
 }

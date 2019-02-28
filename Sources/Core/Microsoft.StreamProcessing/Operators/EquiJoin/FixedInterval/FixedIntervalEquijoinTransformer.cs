@@ -41,6 +41,8 @@ namespace Microsoft.StreamProcessing
         private ColumnarRepresentation rightMessageRepresentation;
         private string ActiveEventTypeLeft;
         private string ActiveEventTypeRight;
+        private long leftDuration;
+        private long rightDuration;
 
         private FixedIntervalEquiJoinTemplate() { }
 
@@ -54,7 +56,11 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                var template = new FixedIntervalEquiJoinTemplate();
+                var template = new FixedIntervalEquiJoinTemplate
+                {
+                    leftDuration = stream.Left.Properties.ConstantDurationLength.Value,
+                    rightDuration = stream.Right.Properties.ConstantDurationLength.Value
+                };
 
                 var keyType = template.keyType = typeof(TKey);
                 var leftType = template.leftType = typeof(TLeft);

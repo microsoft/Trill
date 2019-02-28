@@ -76,9 +76,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     public override int CurrentlyBufferedRightInputCount => base.CurrentlyBufferedRightInputCount + rightIntervalMap.Count;
 
     protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)
-    {
-        Observer.ProduceQueryPlan(queryPlanGenerator(left, right, this));
-    }
+        => Observer.ProduceQueryPlan(queryPlanGenerator(left, right, this));
 
     protected override void DisposeState() => this.output.Free();
 
@@ -122,14 +120,16 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         {
             if (nextLeftTime <= nextRightTime)
             {
-                UpdateTime(nextLeftTime);
-                ProcessLeftEvent(
-                    nextLeftTime,
-                    leftBatch.vother.col[leftBatch.iter],
-                    ref leftBatch.key.col[leftBatch.iter],
-                    leftBatch,
-                    leftBatch.iter,
-                    leftBatch.hash.col[leftBatch.iter]);
+                UpdateTime(this.nextLeftTime);
+                if (leftBatch.vother.col[leftBatch.iter] == StreamEvent.PunctuationOtherTime)
+                    AddPunctuationToBatch(this.nextLeftTime);
+                else
+                    ProcessLeftEvent(
+                        nextLeftTime,
+                        ref leftBatch.key.col[leftBatch.iter],
+                        leftBatch,
+                        leftBatch.iter,
+                        leftBatch.hash.col[leftBatch.iter]);
 
                 leftBatch.iter++;
 
@@ -145,13 +145,15 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
             else
             {
                 UpdateTime(nextRightTime);
-                ProcessRightEvent(
-                    nextRightTime,
-                    rightBatch.vother.col[rightBatch.iter],
-                    ref rightBatch.key.col[rightBatch.iter],
-                    rightBatch,
-                    rightBatch.iter,
-                    rightBatch.hash.col[rightBatch.iter]);
+                if (rightBatch.vother.col[rightBatch.iter] == StreamEvent.PunctuationOtherTime)
+                    AddPunctuationToBatch(this.nextRightTime);
+                else
+                    ProcessRightEvent(
+                        nextRightTime,
+                        ref rightBatch.key.col[rightBatch.iter],
+                        rightBatch,
+                        rightBatch.iter,
+                        rightBatch.hash.col[rightBatch.iter]);
 
                 rightBatch.iter++;
 
@@ -192,13 +194,15 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
 
             UpdateTime(nextLeftTime);
 
-            ProcessLeftEvent(
-                nextLeftTime,
-                batch.vother.col[batch.iter],
-                ref batch.key.col[batch.iter],
-                batch,
-                batch.iter,
-                batch.hash.col[batch.iter]);
+            if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+                AddPunctuationToBatch(this.nextLeftTime);
+            else
+                ProcessLeftEvent(
+                    nextLeftTime,
+                    ref batch.key.col[batch.iter],
+                    batch,
+                    batch.iter,
+                    batch.hash.col[batch.iter]);
 
             batch.iter++;
         }
@@ -230,13 +234,15 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
 
             UpdateTime(nextRightTime);
 
-            ProcessRightEvent(
-                nextRightTime,
-                batch.vother.col[batch.iter],
-                ref batch.key.col[batch.iter],
-                batch,
-                batch.iter,
-                batch.hash.col[batch.iter]);
+            if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+                AddPunctuationToBatch(this.nextRightTime);
+            else
+                ProcessRightEvent(
+                    nextRightTime,
+                    ref batch.key.col[batch.iter],
+                    batch,
+                    batch.iter,
+                    batch.hash.col[batch.iter]);
 
             batch.iter++;
         }
@@ -266,50 +272,35 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ProcessLeftEvent(long start, long end, ref <#= TKey #> key, <#= LeftBatchType #> leftBatch, int leftIndex, int hash)
+    private void ProcessLeftEvent(long start, ref <#= TKey #> key, <#= LeftBatchType #> leftBatch, int leftIndex, int hash)
     {
-        if (start < end)
+        if (nextRightTime > start)
         {
-            // Row is an interval.
-            if (nextRightTime > start)
-            {
-                int index = leftIntervalMap.Insert(hash);
-                leftIntervalMap.Values[index].Populate(start, end, ref key, leftBatch, leftIndex);
-                CreateOutputForLeftStartInterval(start, end, ref key, leftBatch, leftIndex, hash);
-            }
-            else
-            {
-                int index = leftIntervalMap.InsertInvisible(hash);
-                leftIntervalMap.Values[index].Populate(start, end, ref key, leftBatch, leftIndex);
-            }
+            int index = leftIntervalMap.Insert(hash);
+            leftIntervalMap.Values[index].Populate(start, ref key, leftBatch, leftIndex);
+            CreateOutputForLeftStartInterval(start, ref key, leftBatch, leftIndex, hash);
         }
-        else if (end == StreamEvent.PunctuationOtherTime)
+        else
         {
-            AddPunctuationToBatch(start);
+            int index = leftIntervalMap.InsertInvisible(hash);
+            leftIntervalMap.Values[index].Populate(start, ref key, leftBatch, leftIndex);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ProcessRightEvent(long start, long end, ref <#= TKey #> key, <#= RightBatchType #> rightBatch, int rightRowIndex, int hash)
+    private void ProcessRightEvent(long start, ref <#= TKey #> key, <#= RightBatchType #> rightBatch, int rightRowIndex, int hash)
     {
-        if (start < end)
+        // Row is an interval.
+        if (nextLeftTime > start)
         {
-            // Row is an interval.
-            if (nextLeftTime > start)
-            {
-                int index = rightIntervalMap.Insert(hash);
-                rightIntervalMap.Values[index].Populate(start, end, ref key, rightBatch, rightRowIndex);
-                CreateOutputForRightStartInterval(start, end, ref key, rightBatch, rightRowIndex, hash);
-            }
-            else
-            {
-                int index = rightIntervalMap.InsertInvisible(hash);
-                rightIntervalMap.Values[index].Populate(start, end, ref key, rightBatch, rightRowIndex);
-            }
+            int index = rightIntervalMap.Insert(hash);
+            rightIntervalMap.Values[index].Populate(start, ref key, rightBatch, rightRowIndex);
+            CreateOutputForRightStartInterval(start, ref key, rightBatch, rightRowIndex, hash);
         }
-        else if (end == StreamEvent.PunctuationOtherTime)
+        else
         {
-            AddPunctuationToBatch(start);
+            int index = rightIntervalMap.InsertInvisible(hash);
+            rightIntervalMap.Values[index].Populate(start, ref key, rightBatch, rightRowIndex);
         }
     }
 
@@ -321,10 +312,8 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         var leftIntervals = leftIntervalMap.TraverseInvisible();
         while (leftIntervals.Next(out index, out hash))
         {
-            long end = leftIntervalMap.Values[index].End;
             CreateOutputForLeftStartInterval(
                 currTime,
-                end,
                 ref leftIntervalMap.Values[index].Key,
                 ref leftIntervalMap.Values[index],
                 hash);
@@ -334,10 +323,8 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         var rightIntervals = rightIntervalMap.TraverseInvisible();
         while (rightIntervals.Next(out index, out hash))
         {
-            long end = rightIntervalMap.Values[index].End;
             CreateOutputForRightStartInterval(
                 currTime,
-                end,
                 ref rightIntervalMap.Values[index].Key,
                 ref rightIntervalMap.Values[index],
                 hash);
@@ -346,7 +333,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CreateOutputForLeftStartInterval(long currentTime, long end, ref <#= TKey #> key, <#= LeftBatchType #> leftBatch, int leftIndex, int hash)
+    private void CreateOutputForLeftStartInterval(long currentTime, ref <#= TKey #> key, <#= LeftBatchType #> leftBatch, int leftIndex, int hash)
     {
         // Create end edges for all joined right intervals.
         var intervals = rightIntervalMap.Find(hash);
@@ -354,10 +341,11 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         {
             if (<#= keyComparerEquals("key", "rightIntervalMap.Values[index].Key") #>)
             {
-                long rightEnd = rightIntervalMap.Values[index].End;
+                long leftEnd = currentTime + <#= leftDuration #>;
+                long rightEnd = rightIntervalMap.Values[index].Start + <#= rightDuration #>;
                 AddToBatch(
                     currentTime,
-                    end < rightEnd ? end : rightEnd,
+                    leftEnd < rightEnd ? leftEnd : rightEnd,
                     ref key,
                     leftBatch, leftIndex,
                     ref rightIntervalMap.Values[index],
@@ -367,7 +355,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CreateOutputForLeftStartInterval(long currentTime, long end, ref <#= TKey #> key, ref ActiveIntervalLeft leftInterval, int hash)
+    private void CreateOutputForLeftStartInterval(long currentTime, ref <#= TKey #> key, ref ActiveIntervalLeft leftInterval, int hash)
     {
         // Create end edges for all joined right intervals.
         var intervals = rightIntervalMap.Find(hash);
@@ -375,10 +363,11 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         {
             if (<#= keyComparerEquals("key", "rightIntervalMap.Values[index].Key") #>)
             {
-                long rightEnd = rightIntervalMap.Values[index].End;
+                long leftEnd = currentTime + <#= leftDuration #>;
+                long rightEnd = rightIntervalMap.Values[index].Start + <#= rightDuration #>;
                 AddToBatch(
                     currentTime,
-                    end < rightEnd ? end : rightEnd,
+                    leftEnd < rightEnd ? leftEnd : rightEnd,
                     ref key,
                     ref leftInterval,
                     ref rightIntervalMap.Values[index],
@@ -388,7 +377,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CreateOutputForRightStartInterval(long currentTime, long end, ref <#= TKey #> key, <#= RightBatchType #> rightBatch, int rightIndex, int hash)
+    private void CreateOutputForRightStartInterval(long currentTime, ref <#= TKey #> key, <#= RightBatchType #> rightBatch, int rightIndex, int hash)
     {
         // Create end edges for all joined left intervals.
         var intervals = leftIntervalMap.Find(hash);
@@ -396,10 +385,11 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         {
             if (<#= keyComparerEquals("key", "leftIntervalMap.Values[index].Key") #>)
             {
-                long leftEnd = leftIntervalMap.Values[index].End;
+                long rightEnd = currentTime + <#= rightDuration #>;
+                long leftEnd = leftIntervalMap.Values[index].Start + <#= leftDuration #>;
                 AddToBatch(
                     currentTime,
-                    end < leftEnd ? end : leftEnd,
+                    rightEnd < leftEnd ? rightEnd : leftEnd,
                     ref key,
                     ref leftIntervalMap.Values[index],
                     rightBatch, rightIndex,
@@ -409,7 +399,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CreateOutputForRightStartInterval(long currentTime, long end, ref <#= TKey #> key, ref ActiveIntervalRight rightInterval, int hash)
+    private void CreateOutputForRightStartInterval(long currentTime, ref <#= TKey #> key, ref ActiveIntervalRight rightInterval, int hash)
     {
         // Create end edges for all joined left intervals.
         var intervals = leftIntervalMap.Find(hash);
@@ -417,10 +407,11 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         {
             if (<#= keyComparerEquals("key", "leftIntervalMap.Values[index].Key") #>)
             {
-                long leftEnd = leftIntervalMap.Values[index].End;
+                long rightEnd = currentTime + <#= rightDuration #>;
+                long leftEnd = leftIntervalMap.Values[index].Start + <#= leftDuration #>;
                 AddToBatch(
                     currentTime,
-                    end < leftEnd ? end : leftEnd,
+                    rightEnd < leftEnd ? rightEnd : leftEnd,
                     ref key,
                     ref leftIntervalMap.Values[index],
                     ref rightInterval,
@@ -525,18 +516,15 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         [DataMember]
         public long Start;
         [DataMember]
-        public long End;
-        [DataMember]
         public <#= TKey #> Key;
 
         [DataMember]
         public <#= ActiveEventTypeLeft #> Payload;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Populate(long start, long end, ref <#= TKey #> key, <#= LeftBatchType #> batch, int index)
+        public void Populate(long start, ref <#= TKey #> key, <#= LeftBatchType #> batch, int index)
         {
             Start = start;
-            End = end;
             Key = key;
 
 <# if (this.leftMessageRepresentation.noFields) { #>
@@ -549,10 +537,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
 
         }
 
-        public override string ToString()
-        {
-            return "[Start=" + Start + ", End=" + End + ", Key='" + Key + "', Payload='" + "']";
-        }
+        public override string ToString() => "[Start=" + Start + ", Key='" + Key + "', Payload='" + "']";
     }
 
     [DataContract]
@@ -561,18 +546,15 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         [DataMember]
         public long Start;
         [DataMember]
-        public long End;
-        [DataMember]
         public <#= TKey #> Key;
 
         [DataMember]
         public <#= ActiveEventTypeRight #> Payload;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Populate(long start, long end, ref <#= TKey #> key, <#= RightBatchType #> batch, int index)
+        public void Populate(long start, ref <#= TKey #> key, <#= RightBatchType #> batch, int index)
         {
             Start = start;
-            End = end;
             Key = key;
 
 <# if (this.rightMessageRepresentation.noFields) { #>
@@ -585,9 +567,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
 
         }
 
-        public override string ToString()
-        {
-            return "[Start=" + Start + ", End=" + End + ", Key='" + Key + "', Payload='" + "']";
-        }
+        public override string ToString() => "[Start=" + Start + ", Key='" + Key + "', Payload='" + "']";
     }
 }
