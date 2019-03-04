@@ -27,7 +27,7 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Type RightPayloadType { get; }
 
-        private IBinaryObserver pipe;
+        private readonly IBinaryObserver pipe;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -164,7 +164,7 @@ namespace Microsoft.StreamProcessing
         EquiJoin,
 
         /// <summary>
-        /// An equijoin where both streams are guaranteed to only contain intervals.
+        /// An equijoin where both streams are guaranteed to only contain constant-duration intervals.
         /// </summary>
         FixedIntervalEquiJoin,
 
