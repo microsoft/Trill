@@ -44,13 +44,13 @@ namespace Microsoft.StreamProcessing
             if (left.Properties.IsStartEdgeOnly && right.Properties.IsStartEdgeOnly)
             {
                 if ((left.Properties.KeyComparer != null) && (right.Properties.KeyComparer != null) &&
-                    (left.Properties.KeyComparer.ExpressionEquals(right.Properties.KeyComparer) &&
-                    (typeof(TKey).GetPartitionType() == null)))
+                     left.Properties.KeyComparer.ExpressionEquals(right.Properties.KeyComparer) &&
+                    (typeof(TKey).GetPartitionType() == null))
                 {
                     this.joinKind = JoinKind.IncreasingOrderEquiJoin;
                     this.fallbackGenerator = (s, e, o) => new IncreasingOrderEquiJoinPipe<TKey, TLeft, TRight, TResult>(s, e, o);
                     this.partitionedGenerator = null;
-                    this.columnarGenerator = (k => IncreasingOrderEquiJoinTemplate.Generate(this, this.Selector));
+                    this.columnarGenerator = k => IncreasingOrderEquiJoinTemplate.Generate(this, this.Selector);
                 }
                 else
                 {
@@ -63,8 +63,16 @@ namespace Microsoft.StreamProcessing
                              typeof(TRight),
                              typeof(TResult),
                              typeof(TKey).GetPartitionType()), s, e, o);
-                    this.columnarGenerator = (k => StartEdgeEquiJoinTemplate.Generate(this, this.Selector));
+                    this.columnarGenerator = k => StartEdgeEquiJoinTemplate.Generate(this, this.Selector);
                 }
+            }
+            else if (left.Properties.IsConstantDuration && right.Properties.IsConstantDuration)
+            {
+                this.joinKind = JoinKind.FixedIntervalEquiJoin;
+                this.fallbackGenerator = (s, e, o) => new FixedIntervalEquiJoinPipe<TKey, TLeft, TRight, TResult>(s, e, o);
+                this.partitionedGenerator = (s, e, o) => (BinaryPipe<TKey, TLeft, TRight, TResult>)Activator.CreateInstance(
+                    CreatePartitionedFixedIntervalEquiJoinType(), s, e, o);
+                this.columnarGenerator = k => FixedIntervalEquiJoinTemplate.Generate(this, this.Selector);
             }
             else
             {
@@ -72,7 +80,7 @@ namespace Microsoft.StreamProcessing
                 this.fallbackGenerator = (s, e, o) => new EquiJoinPipe<TKey, TLeft, TRight, TResult>(s, e, o);
                 this.partitionedGenerator = (s, e, o) => (BinaryPipe<TKey, TLeft, TRight, TResult>)Activator.CreateInstance(
                     CreatePartitionedEquiJoinType(), s, e, o);
-                this.columnarGenerator = (k => EquiJoinTemplate.Generate(this, this.Selector));
+                this.columnarGenerator = k => EquiJoinTemplate.Generate(this, this.Selector);
             }
 
             Initialize();
@@ -97,6 +105,32 @@ namespace Microsoft.StreamProcessing
                                          typeof(TKey).GetPartitionType());
             // Generic case
             return typeof(PartitionedEquiJoinPipe<,,,,>).MakeGenericType(
+                                     typeof(TKey),
+                                     typeof(TLeft),
+                                     typeof(TRight),
+                                     typeof(TResult),
+                                     typeof(TKey).GetPartitionType());
+        }
+
+        private static Type CreatePartitionedFixedIntervalEquiJoinType()
+        {
+            // Simple case: key type is a simple partition key
+            if (typeof(TKey).GetGenericTypeDefinition() == typeof(PartitionKey<>))
+                return typeof(PartitionedFixedIntervalEquiJoinPipeSimple<,,,>).MakeGenericType(
+                                         typeof(TLeft),
+                                         typeof(TRight),
+                                         typeof(TResult),
+                                         typeof(TKey).GetPartitionType());
+            // Middle case: type is one level of grouping, e.g., TKey = CompoundGroupKey<PartitionKey<TP>, TG>
+            if (typeof(TKey).GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(PartitionKey<>))
+                return typeof(PartitionedFixedIntervalEquiJoinPipeCompound<,,,,>).MakeGenericType(
+                                         typeof(TKey).GenericTypeArguments[1],
+                                         typeof(TLeft),
+                                         typeof(TRight),
+                                         typeof(TResult),
+                                         typeof(TKey).GetPartitionType());
+            // Generic case
+            return typeof(PartitionedFixedIntervalEquiJoinPipe<,,,,>).MakeGenericType(
                                      typeof(TKey),
                                      typeof(TLeft),
                                      typeof(TRight),

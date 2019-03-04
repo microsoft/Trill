@@ -796,7 +796,7 @@ namespace Microsoft.StreamProcessing
                 this.output.key.col[index] = default;
                 this.output[index] = default;
                 this.output.hash.col[index] = 0;
-                this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+                this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
 
                 if (this.output.Count == Config.DataBatchSize) FlushContents();
             }
@@ -812,7 +812,7 @@ namespace Microsoft.StreamProcessing
             this.output[index] = payload;
             this.output.hash.col[index] = hash;
 
-            if (end == long.MinValue) this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+            if (end == long.MinValue) this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
             if (this.output.Count == Config.DataBatchSize) FlushContents();
         }
 

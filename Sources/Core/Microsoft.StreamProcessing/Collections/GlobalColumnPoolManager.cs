@@ -29,9 +29,7 @@ namespace Microsoft.StreamProcessing
         private static SafeConcurrentDictionary<Type> cachedMemoryPools = new SafeConcurrentDictionary<Type>();
 
         internal static DoublingArrayPool<T> GetDoublingArrayPool<T>()
-        {
-            return (DoublingArrayPool<T>)doublingArrayPools.GetOrAdd(CacheKey.Create(typeof(T)), new DoublingArrayPool<T>());
-        }
+            => (DoublingArrayPool<T>)doublingArrayPools.GetOrAdd(CacheKey.Create(typeof(T)), key => new DoublingArrayPool<T>());
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -41,26 +39,22 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ColumnPool<T> GetColumnPool<T>(int size = -1)
-        {
-            if (size == -1) size = Config.DataBatchSize;
-
-            return (ColumnPool<T>)columnPools.GetOrAdd(CacheKey.Create(typeof(T), size), new ColumnPool<T>(size));
-        }
+            => (ColumnPool<T>)columnPools.GetOrAdd(
+                size < 0 || size == Config.DataBatchSize
+                    ? CacheKey.Create(typeof(T))
+                    : CacheKey.Create(typeof(T), size),
+                key => new ColumnPool<T>(size < 0 ? Config.DataBatchSize : size));
 
         internal static CharArrayPool GetCharArrayPool()
-        {
-            return (CharArrayPool)charArrayPools.GetOrAdd(CacheKey.Create(), new CharArrayPool());
-        }
+            => (CharArrayPool)charArrayPools.GetOrAdd(CacheKey.Create(), key => new CharArrayPool());
 
         internal static ColumnPool<long> GetBVPool(int size)
-        {
-            return (ColumnPool<long>)bitvectorPools.GetOrAdd(CacheKey.Create(size), new ColumnPool<long>(size));
-        }
+            => (ColumnPool<long>)bitvectorPools.GetOrAdd(CacheKey.Create(size), key => new ColumnPool<long>(size));
 
         internal static StreamMessagePool<TKey, TPayload> GetStreamMessagePool<TKey, TPayload>(MemoryPool<TKey, TPayload> memoryPool, bool isColumnar)
-        {
-            return (StreamMessagePool<TKey, TPayload>)eventBatchPools.GetOrAdd(CacheKey.Create(typeof(TKey), typeof(TPayload), isColumnar), new StreamMessagePool<TKey, TPayload>(memoryPool, isColumnar));
-        }
+            => (StreamMessagePool<TKey, TPayload>)eventBatchPools.GetOrAdd(
+                CacheKey.Create(typeof(TKey), typeof(TPayload), isColumnar),
+                key => new StreamMessagePool<TKey, TPayload>(memoryPool, isColumnar));
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -87,7 +81,7 @@ namespace Microsoft.StreamProcessing
             }
             if (!typeOfTPayload.CanRepresentAsColumnar())
             {
-                return (MemoryPool<TKey, TPayload>)memoryPools.GetOrAdd(cacheKey, new MemoryPool<TKey, TPayload>(false));
+                return (MemoryPool<TKey, TPayload>)memoryPools.GetOrAdd(cacheKey, key => new MemoryPool<TKey, TPayload>(false));
             }
             var lookupKey = CacheKey.Create(typeOfTKey, typeOfTPayload);
 

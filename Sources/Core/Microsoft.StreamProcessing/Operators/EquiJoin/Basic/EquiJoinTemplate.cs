@@ -964,18 +964,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
         //output[index] = selector(leftPayload, rightPayload);
         ");
             this.Write(this.ToStringHelper.ToStringWithCulture(rightBatchSelector("leftInterval.Payload", "rightBatch", "rightIndex")));
-            this.Write(@"
-        output.hash.col[index] = hash;
-
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AddToBatch(long start, long end, ref ");
+            this.Write("\r\n        output.hash.col[index] = hash;\r\n\r\n        if (output.Count == Config.Da" +
+                    "taBatchSize) FlushContents();\r\n    }\r\n    [MethodImpl(MethodImplOptions.Aggressi" +
+                    "veInlining)]\r\n    private void AddToBatch(long start, long end, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ref ActiveEdgeLeft leftEdge, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(RightBatchType));
@@ -988,19 +979,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
         //output[index] = selector(leftPayload, rightPayload);
         ");
             this.Write(this.ToStringHelper.ToStringWithCulture(rightBatchSelector("leftEdge.Payload", "rightBatch", "rightIndex")));
-            this.Write(@"
-        output.hash.col[index] = hash;
-
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AddToBatch(long start, long end, ref ");
+            this.Write("\r\n        output.hash.col[index] = hash;\r\n\r\n        if (output.Count == Config.Da" +
+                    "taBatchSize) FlushContents();\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions.Aggres" +
+                    "siveInlining)]\r\n    private void AddToBatch(long start, long end, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(LeftBatchType));
@@ -1013,18 +994,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
         //output[index] = selector(leftPayload, rightPayload);
         ");
             this.Write(this.ToStringHelper.ToStringWithCulture(leftBatchSelector("leftBatch", "leftIndex", "rightInterval.Payload")));
-            this.Write(@"
-        output.hash.col[index] = hash;
-
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AddToBatch(long start, long end, ref ");
+            this.Write("\r\n        output.hash.col[index] = hash;\r\n\r\n        if (output.Count == Config.Da" +
+                    "taBatchSize) FlushContents();\r\n    }\r\n    [MethodImpl(MethodImplOptions.Aggressi" +
+                    "veInlining)]\r\n    private void AddToBatch(long start, long end, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(@" key, ref ActiveIntervalLeft leftInterval, ref ActiveIntervalRight rightInterval, int hash)
     {
@@ -1035,18 +1007,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
         //output[index] = selector(leftPayload, rightPayload);
         ");
             this.Write(this.ToStringHelper.ToStringWithCulture(activeSelector("leftInterval.Payload", "rightInterval.Payload")));
-            this.Write(@"
-        output.hash.col[index] = hash;
-
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AddToBatch(long start, long end, ref ");
+            this.Write("\r\n        output.hash.col[index] = hash;\r\n\r\n        if (output.Count == Config.Da" +
+                    "taBatchSize) FlushContents();\r\n    }\r\n    [MethodImpl(MethodImplOptions.Aggressi" +
+                    "veInlining)]\r\n    private void AddToBatch(long start, long end, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(@" key, ref ActiveIntervalLeft leftInterval, ref ActiveEdgeRight rightEdge, int hash)
     {
@@ -1057,18 +1020,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
         //output[index] = selector(leftPayload, rightPayload);
         ");
             this.Write(this.ToStringHelper.ToStringWithCulture(activeSelector("leftInterval.Payload", "rightEdge.Payload")));
-            this.Write(@"
-        output.hash.col[index] = hash;
-
-        if (output.Count == Config.DataBatchSize)
-        {
-            output.Seal();
-            this.Observer.OnNext(output);
-            GetOutputBatch();
-        }
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AddToBatch(long start, long end, ref ");
+            this.Write("\r\n        output.hash.col[index] = hash;\r\n\r\n        if (output.Count == Config.Da" +
+                    "taBatchSize) FlushContents();\r\n    }\r\n    [MethodImpl(MethodImplOptions.Aggressi" +
+                    "veInlining)]\r\n    private void AddToBatch(long start, long end, ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(@" key, ref ActiveEdgeLeft leftEdge, ref ActiveIntervalRight rightInterval, int hash)
     {
