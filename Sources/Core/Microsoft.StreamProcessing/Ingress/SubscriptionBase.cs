@@ -335,11 +335,9 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(
                 this,
                 typeof(Empty), typeof(TPayload), this.isColumnar, this.errorMessages));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -825,11 +823,9 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(
                 this,
                 typeof(Empty), typeof(TPayload), this.isColumnar, this.errorMessages));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1366,11 +1362,9 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(
                 this,
                 typeof(PartitionKey<TKey>), typeof(TPayload), this.isColumnar, this.errorMessages));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1907,11 +1901,9 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(
                 this,
                 typeof(PartitionKey<TKey>), typeof(TPayload), this.isColumnar, this.errorMessages));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

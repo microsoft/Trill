@@ -481,11 +481,9 @@ foreach (bool disordered in new[] { true, false })
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(
                 this,
                 typeof(<#= baseType #>), typeof(TPayload), this.isColumnar, this.errorMessages));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

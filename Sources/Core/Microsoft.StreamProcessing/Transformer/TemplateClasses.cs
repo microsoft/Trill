@@ -37,9 +37,8 @@ namespace Microsoft.StreamProcessing
 #if DOTNETCORE
         internal static IEnumerable<PortableExecutableReference> GetNetCoreAssemblyReferences()
         {
-            var allAvailableAssemblies = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")).Split(';')
-                : ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")).Split(':');
+            var allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
+                .Split(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':');
 
             // From: http://source.roslyn.io/#Microsoft.CodeAnalysis.Scripting/ScriptOptions.cs,40
             // These references are resolved lazily. Keep in sync with list in core csi.rsp.
