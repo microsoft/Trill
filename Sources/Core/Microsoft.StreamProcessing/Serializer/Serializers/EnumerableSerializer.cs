@@ -30,7 +30,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         private static Expression<Action<List<TItem>, TItem>> ListAddExpression = (c, i) => c.Add(i);
         private static Expression<Action<ICollection<TItem>, TItem>> CollectionAddExpression = (c, i) => c.Add(i);
 
-        private ObjectSerializerBase itemSchema;
+        private readonly ObjectSerializerBase itemSchema;
 
         public EnumerableSerializer(ObjectSerializerBase item) : base(typeof(TCollection)) => this.itemSchema = item;
 
@@ -155,23 +155,21 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         }
 
         protected override Expression BuildDeserializerSafe(Expression decoder)
-        {
-            if (typeof(ICollection<TItem>).GetTypeInfo().IsAssignableFrom(typeof(TCollection).GetTypeInfo()))
-                return BuildDeserializerForCollection(decoder);
-            return BuildDeserializerForEnumerable(decoder);
-        }
+            => typeof(ICollection<TItem>).GetTypeInfo().IsAssignableFrom(typeof(TCollection).GetTypeInfo())
+                ? BuildDeserializerForCollection(decoder)
+                : BuildDeserializerForEnumerable(decoder);
 
         private Expression BuildDeserializerForEnumerable(Expression decoder)
         {
-            MethodInfo addElement = GetAddMethod();
+            var addElement = GetAddMethod();
 
             var result = Expression.Variable(typeof(TCollection), "result");
             var index = Expression.Variable(typeof(int), "index");
             var chunkSize = Expression.Variable(typeof(int), "chunkSize");
             var counter = Expression.Variable(typeof(int), "counter");
 
-            LabelTarget chunkLoop = Expression.Label();
-            LabelTarget enumerableLoop = Expression.Label();
+            var chunkLoop = Expression.Label();
+            var enumerableLoop = Expression.Label();
 
             return Expression.Block(
                 new[] { result, index, chunkSize, counter },
@@ -196,11 +194,11 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         private Expression BuildDeserializerForCollection(Expression decoder)
         {
-            ParameterExpression result = Expression.Variable(typeof(TCollection));
-            ParameterExpression currentNumberOfElements = Expression.Variable(typeof(int));
+            var result = Expression.Variable(typeof(TCollection));
+            var currentNumberOfElements = Expression.Variable(typeof(int));
 
-            ParameterExpression counter = Expression.Variable(typeof(int));
-            LabelTarget internalLoopLabel = Expression.Label();
+            var counter = Expression.Variable(typeof(int));
+            var internalLoopLabel = Expression.Label();
 
             // For types that have a count property, we encode as a single chunk and can thus decode in a single pass.
             var body = Expression.Block(
@@ -223,14 +221,13 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         private MethodInfo GetAddMethod()
         {
-            Type type = this.RuntimeType;
-            MethodInfo result = type.GetMethodByName("Add", typeof(TItem))
-                             ?? type.GetMethodByName("Enqueue", typeof(TItem))
-                             ?? type.GetMethodByName("Push", typeof(TItem));
+            var result = this.RuntimeType.GetMethodByName("Add", typeof(TItem))
+                      ?? this.RuntimeType.GetMethodByName("Enqueue", typeof(TItem))
+                      ?? this.RuntimeType.GetMethodByName("Push", typeof(TItem));
 
             if (result == null)
                 throw new SerializationException(
-                    string.Format(CultureInfo.InvariantCulture, "Collection type '{0}' does not have Add/Enqueue/Push method.", type));
+                    string.Format(CultureInfo.InvariantCulture, "Collection type '{0}' does not have Add/Enqueue/Push method.", this.RuntimeType));
             return result;
         }
     }

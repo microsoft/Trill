@@ -113,8 +113,9 @@ namespace Microsoft.StreamProcessing
         public static Tuple<IEnumerable<MyFieldInfo>, bool> GetAnnotatedFields(this Type t)
         {
             var fields = t.ResolveMembers();
-            if (fields.Any()) return Tuple.Create(fields, false);
-            else return Tuple.Create(new MyFieldInfo(t).Yield(), true);
+            return fields.Any()
+                ? Tuple.Create(fields, false)
+                : Tuple.Create(new MyFieldInfo(t).Yield(), true);
         }
 
         private static readonly Dictionary<string, string> OperatorNameLookup;
@@ -158,9 +159,9 @@ namespace Microsoft.StreamProcessing
             var genericArgs = types
                 .Distinct()
                 .Where(g => IsAnonymousType(g));
-            if (!genericArgs.Any())
-                return type;
-            return type.MakeGenericType(genericArgs.ToArray());
+            return !genericArgs.Any()
+                ? type
+                : type.MakeGenericType(genericArgs.ToArray());
         }
 
         public static bool IsAnonymousTypeName(this Type type)
@@ -315,8 +316,9 @@ namespace Microsoft.StreamProcessing
                     return outerKeyType.KeyTypeNeedsGeneratedMemoryPool() || innerKeyType.KeyTypeNeedsGeneratedMemoryPool();
                 }
             }
-            if (keyType == typeof(Empty)) return false;
-            return keyType.NeedGeneratedMemoryPool();
+            return keyType == typeof(Empty)
+                ? false
+                : keyType.NeedGeneratedMemoryPool();
         }
 
         /// <summary>
@@ -531,28 +533,19 @@ namespace Microsoft.StreamProcessing
         }
 
         public static bool ImplementsIEqualityComparerExpression(this Type t)
-        {
-            return t
-                .GetTypeInfo()
+            => t.GetTypeInfo()
                 .GetInterfaces()
                 .Any(i => i.Namespace.Equals("Microsoft.StreamProcessing") && i.Name.Equals("IEqualityComparerExpression`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
-        }
 
         public static bool ImplementsIEqualityComparer(this Type t)
-        {
-            return t
-                .GetTypeInfo()
+            => t.GetTypeInfo()
                 .GetInterfaces()
                 .Any(i => i.Namespace.Equals("System.Collections.Generic") && i.Name.Equals("IEqualityComparer`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
-        }
 
         public static bool ImplementsIEquatable(this Type t)
-        {
-            return t
-                .GetTypeInfo()
+            => t.GetTypeInfo()
                 .GetInterfaces()
                 .Any(i => i.Namespace.Equals("System") && i.Name.Equals("IEquatable`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
-        }
 
         #region Borrowed from Roslyn
 
@@ -651,21 +644,19 @@ namespace Microsoft.StreamProcessing
         ///     <c>true</c> if the type is unsupported; otherwise, <c>false</c>.
         /// </returns>
         public static bool IsUnsupported(this Type type)
-        {
-            return type == typeof(IntPtr)
-                || type == typeof(UIntPtr)
-                || type == typeof(object)
-                || type.GetTypeInfo().ContainsGenericParameters
-                || (!type.IsArray
-                && !type.GetTypeInfo().IsValueType
-                && !type.HasSupportedParameterizedConstructor()
-                && !type.HasParameterlessConstructor()
-                && type != typeof(string)
-                && type != typeof(Uri)
-                && !type.GetTypeInfo().IsAbstract
-                && !type.GetTypeInfo().IsInterface
-                && !(type.GetTypeInfo().IsGenericType && SupportedInterfaces.Contains(type.GetGenericTypeDefinition())));
-        }
+            => type == typeof(IntPtr)
+            || type == typeof(UIntPtr)
+            || type == typeof(object)
+            || type.GetTypeInfo().ContainsGenericParameters
+            || (!type.IsArray
+            && !type.GetTypeInfo().IsValueType
+            && !type.HasSupportedParameterizedConstructor()
+            && !type.HasParameterlessConstructor()
+            && type != typeof(string)
+            && type != typeof(Uri)
+            && !type.GetTypeInfo().IsAbstract
+            && !type.GetTypeInfo().IsInterface
+            && !(type.GetTypeInfo().IsGenericType && SupportedInterfaces.Contains(type.GetGenericTypeDefinition())));
 
         private static readonly HashSet<Type> SupportedInterfaces = new HashSet<Type>
         {

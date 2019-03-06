@@ -484,27 +484,25 @@ namespace Microsoft.StreamProcessing
             var localOffset = offset;
 
             fixed (long* vsync = this.vsync.col)
+            fixed (long* vother = this.vother.col)
             {
-                fixed (long* vother = this.vother.col)
+                while ((count < Config.DataBatchSize) && (localOffset < n))
                 {
-                    while ((count < Config.DataBatchSize) && (localOffset < n))
+                    var partition = partitionExtractor(largeBatch.Array[localOffset]);
+                    var start = startEdgeExtractor(largeBatch.Array[localOffset]);
+                    if (currentTime.ContainsKey(partition) && start < currentTime[partition])
                     {
-                        var partition = partitionExtractor(largeBatch.Array[localOffset]);
-                        var start = startEdgeExtractor(largeBatch.Array[localOffset]);
-                        if (currentTime.ContainsKey(partition) && start < currentTime[partition])
-                        {
-                            throw new IngressException("Out-of-order event encountered during ingress, under a disorder policy of Throw");
-                        }
-                        currentTime[partition] = start;
-                        vsync[count] = start;
-                        vother[count] = endEdgeExtractor(largeBatch.Array[localOffset]);
-                        this.payload.col[count] = largeBatch.Array[localOffset];
-                        var p = partitionConstructor(partition);
-                        this.key.col[count] = p;
-                        this.hash.col[count] = HashCode(p);
-                        localOffset++;
-                        count++;
+                        throw new IngressException("Out-of-order event encountered during ingress, under a disorder policy of Throw");
                     }
+                    currentTime[partition] = start;
+                    vsync[count] = start;
+                    vother[count] = endEdgeExtractor(largeBatch.Array[localOffset]);
+                    this.payload.col[count] = largeBatch.Array[localOffset];
+                    var p = partitionConstructor(partition);
+                    this.key.col[count] = p;
+                    this.hash.col[count] = HashCode(p);
+                    localOffset++;
+                    count++;
                 }
             }
 
@@ -533,18 +531,16 @@ namespace Microsoft.StreamProcessing
             var localOffset = offset;
 
             fixed (long* vsync = this.vsync.col)
+            fixed (long* vother = this.vother.col)
             {
-                fixed (long* vother = this.vother.col)
+                while ((count < Config.DataBatchSize) && (localOffset < n))
                 {
-                    while ((count < Config.DataBatchSize) && (localOffset < n))
-                    {
-                        currentTime = DateTimeOffset.UtcNow.Ticks;
-                        vsync[count] = currentTime;
-                        vother[count] = StreamEvent.InfinitySyncTime;
-                        this.payload.col[count] = largeBatch.Array[localOffset];
-                        localOffset++;
-                        count++;
-                    }
+                    currentTime = DateTimeOffset.UtcNow.Ticks;
+                    vsync[count] = currentTime;
+                    vother[count] = StreamEvent.InfinitySyncTime;
+                    this.payload.col[count] = largeBatch.Array[localOffset];
+                    localOffset++;
+                    count++;
                 }
             }
 
@@ -582,26 +578,24 @@ namespace Microsoft.StreamProcessing
             encounteredPunctuation = false; // let's be optimistic!
 
             fixed (long* vsync = this.vsync.col)
+            fixed (long* vother = this.vother.col)
             {
-                fixed (long* vother = this.vother.col)
+                while ((count < Config.DataBatchSize) && (localOffset < n))
                 {
-                    while ((count < Config.DataBatchSize) && (localOffset < n))
-                    {
-                        currentTime = currentSync;
-                        vsync[count] = currentTime;
-                        vother[count] = StreamEvent.InfinitySyncTime;
-                        this.payload.col[count] = largeBatch.Array[localOffset];
-                        localOffset++;
-                        count++;
-                        eventCount++;
+                    currentTime = currentSync;
+                    vsync[count] = currentTime;
+                    vother[count] = StreamEvent.InfinitySyncTime;
+                    this.payload.col[count] = largeBatch.Array[localOffset];
+                    localOffset++;
+                    count++;
+                    eventCount++;
 
-                        if (eventCount == eventsPerSample)
-                        {
-                            eventCount = 0;
-                            currentSync++;
-                            encounteredPunctuation = true;
-                            break;
-                        }
+                    if (eventCount == eventsPerSample)
+                    {
+                        eventCount = 0;
+                        currentSync++;
+                        encounteredPunctuation = true;
+                        break;
                     }
                 }
             }
@@ -645,7 +639,7 @@ namespace Microsoft.StreamProcessing
             if (this.key != null) this.key.col[this.Count] = default;
             if (this.payload != null) this.payload.col[this.Count] = default;
             this.hash.col[this.Count] = 0;
-            this.bitvector.col[this.Count >> 6] |= (1L << (this.Count & 0x3f));
+            this.bitvector.col[this.Count >> 6] |= 1L << (this.Count & 0x3f);
 
             this.Count++;
             return this.Count == this.vsync.col.Length;
@@ -864,10 +858,7 @@ namespace Microsoft.StreamProcessing
             this.Count = value.Count;
             this.iter = value.iter;
 
-            if (swing)
-            {
-                return;
-            }
+            if (swing) return;
 
             value.vsync.IncrementRefCount(1);
             value.vother.IncrementRefCount(1);
@@ -954,7 +945,7 @@ namespace Microsoft.StreamProcessing
                         }
                     }
 
-                    return (endIndex - startIndex + 1) - hammingWeight;
+                    return endIndex - startIndex + 1 - hammingWeight;
                 }
             }
         }

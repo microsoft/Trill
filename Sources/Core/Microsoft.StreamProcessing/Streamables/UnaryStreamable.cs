@@ -27,7 +27,7 @@ namespace Microsoft.StreamProcessing
 
         public override IDisposable Subscribe(IStreamObserver<TKey, TResult> observer)
         {
-            IStreamObserver<TKey, TSource> pipe = CreatePipe(observer);
+            var pipe = CreatePipe(observer);
             return this.Source.Subscribe(pipe);
         }
 

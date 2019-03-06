@@ -91,10 +91,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(">>.ListTraverser(activeStates);\r\n        var tentativeFindTraverser = new FastLin" +
                     "kedList<OutputEvent<Microsoft.StreamProcessing.Empty, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TRegister));
-            this.Write(">>.ListTraverser(tentativeOutput);\r\n        var tentativeVisibleTraverser = new F" +
-                    "astLinkedList<OutputEvent<Microsoft.StreamProcessing.Empty, ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TRegister));
-            this.Write(">>.VisibleTraverser(tentativeOutput);\r\n\r\n        ");
+            this.Write(">>.ListTraverser(tentativeOutput);\r\n        var tentativeOutputIndex = 0;\r\n\r\n    " +
+                    "    ");
             this.Write(this.ToStringHelper.ToStringWithCulture(sourceBatchTypeName));
             this.Write(" sourceBatch = batch as ");
             this.Write(this.ToStringHelper.ToStringWithCulture(sourceBatchTypeName));
@@ -147,11 +145,11 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
                                 if (tentativeOutput.Count > 0)
                                 {
-                                    tentativeVisibleTraverser.currIndex = 0;
+                                    tentativeOutputIndex = 0;
 
-                                    while (tentativeVisibleTraverser.Next(out index))
+                                    while (this.tentativeOutput.Iterate(ref tentativeOutputIndex))
                                     {
-                                        var elem = tentativeOutput.Values[index];
+                                        var elem = tentativeOutput.Values[tentativeOutputIndex];
 
                                         dest_vsync[iter] = lastSyncTime;
                                         dest_vother[iter] = elem.other;
@@ -314,13 +312,13 @@ using Microsoft.StreamProcessing.Internal.Collections;
                             int index, hash;
                             seenEvent = 0;
 
-                            if (tentativeOutput.Count > 0)
+                            if (this.tentativeOutput.Count > 0)
                             {
-                                tentativeVisibleTraverser.currIndex = 0;
+                                tentativeOutputIndex = 0;
 
-                                while (tentativeVisibleTraverser.Next(out index))
+                                while (this.tentativeOutput.Iterate(ref tentativeOutputIndex))
                                 {
-                                    var elem = tentativeOutput.Values[index];
+                                    var elem = this.tentativeOutput.Values[tentativeOutputIndex];
 
                                     this.batch.vsync.col[iter] = lastSyncTime;
                                     this.batch.vother.col[iter] = elem.other;

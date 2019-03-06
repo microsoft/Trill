@@ -225,8 +225,8 @@ namespace Microsoft.StreamProcessing.Serializer
             Buffer.BlockCopy(buffer, 0, blob, 0, buffer.Length);
         }
 
-        private static DoublingArrayPool<byte> bytePool;
-        private static CharArrayPool charArrayPool;
+        private static readonly Lazy<DoublingArrayPool<byte>> bytePool = new Lazy<DoublingArrayPool<byte>>(MemoryManager.GetDoublingArrayPool<byte>);
+        private static readonly Lazy<CharArrayPool> charArrayPool = new Lazy<CharArrayPool>(MemoryManager.GetCharArrayPool);
 
         public CharArrayWrapper Decode_CharArrayWrapper()
         {
@@ -234,12 +234,11 @@ namespace Microsoft.StreamProcessing.Serializer
             int usedLength = DecodeInt();
             int length = DecodeInt();
 
-            if (charArrayPool == null) charArrayPool = MemoryManager.GetCharArrayPool();
             CharArrayWrapper result;
             if (usedLength == 0)
-                charArrayPool.Get(out result, 1);
+                charArrayPool.Value.Get(out result, 1);
             else
-                charArrayPool.Get(out result, usedLength);
+                charArrayPool.Value.Get(out result, usedLength);
 
             if (header == 0)
             {
@@ -249,19 +248,17 @@ namespace Microsoft.StreamProcessing.Serializer
             }
             else
             {
-                if (bytePool == null) bytePool = MemoryManager.GetDoublingArrayPool<byte>();
-
                 var encodedSize = DecodeInt();
                 byte[] buffer;
 
                 if (encodedSize > 0)
-                    bytePool.Get(out buffer, encodedSize);
+                    bytePool.Value.Get(out buffer, encodedSize);
                 else
-                    bytePool.Get(out buffer, 1);
+                    bytePool.Value.Get(out buffer, 1);
 
                 this.stream.ReadAllRequiredBytes(buffer, 0, encodedSize);
                 Encoding.UTF8.GetChars(buffer, 0, encodedSize, result.charArray.content, 0);
-                bytePool.Return(buffer);
+                bytePool.Value.Return(buffer);
             }
 
             return result;
@@ -278,8 +275,6 @@ namespace Microsoft.StreamProcessing.Serializer
 
         public ColumnBatch<string> Decode_ColumnBatch_String()
         {
-            if (bytePool == null) bytePool = MemoryManager.GetDoublingArrayPool<byte>();
-
             var usedLength = ReadIntFixed();
             if (usedLength == 0)
             {

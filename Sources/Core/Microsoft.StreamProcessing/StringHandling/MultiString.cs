@@ -47,10 +47,10 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [DataMember]
         private MyStringBuilder msb;
 
-        private CharArrayPool charArrayPool;
-        private ColumnPool<int> intPool;
-        private ColumnPool<short> shortPool;
-        private ColumnPool<long> bitvectorPool;
+        private readonly CharArrayPool charArrayPool;
+        private readonly ColumnPool<int> intPool;
+        private readonly ColumnPool<short> shortPool;
+        private readonly ColumnPool<long> bitvectorPool;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -262,17 +262,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         }
 
         #endregion
-
-        internal void AssignPools(CharArrayPool caPool, ColumnPool<int> intPool, ColumnPool<short> shortPool, ColumnPool<long> bitvectorPool)
-        {
-            Contract.Requires(this.State == MultiStringState.Unsealed);
-            Contract.Ensures(this.State == MultiStringState.Unsealed);
-
-            this.charArrayPool = caPool;
-            this.intPool = intPool;
-            this.shortPool = shortPool;
-            this.bitvectorPool = bitvectorPool;
-        }
 
         // Clone the multi-string shell only
         /// <summary>

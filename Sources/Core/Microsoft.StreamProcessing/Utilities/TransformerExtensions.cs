@@ -26,10 +26,9 @@ namespace Microsoft.StreamProcessing
         {
             Contract.Requires(types != null);
             var i = types.Count(t => t.IsAnonymousType());
-            if (i > 0)
-                return s + "`" + i.ToString(CultureInfo.InvariantCulture);
-            else
-                return s;
+            return i > 0
+                ? s + "`" + i.ToString(CultureInfo.InvariantCulture)
+                : s;
         }
 
         public static bool OptimizeString(this MyFieldInfo field) => Config.UseMultiString && field.Type == typeof(string);

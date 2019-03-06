@@ -24,9 +24,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="defaultAccumulator"></param>
         /// <returns></returns>
         public static Afa<TInput, TRegister, TAccumulator> Create<TInput, TRegister, TAccumulator>(TRegister defaultRegister = default, TAccumulator defaultAccumulator = default)
-        {
-            return new Afa<TInput, TRegister, TAccumulator>(defaultRegister, defaultAccumulator);
-        }
+            => new Afa<TInput, TRegister, TAccumulator>(defaultRegister, defaultAccumulator);
 
         /// <summary>
         ///
@@ -36,9 +34,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="defaultRegister"></param>
         /// <returns></returns>
         public static Afa<TInput, TRegister> Create<TInput, TRegister>(TRegister defaultRegister = default)
-        {
-            return new Afa<TInput, TRegister>(defaultRegister);
-        }
+            => new Afa<TInput, TRegister>(defaultRegister);
     }
 
 
@@ -107,9 +103,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="fence">An added condition that must be met for the transition to occur</param>
         /// <param name="transfer">An expression to mutate the register value when the transition occurs</param>
         public void AddSingleElementArc(int fromState, int toState, Expression<Func<long, TInput, TRegister, bool>> fence, Expression<Func<long, TInput, TRegister, TRegister>> transfer = null)
-        {
-            AddArc(fromState, toState, new SingleElementArc<TInput, TRegister> { Fence = fence, Transfer = transfer });
-        }
+            => AddArc(fromState, toState, new SingleElementArc<TInput, TRegister> { Fence = fence, Transfer = transfer });
 
         /// <summary>
         /// Adds a transition to the AFA triggered by a list of concurrent elements
@@ -119,9 +113,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="fence">An added condition that must be met for the transition to occur</param>
         /// <param name="transfer">An expression to mutate the register value when the transition occurs</param>
         public void AddListElementArc(int fromState, int toState, Expression<Func<long, List<TInput>, TRegister, bool>> fence, Expression<Func<long, List<TInput>, TRegister, TRegister>> transfer = null)
-        {
-            AddArc(fromState, toState, new ListElementArc<TInput, TRegister> { Fence = fence, Transfer = transfer });
-        }
+            => AddArc(fromState, toState, new ListElementArc<TInput, TRegister> { Fence = fence, Transfer = transfer });
 
         /// <summary>
         /// Adds an epsilon (no action) arc to the AFA
@@ -129,9 +121,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="fromState">Starting state of the transition</param>
         /// <param name="toState">Ending state of the transition</param>
         public void AddEpsilonElementArc(int fromState, int toState)
-        {
-            AddArc(fromState, toState, new EpsilonArc<TInput, TRegister>());
-        }
+            => AddArc(fromState, toState, new EpsilonArc<TInput, TRegister>());
 
         /// <summary>
         /// Adds a transition that handles multiple elements (events) at a given timestamp
@@ -151,12 +141,15 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, TAccumulator, TRegister, bool>> fence = null,
             Expression<Func<long, TAccumulator, TRegister, TRegister>> transfer = null,
             Expression<Action<TAccumulator>> dispose = null)
-        {
-            AddArc(fromState, toState, new MultiElementArc<TInput, TRegister, TAccumulator>
+            => AddArc(fromState, toState, new MultiElementArc<TInput, TRegister, TAccumulator>
             {
-                Initialize = initialize, Accumulate = accumulate, SkipToEnd = skipToEnd, Fence = fence, Transfer = transfer, Dispose = dispose
+                Initialize = initialize,
+                Accumulate = accumulate,
+                SkipToEnd = skipToEnd,
+                Fence = fence,
+                Transfer = transfer,
+                Dispose = dispose
             });
-        }
 
         /// <summary>
         /// Adds an arc to the AFA.
@@ -249,10 +242,7 @@ namespace Microsoft.StreamProcessing
         /// Set default value of register.
         /// </summary>
         /// <param name="register"></param>
-        public void SetDefaultRegister(TRegister register)
-        {
-            this.DefaultRegister = register;
-        }
+        public void SetDefaultRegister(TRegister register) => this.DefaultRegister = register;
 
         internal CompiledAfa<TInput, TRegister, TAccumulator> Compile() => new CompiledAfa<TInput, TRegister, TAccumulator>(this);
 

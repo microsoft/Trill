@@ -33,13 +33,13 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             if (currentRank == maxRank)
                 return this.ItemSchema.BuildSerializer(encoder, Expression.ArrayIndex(value, indexes));
 
-            MethodInfo getLength = this.RuntimeType.GetTypeInfo().GetMethod("GetLength");
-            ParameterExpression length = Expression.Variable(typeof(int), "length");
+            var getLength = this.RuntimeType.GetTypeInfo().GetMethod("GetLength");
+            var length = Expression.Variable(typeof(int), "length");
             body.Add(Expression.Assign(length, Expression.Call(value, getLength, new Expression[] { Expression.Constant(currentRank) })));
             body.Add(EncodeArrayChunkMethod.ReplaceParametersInBody(encoder, length));
 
-            LabelTarget label = Expression.Label();
-            ParameterExpression counter = Expression.Variable(typeof(int), "counter");
+            var label = Expression.Label();
+            var counter = Expression.Variable(typeof(int), "counter");
             body.Add(Expression.Assign(counter, ConstantZero));
             indexes.Add(counter);
 
@@ -62,10 +62,10 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         {
             var body = new List<Expression>();
 
-            Type type = this.RuntimeType;
-            Type jaggedType = GenerateJaggedType(this.RuntimeType);
+            var type = this.RuntimeType;
+            var jaggedType = GenerateJaggedType(this.RuntimeType);
 
-            ParameterExpression deserialized = Expression.Variable(jaggedType, "deserialized");
+            var deserialized = Expression.Variable(jaggedType, "deserialized");
             body.Add(Expression.Assign(deserialized, GenerateBuildJaggedDeserializer(decoder, jaggedType, 0, type.GetArrayRank())));
 
             var lengths = new List<Expression>();
@@ -76,7 +76,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                 currentObject = Expression.Property(currentObject, "Item", new Expression[] { ConstantZero });
             }
 
-            ParameterExpression result = Expression.Variable(type, "result");
+            var result = Expression.Variable(type, "result");
             body.Add(Expression.Assign(result, Expression.NewArrayBounds(type.GetElementType(), lengths)));
             body.Add(GenerateCopy(new List<Expression>(), result, deserialized, 0, type.GetArrayRank()));
             body.Add(result);
@@ -86,8 +86,8 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         private static Type GenerateJaggedType(Type sourceType)
         {
             int rank = sourceType.GetArrayRank();
-            Type elementType = sourceType.GetElementType();
-            Type result = elementType;
+            var elementType = sourceType.GetElementType();
+            var result = elementType;
             for (int i = 0; i < rank; i++)
             {
                 result = typeof(List<>).MakeGenericType(result);
@@ -103,18 +103,18 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                 return this.ItemSchema.BuildDeserializer(decoder);
             }
 
-            ParameterExpression result = Expression.Variable(valueType, "result");
-            ParameterExpression index = Expression.Variable(typeof(int), "index");
-            ParameterExpression chunkSize = Expression.Variable(typeof(int), "chunkSize");
+            var result = Expression.Variable(valueType, "result");
+            var index = Expression.Variable(typeof(int), "index");
+            var chunkSize = Expression.Variable(typeof(int), "chunkSize");
 
             body.Add(Expression.Assign(result, Expression.New(valueType)));
             body.Add(Expression.Assign(index, ConstantZero));
 
-            LabelTarget internalLoopLabel = Expression.Label();
-            ParameterExpression counter = Expression.Variable(typeof(int));
+            var internalLoopLabel = Expression.Label();
+            var counter = Expression.Variable(typeof(int));
             body.Add(Expression.Assign(counter, ConstantZero));
 
-            LabelTarget allRead = Expression.Label();
+            var allRead = Expression.Label();
 
             body.Add(
                 Expression.Loop(
@@ -155,11 +155,11 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                 return Expression.Assign(Expression.ArrayAccess(destination, indexes), source);
             }
 
-            ParameterExpression length = Expression.Variable(typeof(int), "length");
+            var length = Expression.Variable(typeof(int), "length");
             body.Add(Expression.Assign(length, Expression.Property(source, "Count")));
 
-            LabelTarget label = Expression.Label();
-            ParameterExpression counter = Expression.Variable(typeof(int), "counter");
+            var label = Expression.Label();
+            var counter = Expression.Variable(typeof(int), "counter");
             body.Add(Expression.Assign(counter, ConstantZero));
             indexes.Add(counter);
 

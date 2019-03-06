@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         protected override Expression BuildSerializerSafe(Expression encoder, Expression value)
         {
-            PropertyInfo getLength = this.RuntimeType.GetTypeInfo().GetProperty("Length");
+            var getLength = this.RuntimeType.GetTypeInfo().GetProperty("Length");
             if (getLength == null)
             {
                 throw new SerializationException(
@@ -28,12 +28,12 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
             var body = new List<Expression>();
 
-            ParameterExpression arrayLength = Expression.Variable(typeof(int), "arrayLength");
+            var arrayLength = Expression.Variable(typeof(int), "arrayLength");
             body.Add(Expression.Assign(arrayLength, Expression.Property(value, getLength)));
             body.Add(EncodeArrayChunkMethod.ReplaceParametersInBody(encoder, arrayLength));
 
-            LabelTarget label = Expression.Label();
-            ParameterExpression counter = Expression.Variable(typeof(int), "counter");
+            var label = Expression.Label();
+            var counter = Expression.Variable(typeof(int), "counter");
             body.Add(Expression.Assign(counter, ConstantZero));
 
             body.Add(
@@ -53,22 +53,22 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         protected override Expression BuildDeserializerSafe(Expression decoder)
         {
-            Type arrayType = this.RuntimeType;
+            var arrayType = this.RuntimeType;
 
-            MethodInfo resize = typeof(Array).GetTypeInfo().GetMethod("Resize").MakeGenericMethod(arrayType.GetElementType());
+            var resize = typeof(Array).GetTypeInfo().GetMethod("Resize").MakeGenericMethod(arrayType.GetElementType());
             var body = new List<Expression>();
 
-            ParameterExpression result = Expression.Variable(arrayType, "result");
+            var result = Expression.Variable(arrayType, "result");
             body.Add(Expression.Assign(result, Expression.NewArrayBounds(arrayType.GetElementType(), ConstantZero)));
 
-            ParameterExpression index = Expression.Variable(typeof(int), "index");
+            var index = Expression.Variable(typeof(int), "index");
             body.Add(Expression.Assign(index, ConstantZero));
 
-            ParameterExpression chunkSize = Expression.Variable(typeof(int), "chunkSize");
-            ParameterExpression counter = Expression.Variable(typeof(int), "counter");
+            var chunkSize = Expression.Variable(typeof(int), "chunkSize");
+            var counter = Expression.Variable(typeof(int), "counter");
 
-            LabelTarget chunkReadLoop = Expression.Label();
-            LabelTarget arrayReadLoop = Expression.Label();
+            var chunkReadLoop = Expression.Label();
+            var arrayReadLoop = Expression.Label();
 
             body.Add(
                 Expression.Loop(

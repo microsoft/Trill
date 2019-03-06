@@ -312,9 +312,6 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        internal void RegisterQueryPlan(string identifier, PlanNode node)
-        {
-            this.queryPlans.Add(identifier, node);
-        }
+        internal void RegisterQueryPlan(string identifier, PlanNode node) => this.queryPlans.Add(identifier, node);
     }
 }

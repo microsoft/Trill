@@ -85,7 +85,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public int hash;
     }
 
-
     internal static class HashHelpers
     {
         public static readonly int[] primes = new int[] {
@@ -99,11 +98,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public static int ExpandPrime(int oldSize)
         {
             int min = 2 * oldSize;
-            if ((min > 0x7feffffd) && (oldSize < 0x7feffffd))
-            {
-                return 0x7feffffd;
-            }
-            return GetPrime(min);
+            return (min > 0x7feffffd) && (oldSize < 0x7feffffd)
+                ? 0x7feffffd
+                : GetPrime(min);
         }
 
         public static int GetPrime(int min)
@@ -124,7 +121,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             return min;
         }
 
-        public static bool IsPrime(int candidate)
+        private static bool IsPrime(int candidate)
         {
             if ((candidate & 1) == 0)
             {

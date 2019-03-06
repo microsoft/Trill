@@ -69,9 +69,9 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         protected override Expression BuildDeserializerSafe(Expression decoder)
         {
-            ParameterExpression resultParameter = Expression.Variable(this.RuntimeType, "result");
-            ParameterExpression unionTypeParameter = Expression.Variable(typeof(int), "unionType");
-            BinaryExpression assignUnionType = Expression.Assign(
+            var resultParameter = Expression.Variable(this.RuntimeType, "result");
+            var unionTypeParameter = Expression.Variable(typeof(int), "unionType");
+            var assignUnionType = Expression.Assign(
                 unionTypeParameter,
                 decoderExpression.ReplaceParametersInBody(decoder));
 

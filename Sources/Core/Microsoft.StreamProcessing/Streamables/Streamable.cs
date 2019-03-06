@@ -62,8 +62,7 @@ namespace Microsoft.StreamProcessing
     {
         public StreamableContract(StreamProperties<TKey, TPayload> properties)
             : base(properties)
-        {
-        }
+        { }
 
         public override IDisposable Subscribe(IStreamObserver<TKey, TPayload> observer)
         {

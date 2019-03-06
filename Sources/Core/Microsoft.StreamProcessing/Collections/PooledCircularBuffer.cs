@@ -54,10 +54,10 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsFull() => (((this.tail + 1) & this.DefaultCapacity) == this.head);
+        public bool IsFull() => ((this.tail + 1) & this.DefaultCapacity) == this.head;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsEmpty() => (this.head == this.tail);
+        public bool IsEmpty() => this.head == this.tail;
 
         public IEnumerable<T> Iterate()
         {
@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     public sealed class PooledElasticCircularBuffer<T> : IEnumerable<T>, IDisposable
     {
         private const int Capacity = 0xff;
-        private LinkedList<PooledCircularBuffer<T>> buffers;
+        private readonly LinkedList<PooledCircularBuffer<T>> buffers = new LinkedList<PooledCircularBuffer<T>>();
         private LinkedListNode<PooledCircularBuffer<T>> head;
         private LinkedListNode<PooledCircularBuffer<T>> tail;
         private readonly ColumnPool<T> pool;
@@ -100,7 +100,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public PooledElasticCircularBuffer()
         {
             this.pool = MemoryManager.GetColumnPool<T>(Capacity + 1);
-            this.buffers = new LinkedList<PooledCircularBuffer<T>>();
             var node = new LinkedListNode<PooledCircularBuffer<T>>(new PooledCircularBuffer<T>(Capacity, this.pool));
             this.buffers.AddFirst(node);
             this.tail = this.head = node;
@@ -233,14 +232,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// </summary>
         /// <returns></returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsEmpty() => (this.head.Value.IsEmpty() && (this.head == this.tail));
-
-        private IEnumerable<T> Iterate()
-        {
-            foreach (PooledCircularBuffer<T> buffer in this.buffers)
-                foreach (T item in buffer.Iterate())
-                    yield return item;
-        }
+        public bool IsEmpty() => this.head.Value.IsEmpty() && (this.head == this.tail);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -253,7 +245,12 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// </summary>
         /// <returns></returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public IEnumerator<T> GetEnumerator() => Iterate().GetEnumerator();
+        public IEnumerator<T> GetEnumerator()
+        {
+            foreach (var buffer in this.buffers)
+                foreach (var item in buffer.Iterate())
+                    yield return item;
+        }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 

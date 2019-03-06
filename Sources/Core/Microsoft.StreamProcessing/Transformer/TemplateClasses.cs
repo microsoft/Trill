@@ -35,55 +35,46 @@ namespace Microsoft.StreamProcessing
         public static Assembly SystemCoreDll = typeof(BinaryExpression).GetTypeInfo().Assembly;
 
 #if DOTNETCORE
-        internal static IEnumerable<PortableExecutableReference> NetCoreAssemblyReferences
+        internal static IEnumerable<PortableExecutableReference> GetNetCoreAssemblyReferences()
         {
-            get
+            var allAvailableAssemblies = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")).Split(';')
+                : ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")).Split(':');
+
+            // From: http://source.roslyn.io/#Microsoft.CodeAnalysis.Scripting/ScriptOptions.cs,40
+            // These references are resolved lazily. Keep in sync with list in core csi.rsp.
+            var files = new[]
             {
-                if (netCoreAssemblyReferences == null)
-                {
-                    string[] allAvailableAssemblies;
-
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")).Split(';');
-                    else
-                        allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")).Split(':');
-
-                    // From: http://source.roslyn.io/#Microsoft.CodeAnalysis.Scripting/ScriptOptions.cs,40
-                    // These references are resolved lazily. Keep in sync with list in core csi.rsp.
-                    var files = new[]
-                    {
-                        "System.Collections",
-                        "System.Collections.Concurrent",
-                        "System.Console",
-                        "System.Diagnostics.Debug",
-                        "System.Diagnostics.Process",
-                        "System.Diagnostics.StackTrace",
-                        "System.Globalization",
-                        "System.IO",
-                        "System.IO.FileSystem",
-                        "System.IO.FileSystem.Primitives",
-                        "System.Reflection",
-                        "System.Reflection.Extensions",
-                        "System.Reflection.Primitives",
-                        "System.Runtime",
-                        "System.Runtime.Extensions",
-                        "System.Runtime.InteropServices",
-                        "System.Text.Encoding",
-                        "System.Text.Encoding.CodePages",
-                        "System.Text.Encoding.Extensions",
-                        "System.Text.RegularExpressions",
-                        "System.Threading",
-                        "System.Threading.Tasks",
-                        "System.Threading.Tasks.Parallel",
-                        "System.Threading.Thread",
-                    };
-                    var filteredPaths = allAvailableAssemblies.Where(p => files.Concat(new string[] { "mscorlib", "netstandard", "System.Private.CoreLib", "System.Runtime.Serialization.Primitives", }).Any(f => Path.GetFileNameWithoutExtension(p).Equals(f)));
-                    netCoreAssemblyReferences = filteredPaths.Select(p => MetadataReference.CreateFromFile(p));
-                }
-                return netCoreAssemblyReferences;
-            }
+                "System.Collections",
+                "System.Collections.Concurrent",
+                "System.Console",
+                "System.Diagnostics.Debug",
+                "System.Diagnostics.Process",
+                "System.Diagnostics.StackTrace",
+                "System.Globalization",
+                "System.IO",
+                "System.IO.FileSystem",
+                "System.IO.FileSystem.Primitives",
+                "System.Reflection",
+                "System.Reflection.Extensions",
+                "System.Reflection.Primitives",
+                "System.Runtime",
+                "System.Runtime.Extensions",
+                "System.Runtime.InteropServices",
+                "System.Text.Encoding",
+                "System.Text.Encoding.CodePages",
+                "System.Text.Encoding.Extensions",
+                "System.Text.RegularExpressions",
+                "System.Threading",
+                "System.Threading.Tasks",
+                "System.Threading.Tasks.Parallel",
+                "System.Threading.Thread",
+            };
+            var filteredPaths = allAvailableAssemblies.Where(p => files.Concat(new string[] { "mscorlib", "netstandard", "System.Private.CoreLib", "System.Runtime.Serialization.Primitives", }).Any(f => Path.GetFileNameWithoutExtension(p).Equals(f)));
+            return filteredPaths.Select(p => MetadataReference.CreateFromFile(p));
         }
-        private static IEnumerable<PortableExecutableReference> netCoreAssemblyReferences;
+        private static readonly Lazy<IEnumerable<PortableExecutableReference>> netCoreAssemblyReferences
+            = new Lazy<IEnumerable<PortableExecutableReference>>(GetNetCoreAssemblyReferences);
 #endif
 
         /// <summary>
@@ -103,9 +94,8 @@ namespace Microsoft.StreamProcessing
 #if DEBUG
             includeDebugInfo = (Config.CodegenOptions.BreakIntoCodeGen & Config.CodegenOptions.DebugFlags.Operators) != 0;
 #endif
-            if (includeDebugInfo)
-            {
-                return string.Format(
+            return includeDebugInfo
+                ? string.Format(
                     CultureInfo.InvariantCulture,
 @"
     static {0}() {{
@@ -113,9 +103,8 @@ namespace Microsoft.StreamProcessing
             System.Diagnostics.Debugger.Break();
         else
             System.Diagnostics.Debugger.Launch();
-    }}", className);
-            }
-            else return string.Empty;
+    }}", className)
+                : string.Empty;
         }
 
         /// <summary>
@@ -240,7 +229,7 @@ namespace Microsoft.StreamProcessing
                 .Concat(uniqueReferences.Where(reference => metadataReferenceCache.ContainsKey(reference)).Select(reference => metadataReferenceCache[reference]));
 
 #if DOTNETCORE
-            refs = refs.Concat(NetCoreAssemblyReferences);
+            refs = refs.Concat(netCoreAssemblyReferences.Value);
 #endif
 
             var options = new CSharpCompilationOptions(
@@ -254,7 +243,6 @@ namespace Microsoft.StreamProcessing
             var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType.GetTypeInfo().GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
             var ignoreAccessibility = binderFlagsType.GetTypeInfo().GetField("IgnoreAccessibility", BindingFlags.Static | BindingFlags.Public);
             topLevelBinderFlagsProperty.SetValue(options, (uint)ignoreCorLibraryDuplicatedTypesMember.GetValue(null) | (uint)ignoreAccessibility.GetValue(null));
-
 
             var compilation = CSharpCompilation.Create(assemblyName, trees, refs, options);
             var a = EmitCompilationAndLoadAssembly(compilation, includeDebugInfo, out errorMessages);
@@ -426,6 +414,7 @@ namespace System.Runtime.CompilerServices
 
         private static int BatchClassSequenceNumber = 0;
         private static SafeConcurrentDictionary<string> batchType2Name = new SafeConcurrentDictionary<string>();
+
         internal static string GetBatchClassName(Type keyType, Type payloadType)
         {
             if (!payloadType.CanRepresentAsColumnar())
@@ -704,10 +693,7 @@ namespace System.Runtime.CompilerServices
             this.DeclaringType = t.DeclaringType;
         }
 
-        public override string ToString()
-        {
-            return "|" + this.TypeName + ", " + this.Name + "|";
-        }
+        public override string ToString() => "|" + this.TypeName + ", " + this.Name + "|";
     }
 
     internal partial class SafeBatchTemplate
@@ -810,53 +796,23 @@ namespace System.Runtime.CompilerServices
     {
         public abstract string TransformText();
 #region Fields
-        private StringBuilder generationEnvironmentField;
-        private List<int> indentLengthsField;
         private bool endsWithNewline;
-        private IDictionary<string, object> sessionField;
 #endregion
 #region Properties
         /// <summary>
         /// The string builder that generation-time code is using to assemble generated output
         /// </summary>
-        protected StringBuilder GenerationEnvironment
-        {
-            get
-            {
-                if ((this.generationEnvironmentField == null)) this.generationEnvironmentField = new StringBuilder();
-                return this.generationEnvironmentField;
-            }
-            set
-            {
-                this.generationEnvironmentField = value;
-            }
-        }
+        protected StringBuilder GenerationEnvironment { get; } = new StringBuilder();
 
         /// <summary>
         /// A list of the lengths of each indent that was added with PushIndent
         /// </summary>
-        private List<int> IndentLengths
-        {
-            get
-            {
-                if (this.indentLengthsField == null) this.indentLengthsField = new List<int>();
-                return this.indentLengthsField;
-            }
-        }
+        private List<int> IndentLengths { get; } = new List<int>();
 
         /// <summary>
         /// Gets the current indent we use when adding lines to the output
         /// </summary>
         public string CurrentIndent { get; private set; } = string.Empty;
-
-        /// <summary>
-        /// Current transformation session
-        /// </summary>
-        public virtual IDictionary<string, object> Session
-        {
-            get => this.sessionField;
-            set => this.sessionField = value;
-        }
 #endregion
 #region Transform-time helpers
         /// <summary>
@@ -868,8 +824,7 @@ namespace System.Runtime.CompilerServices
 
             // If we're starting off, or if the previous text ended with a newline,
             // we have to append the current indent first.
-            if (((this.GenerationEnvironment.Length == 0)
-                        || this.endsWithNewline))
+            if ((this.GenerationEnvironment.Length == 0) || this.endsWithNewline)
             {
                 this.GenerationEnvironment.Append(this.CurrentIndent);
                 this.endsWithNewline = false;
@@ -881,7 +836,7 @@ namespace System.Runtime.CompilerServices
             }
             // This is an optimization. If the current indent is "", then we don't have to do any
             // of the more complex stuff further down.
-            if ((this.CurrentIndent.Length == 0))
+            if (this.CurrentIndent.Length == 0)
             {
                 this.GenerationEnvironment.Append(textToAppend);
                 return;
@@ -933,18 +888,19 @@ namespace System.Runtime.CompilerServices
         public string PopIndent()
         {
             string returnValue = string.Empty;
-            if ((this.IndentLengths.Count > 0))
+            if (this.IndentLengths.Count > 0)
             {
-                int indentLength = this.IndentLengths[(this.IndentLengths.Count - 1)];
-                this.IndentLengths.RemoveAt((this.IndentLengths.Count - 1));
-                if ((indentLength > 0))
+                int indentLength = this.IndentLengths[this.IndentLengths.Count - 1];
+                this.IndentLengths.RemoveAt(this.IndentLengths.Count - 1);
+                if (indentLength > 0)
                 {
-                    returnValue = this.CurrentIndent.Substring((this.CurrentIndent.Length - indentLength));
-                    this.CurrentIndent = this.CurrentIndent.Remove((this.CurrentIndent.Length - indentLength));
+                    returnValue = this.CurrentIndent.Substring(this.CurrentIndent.Length - indentLength);
+                    this.CurrentIndent = this.CurrentIndent.Remove(this.CurrentIndent.Length - indentLength);
                 }
             }
             return returnValue;
         }
+
         /// <summary>
         /// Remove any indentation
         /// </summary>
@@ -958,7 +914,7 @@ namespace System.Runtime.CompilerServices
         /// <summary>
         /// Utility class to produce culture-oriented representation of an object as a string.
         /// </summary>
-        public class ToStringInstanceHelper
+        public sealed class ToStringInstanceHelper
         {
             private IFormatProvider formatProviderField = CultureInfo.InvariantCulture;
             /// <summary>
@@ -969,7 +925,7 @@ namespace System.Runtime.CompilerServices
                 get => this.formatProviderField;
                 set
                 {
-                    if ((value != null)) this.formatProviderField = value;
+                    if (value != null) this.formatProviderField = value;
                 }
             }
             /// <summary>
@@ -977,15 +933,14 @@ namespace System.Runtime.CompilerServices
             /// </summary>
             public string ToStringWithCulture(object objectToConvert)
             {
-                if ((objectToConvert == null)) throw new ArgumentNullException(nameof(objectToConvert));
+                if (objectToConvert == null) throw new ArgumentNullException(nameof(objectToConvert));
 
-                Type t = objectToConvert.GetType();
-                MethodInfo method = t.GetTypeInfo().GetMethod("ToString", new Type[] { typeof(IFormatProvider) });
+                var t = objectToConvert.GetType();
+                var method = t.GetTypeInfo().GetMethod("ToString", new Type[] { typeof(IFormatProvider) });
 
-                if ((method == null))
-                    return objectToConvert.ToString();
-                else
-                    return ((string)(method.Invoke(objectToConvert, new object[] { this.formatProviderField })));
+                return method == null
+                    ? objectToConvert.ToString()
+                    : (string)(method.Invoke(objectToConvert, new object[] { this.formatProviderField }));
             }
         }
 

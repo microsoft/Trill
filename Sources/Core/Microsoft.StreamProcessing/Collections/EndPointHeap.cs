@@ -64,42 +64,37 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public unsafe void Insert(long time, int value)
         {
             // If out of space in the stack, then grow.
-            if (this.count == this.capacity)
-            {
-                Grow();
-            }
+            if (this.count == this.capacity) Grow();
 
             fixed (long* timeArray = this.times)
+            fixed (int* valueArray = this.values)
             {
-                fixed (int* valueArray = this.values)
+                // Find location for new element in heap, default to end.
+                int insertPos = this.count;
+                this.count++;
+
+                // Loop while position 'pos' still has a parent.
+                while (insertPos > 0)
                 {
-                    // Find location for new element in heap, default to end.
-                    int insertPos = this.count;
-                    this.count++;
-
-                    // Loop while position 'pos' still has a parent.
-                    while (insertPos > 0)
+                    // Determine if position 'insertPos' would be consistent with its parent.
+                    int parentPos = (insertPos - 1) >> 1;
+                    long parentTime = *(timeArray + parentPos);
+                    if (parentTime <= time)
                     {
-                        // Determine if position 'insertPos' would be consistent with its parent.
-                        int parentPos = (insertPos - 1) >> 1;
-                        long parentTime = *(timeArray + parentPos);
-                        if (parentTime <= time)
-                        {
-                            // Parent is <= time, so heap would be consistent and we are done.
-                            break;
-                        }
-
-                        // Heap is not consistent, so move insertion point to location of
-                        // parent and move parent to current 'insertPos'.
-                        *(timeArray + insertPos) = parentTime;
-                        *(valueArray + insertPos) = *(valueArray + parentPos);
-                        insertPos = parentPos;
+                        // Parent is <= time, so heap would be consistent and we are done.
+                        break;
                     }
 
-                    // Insert element into heap.
-                    *(timeArray + insertPos) = time;
-                    *(valueArray + insertPos) = value;
+                    // Heap is not consistent, so move insertion point to location of
+                    // parent and move parent to current 'insertPos'.
+                    *(timeArray + insertPos) = parentTime;
+                    *(valueArray + insertPos) = *(valueArray + parentPos);
+                    insertPos = parentPos;
                 }
+
+                // Insert element into heap.
+                *(timeArray + insertPos) = time;
+                *(valueArray + insertPos) = value;
             }
         }
 

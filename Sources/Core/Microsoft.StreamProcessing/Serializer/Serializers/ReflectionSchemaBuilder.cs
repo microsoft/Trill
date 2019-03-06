@@ -89,7 +89,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             var surrogate = this.settings.Surrogate;
             if (surrogate != null)
             {
-                if (surrogate.IsSupportedType(type, out MethodInfo serialize, out MethodInfo deserialize))
+                if (surrogate.IsSupportedType(type, out var serialize, out var deserialize))
                 {
                     return new SurrogateSerializer(this.settings, type, serialize, deserialize);
                 }
@@ -121,8 +121,8 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         private ObjectSerializerBase CreateNotNullableSchema(Type type, uint currentDepth)
         {
-            if (RuntimeTypeToSerializer.TryGetValue(type, out Func<ObjectSerializerBase> p)) return p();
-            if (this.seenTypes.TryGetValue(type, out ObjectSerializerBase schema)) return schema;
+            if (RuntimeTypeToSerializer.TryGetValue(type, out var p)) return p();
+            if (this.seenTypes.TryGetValue(type, out var schema)) return schema;
 
             var typeInfo = type.GetTypeInfo();
             if (typeInfo.IsEnum) return BuildEnumTypeSchema(type);
@@ -170,7 +170,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             var members = type.ResolveMembers();
             foreach (var info in members)
             {
-                ObjectSerializerBase fieldSchema = CreateSchema(info.Type, currentDepth + 1);
+                var fieldSchema = CreateSchema(info.Type, currentDepth + 1);
 
                 var recordField = new RecordFieldSerializer(fieldSchema, info);
                 record.AddField(recordField);

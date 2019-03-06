@@ -56,10 +56,8 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual void ProduceQueryPlan(PlanNode previous)
-        {
-            this.activeProcess.RegisterQueryPlan(this.identifier, new EgressPlanNode(
+            => this.activeProcess.RegisterQueryPlan(this.identifier, new EgressPlanNode(
                 previous, this, typeof(TKey), typeof(TPayload), false, null));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

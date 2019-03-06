@@ -18,8 +18,8 @@ namespace Microsoft.StreamProcessing
     {
         private static SafeConcurrentDictionary<ColumnPoolBase> doublingArrayPools = new SafeConcurrentDictionary<ColumnPoolBase>();
         private static SafeConcurrentDictionary<ColumnPoolBase> columnPools = new SafeConcurrentDictionary<ColumnPoolBase>();
-        private static SafeConcurrentDictionary<ColumnPoolBase> charArrayPools = new SafeConcurrentDictionary<ColumnPoolBase>();
-        private static SafeConcurrentDictionary<ColumnPoolBase> bitvectorPools = new SafeConcurrentDictionary<ColumnPoolBase>();
+        private static SafeConcurrentDictionary<CharArrayPool> charArrayPools = new SafeConcurrentDictionary<CharArrayPool>();
+        private static SafeConcurrentDictionary<ColumnPool<long>> bitvectorPools = new SafeConcurrentDictionary<ColumnPool<long>>();
         private static SafeConcurrentDictionary<ColumnPoolBase> eventBatchPools = new SafeConcurrentDictionary<ColumnPoolBase>();
         private static SafeConcurrentDictionary<object> memoryPools = new SafeConcurrentDictionary<object>();
 
@@ -46,10 +46,10 @@ namespace Microsoft.StreamProcessing
                 key => new ColumnPool<T>(size < 0 ? Config.DataBatchSize : size));
 
         internal static CharArrayPool GetCharArrayPool()
-            => (CharArrayPool)charArrayPools.GetOrAdd(CacheKey.Create(), key => new CharArrayPool());
+            => charArrayPools.GetOrAdd(CacheKey.Create(), key => new CharArrayPool());
 
         internal static ColumnPool<long> GetBVPool(int size)
-            => (ColumnPool<long>)bitvectorPools.GetOrAdd(CacheKey.Create(size), key => new ColumnPool<long>(size));
+            => bitvectorPools.GetOrAdd(CacheKey.Create(size), key => new ColumnPool<long>(size));
 
         internal static StreamMessagePool<TKey, TPayload> GetStreamMessagePool<TKey, TPayload>(MemoryPool<TKey, TPayload> memoryPool, bool isColumnar)
             => (StreamMessagePool<TKey, TPayload>)eventBatchPools.GetOrAdd(
@@ -85,7 +85,7 @@ namespace Microsoft.StreamProcessing
             }
             var lookupKey = CacheKey.Create(typeOfTKey, typeOfTPayload);
 
-            Type generatedMemoryPool = cachedMemoryPools.GetOrAdd(lookupKey, key => Transformer.GenerateMemoryPoolClass<TKey, TPayload>());
+            var generatedMemoryPool = cachedMemoryPools.GetOrAdd(lookupKey, key => Transformer.GenerateMemoryPoolClass<TKey, TPayload>());
 
             return (MemoryPool<TKey, TPayload>)memoryPools.GetOrAdd(cacheKey, t => Activator.CreateInstance(generatedMemoryPool));
         }

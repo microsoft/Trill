@@ -250,6 +250,33 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public unsafe bool Iterate(ref int index)
+        {
+            fixed (int* hashAndNextArray = this.next)
+            {
+                int* hashNextPtr = hashAndNextArray + index;
+                while (index < this.initialized)
+                {
+                    index++;
+                    hashNextPtr++;
+
+                    long currHashNext = *hashNextPtr;
+                    int currNext = (int)currHashNext;
+                    if (currNext >= 0) return true;
+                }
+
+                index = 0;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public struct ListTraverser
         {
@@ -371,65 +398,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 this.list.next[removedIndex] = this.list.freeHead;
                 this.list.freeHead = removedIndex;
                 this.list.count--;
-            }
-        }
-
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public struct VisibleTraverser
-        {
-            private readonly FastLinkedList<T> list;
-
-            /// <summary>
-            /// Currently for internal use only - do not use directly.
-            /// </summary>
-            [EditorBrowsable(EditorBrowsableState.Never)]
-            public int currIndex;
-
-            /// <summary>
-            /// Currently for internal use only - do not use directly.
-            /// </summary>
-            /// <param name="list"></param>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            [EditorBrowsable(EditorBrowsableState.Never)]
-            public VisibleTraverser(FastLinkedList<T> list)
-            {
-                this.list = list;
-                this.currIndex = 0;
-            }
-
-            /// <summary>
-            /// Currently for internal use only - do not use directly.
-            /// </summary>
-            /// <param name="index"></param>
-            /// <returns></returns>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            [EditorBrowsable(EditorBrowsableState.Never)]
-            public unsafe bool Next(out int index)
-            {
-                fixed (int* hashAndNextArray = this.list.next)
-                {
-                    int* hashNextPtr = hashAndNextArray + this.currIndex;
-                    int initialized = this.list.initialized;
-                    while (this.currIndex < initialized)
-                    {
-                        this.currIndex++;
-                        hashNextPtr++;
-
-                        long currHashNext = *hashNextPtr;
-                        int currNext = (int)currHashNext;
-                        if (currNext >= 0)
-                        {
-                            index = this.currIndex;
-                            return true;
-                        }
-                    }
-
-                    index = 0;
-                    return false;
-                }
             }
         }
     }
