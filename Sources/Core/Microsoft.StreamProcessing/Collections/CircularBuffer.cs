@@ -96,14 +96,14 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsFull() => (((this.tail + 1) & this.capacityMask) == this.head);
+        public bool IsFull() => ((this.tail + 1) & this.capacityMask) == this.head;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsEmpty() => (this.head == this.tail);
+        public bool IsEmpty() => this.head == this.tail;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -134,10 +134,9 @@ namespace Microsoft.StreamProcessing
     [EditorBrowsable(EditorBrowsableState.Never)]
     public sealed class ElasticCircularBuffer<T> : IEnumerable<T>
     {
-        private LinkedList<CircularBuffer<T>> buffers;
+        private readonly LinkedList<CircularBuffer<T>> buffers = new LinkedList<CircularBuffer<T>>();
         private LinkedListNode<CircularBuffer<T>> head;
         private LinkedListNode<CircularBuffer<T>> tail;
-        private int count;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -145,11 +144,10 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ElasticCircularBuffer()
         {
-            this.buffers = new LinkedList<CircularBuffer<T>>();
             var node = new LinkedListNode<CircularBuffer<T>>(new CircularBuffer<T>());
             this.buffers.AddFirst(node);
             this.tail = this.head = node;
-            this.count = 0;
+            this.Count = 0;
         }
 
         /// <summary>
@@ -174,7 +172,7 @@ namespace Microsoft.StreamProcessing
             }
 
             this.tail.Value.Enqueue(ref value);
-            this.count++;
+            this.Count++;
         }
 
         /// <summary>
@@ -201,7 +199,7 @@ namespace Microsoft.StreamProcessing
                 if (this.head == null) this.head = this.buffers.First;
             }
 
-            this.count--;
+            this.Count--;
             return this.head.Value.Dequeue();
         }
 
@@ -241,27 +239,25 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns></returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsEmpty() => (this.head.Value.IsEmpty() && (this.head == this.tail));
-
-        private IEnumerator<T> Iterate()
-        {
-            foreach (CircularBuffer<T> buffer in this.buffers)
-                foreach (T item in buffer.Iterate())
-                    yield return item;
-        }
+        public bool IsEmpty() => this.head.Value.IsEmpty() && (this.head == this.tail);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public int Count => this.count;
+        public int Count { get; private set; }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         /// <returns></returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public IEnumerator<T> GetEnumerator() => Iterate();
+        public IEnumerator<T> GetEnumerator()
+        {
+            foreach (var buffer in this.buffers)
+                foreach (var item in buffer.Iterate())
+                    yield return item;
+        }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }

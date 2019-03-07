@@ -263,7 +263,7 @@ namespace Microsoft.StreamProcessing
 
         private MyStringBuilder FindChunkForIndex(int index)
         {
-            MyStringBuilder chunkPrevious = this;
+            var chunkPrevious = this;
             while (chunkPrevious.m_ChunkOffset > index)
             {
                 chunkPrevious = chunkPrevious.m_ChunkPrevious;
@@ -291,7 +291,7 @@ namespace Microsoft.StreamProcessing
 
             if (this.Length == 0) return resultCaw;
 
-            MyStringBuilder chunkPrevious = this;
+            var chunkPrevious = this;
             fixed (char* str2 = result)
             {
                 char* charPtr = str2;
@@ -379,7 +379,7 @@ namespace Microsoft.StreamProcessing
                     }
                     else
                     {
-                        MyStringBuilder builder = FindChunkForIndex(value);
+                        var builder = FindChunkForIndex(value);
                         if (builder != this)
                         {
                             int num3 = capacity - builder.m_ChunkOffset;

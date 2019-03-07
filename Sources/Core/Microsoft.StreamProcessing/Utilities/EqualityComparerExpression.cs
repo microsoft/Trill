@@ -82,12 +82,12 @@ namespace Microsoft.StreamProcessing
         public static bool TryGetCachedGetHashCodeFunction<T>(out Func<T, int> getHashCodeFunction)
         {
             var t = typeof(T);
-            getHashCodeFunction = null;
             if (getHashCodeCache.TryGetValue(t, out object temp))
             {
                 getHashCodeFunction = (Func<T, int>)temp;
                 return true;
             }
+            getHashCodeFunction = null;
             return false;
         }
 

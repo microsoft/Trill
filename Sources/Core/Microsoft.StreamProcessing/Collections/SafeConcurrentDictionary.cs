@@ -12,7 +12,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 {
     /// <summary>
     /// A dictionary that supports concurrency with similar interface to .NET's ConcurrentDictionary.
-    /// However, this dictionary changes the implementation of AddOrUpdate and GetOrAdd functions to
+    /// However, this dictionary changes the implementation and GetOrAdd functions to
     /// guarantee atomicity per-key for factory lambdas.
     /// </summary>
     /// <typeparam name="TValue">Type of values in the dictionary</typeparam>

@@ -613,5 +613,4 @@ namespace Microsoft.StreamProcessing
             }
         }
     }
-
 }

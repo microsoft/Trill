@@ -41,15 +41,13 @@ namespace Microsoft.StreamProcessing
             else
             {
                 Interlocked.Decrement(ref this.RefCount);
-                pool.Get(out CharArrayWrapper result, this.UsedLength);
+                pool.Get(out var result, this.UsedLength);
                 if (copyData)
                 {
                     fixed (char* dest = result.charArray.content)
+                    fixed (char* src = this.charArray.content)
                     {
-                        fixed (char* src = this.charArray.content)
-                        {
-                            MyStringBuilder.Wstrcpy(dest, src, this.UsedLength);
-                        }
+                        MyStringBuilder.Wstrcpy(dest, src, this.UsedLength);
                     }
                 }
                 return result;

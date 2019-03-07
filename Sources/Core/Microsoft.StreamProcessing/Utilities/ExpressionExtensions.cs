@@ -111,8 +111,7 @@ namespace Microsoft.StreamProcessing
             var stringBuilder = new StringBuilder();
             var visitor = new ConvertToCSharpButWithStringParameters(new StringWriter(stringBuilder, CultureInfo.InvariantCulture), map);
             visitor.Visit(e);
-            var s = stringBuilder.ToString();
-            return s;
+            return stringBuilder.ToString();
         }
 
         public static LambdaExpression RemoveCastToObject(this LambdaExpression lambda)
@@ -157,10 +156,9 @@ namespace Microsoft.StreamProcessing
         }
 
         protected override Expression VisitParameter(ParameterExpression node)
-        {
-            if (this.arguments.TryGetValue(node, out Expression replacement) && replacement != null) return replacement;
-            return node;
-        }
+            => this.arguments.TryGetValue(node, out var replacement) && replacement != null
+                ? replacement
+                : node;
     }
 
     internal sealed class ConstantExpressionFinder : ExpressionVisitor
@@ -181,12 +179,14 @@ namespace Microsoft.StreamProcessing
             me.Visit(function.Body);
             return me.isConstant;
         }
+
         protected override Expression VisitConstant(ConstantExpression node)
         {
             var t = node.Type;
             if (!t.GetTypeInfo().IsPrimitive) this.isConstant = false;
             return base.VisitConstant(node);
         }
+
         protected override Expression VisitMember(MemberExpression node)
         {
             if (!(node.Expression is MemberExpression me)) // if it is a member expression, then let visitor recurse down to the left-most branch
@@ -313,8 +313,9 @@ namespace Microsoft.StreamProcessing
             if (e1 is NewExpression new1)
             {
                 var new2 = e2 as NewExpression;
-                if (new1.Constructor == null) return new2.Constructor == null;
-                return new1.Constructor.Equals(new2.Constructor) && Equals(new1.Arguments, new2.Arguments);
+                return new1.Constructor == null
+                    ? new2.Constructor == null
+                    : new1.Constructor.Equals(new2.Constructor) && Equals(new1.Arguments, new2.Arguments);
             }
             if (e1 is NewArrayExpression newarr1)
             {
@@ -475,10 +476,9 @@ namespace Microsoft.StreamProcessing
             => this.arguments = new Dictionary<ParameterExpression, Expression>(arguments);
 
         protected override Expression VisitParameter(ParameterExpression node)
-        {
-            if (this.arguments.TryGetValue(node, out Expression replacement)) return replacement;
-            return base.VisitParameter(node);
-        }
+            => this.arguments.TryGetValue(node, out var replacement)
+                ? replacement
+                : base.VisitParameter(node);
     }
 
     /// <summary>
@@ -532,7 +532,7 @@ namespace Microsoft.StreamProcessing
         // Returns:
         //     The modified expression, if it or any subexpression was modified; otherwise,
         //     returns the original expression.
-        public override Expression Visit(Expression node) { return base.Visit(node); }
+        public override Expression Visit(Expression node) => base.Visit(node);
 
         //
         // Summary:
@@ -1065,9 +1065,7 @@ namespace Microsoft.StreamProcessing
         //     The modified expression, if it or any subexpression was modified; otherwise,
         //     returns the original expression.
         protected override MemberBinding VisitMemberBinding(MemberBinding node)
-        {
-            return base.VisitMemberBinding(node); // taken care of by VisitMemberAssignment, but what if there are other subtypes of MemberBinding?
-        }
+            => base.VisitMemberBinding(node); // taken care of by VisitMemberAssignment, but what if there are other subtypes of MemberBinding?
 
         //
         // Summary:
@@ -2027,10 +2025,9 @@ namespace Microsoft.StreamProcessing
         }
 
         protected override Expression VisitMember(MemberExpression node)
-        {
-            if (node.Member.Name == "Key" && node.Expression == parameter) return newParameter;
-            return base.VisitMember(node);
-        }
+            => node.Member.Name == "Key" && node.Expression == parameter
+                ? newParameter
+                : base.VisitMember(node);
 
         protected override Expression VisitParameter(ParameterExpression node)
         {

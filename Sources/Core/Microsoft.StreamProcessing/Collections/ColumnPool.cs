@@ -54,21 +54,13 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class ColumnPool<T> : ColumnPoolBase
     {
-        private readonly ConcurrentQueue<ColumnBatch<T>> queue;
+        private readonly ConcurrentQueue<ColumnBatch<T>> queue = new ConcurrentQueue<ColumnBatch<T>>();
         private long createdObjects;
         private readonly int size;
 
-        internal ColumnPool()
-        {
-            this.queue = new ConcurrentQueue<ColumnBatch<T>>();
-            this.size = Config.DataBatchSize;
-        }
+        internal ColumnPool() => this.size = Config.DataBatchSize;
 
-        internal ColumnPool(int size)
-        {
-            this.queue = new ConcurrentQueue<ColumnBatch<T>>();
-            this.size = size;
-        }
+        internal ColumnPool(int size) => this.size = size;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -124,7 +116,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Free(bool reset = false)
         {
-            while (this.queue.TryDequeue(out ColumnBatch<T> result))
+            while (this.queue.TryDequeue(out var result))
             {
                 result.pool = null;
                 result.col = null;

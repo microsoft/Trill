@@ -66,26 +66,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsEmpty
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => this.count == 0;
-        }
-
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public int Capacity
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => this.capacity;
-        }
-
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public T[] Values
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -108,53 +88,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public int Push(T value)
-        {
-            int index = Push();
-            this.values[index] = value;
-            return index;
-        }
-
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public int Push(ref T value)
-        {
-            int index = Push();
-            this.values[index] = value;
-            return index;
-        }
-
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public int Pop()
-        {
-            Contract.Assume(this.count > 0);
-
-            return --this.count;
-        }
-
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Clear()
-        {
-            this.count = 0;
-        }
+        public void Clear() => this.count = 0;
 
         private void Grow()
         {

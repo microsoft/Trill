@@ -63,10 +63,8 @@ namespace Microsoft.StreamProcessing
             => EqualityComparer.IsEqual(source.GetCompareExpr(), other.GetCompareExpr());
 
         public static bool ExpressionEquals<T>(this IEqualityComparerExpression<T> source, IEqualityComparerExpression<T> other)
-        {
-            return EqualityComparer.IsEqual(source.GetEqualsExpr(), other.GetEqualsExpr())
-                && EqualityComparer.IsEqual(source.GetGetHashCodeExpr(), other.GetGetHashCodeExpr());
-        }
+            => EqualityComparer.IsEqual(source.GetEqualsExpr(), other.GetEqualsExpr())
+            && EqualityComparer.IsEqual(source.GetGetHashCodeExpr(), other.GetGetHashCodeExpr());
 
         /// <summary>
         /// Performs a special kind of equality test on IEqualityComparer&lt;T&gt; in which case, both the Equals function and GetHashCode function are checked
@@ -91,10 +89,8 @@ namespace Microsoft.StreamProcessing
         private static dynamic TryIsEqualIECE(dynamic obj1, dynamic obj2) => IsEqualIECE(obj1, obj2);
 
         private static bool IsEqualIECE<T>(IEqualityComparerExpression<T> o1, IEqualityComparerExpression<T> o2)
-        {
-            return EqualityComparer.IsEqual(o1.GetEqualsExpr(), o2.GetEqualsExpr()) &&
-                EqualityComparer.IsEqual(o1.GetGetHashCodeExpr(), o2.GetGetHashCodeExpr());
-        }
+            => EqualityComparer.IsEqual(o1.GetEqualsExpr(), o2.GetEqualsExpr())
+            && EqualityComparer.IsEqual(o1.GetGetHashCodeExpr(), o2.GetGetHashCodeExpr());
 
         // catch-all for other types
         private static bool IsEqualIECE(object o1, object o2) => false;

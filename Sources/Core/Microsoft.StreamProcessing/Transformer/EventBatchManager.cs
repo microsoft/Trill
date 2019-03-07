@@ -43,7 +43,7 @@ namespace Microsoft.StreamProcessing
             if (Config.ForceRowBasedExecution) return new StreamMessage<TKey, TPayload>(pool);
             if (!typeof(TPayload).CanRepresentAsColumnar()) return new StreamMessage<TKey, TPayload>(pool);
 
-            Type generatedBatchType = GetStreamMessageType<TKey, TPayload>();
+            var generatedBatchType = GetStreamMessageType<TKey, TPayload>();
 
             var instance = Activator.CreateInstance(generatedBatchType, pool);
             var returnValue = (StreamMessage<TKey, TPayload>)instance;

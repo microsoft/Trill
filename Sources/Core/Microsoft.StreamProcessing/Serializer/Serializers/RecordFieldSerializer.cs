@@ -33,7 +33,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
             var tmp = Expression.Variable(this.Schema.RuntimeType, Guid.NewGuid().ToString());
             var assignment = Expression.Assign(tmp, member);
-            Expression serialized = this.Schema.BuildSerializer(encoder, tmp);
+            var serialized = this.Schema.BuildSerializer(encoder, tmp);
             return Expression.Block(new[] { tmp }, new[] { assignment, serialized });
         }
 
@@ -57,9 +57,8 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         }
 
         private Expression GetMember(Expression @object)
-        {
-            if (this.MemberInfo.isField) return Expression.Field(@object, this.MemberInfo.DeclaringType, this.MemberInfo.OriginalName);
-            else return Expression.Property(@object, this.MemberInfo.DeclaringType, this.MemberInfo.OriginalName);
-        }
+            => this.MemberInfo.isField
+                ? Expression.Field(@object, this.MemberInfo.DeclaringType, this.MemberInfo.OriginalName)
+                : Expression.Property(@object, this.MemberInfo.DeclaringType, this.MemberInfo.OriginalName);
     }
 }

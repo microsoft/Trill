@@ -108,7 +108,7 @@ namespace Microsoft.StreamProcessing.Internal
                 }
                 else
                 {
-                    pool.Get(out ColumnBatch<T> result);
+                    pool.Get(out var result);
                     System.Array.Copy(this.col, result.col, this.col.Length);
                     result.UsedLength = this.UsedLength;
                     Interlocked.Decrement(ref this.RefCount);

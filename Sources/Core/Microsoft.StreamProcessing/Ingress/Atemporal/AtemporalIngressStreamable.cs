@@ -54,19 +54,13 @@ namespace Microsoft.StreamProcessing
         public override IDisposable Subscribe(IStreamObserver<Empty, TPayload> observer)
         {
             Contract.EnsuresOnThrow<IngressException>(true);
-            IIngressStreamObserver subscription;
-            if (this.timelinePolicy.timelineEnum == TimelineEnum.WallClock)
-            {
-                subscription = new MonotonicSubscriptionWallClock<TPayload>(this.observable, this.IngressSiteIdentifier,
+            var subscription = this.timelinePolicy.timelineEnum == TimelineEnum.WallClock
+                ? new MonotonicSubscriptionWallClock<TPayload>(this.observable, this.IngressSiteIdentifier,
+                    this,
+                    observer, this.flushPolicy, this.punctuationPolicy, this.onCompletedPolicy, this.timelinePolicy)
+                : (IIngressStreamObserver)new MonotonicSubscriptionSequence<TPayload>(this.observable, this.IngressSiteIdentifier,
                     this,
                     observer, this.flushPolicy, this.punctuationPolicy, this.onCompletedPolicy, this.timelinePolicy);
-            }
-            else
-            {
-                subscription = new MonotonicSubscriptionSequence<TPayload>(this.observable, this.IngressSiteIdentifier,
-                    this,
-                    observer, this.flushPolicy, this.punctuationPolicy, this.onCompletedPolicy, this.timelinePolicy);
-            }
 
             if (this.delayed)
             {

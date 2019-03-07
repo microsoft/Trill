@@ -192,12 +192,12 @@ namespace Microsoft.StreamProcessing
                 this.error = true;
                 return;
             }
-            if (!this.parameterInformation.TryGetValue(parameter, out SelectParameterInformation spi))
+            if (!this.parameterInformation.TryGetValue(parameter, out var selectParameter))
             {
                 this.error = true;
                 return;
             }
-            var columnarField = spi.parameterRepresentation.Fields[fieldOrAutoProp.Name];
+            var columnarField = selectParameter.parameterRepresentation.Fields[fieldOrAutoProp.Name];
             if (this.resultTypeInformation.noFields)
             {
                 // Then e.f is of type R (the result type) where R is a primitive type or some type that doesn't get decomposed.
@@ -232,12 +232,12 @@ namespace Microsoft.StreamProcessing
 
         private ParameterExpression GetIndexVariable(ParameterExpression parameter)
         {
-            if (!this.parameterInformation.TryGetValue(parameter, out SelectParameterInformation spi))
+            if (!this.parameterInformation.TryGetValue(parameter, out var selectParameter))
             {
                 // then this parameter must be a parameter of an inner lambda or a parameter not being substituted for
                 return parameter;
             }
-            var indexVariable = Expression.Variable(typeof(int), spi.IndexVariableName);
+            var indexVariable = Expression.Variable(typeof(int), selectParameter.IndexVariableName);
             return indexVariable;
         }
 
@@ -273,7 +273,7 @@ namespace Microsoft.StreamProcessing
         {
             Contract.Assume(parameter.Type == this.resultTypeInformation.RepresentationFor);
 
-            if (!this.parameterInformation.TryGetValue(parameter, out SelectParameterInformation spi))
+            if (!this.parameterInformation.TryGetValue(parameter, out var selectParameter))
             {
                 if (!hasStartEdge && !this.resultTypeInformation.noFields)
                 {
@@ -288,7 +288,7 @@ namespace Microsoft.StreamProcessing
             }
             foreach (var resultField in this.resultTypeInformation.AllFields)
             {
-                var matchingField = spi.parameterRepresentation.AllFields.First(f => f.OriginalName == resultField.OriginalName);
+                var matchingField = selectParameter.parameterRepresentation.AllFields.First(f => f.OriginalName == resultField.OriginalName);
                 if (this.noSwingingFields)
                 {
                     var a = GetBatchColumnIndexer(parameter, matchingField);
@@ -391,9 +391,9 @@ namespace Microsoft.StreamProcessing
             {
                 if (node.Expression is ParameterExpression parameter)
                 {
-                    if (this.parameterInformation.TryGetValue(parameter, out SelectParameterInformation spi))
+                    if (this.parameterInformation.TryGetValue(parameter, out var selectParameter))
                     {
-                        var columnarField = spi.parameterRepresentation.Fields[member.Name];
+                        var columnarField = selectParameter.parameterRepresentation.Fields[member.Name];
                         var a = GetBatchColumnIndexer(parameter, columnarField);
                         return a;
                     }
@@ -428,11 +428,11 @@ namespace Microsoft.StreamProcessing
 
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            if (this.parameterInformation.TryGetValue(node, out SelectParameterInformation spi))
+            if (this.parameterInformation.TryGetValue(node, out var selectParameter))
             {
-                if (spi.parameterRepresentation.noFields)
+                if (selectParameter.parameterRepresentation.noFields)
                 {
-                    var columnarField = spi.parameterRepresentation.PseudoField;
+                    var columnarField = selectParameter.parameterRepresentation.PseudoField;
                     var a = GetBatchColumnIndexer(node, columnarField);
                     return a;
                 }
@@ -558,10 +558,9 @@ namespace Microsoft.StreamProcessing
                     var n = methodCall.Arguments.Count;
                     if (n == 1)
                     {
-                        if (firstArgIsChar) // IndexOf/LastIndexOf(char)
-                            firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}.ToString(), 0, StringComparison.Ordinal", firstArgAsCSharpString);
-                        else // IndexOf/LastIndexOf(string)
-                            firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}, 0, StringComparison.Ordinal", firstArgAsCSharpString);
+                        firstArgsToMultiStringCall = firstArgIsChar
+                            ? string.Format(CultureInfo.InvariantCulture, "{0}.ToString(), 0, StringComparison.Ordinal", firstArgAsCSharpString)
+                            : string.Format(CultureInfo.InvariantCulture, "{0}, 0, StringComparison.Ordinal", firstArgAsCSharpString);
                     }
                     else
                     {
@@ -570,10 +569,9 @@ namespace Microsoft.StreamProcessing
                         {
                             if (methodCall.Arguments.ElementAt(1).Type.Equals(typeof(int)))
                             {
-                                if (firstArgIsChar) // IndexOf/LastIndexOf(char, int)
-                                    firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}.ToString(), {1}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString);
-                                else // IndexOf/LastIndexOf(string, int)
-                                    firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}, {1}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString);
+                                firstArgsToMultiStringCall = firstArgIsChar
+                                    ? string.Format(CultureInfo.InvariantCulture, "{0}.ToString(), {1}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString)
+                                    : string.Format(CultureInfo.InvariantCulture, "{0}, {1}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString);
                             }
                             else
                             {
@@ -590,10 +588,9 @@ namespace Microsoft.StreamProcessing
                                     firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}.ToString(), {1}, {2}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString, thirdArgAsCSharpString);
                                 else
                                 {
-                                    if (methodCall.Method.GetParameters().ElementAt(2).ParameterType.Equals(typeof(int))) // IndexOf/LastIndexOf(string, int, int)
-                                        firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}, {1}, {2}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString, thirdArgAsCSharpString);
-                                    else // IndexOf/LastIndexOf(string, int, StringComparison),
-                                        firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}, {1}, {2}", firstArgAsCSharpString, secondArgAsCSharpString, thirdArgAsCSharpString);
+                                    firstArgsToMultiStringCall = methodCall.Method.GetParameters().ElementAt(2).ParameterType.Equals(typeof(int))
+                                        ? string.Format(CultureInfo.InvariantCulture, "{0}, {1}, {2}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString, thirdArgAsCSharpString)
+                                        : string.Format(CultureInfo.InvariantCulture, "{0}, {1}, {2}", firstArgAsCSharpString, secondArgAsCSharpString, thirdArgAsCSharpString);
                                 }
                             }
                             else
@@ -612,11 +609,9 @@ namespace Microsoft.StreamProcessing
                     break;
 
             }
-            string s = null;
-            if (methodName.Equals("Substring"))
-                s = string.Format(CultureInfo.InvariantCulture, "{0}({1}, sourceBatch.bitvector)", methodToCall, firstArgsToMultiStringCall);
-            else
-                s = string.Format(CultureInfo.InvariantCulture, "{0}({1}, sourceBatch.bitvector, false)", methodToCall, firstArgsToMultiStringCall);
+            var s = methodName.Equals("Substring")
+                ? string.Format(CultureInfo.InvariantCulture, "{0}({1}, sourceBatch.bitvector)", methodToCall, firstArgsToMultiStringCall)
+                : string.Format(CultureInfo.InvariantCulture, "{0}({1}, sourceBatch.bitvector, false)", methodToCall, firstArgsToMultiStringCall);
             return s;
         }
 
