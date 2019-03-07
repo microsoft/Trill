@@ -548,9 +548,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="patterns">Any remaining patterns to be concatenated, in order</param>
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, TAccumulator> Concat<TInput, TRegister, TAccumulator>(Afa<TInput, TRegister, TAccumulator> pattern1, Afa<TInput, TRegister, TAccumulator> pattern2, params Afa<TInput, TRegister, TAccumulator>[] patterns)
-        {
-            return ConcatWorker(false, pattern1, pattern2, patterns);
-        }
+            => ConcatWorker(false, pattern1, pattern2, patterns);
 
         /// <summary>
         /// Creates a new pattern resulting from the concatenation of other patterns, but where each individual pattern may result in a final state
@@ -563,13 +561,10 @@ namespace Microsoft.StreamProcessing
         /// <param name="patterns">Any remaining patterns to be concatenated, in order</param>
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, TAccumulator> OrConcat<TInput, TRegister, TAccumulator>(Afa<TInput, TRegister, TAccumulator> pattern1, Afa<TInput, TRegister, TAccumulator> pattern2, params Afa<TInput, TRegister, TAccumulator>[] patterns)
-        {
-            return ConcatWorker(true, pattern1, pattern2, patterns);
-        }
+            => ConcatWorker(true, pattern1, pattern2, patterns);
 
         private static Afa<TInput, TRegister, TAccumulator> ConcatWorker<TInput, TRegister, TAccumulator>(bool isOr, Afa<TInput, TRegister, TAccumulator> pattern1, Afa<TInput, TRegister, TAccumulator> pattern2, params Afa<TInput, TRegister, TAccumulator>[] patterns)
         {
-
             var allPatterns = new Afa<TInput, TRegister, TAccumulator>[patterns.Length + 2];
             allPatterns[0] = pattern1;
             allPatterns[1] = pattern2;
@@ -581,7 +576,6 @@ namespace Microsoft.StreamProcessing
 
             for (int i = 1; i < allPatterns.Length; i++)
             {
-
                 var nextPattern = allPatterns[i];
 
                 var newFinal = result.MaxState + 1;
@@ -589,7 +583,7 @@ namespace Microsoft.StreamProcessing
                 var epsilonArcAdded = false;
                 foreach (var finalState in result.finalStates)
                 {
-                    if (result.transitionInfo.TryGetValue(finalState, out Dictionary<int, Arc<TInput, TRegister>> outgoingEdges))
+                    if (result.transitionInfo.TryGetValue(finalState, out var outgoingEdges))
                     {
                         result.AddArc(finalState, newFinal, new EpsilonArc<TInput, TRegister> { });
                         if (!epsilonArcAdded)
@@ -618,15 +612,13 @@ namespace Microsoft.StreamProcessing
                             int from = kvp1.Key;
                             int to = kvp2.Key;
 
-                            if (from == nextPattern.StartState)
-                                from = oldFinal;
-                            else
-                                from = from + oldMax;
+                            from = from == nextPattern.StartState
+                                ? oldFinal
+                                : from + oldMax;
 
-                            if (to == nextPattern.StartState)
-                                to = oldFinal;
-                            else
-                                to = to + oldMax;
+                            to = to == nextPattern.StartState
+                                ? oldFinal
+                                : to + oldMax;
 
                             result.AddArc(from, to, kvp2.Value);
 
@@ -750,9 +742,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="pattern">The pattern to iterate</param>
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, TAccumulator> KleenePlus<TInput, TRegister, TAccumulator>(Afa<TInput, TRegister, TAccumulator> pattern)
-        {
-            return Concat(pattern, KleeneStar(pattern));
-        }
+            => Concat(pattern, KleeneStar(pattern));
 
         /// <summary>
         /// Creates a new pattern resulting from zero or one instances of the given pattern

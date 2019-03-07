@@ -17,20 +17,15 @@ namespace SimpleTesting
     {
         public FList()
             : base()
-        {
-
-        }
+        { }
 
         public FList(int capacity)
             : base(capacity)
-        {
-
-        }
+        { }
 
         public FList(IEnumerable<T> collection)
             : base(collection)
-        {
-        }
+        { }
 
         public new FList<T> Add(T t)
         {
@@ -38,10 +33,7 @@ namespace SimpleTesting
             return this;
         }
 
-        public FList<T> Clone()
-        {
-            return new FList<T>(this);
-        }
+        public FList<T> Clone() => new FList<T>(this);
 
         public new FList<T> Clear()
         {
@@ -344,6 +336,7 @@ namespace SimpleTesting
             Assert.IsTrue(result.SequenceEqual(expected));
 
         }
+
         public static void AfaDefinePattern02()
         {
             var source1 = new StreamEvent<AfaPayload>[] {
@@ -376,6 +369,7 @@ namespace SimpleTesting
             Assert.IsTrue(result.SequenceEqual(expected));
 
         }
+
         public static void AfaDefinePattern03()
         {
             var source1 = new StreamEvent<AfaPayload>[] {
@@ -390,7 +384,7 @@ namespace SimpleTesting
             var result =
                 source1
                 .DefinePattern()
-                .SetRegister(0) // or .SetRegister<int>()
+                .SetRegister(10) // or .SetRegister<int>()
                 .SingleElement(e => e.Field1 == "A", (l, p, i) => i + p.Field2)
                 .SingleElement(e => e.Field1 == "C", (l, p, i) => i + p.Field2)
                 .Detect()
@@ -401,7 +395,7 @@ namespace SimpleTesting
                 ;
 
             var expected = new StreamEvent<int>[] {
-                StreamEvent.CreateInterval(110, 1100, 7),
+                StreamEvent.CreateInterval(110, 1100, 17),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
 
@@ -465,6 +459,7 @@ namespace SimpleTesting
             };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
+
         public static Register CreateOrAddToRegister(Payload2 p, Register r, bool isNegativeMatch)
         {
             var ret = new Register();
@@ -480,6 +475,7 @@ namespace SimpleTesting
             }
             return ret;
         }
+
         public static void DAfa01()
         {
            // Config.CodegenOptions.BreakIntoCodeGen = Config.CodegenOptions.DebugFlags.Operators;
@@ -506,6 +502,7 @@ namespace SimpleTesting
             Assert.IsTrue(registers.Count == 1 && registers[0] == null); // really just want to test that code gen didn't fail.
         }
     }
+
     [TestClass]
     public class AfaTestsWithoutCodegen : TestWithConfigSettingsAndMemoryLeakDetection
     {
@@ -536,6 +533,9 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void AfaDefinePatternWithoutCodegen02() => AfaTests.AfaDefinePattern02();
+
+        [TestMethod, TestCategory("Gated")]
+        public void AfaDefinePatternWithoutCodegen03() => AfaTests.AfaDefinePattern03();
 
         [TestMethod, TestCategory("Gated")]
         public void DAfaWithoutCodegen01() => AfaTests.DAfa01();
@@ -578,6 +578,9 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void AfaDefinePatternWithCodegen02() => AfaTests.AfaDefinePattern02();
+
+        [TestMethod, TestCategory("Gated")]
+        public void AfaDefinePatternWithCodegen03() => AfaTests.AfaDefinePattern03();
 
         [TestMethod, TestCategory("Gated")]
         public void DAfaWithCodegen01() => AfaTests.DAfa01();

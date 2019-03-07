@@ -82,14 +82,11 @@ namespace Microsoft.StreamProcessing
                                 Accumulate = (ts, ev, reg, acc) => multiArc.Accumulate.Inline(ts, ev, reg, acc),
                                 Fence = (ts, acc, reg) => multiArc.Fence.Inline(ts, acc, reg),
                             };
-                            if (multiArc.Transfer == null)
-                            {
-                                multiEdgeInfo.Transfer = null;
-                            }
-                            else
-                            {
-                                multiEdgeInfo.Transfer = (ts, acc, reg) => multiArc.Transfer.Inline(ts, acc, reg);
-                            }
+
+                            multiEdgeInfo.Transfer = multiArc.Transfer == null
+                                ? (Func<string, string, string, string>)null
+                                : ((ts, acc, reg) => multiArc.Transfer.Inline(ts, acc, reg));
+
                             if (multiArc.Dispose == null)
                             {
                                 multiEdgeInfo.Dispose = (acc) => "// no dispose function";
@@ -98,14 +95,10 @@ namespace Microsoft.StreamProcessing
                             {
                                 multiEdgeInfo.Dispose = (acc) => multiArc.Dispose.Inline(acc);
                             }
-                            if (multiArc.SkipToEnd == null)
-                            {
-                                multiEdgeInfo.SkipToEnd = null;
-                            }
-                            else
-                            {
-                                multiEdgeInfo.SkipToEnd = (ts, ev, acc) => multiArc.SkipToEnd.Inline(ts, ev, acc);
-                            }
+
+                            multiEdgeInfo.SkipToEnd = multiArc.SkipToEnd == null
+                                ? (Func<string, string, string, string>)null
+                                : ((ts, ev, acc) => multiArc.SkipToEnd.Inline(ts, ev, acc));
 
                             edgeList.Add(multiEdgeInfo);
                             continue;
@@ -149,14 +142,11 @@ namespace Microsoft.StreamProcessing
                                 Accumulate = (ts, ev, reg, acc) => multiArc.Accumulate.Inline(ts, ev, reg, acc),
                                 Fence = (ts, acc, reg) => multiArc.Fence.Inline(ts, acc, reg),
                             };
-                            if (multiArc.Transfer == null)
-                            {
-                                multiEdgeInfo.Transfer = null;
-                            }
-                            else
-                            {
-                                multiEdgeInfo.Transfer = (ts, acc, reg) => multiArc.Transfer.Inline(ts, acc, reg);
-                            }
+
+                            multiEdgeInfo.Transfer = multiArc.Transfer == null
+                                ? (Func<string, string, string, string>)null
+                                : ((ts, acc, reg) => multiArc.Transfer.Inline(ts, acc, reg));
+
                             if (multiArc.Dispose == null)
                             {
                                 multiEdgeInfo.Dispose = (acc) => "// no dispose function";
@@ -165,14 +155,11 @@ namespace Microsoft.StreamProcessing
                             {
                                 multiEdgeInfo.Dispose = (acc) => multiArc.Dispose.Inline(acc);
                             }
-                            if (multiArc.SkipToEnd == null)
-                            {
-                                multiEdgeInfo.SkipToEnd = null;
-                            }
-                            else
-                            {
-                                multiEdgeInfo.SkipToEnd = (ts, ev, acc) => multiArc.SkipToEnd.Inline(ts, ev, acc);
-                            }
+
+                            multiEdgeInfo.SkipToEnd = multiArc.SkipToEnd == null
+                                ? (Func<string, string, string, string>)null
+                                : ((ts, ev, acc) => multiArc.SkipToEnd.Inline(ts, ev, acc));
+
                             edgeList2.Add(multiEdgeInfo);
                             continue;
                         }

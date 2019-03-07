@@ -30,9 +30,7 @@ namespace Microsoft.StreamProcessing
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledPartitionedAfaPipe_MultiEvent()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         public CompiledPartitionedAfaPipe_MultiEvent(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
             : base(stream, observer, afa, maxDuration, false)
@@ -275,8 +273,6 @@ namespace Microsoft.StreamProcessing
         }
 
         protected override void UpdatePointers()
-        {
-            this.activeFindTraverser = new FastMap<GroupedActiveStateAccumulator<TKey, TPayload, TRegister, TAccumulator>>.FindTraverser(this.activeStates);
-        }
+            => this.activeFindTraverser = new FastMap<GroupedActiveStateAccumulator<TKey, TPayload, TRegister, TAccumulator>>.FindTraverser(this.activeStates);
     }
 }

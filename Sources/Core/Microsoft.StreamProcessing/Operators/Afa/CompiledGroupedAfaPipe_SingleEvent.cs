@@ -172,10 +172,9 @@ namespace Microsoft.StreamProcessing
 
                                                 if (arcinfo.Fence(synctime, batch[i], state.register))
                                                 {
-                                                    TRegister newReg;
-                                                    if (arcinfo.Transfer == null) newReg = state.register;
-                                                    else newReg = arcinfo.Transfer(synctime, batch[i], state.register);
-
+                                                    var newReg = arcinfo.Transfer == null
+                                                        ? state.register
+                                                        : arcinfo.Transfer(synctime, batch[i], state.register);
                                                     int ns = arcinfo.toState;
                                                     while (true)
                                                     {
@@ -256,10 +255,9 @@ namespace Microsoft.StreamProcessing
                                         var arcinfo = startStateMap[cnt];
                                         if (arcinfo.Fence(synctime, batch[i], this.defaultRegister))
                                         {
-                                            TRegister newReg;
-                                            if (arcinfo.Transfer == null) newReg = this.defaultRegister;
-                                            else newReg = arcinfo.Transfer(synctime, batch[i], this.defaultRegister);
-
+                                            var newReg = arcinfo.Transfer == null
+                                                ? this.defaultRegister
+                                                : arcinfo.Transfer(synctime, batch[i], this.defaultRegister);
                                             int ns = arcinfo.toState;
                                             while (true)
                                             {

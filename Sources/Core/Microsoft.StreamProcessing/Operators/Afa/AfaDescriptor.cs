@@ -37,7 +37,6 @@ namespace Microsoft.StreamProcessing
             => new Afa<TInput, TRegister>(defaultRegister);
     }
 
-
     /// <summary>
     /// Class that describes an AFA completely, along with its properties.
     /// </summary>
@@ -282,7 +281,6 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="defaultRegister">The default value for the register</param>
         public Afa(TRegister defaultRegister = default) : base(defaultRegister)
-        {
-        }
+        { }
     }
 }
