@@ -23,8 +23,8 @@ namespace Microsoft.StreamProcessing
 
             if (Config.ForceRowBasedExecution)
             {
-                this.sourceBatchTypeName = string.Format("Microsoft.StreamProcessing.StreamMessage<{0}, {1}>", this.TKey, this.TPayload);
-                this.resultBatchTypeName = string.Format("Microsoft.StreamProcessing.StreamMessage<{0}, {1}>", this.TKey, this.TRegister);
+                this.sourceBatchTypeName = $"Microsoft.StreamProcessing.StreamMessage<{this.TKey}, {this.TPayload}>";
+                this.resultBatchTypeName = $"Microsoft.StreamProcessing.StreamMessage<{this.TKey}, {this.TRegister}>";
             }
             else
             {
@@ -42,13 +42,18 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                var className = string.Format("GeneratedGroupedAfaMultiEvent_{0}", AFASequenceNumber++);
-                var template = new GroupedAfaMultiEventTemplate(className, typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(TAccumulator));
-
-                template.isFinal = stream.afa.isFinal;
-                template.hasOutgoingArcs = stream.afa.hasOutgoingArcs;
-                template.startStates = stream.afa.startStates;
-                template.AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances;
+                var className = $"GeneratedGroupedAfaMultiEvent_{AFASequenceNumber++}";
+                var template = new GroupedAfaMultiEventTemplate(className, typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(TAccumulator))
+                {
+                    isFinal = stream.afa.isFinal,
+                    hasOutgoingArcs = stream.afa.hasOutgoingArcs,
+                    startStates = stream.afa.startStates,
+                    AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances,
+                    isSyncTimeSimultaneityFree = true, // The handwritten version doesn't make a distinction.
+                    keyEqualityComparer =
+                        (left, right) =>
+                            stream.Properties.KeyEqualityComparer.GetEqualsExpr().Inline(left, right),
+                };
 
                 var d1 = stream.afa.uncompiledAfa.transitionInfo;
                 var orderedKeys = d1.Keys.OrderBy(e => e).ToArray();
@@ -78,14 +83,11 @@ namespace Microsoft.StreamProcessing
                                 },
                                 Fence = (ts, acc, reg) => multiArc.Fence.Inline(ts, acc, reg),
                             };
-                            if (multiArc.Transfer == null)
-                            {
-                                multiEdgeInfo.Transfer = null;
-                            }
-                            else
-                            {
-                                multiEdgeInfo.Transfer = (ts, acc, reg) => multiArc.Transfer.Inline(ts, acc, reg);
-                            }
+
+                            multiEdgeInfo.Transfer = multiArc.Transfer == null
+                                ? (Func<string, string, string, string>)null
+                                : ((ts, acc, reg) => multiArc.Transfer.Inline(ts, acc, reg));
+
                             if (multiArc.Dispose == null)
                             {
                                 multiEdgeInfo.Dispose = (acc) => "// no dispose function";
@@ -94,14 +96,10 @@ namespace Microsoft.StreamProcessing
                             {
                                 multiEdgeInfo.Dispose = (acc) => multiArc.Dispose.Inline(acc);
                             }
-                            if (multiArc.SkipToEnd == null)
-                            {
-                                multiEdgeInfo.SkipToEnd = null;
-                            }
-                            else
-                            {
-                                multiEdgeInfo.SkipToEnd = (ts, ev, acc) => multiArc.SkipToEnd.Inline(ts, ev, acc);
-                            }
+
+                            multiEdgeInfo.SkipToEnd = multiArc.SkipToEnd == null
+                                ? (Func<string, string, string, string>)null
+                                : ((ts, ev, acc) => multiArc.SkipToEnd.Inline(ts, ev, acc));
 
                             edgeList.Add(multiEdgeInfo);
                         }
@@ -135,14 +133,11 @@ namespace Microsoft.StreamProcessing
                                 },
                                 Fence = (ts, acc, reg) => multiArc.Fence.Inline(ts, acc, reg),
                             };
-                            if (multiArc.Transfer == null)
-                            {
-                                multiEdgeInfo.Transfer = null;
-                            }
-                            else
-                            {
-                                multiEdgeInfo.Transfer = (ts, acc, reg) => multiArc.Transfer.Inline(ts, acc, reg);
-                            }
+
+                            multiEdgeInfo.Transfer = multiArc.Transfer == null
+                                ? (Func<string, string, string, string>)null
+                                : ((ts, acc, reg) => multiArc.Transfer.Inline(ts, acc, reg));
+
                             if (multiArc.Dispose == null)
                             {
                                 multiEdgeInfo.Dispose = (acc) => "// no dispose function";
@@ -151,25 +146,17 @@ namespace Microsoft.StreamProcessing
                             {
                                 multiEdgeInfo.Dispose = (acc) => multiArc.Dispose.Inline(acc);
                             }
-                            if (multiArc.SkipToEnd == null)
-                            {
-                                multiEdgeInfo.SkipToEnd = null;
-                            }
-                            else
-                            {
-                                multiEdgeInfo.SkipToEnd = (ts, ev, acc) => multiArc.SkipToEnd.Inline(ts, ev, acc);
-                            }
+
+                            multiEdgeInfo.SkipToEnd = multiArc.SkipToEnd == null
+                                ? (Func<string, string, string, string>)null
+                                : ((ts, ev, acc) => multiArc.SkipToEnd.Inline(ts, ev, acc));
+
                             edgeList2.Add(multiEdgeInfo);
                         }
                     }
 
                     template.startEdgeInfos.Add(Tuple.Create(startState, edgeList2));
                 }
-
-                template.isSyncTimeSimultaneityFree = true; // The handwritten version doesn't make a distinction.
-                template.keyEqualityComparer =
-                    (left, right) =>
-                        stream.Properties.KeyEqualityComparer.GetEqualsExpr().Inline(left, right);
 
                 var expandedCode = template.TransformText();
 

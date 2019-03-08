@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
           sw.Start();
 #endif
             var template = new PointAtEndTemplate(
-                string.Format("GeneratedPointAtEnd_{0}", PointAtEndSequenceNumber++),
+                $"GeneratedPointAtEnd_{PointAtEndSequenceNumber++}",
                 typeof(TKey), typeof(TPayload));
 
             return template.Generate<TKey, TPayload>(typeof(IStreamable<,>));

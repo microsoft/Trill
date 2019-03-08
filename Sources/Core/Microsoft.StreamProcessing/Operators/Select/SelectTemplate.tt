@@ -30,7 +30,7 @@ using <#= this.resultType.Namespace #>;
 // Source Fields: <#= String.Join(",", this.fields.Select(f => f.OriginalName)) #>
 // Destination Fields: <#= String.Join(",", this.destinationFields.Select(f => f.OriginalName)) #>
 // Computed Fields: <#= String.Join(",", this.computedFields.Keys.Select(f => f.OriginalName)) #>
-// Swinging Fields: <#= String.Join(",", this.swingingFields.Select(tup => string.Format("<{0},{1}>", tup.Item1.OriginalName, tup.Item2.Name))) #>
+// Swinging Fields: <#= String.Join(",", this.swingingFields.Select(tup => $"<{tup.Item1.OriginalName},{tup.Item2.Name}>")) #>
 
 [DataContract]
 internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TResult #>>

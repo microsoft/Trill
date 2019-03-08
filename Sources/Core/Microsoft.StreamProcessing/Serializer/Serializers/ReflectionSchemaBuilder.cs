@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -84,7 +83,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         private ObjectSerializerBase CreateSchema(Type type, uint currentDepth)
         {
             if (currentDepth == this.settings.MaxItemsInSchemaTree)
-                throw new SerializationException(string.Format(CultureInfo.InvariantCulture, "Maximum depth of object graph reached."));
+                throw new SerializationException("Maximum depth of object graph reached.");
 
             var surrogate = this.settings.Surrogate;
             if (surrogate != null)
@@ -96,8 +95,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
                 if (type.IsUnsupported())
                 {
-                    throw new SerializationException(
-                        string.Format(CultureInfo.InvariantCulture, "Type '{0}' is not supported.", type));
+                    throw new SerializationException($"Type '{type}' is not supported.");
                 }
             }
 
@@ -143,7 +141,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             // Others
             if (typeInfo.IsClass || typeInfo.IsValueType) return BuildRecordTypeSchema(type, currentDepth);
 
-            throw new SerializationException(string.Format(CultureInfo.InvariantCulture, "Type '{0}' is not supported.", type));
+            throw new SerializationException($"Type '{type}' is not supported.");
         }
 
         private ObjectSerializerBase BuildEnumTypeSchema(Type type)
@@ -184,8 +182,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             var applicable = this.knownTypes.Where(t => t.CanBeKnownTypeOf(type)).ToList();
             if (applicable.Count == 0)
             {
-                throw new SerializationException(
-                    string.Format(CultureInfo.InvariantCulture, "Could not find any matching known type for '{0}'.", type));
+                throw new SerializationException($"Could not find any matching known type for '{type}'.");
             }
 
             if (!type.IsAbstract && !type.IsInterface && !this.knownTypes.Contains(type)) applicable.Add(type);

@@ -72,7 +72,7 @@ namespace Microsoft.StreamProcessing
                 template.TKeyTResultGenericParameters = tm.GenericTypeVariables(keyType, resultType).BracketedCommaSeparatedString();
                 template.genericParameters = tm.GenericTypeVariables(keyType, leftType, rightType, resultType).BracketedCommaSeparatedString();
 
-                template.className = string.Format("GeneratedEquiJoin_{0}", EquiJoinSequenceNumber++);
+                template.className = $"GeneratedEquiJoin_{EquiJoinSequenceNumber++}";
 
                 template.leftMessageRepresentation = new ColumnarRepresentation(leftType);
                 template.rightMessageRepresentation = new ColumnarRepresentation(rightType);
@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing
                 if (keyType.IsAnonymousType())
                 {
                     template.keyComparerEquals =
-                        (left, right) => string.Format("keyComparerEquals({0}, {1})", left, right);
+                        (left, right) => $"keyComparerEquals({left}, {right})";
                 }
                 #endregion
 
@@ -277,7 +277,7 @@ namespace Microsoft.StreamProcessing
                     template.endPointHeap = "EndPointQueue";
                 }
                 else if (stream.Left.Properties.IsConstantDuration && stream.Right.Properties.IsConstantDuration &&
-                            stream.Left.Properties.ConstantDurationLength == stream.Right.Properties.ConstantDurationLength)
+                         stream.Left.Properties.ConstantDurationLength == stream.Right.Properties.ConstantDurationLength)
                 {
                     template.endPointHeap = "EndPointQueue";
                 }

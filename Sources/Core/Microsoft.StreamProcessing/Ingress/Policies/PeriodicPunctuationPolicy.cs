@@ -43,9 +43,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns>An instance of the punctuation policy</returns>
         public static PeriodicPunctuationPolicy None()
-        {
-            return new PeriodicPunctuationPolicy(PeriodicPunctuationPolicyType.None, 0);
-        }
+            => new PeriodicPunctuationPolicy(PeriodicPunctuationPolicyType.None, 0);
 
         /// <summary>
         /// Inject punctuations every <paramref name="generationPeriod"/> time ticks, rounded down to the previous
@@ -63,10 +61,7 @@ namespace Microsoft.StreamProcessing
         /// Provides a hash code for the PeriodicPunctuationPolicy object.
         /// </summary>
         /// <returns>A hash code for the PeriodicPunctuationPolicy object.</returns>
-        public override int GetHashCode()
-        {
-            return this.type.GetHashCode() ^ this.generationPeriod.GetHashCode();
-        }
+        public override int GetHashCode() => this.type.GetHashCode() ^ this.generationPeriod.GetHashCode();
 
         /// <summary>
         /// Provides a string representation for the PeriodicPunctuationPolicy object.
@@ -81,7 +76,7 @@ namespace Microsoft.StreamProcessing
                 case PeriodicPunctuationPolicyType.Time: kind = "Time"; break;
                 default: kind = "Unknown(" + this.type.ToString() + ")"; break;
             }
-            return string.Format("PeriodicPunctuationPolicy.{0}({1})", kind, this.generationPeriod.ToString());
+            return $"PeriodicPunctuationPolicy.{kind}({this.generationPeriod.ToString()})";
         }
     }
 }

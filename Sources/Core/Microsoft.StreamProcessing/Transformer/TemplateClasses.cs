@@ -417,25 +417,23 @@ namespace System.Runtime.CompilerServices
         internal static string GetBatchClassName(Type keyType, Type payloadType)
         {
             if (!payloadType.CanRepresentAsColumnar())
-                return string.Format(CultureInfo.InvariantCulture, "StreamMessage<{0}, {1}>", keyType.GetCSharpSourceSyntax(), payloadType.GetCSharpSourceSyntax());
+                return $"StreamMessage<{keyType.GetCSharpSourceSyntax()}, {payloadType.GetCSharpSourceSyntax()}>";
 
             var dictionaryKey = CacheKey.Create(keyType, payloadType);
-            var generatedBatchClassName = batchType2Name.GetOrAdd(
+            return batchType2Name.GetOrAdd(
                 dictionaryKey,
-                key => string.Format(CultureInfo.InvariantCulture, "GeneratedBatch_{0}", BatchClassSequenceNumber++));
-            return generatedBatchClassName;
+                key => $"GeneratedBatch_{BatchClassSequenceNumber++}");
         }
 
         internal static string GetMemoryPoolClassName(Type keyType, Type payloadType)
         {
             if (!keyType.KeyTypeNeedsGeneratedMemoryPool() && payloadType.MemoryPoolHasGetMethodFor())
-                return string.Format(CultureInfo.InvariantCulture, "MemoryPool<{0}, {1}>", keyType.GetCSharpSourceSyntax(), payloadType.GetCSharpSourceSyntax());
+                return $"MemoryPool<{keyType.GetCSharpSourceSyntax()}, {payloadType.GetCSharpSourceSyntax()}>";
 
             if (!payloadType.CanRepresentAsColumnar())
-                return string.Format(CultureInfo.InvariantCulture, "MemoryPool<{0}, {1}>", keyType.GetCSharpSourceSyntax(), payloadType.GetCSharpSourceSyntax());
+                return $"MemoryPool<{keyType.GetCSharpSourceSyntax()}, {payloadType.GetCSharpSourceSyntax()}>";
 
-            var generatedMemoryPoolName = string.Format(CultureInfo.InvariantCulture, "MemoryPool_{0}_{1}", keyType.Name.CleanUpIdentifierName(), payloadType.Name.CleanUpIdentifierName());
-            return generatedMemoryPoolName;
+            return $"MemoryPool_{keyType.Name.CleanUpIdentifierName()}_{payloadType.Name.CleanUpIdentifierName()}";
         }
 
         internal static string GetValidIdentifier(Type t) => t.GetCSharpSourceSyntax().CleanUpIdentifierName();
@@ -939,7 +937,7 @@ namespace System.Runtime.CompilerServices
 
                 return method == null
                     ? objectToConvert.ToString()
-                    : (string)(method.Invoke(objectToConvert, new object[] { this.formatProviderField }));
+                    : (string)method.Invoke(objectToConvert, new object[] { this.formatProviderField });
             }
         }
 

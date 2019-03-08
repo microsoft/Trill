@@ -56,19 +56,19 @@ namespace Microsoft.StreamProcessing
 
         public static bool CanBeKnownTypeOf(this Type type, Type baseType)
         {
-            TypeInfo typeInfo = type.GetTypeInfo();
-            TypeInfo baseTypeInfo = baseType.GetTypeInfo();
+            var typeInfo = type.GetTypeInfo();
+            var baseTypeInfo = baseType.GetTypeInfo();
 
             return !typeInfo.IsAbstract
-                   && !type.IsUnsupported()
-                   && (typeInfo.IsSubclassOf(baseType)
-                   || type == baseType
-                   || (baseTypeInfo.IsInterface && baseTypeInfo.IsAssignableFrom(type))
-                   || (baseTypeInfo.IsGenericType && baseTypeInfo.IsInterface && baseType.GenericIsAssignable(type)
-                           && typeInfo.GetGenericArguments()
-                                  .Zip(baseTypeInfo.GetGenericArguments(), (type1, type2) => new Tuple<Type, Type>(type1, type2))
-                                  .ToList()
-                                  .TrueForAll(tuple => CanBeKnownTypeOf(tuple.Item1, tuple.Item2))));
+                && !type.IsUnsupported()
+                && (typeInfo.IsSubclassOf(baseType)
+                    || type == baseType
+                    || (baseTypeInfo.IsInterface && baseTypeInfo.IsAssignableFrom(type))
+                    || (baseTypeInfo.IsGenericType && baseTypeInfo.IsInterface && baseType.GenericIsAssignable(type)
+                        && typeInfo.GetGenericArguments()
+                                   .Zip(baseTypeInfo.GetGenericArguments(), (type1, type2) => new Tuple<Type, Type>(type1, type2))
+                                   .ToList()
+                                   .TrueForAll(tuple => CanBeKnownTypeOf(tuple.Item1, tuple.Item2))));
         }
 
         private static bool GenericIsAssignable(this Type type, Type instanceType)
@@ -592,7 +592,7 @@ namespace Microsoft.StreamProcessing
                     // Only instance fields (including field-like events) affect the outcome.
                     if (field.IsStatic) continue;
 
-                    Type fieldType = field.FieldType;
+                    var fieldType = field.FieldType;
                     switch (IsManagedTypeHelper(fieldType))
                     {
                         case true:
@@ -625,7 +625,6 @@ namespace Microsoft.StreamProcessing
 
             return true;
         }
-
         #endregion
 
         /// <summary>
@@ -649,14 +648,14 @@ namespace Microsoft.StreamProcessing
             || type == typeof(object)
             || type.GetTypeInfo().ContainsGenericParameters
             || (!type.IsArray
-            && !type.GetTypeInfo().IsValueType
-            && !type.HasSupportedParameterizedConstructor()
-            && !type.HasParameterlessConstructor()
-            && type != typeof(string)
-            && type != typeof(Uri)
-            && !type.GetTypeInfo().IsAbstract
-            && !type.GetTypeInfo().IsInterface
-            && !(type.GetTypeInfo().IsGenericType && SupportedInterfaces.Contains(type.GetGenericTypeDefinition())));
+                && !type.GetTypeInfo().IsValueType
+                && !type.HasSupportedParameterizedConstructor()
+                && !type.HasParameterlessConstructor()
+                && type != typeof(string)
+                && type != typeof(Uri)
+                && !type.GetTypeInfo().IsAbstract
+                && !type.GetTypeInfo().IsInterface
+                && !(type.GetTypeInfo().IsGenericType && SupportedInterfaces.Contains(type.GetGenericTypeDefinition())));
 
         private static readonly HashSet<Type> SupportedInterfaces = new HashSet<Type>
         {
@@ -677,10 +676,7 @@ namespace Microsoft.StreamProcessing
             Contract.EndContractBlock();
 
             if (type.IsUnsupported())
-            {
-                throw new SerializationException(
-                    string.Format(CultureInfo.InvariantCulture, "Type '{0}' is not supported by the resolver.", type));
-            }
+                throw new SerializationException($"Type '{type}' is not supported by the resolver.");
 
             return type;
         }

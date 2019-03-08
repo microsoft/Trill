@@ -31,7 +31,7 @@ namespace Microsoft.StreamProcessing
             assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(keyType));
             assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(payloadType));
 
-            var generatedClassName = string.Format(CultureInfo.InvariantCulture, "ColumnToRowUnaryPipeGeneratedFrom_{0}_{1}_{2}", keyType.GetValidIdentifier(), payloadType.GetValidIdentifier(), ColumnToRowSequenceNumber++);
+            var generatedClassName = $"ColumnToRowUnaryPipeGeneratedFrom_{keyType.GetValidIdentifier()}_{payloadType.GetValidIdentifier()}_{ColumnToRowSequenceNumber++}";
             var template = new ColumnToRowTemplate(generatedClassName, keyType, payloadType);
 
             var expandedCode = template.TransformText();

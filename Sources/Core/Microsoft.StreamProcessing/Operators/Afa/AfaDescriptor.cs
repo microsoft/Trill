@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing
@@ -252,7 +251,7 @@ namespace Microsoft.StreamProcessing
         public override string ToString()
         {
             string result = string.Empty;
-            result += string.Format(CultureInfo.InvariantCulture, "Start State: {0}\n", this.StartState);
+            result += $"Start State: {this.StartState}\n";
             result += "Final States:";
             this.finalStates.ForEach(x => result += " " + x);
             result += "\n";

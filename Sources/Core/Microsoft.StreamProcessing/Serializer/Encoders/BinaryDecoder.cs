@@ -3,7 +3,6 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
@@ -169,7 +168,7 @@ namespace Microsoft.StreamProcessing.Serializer
             if (read != array.Length)
             {
                 throw new SerializationException(
-                    string.Format(CultureInfo.InvariantCulture, "Unexpected end of stream: '{0}' bytes missing.", array.Length - read));
+                    $"Unexpected end of stream: '{array.Length - read}' bytes missing.");
             }
         }
 

@@ -66,7 +66,7 @@ namespace Microsoft.StreamProcessing
                 var gps = tm.GenericTypeVariables(keyType, leftType, rightType);
                 template.genericParameters = gps.BracketedCommaSeparatedString();
 
-                template.className = string.Format("GeneratedLeftAntiSemiJoin_{0}", LASJSequenceNumber++);
+                template.className = $"GeneratedLeftAntiSemiJoin_{LASJSequenceNumber++}";
 
                 var leftMessageRepresentation = new ColumnarRepresentation(leftType);
                 var resultRepresentation = new ColumnarRepresentation(leftType);

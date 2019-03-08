@@ -56,7 +56,7 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                generatedClassName = string.Format("SelectMany_{0}", sequenceNumber++);
+                generatedClassName = $"SelectMany_{sequenceNumber++}";
                 var keyType = typeof(TKey);
                 var payloadType = typeof(TPayload);
                 var resultType = typeof(TResult);
@@ -67,7 +67,7 @@ namespace Microsoft.StreamProcessing
                 template.genericParameters = gps.BracketedCommaSeparatedString();
                 template.numberOfGenericParameters = gps.Count();
                 template.TKeyTResultGenericParameters = tm.GenericTypeVariables(keyType, resultType).BracketedCommaSeparatedString();
-                template.MemoryPoolGenericParameters = string.Format("<{0}, {1}>", template.TKey, template.TResult);
+                template.MemoryPoolGenericParameters = $"<{template.TKey}, {template.TResult}>";
                 if (resultType == typeof(int) || resultType == typeof(long) || resultType == typeof(string))
                     template.MemoryPoolGenericParameters = string.Empty;
 

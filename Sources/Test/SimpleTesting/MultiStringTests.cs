@@ -8,7 +8,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
 using Microsoft.StreamProcessing;
-using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Internal.Collections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

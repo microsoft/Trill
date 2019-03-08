@@ -12,13 +12,13 @@ namespace Microsoft.StreamProcessing
 {
     internal partial class UngroupedAfaTemplate : AfaTemplate
     {
-        private UngroupedAfaTemplate(string className, Type keyType, Type payloadType, Type registerType, Type accumulatorType)
-            : base(className, keyType, payloadType, registerType, accumulatorType)
+        private UngroupedAfaTemplate(string className, Type payloadType, Type registerType, Type accumulatorType)
+            : base(className, typeof(Empty), payloadType, registerType, accumulatorType)
         {
             if (Config.ForceRowBasedExecution)
             {
-                this.sourceBatchTypeName = string.Format("Microsoft.StreamProcessing.StreamMessage<Microsoft.StreamProcessing.Empty, {0}>", this.TPayload);
-                this.resultBatchTypeName = string.Format("Microsoft.StreamProcessing.StreamMessage<Microsoft.StreamProcessing.Empty, {0}>", this.TRegister);
+                this.sourceBatchTypeName = $"Microsoft.StreamProcessing.StreamMessage<Microsoft.StreamProcessing.Empty, {this.TPayload}>";
+                this.resultBatchTypeName = $"Microsoft.StreamProcessing.StreamMessage<Microsoft.StreamProcessing.Empty, {this.TRegister}>";
             }
             else
             {
@@ -36,13 +36,14 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                var className = string.Format("GeneratedUngroupedAfa_{0}", AFASequenceNumber++);
-                var template = new UngroupedAfaTemplate(className, typeof(Empty), typeof(TPayload), typeof(TRegister), typeof(TAccumulator));
-
-                template.isFinal = stream.afa.isFinal;
-                template.hasOutgoingArcs = stream.afa.hasOutgoingArcs;
-                template.startStates = stream.afa.startStates;
-                template.AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances;
+                var className = $"GeneratedUngroupedAfa_{AFASequenceNumber++}";
+                var template = new UngroupedAfaTemplate(className, typeof(TPayload), typeof(TRegister), typeof(TAccumulator))
+                {
+                    isFinal = stream.afa.isFinal,
+                    hasOutgoingArcs = stream.afa.hasOutgoingArcs,
+                    startStates = stream.afa.startStates,
+                    AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances
+                };
 
                 var d1 = stream.afa.uncompiledAfa.transitionInfo;
                 var orderedKeys = d1.Keys.OrderBy(e => e).ToArray();

@@ -30,7 +30,7 @@ namespace Microsoft.StreamProcessing
             // This operator uses the equality method on payloads
             if (this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of payload, '{0}', to LASJ does not have a valid equality operator for columnar mode.", typeof(TLeft).FullName));
+                throw new InvalidOperationException($"Type of payload, '{typeof(TLeft).FullName}', to LASJ does not have a valid equality operator for columnar mode.");
             }
         }
 
@@ -39,8 +39,9 @@ namespace Microsoft.StreamProcessing
             var part = typeof(TKey).GetPartitionType();
             if (part == null)
             {
-                if (this.properties.IsColumnar) return GetPipe(observer, this.Left.Properties.IsConstantDuration, this.Right.Properties.IsConstantDuration);
-                else return new LeftAntiSemiJoinPipe<TKey, TLeft, TRight>(this, observer);
+                return this.properties.IsColumnar
+                    ? GetPipe(observer, this.Left.Properties.IsConstantDuration, this.Right.Properties.IsConstantDuration)
+                    : new LeftAntiSemiJoinPipe<TKey, TLeft, TRight>(this, observer);
             }
 
             var outputType = typeof(PartitionedLeftAntiSemiJoinPipe<,,,>).MakeGenericType(

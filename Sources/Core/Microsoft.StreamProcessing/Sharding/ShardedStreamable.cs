@@ -25,17 +25,13 @@ namespace Microsoft.StreamProcessing.Sharding
         /// Default constructor - do not use directly
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public ShardedStreamable()
-        { }
+        public ShardedStreamable() { }
 
         /// <summary>
         /// Constructor to create a new sharded streamable instance from an existing set of streamables
         /// </summary>
         /// <param name="streamables"></param>
-        public ShardedStreamable(IStreamable<TKey, TPayload>[] streamables)
-        {
-            this.streamables = streamables;
-        }
+        public ShardedStreamable(IStreamable<TKey, TPayload>[] streamables) => this.streamables = streamables;
 
         /// <summary>
         /// Constructor to create a new sharded streamable instance from an existing set of sharded streamables

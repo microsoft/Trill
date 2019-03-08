@@ -33,12 +33,12 @@ namespace Microsoft.StreamProcessing
             // This operator uses the equality method on payloads
             if (left.Properties.IsColumnar && !left.Properties.IsStartEdgeOnly && !left.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of left side of join, '{0}', does not have a valid equality operator for columnar mode.", typeof(TLeft).FullName));
+                throw new InvalidOperationException($"Type of left side of join, '{typeof(TLeft).FullName}', does not have a valid equality operator for columnar mode.");
             }
             // This operator uses the equality method on payloads
             if (right.Properties.IsColumnar && !right.Properties.IsStartEdgeOnly && !right.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of right side of join, '{0}', does not have a valid equality operator for columnar mode.", typeof(TRight).FullName));
+                throw new InvalidOperationException($"Type of right side of join, '{typeof(TRight).FullName}', does not have a valid equality operator for columnar mode.");
             }
 
             if (left.Properties.IsStartEdgeOnly && right.Properties.IsStartEdgeOnly)
@@ -140,11 +140,11 @@ namespace Microsoft.StreamProcessing
 
         protected override IBinaryObserver<TKey, TLeft, TRight, TResult> CreatePipe(IStreamObserver<TKey, TResult> observer)
         {
-            var part = typeof(TKey).GetPartitionType();
-            if (part == null)
+            if (typeof(TKey).GetPartitionType() == null)
             {
-                if (this.properties.IsColumnar) return GetPipe(observer);
-                else return this.fallbackGenerator(this, this.Selector, observer);
+                return this.properties.IsColumnar
+                    ? GetPipe(observer)
+                    : this.fallbackGenerator(this, this.Selector, observer);
             }
             return this.partitionedGenerator(this, this.Selector, observer);
         }
@@ -166,18 +166,18 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create(this.joinKind, this.Properties.KeyEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Left.Properties.PayloadEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Right.Properties.PayloadEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Selector.ExpressionToCSharp());
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, this.columnarGenerator);
-            Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> planNode = ((PlanNode left, PlanNode right, IBinaryObserver o) =>
+            Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> planNode = (PlanNode left, PlanNode right, IBinaryObserver o) =>
             {
                 var node = new JoinPlanNode(
-                        left, right, o,
-                        typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), this.joinKind, true, generatedPipeType.Item2, false);
+                    left, right, o,
+                    typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), this.joinKind, true, generatedPipeType.Item2, false);
                 node.AddJoinExpression("key comparer", this.Properties.KeyEqualityComparer.GetEqualsExpr());
                 node.AddJoinExpression("left payload comparer", this.Left.Properties.PayloadEqualityComparer.GetEqualsExpr());
                 node.AddJoinExpression("right payload comparer", this.Right.Properties.PayloadEqualityComparer.GetEqualsExpr());
                 node.AddJoinExpression("left key comparer", this.Left.Properties.KeyComparer.GetCompareExpr());
                 node.AddJoinExpression("right key comparer", this.Right.Properties.KeyComparer.GetCompareExpr());
                 return node;
-            });
+            };
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode);
             var returnValue = (BinaryPipe<TKey, TLeft, TRight, TResult>)instance;

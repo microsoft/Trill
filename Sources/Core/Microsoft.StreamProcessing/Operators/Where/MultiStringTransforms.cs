@@ -12,11 +12,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing
 {
-    internal class MultiStringTransformer
+    internal sealed class MultiStringTransformer
     {
-        private MultiStringTransformer(Type t) {
-            this.batchType = t;
-        }
+        private MultiStringTransformer(Type t) => this.batchType = t;
 
         private readonly Type batchType;
 
@@ -67,21 +65,17 @@ namespace Microsoft.StreamProcessing
             return vectorVisitor.IsVectorizable;
         }
 
-        private class VectorizableVisitor : ExpressionVisitor
+        private sealed class VectorizableVisitor : ExpressionVisitor
         {
             public bool IsVectorizable = true;
             private readonly Type batchType;
 
-            public VectorizableVisitor(Type batchType)
-            {
-                this.batchType = batchType;
-            }
+            public VectorizableVisitor(Type batchType) => this.batchType = batchType;
 
             public static bool IsMemberOnBatchField(MemberExpression memberBinding, Type batchType)
-            {
-                if (memberBinding == null) return false;
-                return memberBinding.Member.DeclaringType == batchType;
-            }
+                => memberBinding == null
+                    ? false
+                    : memberBinding.Member.DeclaringType == batchType;
 
             protected override Expression VisitBinary(BinaryExpression node)
             {
@@ -97,6 +91,7 @@ namespace Microsoft.StreamProcessing
                         return node;
                 }
             }
+
             protected override Expression VisitUnary(UnaryExpression node)
             {
                 switch (node.NodeType)
@@ -109,6 +104,7 @@ namespace Microsoft.StreamProcessing
                         return node;
                 }
             }
+
             protected override Expression VisitMethodCall(MethodCallExpression methodCall)
             {
                 var calledMethod = methodCall.Method;
@@ -145,17 +141,17 @@ namespace Microsoft.StreamProcessing
                 var calledMethod = methodCall.Method;
 
                 // static bool System.Text.RegularExpressions.Regex.IsMatch(string input, string pattern)
-                return (calledMethod.DeclaringType.Equals(typeof(System.Text.RegularExpressions.Regex)) &&
+                return calledMethod.DeclaringType.Equals(typeof(System.Text.RegularExpressions.Regex)) &&
                     calledMethod.IsStatic &&
                     calledMethod.Name.Equals("IsMatch") &&
                     methodCall.Arguments.Count == 2 &&
                     methodCall.Arguments.All(a => a.Type.Equals(typeof(string))) &&
                     methodCall.Arguments.All(a => !SearchForMultiStringMethod.ContainsMultiStringCall(batchType, a)) &&
-                    IsMemberOnBatchField(methodCall.Arguments.ElementAt(0) as MemberExpression, batchType));
+                    IsMemberOnBatchField(methodCall.Arguments.ElementAt(0) as MemberExpression, batchType);
             }
         }
 
-        private class Vectorize : ExpressionVisitor
+        private sealed class Vectorize : ExpressionVisitor
         {
             private static int counter = 0;
             public List<string> vectorStatements = new List<string>();
@@ -164,10 +160,7 @@ namespace Microsoft.StreamProcessing
             private string resultBV;
             private readonly Type batchType;
 
-            private Vectorize(Type batchType)
-            {
-                this.batchType = batchType;
-            }
+            private Vectorize(Type batchType) => this.batchType = batchType;
 
             public static IEnumerable<string> Transform(Type batchType, Expression e)
             {
@@ -182,15 +175,6 @@ namespace Microsoft.StreamProcessing
                 return me.vectorStatements;
             }
 
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider",
-                MessageId = "System.string.Format(System.String,System.Object,System.Object)",
-                Justification = "This is CLR API substitution, additional intent should not be added on behalf of the user of the API."),
-             System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider",
-                MessageId = "System.string.Format(System.String,System.Object)",
-                Justification = "This is CLR API substitution, additional intent should not be added on behalf of the user of the API."),
-             System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider",
-                MessageId = "System.string.Format(System.String,System.Object,System.Object,System.Object)",
-                Justification="This is CLR API substitution, additional intent should not be added on behalf of the user of the API.")]
             protected override Expression VisitBinary(BinaryExpression node)
             {
                 string left_result;
@@ -201,20 +185,18 @@ namespace Microsoft.StreamProcessing
                         left_result = this.resultBV;
                         var bv_i = "bv" + counter++;
                         // var bv_i = invert(left_result) | incomingBV;
-                        this.vectorStatements.Add(string.Format(
-                            "var {0} = MultiString.InvertLeftThenOrWithRight({1}, {2}, this.pool.bitvectorPool);",
-                            bv_i, left_result, this.incomingBV));
+                        this.vectorStatements.Add($"var {bv_i} = MultiString.InvertLeftThenOrWithRight({left_result}, {this.incomingBV}, this.pool.bitvectorPool);");
                         this.incomingBV = bv_i;
                         Visit(node.Right);
 
                         // free bv_i
-                        this.vectorStatements.Add(string.Format("{0}.ReturnClear();", bv_i));
+                        this.vectorStatements.Add($"{bv_i}.ReturnClear();");
 
                         // this.resultBV &= left_result;
-                        this.vectorStatements.Add(string.Format("MultiString.AndEquals({0}, {1});", this.resultBV, left_result));
+                        this.vectorStatements.Add($"MultiString.AndEquals({this.resultBV}, {left_result});");
 
                         // free left_result
-                        this.vectorStatements.Add(string.Format("{0}.ReturnClear();", left_result));
+                        this.vectorStatements.Add($"{left_result}.ReturnClear();");
 
                         break;
                     case ExpressionType.AndAlso:
@@ -224,7 +206,7 @@ namespace Microsoft.StreamProcessing
                         Visit(node.Right);
 
                         // free left_result
-                        this.vectorStatements.Add(string.Format("{0}.ReturnClear();", left_result));
+                        this.vectorStatements.Add($"{left_result}.ReturnClear();");
 
                         break;
                     default:
@@ -283,7 +265,7 @@ namespace Microsoft.StreamProcessing
                 }
                 else
                 {
-                    this.resultBV = string.Format("bv{0}", counter++);
+                    this.resultBV = $"bv{counter++}";
                     s = "var " + this.resultBV + " = ";
                 }
                 s += methodCall;
@@ -297,10 +279,7 @@ namespace Microsoft.StreamProcessing
             private bool found = false;
             private readonly Type batchType;
 
-            private SearchForMultiStringMethod(Type t)
-            {
-                this.batchType = t;
-            }
+            private SearchForMultiStringMethod(Type t) => this.batchType = t;
 
             public static bool ContainsMultiStringCall(Type batchType, Expression e)
             {
@@ -313,8 +292,9 @@ namespace Microsoft.StreamProcessing
             {
                 if (memberBinding == null) return false;
                 var field = memberBinding.Member as FieldInfo;
-                if (field == null) return false;
-                return field.DeclaringType == this.batchType;
+                return field == null
+                    ? false
+                    : field.DeclaringType == this.batchType;
             }
 
             protected override Expression VisitMethodCall(MethodCallExpression methodCall)
@@ -372,10 +352,7 @@ namespace Microsoft.StreamProcessing
             private readonly Type batchType;
             public Dictionary<FieldInfo, ParameterExpression> multiStringTable = new Dictionary<FieldInfo, ParameterExpression>();
 
-            public WrapperTransformer(Type t)
-            {
-                this.batchType = t;
-            }
+            public WrapperTransformer(Type t) => this.batchType = t;
 
             /// <summary>
             /// Translate calls to method calls on multistrings into calls to MultiString wrapper methods

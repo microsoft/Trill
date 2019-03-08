@@ -25,7 +25,7 @@ namespace Microsoft.StreamProcessing
           sw.Start();
 #endif
             var template = new QuantizeLifetimeTemplate(
-                string.Format("GeneratedQuantizeLifetime_{0}", QuantizeLifetimeSequenceNumber++),
+                $"GeneratedQuantizeLifetime_{QuantizeLifetimeSequenceNumber++}",
                 typeof(TKey), typeof(TPayload));
 
             return template.Generate<TKey, TPayload>(typeof(IStreamable<,>));

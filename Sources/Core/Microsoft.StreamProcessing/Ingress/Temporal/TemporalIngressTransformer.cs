@@ -116,7 +116,7 @@ namespace Microsoft.StreamProcessing
             FuseModule fuseModule)
         {
             var template = new TemporalIngressTemplate(
-                string.Format("GeneratedTemporalIngress_{0}", TemporalIngressSequenceNumber++),
+                $"GeneratedTemporalIngress_{TemporalIngressSequenceNumber++}",
                 typeof(TKey), typeof(TSource), fuseModule?.OutputType ?? typeof(TResult));
 
             var tm = new TypeMapper(template.keyType, template.payloadType, template.resultType);

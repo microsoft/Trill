@@ -168,7 +168,6 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         }
     }
 
-
     [TestClass]
     public class CheckpointRestoreTests<#= suffix #> : TestWithConfigSettingsWithoutMemoryLeakDetection
     {
@@ -192,12 +191,10 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         { }
 
         private static IStreamable<Empty, int> CreateBasicQuery(IStreamable<Empty, int> input)
-        {
-            return input
+            => input
                 .Where(e => e % 2 == 1)
                 .AlterEventLifetime(e => e + 1, StreamEvent.InfinitySyncTime)
                 .Select(e => e / 2);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void BasicIngressDiagnostic<#= suffix #>()

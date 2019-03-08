@@ -56,16 +56,11 @@ namespace Microsoft.StreamProcessing
           sw.Start();
 #endif
             ExtendLifetimeBaseTemplate template;
-            var className = string.Format("GeneratedExtendLifetime_{0}", ExtendLifetimeSequenceNumber++);
+            var className = $"GeneratedExtendLifetime_{ExtendLifetimeSequenceNumber++}";
 
-            if (duration < 0)
-            {
-                template = new ExtendLifetimeNegativeTemplate(className, typeof(TKey), typeof(TPayload));
-            }
-            else
-            {
-                template = new ExtendLifetimeTemplate(className, typeof(TKey), typeof(TPayload));
-            }
+            template = duration < 0
+                ? new ExtendLifetimeNegativeTemplate(className, typeof(TKey), typeof(TPayload))
+                : (ExtendLifetimeBaseTemplate)new ExtendLifetimeTemplate(className, typeof(TKey), typeof(TPayload));
 
             template.ActiveEventType = typeof(TPayload).GetTypeInfo().IsValueType ? template.TPayload : "Active_Event";
 
@@ -88,7 +83,7 @@ namespace Microsoft.StreamProcessing
             template.useCompiledPayloadComparer = useCompiledPayloadComparer;
             if (useCompiledPayloadComparer)
             {
-                template.payloadComparer = (left, right) => string.Format("payloadComparer({0}.Payload, {1}.Payload", left, right);
+                template.payloadComparer = (left, right) => $"payloadComparer({left}.Payload, {right}.Payload";
             }
             else
             {

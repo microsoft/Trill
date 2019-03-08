@@ -174,6 +174,19 @@ namespace Microsoft.StreamProcessing
         /// <typeparam name="TKey">Key type</typeparam>
         /// <typeparam name="TPayload">Payload type</typeparam>
         /// <typeparam name="TRegister">Result type (output of matcher is the register at an accepting state of the AFA)</typeparam>
+        /// <param name="source">Source stream</param>
+        /// <param name="defaultRegister">Default register value for the automata</param>
+        /// <returns>The beginning of a builder from which a pattern may be defined</returns>
+        public static IAbstractPattern<TKey, TPayload, TRegister, bool> DefinePattern<TKey, TPayload, TRegister>(
+            this IStreamable<TKey, TPayload> source, TRegister defaultRegister)
+            => new PatternMatcher<TKey, TPayload, TRegister, bool>(source, null, defaultRegister);
+
+        /// <summary>
+        /// Define a pattern against which data in the input stream may be matched
+        /// </summary>
+        /// <typeparam name="TKey">Key type</typeparam>
+        /// <typeparam name="TPayload">Payload type</typeparam>
+        /// <typeparam name="TRegister">Result type (output of matcher is the register at an accepting state of the AFA)</typeparam>
         /// <typeparam name="TAccumulator">Accumulator type</typeparam>
         /// <param name="source">Source stream</param>
         /// <param name="defaultRegister">Default register value for the automata</param>

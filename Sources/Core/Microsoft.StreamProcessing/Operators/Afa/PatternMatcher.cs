@@ -111,7 +111,6 @@ namespace Microsoft.StreamProcessing
             return ListElement(condition, aggregatorTemplate.InlineCalls());
         }
 
-
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, TRegister, bool>> condition, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null)
         {
             Expression<Func<long, List<TPayload>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
@@ -296,14 +295,13 @@ namespace Microsoft.StreamProcessing
             }
             result.StartState = 0;
 
-
             return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, result));
         }
         #endregion
 
         #region Set Register and Accumulator
         public IAbstractPattern<TKey, TPayload, TRegister, TAccumulatorNew> SetAccumulator<TAccumulatorNew>(TAccumulatorNew defaultAccumulator = default)
-            => new PatternMatcher<TKey, TPayload, TRegister, TAccumulatorNew>(this.source, null);
+            => new PatternMatcher<TKey, TPayload, TRegister, TAccumulatorNew>(this.source);
 
         public IAbstractPattern<TKey, TPayload, TRegisterNew, TAccumulator> SetRegister<TRegisterNew>(TRegisterNew defaultRegister = default)
             => new PatternMatcher<TKey, TPayload, TRegisterNew, TAccumulator>(this.source, null, defaultRegister);
@@ -413,10 +411,8 @@ namespace Microsoft.StreamProcessing
                             result.AddArc(from, to, kvp2.Value);
 
                             if (nextPattern.finalStates.Contains(kvp2.Key))
-                            {
                                 if (!result.finalStates.Contains(to))
                                     result.finalStates.Add(to);
-                            }
                         }
                     }
                 }

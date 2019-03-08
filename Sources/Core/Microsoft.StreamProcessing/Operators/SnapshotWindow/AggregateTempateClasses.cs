@@ -101,16 +101,16 @@ namespace Microsoft.StreamProcessing
                 var getHashcodeExpression = keyComparer.GetGetHashCodeExpr();
                 template.inlinedKeyComparerEquals =
                     (left, right) =>
-                        string.Format("({0})", equalsExpression.Inline(left, right));
+                        $"({equalsExpression.Inline(left, right)})";
                 template.inlinedKeyComparerGetHashCode =
                     (x) =>
-                        string.Format("({0}/* inlined GetHashCode */)", getHashcodeExpression.Inline(x));
+                        $"({getHashcodeExpression.Inline(x)}/* inlined GetHashCode */)";
                 if (keyType.IsAnonymousType())
                 {
                     template.inlinedKeyComparerEquals =
-                        (left, right) => string.Format("keyComparerEquals({0}, {1})", left, right);
+                        (left, right) => $"keyComparerEquals({left}, {right})";
                     template.inlinedKeyComparerGetHashCode =
-                        (x) => string.Format("keyComparerGetHashCode({0})", x);
+                        (x) => $"keyComparerGetHashCode({x})";
                 }
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(equalsExpression));
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(getHashcodeExpression));

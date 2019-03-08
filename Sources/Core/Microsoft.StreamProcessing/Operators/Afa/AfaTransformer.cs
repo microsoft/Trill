@@ -84,10 +84,7 @@ namespace Microsoft.StreamProcessing
             public Func<string, string> Dispose;
             public Func<string, string, string, string> SkipToEnd;
 
-            public MultiEdgeInfo()
-            {
-                this.Type = EdgeType.Multi;
-            }
+            public MultiEdgeInfo() => this.Type = EdgeType.Multi;
         }
 
         protected static List<int> EpsilonClosure<TPayload, TRegister, TAccumulator>(CompiledAfa<TPayload, TRegister, TAccumulator> afa, int node)
@@ -109,14 +106,9 @@ namespace Microsoft.StreamProcessing
                 SourceNode = targetNodeNumber,
                 Fence = (ts, ev, reg) => searc.Fence.Inline(ts, ev, reg),
             };
-            if (searc.Transfer == null)
-            {
-                edgeInfo.Transfer = null;
-            }
-            else
-            {
-                edgeInfo.Transfer = (ts, ev, reg) => searc.Transfer.Inline(ts, ev, reg);
-            }
+            edgeInfo.Transfer = searc.Transfer == null
+                ? (Func<string, string, string, string>)null
+                : ((ts, ev, reg) => searc.Transfer.Inline(ts, ev, reg));
             return edgeInfo;
         }
 
@@ -135,11 +127,9 @@ namespace Microsoft.StreamProcessing
 
         protected void UpdateRegisterValue(EdgeInfo e, string defaultRegisterValue, string ts, string payloadList, string reg)
         {
-            string newRegisterValue;
-            if (!this.hasRegister || e.Transfer == null)
-                newRegisterValue = defaultRegisterValue;
-            else
-                newRegisterValue = e.Transfer(ts, payloadList, reg);
+            var newRegisterValue = !this.hasRegister || e.Transfer == null
+                ? defaultRegisterValue
+                : e.Transfer(ts, payloadList, reg);
             WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
             return;
 
@@ -147,11 +137,9 @@ namespace Microsoft.StreamProcessing
 
         protected void UpdateRegisterValue(MultiEdgeInfo e, string defaultRegisterValue, string ts, string acc, string reg)
         {
-            string newRegisterValue;
-            if (e.Transfer == null)
-                newRegisterValue = defaultRegisterValue;
-            else
-                newRegisterValue = e.Transfer(ts, acc, reg);
+            var newRegisterValue = e.Transfer == null
+                ? defaultRegisterValue
+                : e.Transfer(ts, acc, reg);
             WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
             return;
 
@@ -170,54 +158,25 @@ namespace Microsoft.StreamProcessing
             }
             return;
         }
+
         protected static string BeginColumnPointerDeclaration(MyFieldInfo f, string batchName)
-        {
-            if (f.canBeFixed)
-            {
-                return string.Format("fixed ({0}* {2}_{1}_col = {2}.{1}.col) {{", f.TypeName, f.Name, batchName);
-            }
-            else if (f.OptimizeString())
-            {
-                return string.Format("var {1}_{0}_col = {1}.{0};", f.Name, batchName);
-            }
-            else
-            {
-                return string.Format("var {1}_{0}_col = {1}.{0}.col;", f.Name, batchName);
-            }
-        }
-        protected static string EndColumnPointerDeclaration(MyFieldInfo f)
-        {
-            if (f.canBeFixed)
-            {
-                return "}";
-            }
-            else
-            {
-                return string.Empty;
-            }
-        }
+            => f.canBeFixed
+                ? string.Format("fixed ({0}* {2}_{1}_col = {2}.{1}.col) {{", f.TypeName, f.Name, batchName)
+                : f.OptimizeString()
+                    ? string.Format("var {1}_{0}_col = {1}.{0};", f.Name, batchName)
+                    : string.Format("var {1}_{0}_col = {1}.{0}.col;", f.Name, batchName);
+
+        protected static string EndColumnPointerDeclaration(MyFieldInfo f) => f.canBeFixed ? "}" : string.Empty;
+
         protected static string ColumnPointerFieldDeclaration(MyFieldInfo f, string batchName)
-        {
-            if (f.OptimizeString())
-            {
-                return string.Format("Microsoft.StreamProcessing.Internal.Collections.Multistring {1}_{0}_col;", f.Name, batchName);
-            }
-            else
-            {
-                return string.Format("{2} {1}_{0}_col;", f.Name, batchName, f.Type.MakeArrayType().GetCSharpSourceSyntax());
-            }
-        }
+            => f.OptimizeString()
+                ? string.Format("Microsoft.StreamProcessing.Internal.Collections.Multistring {1}_{0}_col;", f.Name, batchName)
+                : string.Format("{2} {1}_{0}_col;", f.Name, batchName, f.Type.MakeArrayType().GetCSharpSourceSyntax());
+
         protected static string ColumnPointerFieldAssignment(MyFieldInfo f, string batchName)
-        {
-            if (f.OptimizeString())
-            {
-                return string.Format("this.{1}_{0}_col = {1}.{0};", f.Name, batchName);
-            }
-            else
-            {
-                return string.Format("this.{1}_{0}_col = {1}.{0}.col;", f.Name, batchName);
-            }
-        }
+            => f.OptimizeString()
+                ? string.Format("this.{1}_{0}_col = {1}.{0};", f.Name, batchName)
+                : string.Format("this.{1}_{0}_col = {1}.{0}.col;", f.Name, batchName);
 
     }
 

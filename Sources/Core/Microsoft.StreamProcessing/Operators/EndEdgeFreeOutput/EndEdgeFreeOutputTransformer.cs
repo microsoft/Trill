@@ -38,7 +38,7 @@ namespace Microsoft.StreamProcessing
             Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TPayload>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             var template = new EndEdgeFreeOutputTemplate(
-                string.Format("GeneratedEndEdgeFreeOutput_{0}", EndEdgeFreeOutputTemplateSequenceNumber++),
+                $"GeneratedEndEdgeFreeOutput_{EndEdgeFreeOutputTemplateSequenceNumber++}",
                 typeof(TKey), typeof(TPayload));
 
             template.ActiveEventType = typeof(TPayload).GetTypeInfo().IsValueType ? template.TPayload : "Active_Event";

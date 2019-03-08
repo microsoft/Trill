@@ -82,7 +82,7 @@ namespace Microsoft.StreamProcessing
 
                 template.TResult = resultType.GetCSharpSourceSyntax(); // BUGBUG: need to get any generic parameters needed
                 template.isUngrouped = (keyType == typeof(Empty));
-                template.className = string.Format("GeneratedGroupedAggregate_{0}", GroupedAggregateSequenceNumber++);
+                template.className = $"GeneratedGroupedAggregate_{GroupedAggregateSequenceNumber++}";
 
                 var inputMessageRepresentation = new ColumnarRepresentation(inputType);
 
@@ -160,7 +160,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledAccumulate = true;
-                        template.accumulate = (s1, s2) => string.Format("accumulate({0}, {1}, batch[i]);", s1, s2);
+                        template.accumulate = (s1, s2) => $"accumulate({s1}, {s2}, batch[i]);";
                     }
                 }
 
@@ -180,7 +180,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledDeaccumulate = true;
-                        template.deaccumulate = (s1, s2) => string.Format("deaccumulate({0}, {1}, batch[i]);", s1, s2);
+                        template.deaccumulate = (s1, s2) => $"deaccumulate({s1}, {s2}, batch[i]);";
                     }
                 }
 
@@ -200,7 +200,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledDifference = true;
-                        template.deaccumulate = (s1, s2) => string.Format("difference({0}, {1});", s1, s2);
+                        template.deaccumulate = (s1, s2) => $"difference({s1}, {s2});";
                     }
                 }
 
@@ -235,7 +235,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledComputeResult = true;
-                        template.computeResult = (stateArg) => "computeResult(" + stateArg + ")";
+                        template.computeResult = (stateArg) => $"computeResult({stateArg})";
                     }
                 }
                 #endregion
@@ -262,7 +262,7 @@ namespace Microsoft.StreamProcessing
                         };
                         var sb = new System.Text.StringBuilder();
                         sb.AppendLine("{");
-                        sb.AppendLine(string.Format("var {0} = {1};\n", resultSelector.Parameters.ElementAt(1).Name, aggregateResult));
+                        sb.AppendLine($"var {resultSelector.Parameters.ElementAt(1).Name} = {aggregateResult};\n");
                         foreach (var kv in projectionResult.ComputedFields)
                         {
                             var f = kv.Key;

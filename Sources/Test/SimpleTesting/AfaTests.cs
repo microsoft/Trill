@@ -350,8 +350,7 @@ namespace SimpleTesting
             }.ToObservable().ToStreamable().AlterEventDuration(1000);
             var result =
                 source1
-                .DefinePattern()
-                .SetRegister(0) // or .SetRegister<int>()
+                .DefinePattern(0)
                 .SingleElement(e => e.Field1 == "A")
                 .KleeneStar(r => r.SingleElement(e => e.Field1 == "B", (ev, d) => d + ev.Field2))
                 .SingleElement(e => e.Field1 == "C")
@@ -383,8 +382,7 @@ namespace SimpleTesting
             }.ToObservable().ToStreamable().AlterEventDuration(1000);
             var result =
                 source1
-                .DefinePattern()
-                .SetRegister(10) // or .SetRegister<int>()
+                .DefinePattern(10)
                 .SingleElement(e => e.Field1 == "A", (l, p, i) => i + p.Field2)
                 .SingleElement(e => e.Field1 == "C", (l, p, i) => i + p.Field2)
                 .Detect()

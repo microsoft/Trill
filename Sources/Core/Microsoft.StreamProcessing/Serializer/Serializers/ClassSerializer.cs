@@ -136,10 +136,6 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         }
 
         private static Exception UnexpectedNullValueException(Type type)
-            => new SerializationException(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "Unexpected null value for the object of type '{0}'. Please check the schema.",
-                    type));
+            => new SerializationException($"Unexpected null value for the object of type '{type}'. Please check the schema.");
     }
 }

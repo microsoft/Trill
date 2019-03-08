@@ -130,10 +130,6 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public override ArcType ArcType => ArcType.Epsilon;
 
-        public override string ToString()
-        {
-            return "EpsilonArc";
-        }
-
+        public override string ToString() => "EpsilonArc";
     }
 }

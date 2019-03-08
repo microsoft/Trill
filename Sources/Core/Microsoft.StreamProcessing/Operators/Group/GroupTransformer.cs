@@ -65,7 +65,7 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                string generatedClassName = string.Format("GeneratedGroupStreamable_{0}", GroupStreamableSequenceNumber++);
+                string generatedClassName = $"GeneratedGroupStreamable_{GroupStreamableSequenceNumber++}";
 
                 string transformedKeySelectorAsString;
                 MyFieldInfo swingingField = default;
@@ -132,8 +132,8 @@ namespace Microsoft.StreamProcessing
                     var transformedPredicate = Extensions.TransformUnaryFunction<TOuterKey, TSource>(keySelector).Body;
                     template.transformedKeySelectorAsString = transformedPredicate.ExpressionToCSharp();
                     template.inlinedHashCodeComputation = "hashCodeVector.col[i]";
-                    var fieldName = ((MemberExpression)(keySelector.Body)).Member.Name;
-                    template.vectorHashCodeInitialization = string.Format("resultBatch.hash = {0}{1}_col.GetHashCode(batch.bitvector);", Transformer.ColumnFieldPrefix, fieldName);
+                    var fieldName = ((MemberExpression)keySelector.Body).Member.Name;
+                    template.vectorHashCodeInitialization = $"resultBatch.hash = {Transformer.ColumnFieldPrefix}{fieldName}_col.GetHashCode(batch.bitvector);";
                     template.swingingHashColumn = true;
                 }
 

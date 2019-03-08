@@ -40,9 +40,7 @@ namespace Microsoft.StreamProcessing.Sharding
         /// <param name="source">The stream to be returned from sharded to strictly a unified stream</param>
         /// <returns>A streamable brought together from all shards</returns>
         public static IStreamable<Empty, TPayload> Unshard<TPayload>(this IShardedStreamable<Empty, TPayload> source)
-        {
-            return new MultiUnionStreamable<Empty, TPayload>(((ShardedStreamable<Empty, TPayload>)source).Streamables, false);
-        }
+            => new MultiUnionStreamable<Empty, TPayload>(((ShardedStreamable<Empty, TPayload>)source).Streamables, false);
 
         /// <summary>
         /// Unshard operation on a partitioned stream
@@ -52,9 +50,6 @@ namespace Microsoft.StreamProcessing.Sharding
         /// <param name="source">The stream to be returned from sharded to strictly a unified stream</param>
         /// <returns>A streamable brought together from all shards</returns>
         public static IStreamable<PartitionKey<TKey>, TPayload> Unshard<TKey, TPayload>(this IShardedStreamable<PartitionKey<TKey>, TPayload> source)
-        {
-            return new MultiUnionStreamable<PartitionKey<TKey>, TPayload>(((ShardedStreamable<PartitionKey<TKey>, TPayload>)source).Streamables, false);
-        }
+            => new MultiUnionStreamable<PartitionKey<TKey>, TPayload>(((ShardedStreamable<PartitionKey<TKey>, TPayload>)source).Streamables, false);
     }
-
 }

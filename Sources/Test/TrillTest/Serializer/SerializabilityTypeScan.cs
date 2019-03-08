@@ -168,10 +168,7 @@ namespace ComponentTesting.Serializer
             }
 
             // Note: for generic types compare with generic type definition.
-            if (TypesToSkip.Any(e => t.IsGenericType ? t.GetGenericTypeDefinition() == e : t == e))
-                return true;
-
-            return false;
+            return TypesToSkip.Any(e => t.IsGenericType ? t.GetGenericTypeDefinition() == e : t == e);
         }
 
         private static string DescribeGeneric(string name, IEnumerable<Type> args)

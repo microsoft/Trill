@@ -251,9 +251,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new AfaPlanNode(
+            => this.Observer.ProduceQueryPlan(new AfaPlanNode(
                 previous, this, typeof(TKey), typeof(TPayload), this.IsGenerated, this.errorMessages));
-        }
     }
 }

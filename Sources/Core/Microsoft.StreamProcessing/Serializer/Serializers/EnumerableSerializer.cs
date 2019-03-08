@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -226,8 +225,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                       ?? this.RuntimeType.GetMethodByName("Push", typeof(TItem));
 
             if (result == null)
-                throw new SerializationException(
-                    string.Format(CultureInfo.InvariantCulture, "Collection type '{0}' does not have Add/Enqueue/Push method.", this.RuntimeType));
+                throw new SerializationException($"Collection type '{this.RuntimeType}' does not have Add/Enqueue/Push method.");
             return result;
         }
     }

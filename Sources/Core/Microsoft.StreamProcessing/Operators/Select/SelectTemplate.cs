@@ -62,7 +62,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write("\r\n// Computed Fields: ");
             this.Write(this.ToStringHelper.ToStringWithCulture(String.Join(",", this.computedFields.Keys.Select(f => f.OriginalName))));
             this.Write("\r\n// Swinging Fields: ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(String.Join(",", this.swingingFields.Select(tup => string.Format("<{0},{1}>", tup.Item1.OriginalName, tup.Item2.Name)))));
+            this.Write(this.ToStringHelper.ToStringWithCulture(String.Join(",", this.swingingFields.Select(tup => $"<{tup.Item1.OriginalName},{tup.Item2.Name}>"))));
             this.Write("\r\n\r\n[DataContract]\r\ninternal sealed class ");
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write(this.ToStringHelper.ToStringWithCulture(genericParameters));

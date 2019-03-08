@@ -115,12 +115,10 @@ using Microsoft.StreamProcessing.Aggregates;
                     "MIT License\r\n// ****************************************************************" +
                     "*****\r\n");
 
-  var resultMessageMemoryPoolGenericParameters = string.Format("<{0}, {1}>", TKey, TResult);
+  var resultMessageMemoryPoolGenericParameters = $"<{TKey}, {TResult}>";
   if (resultType == typeof(int) || resultType == typeof(long) || resultType == typeof(string)) resultMessageMemoryPoolGenericParameters = string.Empty;
 
-  getOutputBatch = string.Format("this.pool.Get(out genericOutputbatch); this.batch = ({0}{1})genericOutputbatch;",
-          Transformer.GetBatchClassName(typeof(Empty), resultType),
-          UnitTResultGenericParameters);
+  getOutputBatch = $"this.pool.Get(out genericOutputbatch); this.batch = ({Transformer.GetBatchClassName(typeof(Empty), resultType)}{UnitTResultGenericParameters})genericOutputbatch;";
 
 
             this.Write("\r\n// TKey: ");
