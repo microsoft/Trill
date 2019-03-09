@@ -32,8 +32,16 @@ namespace Microsoft.StreamProcessing
         /// <typeparam name="TRegister"></typeparam>
         /// <param name="defaultRegister"></param>
         /// <returns></returns>
-        public static Afa<TInput, TRegister> Create<TInput, TRegister>(TRegister defaultRegister = default)
-            => new Afa<TInput, TRegister>(defaultRegister);
+        public static Afa<TInput, TRegister, bool> Create<TInput, TRegister>(TRegister defaultRegister = default)
+            => new Afa<TInput, TRegister, bool>(defaultRegister);
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="TInput"></typeparam>
+        /// <returns></returns>
+        public static Afa<TInput, Empty, bool> Create<TInput>()
+            => new Afa<TInput, Empty, bool>();
     }
 
     /// <summary>
@@ -42,7 +50,7 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TInput">The event type.</typeparam>
     /// <typeparam name="TRegister">The register type.</typeparam>
     /// <typeparam name="TAccumulator">The accumulator type.</typeparam>
-    public class Afa<TInput, TRegister, TAccumulator>
+    public sealed class Afa<TInput, TRegister, TAccumulator>
     {
         /// <summary>
         /// Create a new instance of an AFA object.
@@ -50,12 +58,15 @@ namespace Microsoft.StreamProcessing
         /// <param name="defaultRegister">The default register for new instances of the AFA.</param>
         /// <param name="defaultAccumulator">The default accumulator for new instances of the AFA.</param>
         public Afa(TRegister defaultRegister = default, TAccumulator defaultAccumulator = default)
-            => this.DefaultRegister = defaultRegister;
+        {
+            this.DefaultRegister = defaultRegister;
+            this.DefaultAccumulator = defaultAccumulator;
+        }
 
         /// <summary>
         /// AFA is sealed or not.
         /// </summary>
-        protected bool isSealed = false;
+        private bool isSealed = false;
 
         /// <summary>
         /// The set of final states in the AFA.
@@ -78,6 +89,11 @@ namespace Microsoft.StreamProcessing
         /// The default value of the register.
         /// </summary>
         internal TRegister DefaultRegister = default;
+
+        /// <summary>
+        /// The default value of the accumulator.
+        /// </summary>
+        internal TAccumulator DefaultAccumulator = default;
 
         /// <summary>
         /// This property specifies whether, on a new incoming event, we allow new
@@ -266,20 +282,5 @@ namespace Microsoft.StreamProcessing
 
             return result;
         }
-    }
-
-    /// <summary>
-    /// A simpler form of AFA whose accumulator is a simple boolean indicating that the pattern has matched
-    /// </summary>
-    /// <typeparam name="TInput">The event type.</typeparam>
-    /// <typeparam name="TRegister">The register type.</typeparam>
-    public class Afa<TInput, TRegister> : Afa<TInput, TRegister, bool>
-    {
-        /// <summary>
-        /// Create a new instance of the simplified AFA
-        /// </summary>
-        /// <param name="defaultRegister">The default value for the register</param>
-        public Afa(TRegister defaultRegister = default) : base(defaultRegister)
-        { }
     }
 }

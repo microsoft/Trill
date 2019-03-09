@@ -12,9 +12,7 @@ namespace Microsoft.StreamProcessing
     internal static class CallInliner
     {
         public static int Call<TComparison>(Expression<Comparison<TComparison>> expression, TComparison input1, TComparison input2)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 <#
     int maxParameters = 16;
     for (int count = 0; count <= maxParameters; count++)
@@ -22,9 +20,7 @@ namespace Microsoft.StreamProcessing
 #>
 
         public static TOutput Call<<#= Iterate("T$, ", count) #>TOutput>(Expression<Func<<#= Iterate("T$, ", count) #>TOutput>> expression<#= Iterate(", T$ input$", count) #>)
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 <#
     }
 #>

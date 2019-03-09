@@ -129,7 +129,6 @@ namespace ComponentTesting.Serializer
             typeof(QueryContainer),
             typeof(Process),
             typeof(ConfigModifier),
-            typeof(Afa<,>),
             typeof(Afa<,,>),
             typeof(Arc<,>),
             typeof(SingleElementArc<,>),

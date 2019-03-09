@@ -93,7 +93,7 @@ namespace SimpleTesting
     {
         public static void CoreAfaList01()
         {
-            var pat1 = new Afa<long, Empty>();
+            var pat1 = Afa.Create<long>();
             pat1.AddListElementArc(0, 1, fence: (ts, ev, reg) => ev.Contains(0));
             pat1.AddListElementArc(1, 1, fence: (ts, ev, reg) => !ev.Contains(1));
             pat1.AddListElementArc(1, 2, fence: (ts, ev, reg) => ev.Contains(1));
@@ -118,7 +118,7 @@ namespace SimpleTesting
 
         public static void CoreAfaList02()
         {
-            var pat1 = new Afa<AfaPayload, Empty>();
+            var pat1 = Afa.Create<AfaPayload>();
             pat1.AddListElementArc(0, 1, fence: (ts, events, reg) => events.Any(p => p.Field2 == 0));
             pat1.AddListElementArc(1, 1, fence: (ts, events, reg) => !events.Any(p => p.Field2 == 1));
             pat1.AddListElementArc(1, 2, fence: (ts, events, reg) => events.Any(p => p.Field2 == 1));
