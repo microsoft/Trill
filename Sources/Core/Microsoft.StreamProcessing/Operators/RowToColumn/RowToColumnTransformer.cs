@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.Reflection;
 
 namespace Microsoft.StreamProcessing
@@ -16,9 +15,7 @@ namespace Microsoft.StreamProcessing
 
         public RowToColumnTemplate(string className, Type keyType, Type payloadType)
             : base(className, keyType, payloadType, payloadType)
-        {
-            this.fields = payloadType.GetAnnotatedFields().Item1; // Do we need this special case?
-        }
+            => this.fields = payloadType.GetAnnotatedFields().Item1; // Do we need this special case?
 
         internal static Tuple<Type, string> Generate<TKey, TPayload>(RowToColumnStreamable<TKey, TPayload> stream)
         {
@@ -29,7 +26,7 @@ namespace Microsoft.StreamProcessing
             var keyType = typeof(TKey);
             var payloadType = typeof(TPayload);
 
-            var generatedClassName = string.Format(CultureInfo.InvariantCulture, "RowToColumnUnaryPipeGeneratedFrom_{0}_{1}_{2}", keyType.GetValidIdentifier(), payloadType.GetValidIdentifier(), RowToColumnSequenceNumber++);
+            var generatedClassName = $"RowToColumnUnaryPipeGeneratedFrom_{keyType.GetValidIdentifier()}_{payloadType.GetValidIdentifier()}_{RowToColumnSequenceNumber++}";
             var template = new RowToColumnTemplate(generatedClassName, keyType, payloadType);
             var expandedCode = template.TransformText();
 

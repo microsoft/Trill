@@ -181,9 +181,7 @@ namespace Microsoft.StreamProcessing
                     nameForIndexVariable = indexVariableName,
                     typeOfBatchVariable = batchType,
                 });
-            var l_prime = ColumnOriented.Transform(f, d);
-            if (l_prime == null) return null;
-            return l_prime;
+            return ColumnOriented.Transform(f, d);
         }
 
         public static string AccessExpressionForRowValue(this MyFieldInfo f, string batchVariableName, string indexVariableName)

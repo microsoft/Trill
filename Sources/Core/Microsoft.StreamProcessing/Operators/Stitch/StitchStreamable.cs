@@ -3,7 +3,6 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Globalization;
 using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing
@@ -19,7 +18,7 @@ namespace Microsoft.StreamProcessing
             // This operator uses the equality method on payloads
             if (this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of payload, '{0}', to Stitch does not have a valid equality operator for columnar mode.", typeof(TPayload).FullName));
+                throw new InvalidOperationException($"Type of payload, '{typeof(TPayload).FullName}', to Stitch does not have a valid equality operator for columnar mode.");
             }
 
             Initialize();
@@ -30,8 +29,9 @@ namespace Microsoft.StreamProcessing
             var part = typeof(TKey).GetPartitionType();
             if (part == null)
             {
-                if (this.Source.Properties.IsColumnar) return GetPipe(observer);
-                else return new StitchPipe<TKey, TPayload>(this, observer);
+                return this.Source.Properties.IsColumnar
+                    ? GetPipe(observer)
+                    : new StitchPipe<TKey, TPayload>(this, observer);
             }
 
             var outputType = typeof(PartitionedStitchPipe<,,>).MakeGenericType(

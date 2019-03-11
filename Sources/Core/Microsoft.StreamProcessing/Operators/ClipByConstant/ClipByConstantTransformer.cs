@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
           sw.Start();
 #endif
             var template = new ClipByConstantTemplate(
-                string.Format("ClipByConstant_{0}", ClipByConstantSequenceNumber++),
+                $"ClipByConstant_{ClipByConstantSequenceNumber++}",
                 typeof(TKey), typeof(TPayload));
 
             return template.Generate<TKey, TPayload>(typeof(IStreamable<,>));

@@ -70,7 +70,7 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TRegister"></typeparam>
     /// <typeparam name="TAccumulator"></typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class MultiEventArcInfo<TPayload, TRegister, TAccumulator>
+    public sealed class MultiEventArcInfo<TPayload, TRegister, TAccumulator>
     {
         /// <summary>
         /// Currently for internal use only - do not use directly

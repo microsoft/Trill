@@ -122,8 +122,8 @@ namespace Microsoft.StreamProcessing
                             keySelector.IsSimpleFieldOrPropertyAccess())
                         {
                             template.inlinedHashCodeComputation = "hashCodeVector.col[i]";
-                            var fieldName = ((MemberExpression)(keySelector.Body)).Member.Name;
-                            template.vectorHashCodeInitialization = string.Format(CultureInfo.InvariantCulture, "var hashCodeVector = {0}{1}_col.GetHashCode(batch.bitvector);", Transformer.ColumnFieldPrefix, fieldName);
+                            var fieldName = ((MemberExpression)keySelector.Body).Member.Name;
+                            template.vectorHashCodeInitialization = $"var hashCodeVector = {Transformer.ColumnFieldPrefix}{fieldName}_col.GetHashCode(batch.bitvector);";
                         }
                     }
                 }

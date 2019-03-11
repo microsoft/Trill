@@ -157,7 +157,7 @@ namespace SimpleTesting.PartitionedIngressAndEgress
         }
 
         // Determines whether the given watermark should reset the punctuation generation period
-        private bool LowWatermarkResetsPunctuationPeriod(long lowWatermark, long lowWatermarkArrivalTime, int lastCTI,
+        private static bool LowWatermarkResetsPunctuationPeriod(long lowWatermark, long lowWatermarkArrivalTime, int lastCTI,
             long newPunctuationPreSnap, long newPunctuationArrivalTime, bool newPunctuationTriggeredByLowWatermark)
         {
             // If the watermark timestamp is before the last CTI, it won't reset anything.
@@ -311,7 +311,7 @@ namespace SimpleTesting.PartitionedIngressAndEgress
             AddEvent(1, 200);
             AddEvent(2, 200);
 
-            ProcessInput(out List<OutOfOrderPartitionedStreamEvent<int, int>> diagnosticEvents, out List<PartitionedStreamEvent<int, int>> dataEvents);
+            ProcessInput(out var diagnosticEvents, out var dataEvents);
 
             for (int key = 0; key < 3; key++)
             {

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.StreamProcessing
 {
-    internal class CompiledAfa<TPayload, TRegister, TAccumulator>
+    internal sealed class CompiledAfa<TPayload, TRegister, TAccumulator>
     {
         public bool[] isFinal;
         public bool[] hasOutgoingArcs;
@@ -19,14 +19,17 @@ namespace Microsoft.StreamProcessing
         public int[][] epsilonStateMap;
         public int[] startStates;
         public int numStartStates;
-        public TRegister defaultRegister;
+        public readonly TRegister defaultRegister;
+        private readonly TAccumulator defaultAccumulator;
 
         internal Afa<TPayload, TRegister, TAccumulator> uncompiledAfa;
 
         public CompiledAfa(Afa<TPayload, TRegister, TAccumulator> afa)
         {
-            if (!afa.IsSealed()) throw new Exception("Cannot compile an unsealed AFA");
+            if (!afa.IsSealed()) throw new InvalidOperationException("Cannot compile an unsealed AFA");
             this.uncompiledAfa = afa;
+            this.defaultRegister = afa.DefaultRegister;
+            this.defaultAccumulator = afa.DefaultAccumulator;
             CompileAfa(afa);
         }
 
@@ -34,7 +37,6 @@ namespace Microsoft.StreamProcessing
         {
             this.isFinal = new bool[afa.MaxState + 1];
             this.hasOutgoingArcs = new bool[afa.MaxState + 1];
-            this.defaultRegister = afa.DefaultRegister;
 
             int nst = afa.StartState;
             var startStatesList = new List<int>();
@@ -92,7 +94,7 @@ namespace Microsoft.StreamProcessing
                         switch (arc.ArcType)
                         {
                             case ArcType.Epsilon:
-                                if (from == to) throw new Exception("Self-looping epsilon states are not allowed");
+                                if (from == to) throw new InvalidOperationException("Self-looping epsilon states are not allowed");
 
                                 if (this.epsilonStateMap == null) this.epsilonStateMap = new int[afa.MaxState + 1][];
                                 epsilonCount++;
@@ -163,7 +165,11 @@ namespace Microsoft.StreamProcessing
                                     new MultiEventArcInfo<TPayload, TRegister, TAccumulator>
                                     {
                                         toState = to,
-                                        Initialize = mearc.Initialize != null ? mearc.Initialize.Compile() : (ts, reg) => default,
+                                        Initialize = mearc.Initialize != null
+                                            ? mearc.Initialize.Compile()
+                                            : defaultAccumulator == default
+                                                ? (ts, reg) => default // To avoid a closure
+                                                : (Func<long, TRegister, TAccumulator>)((ts, reg) => this.defaultAccumulator),
                                         Accumulate = mearc.Accumulate != null ? mearc.Accumulate.Compile() : (ts, ev, reg, acc) => acc,
                                         SkipToEnd = mearc.SkipToEnd?.Compile(),
                                         Dispose = mearc.Dispose?.Compile(),

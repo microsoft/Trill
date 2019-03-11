@@ -93,7 +93,7 @@ namespace SimpleTesting
     {
         public static void CoreAfaList01()
         {
-            var pat1 = new Afa<long, Empty>();
+            var pat1 = Afa.Create<long>();
             pat1.AddListElementArc(0, 1, fence: (ts, ev, reg) => ev.Contains(0));
             pat1.AddListElementArc(1, 1, fence: (ts, ev, reg) => !ev.Contains(1));
             pat1.AddListElementArc(1, 2, fence: (ts, ev, reg) => ev.Contains(1));
@@ -118,7 +118,7 @@ namespace SimpleTesting
 
         public static void CoreAfaList02()
         {
-            var pat1 = new Afa<AfaPayload, Empty>();
+            var pat1 = Afa.Create<AfaPayload>();
             pat1.AddListElementArc(0, 1, fence: (ts, events, reg) => events.Any(p => p.Field2 == 0));
             pat1.AddListElementArc(1, 1, fence: (ts, events, reg) => !events.Any(p => p.Field2 == 1));
             pat1.AddListElementArc(1, 2, fence: (ts, events, reg) => events.Any(p => p.Field2 == 1));
@@ -350,8 +350,7 @@ namespace SimpleTesting
             }.ToObservable().ToStreamable().AlterEventDuration(1000);
             var result =
                 source1
-                .DefinePattern()
-                .SetRegister(0) // or .SetRegister<int>()
+                .DefinePattern(0)
                 .SingleElement(e => e.Field1 == "A")
                 .KleeneStar(r => r.SingleElement(e => e.Field1 == "B", (ev, d) => d + ev.Field2))
                 .SingleElement(e => e.Field1 == "C")
@@ -383,8 +382,7 @@ namespace SimpleTesting
             }.ToObservable().ToStreamable().AlterEventDuration(1000);
             var result =
                 source1
-                .DefinePattern()
-                .SetRegister(10) // or .SetRegister<int>()
+                .DefinePattern(10)
                 .SingleElement(e => e.Field1 == "A", (l, p, i) => i + p.Field2)
                 .SingleElement(e => e.Field1 == "C", (l, p, i) => i + p.Field2)
                 .Detect()

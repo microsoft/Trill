@@ -159,6 +159,6 @@ namespace SimpleTesting.Flush
         private int ingressCount = 0;
 
         // Events that have already been validated (kept around for debugging purposes)
-        private List<StreamEvent<int>> validatedOutput = new List<StreamEvent<int>>();
+        private readonly List<StreamEvent<int>> validatedOutput = new List<StreamEvent<int>>();
     }
 }

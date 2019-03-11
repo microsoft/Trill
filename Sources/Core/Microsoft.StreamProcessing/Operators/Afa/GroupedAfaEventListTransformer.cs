@@ -20,8 +20,8 @@ namespace Microsoft.StreamProcessing
         {
             if (Config.ForceRowBasedExecution)
             {
-                this.sourceBatchTypeName = string.Format("Microsoft.StreamProcessing.StreamMessage<{0}, {1}>", this.TKey, this.TPayload);
-                this.resultBatchTypeName = string.Format("Microsoft.StreamProcessing.StreamMessage<{0}, {1}>", this.TKey, this.TRegister);
+                this.sourceBatchTypeName = $"Microsoft.StreamProcessing.StreamMessage<{this.TKey}, {this.TPayload}>";
+                this.resultBatchTypeName = $"Microsoft.StreamProcessing.StreamMessage<{this.TKey}, {this.TRegister}>";
             }
             else
             {
@@ -39,14 +39,18 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                var className = string.Format("GeneratedGroupedAfaEventList_{0}", AFASequenceNumber++);
+                var className = $"GeneratedGroupedAfaEventList_{AFASequenceNumber++}";
                 var template = new GroupedAfaEventListTemplate(className, typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(TAccumulator))
                 {
                     TKey = typeof(TKey).GetCSharpSourceSyntax(),
                     isFinal = stream.afa.isFinal,
                     hasOutgoingArcs = stream.afa.hasOutgoingArcs,
                     startStates = stream.afa.startStates,
-                    AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances
+                    AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances,
+                    isSyncTimeSimultaneityFree = true, // The handwritten version doesn't make a distinction.
+                    keyEqualityComparer =
+                        (left, right) =>
+                            stream.Properties.KeyEqualityComparer.GetEqualsExpr().Inline(left, right),
                 };
 
                 var d1 = stream.afa.uncompiledAfa.transitionInfo;
@@ -100,10 +104,6 @@ namespace Microsoft.StreamProcessing
 
                     template.newActivationInfo.Add(Tuple.Create(startState, edgeList2));
                 }
-                template.isSyncTimeSimultaneityFree = true; // The handwritten version doesn't make a distinction.
-                template.keyEqualityComparer =
-                    (left, right) =>
-                        stream.Properties.KeyEqualityComparer.GetEqualsExpr().Inline(left, right);
 
                 var expandedCode = template.TransformText();
 

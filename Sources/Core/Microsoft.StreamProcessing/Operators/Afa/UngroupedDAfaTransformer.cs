@@ -12,20 +12,18 @@ namespace Microsoft.StreamProcessing
 {
     internal partial class UngroupedDAfaTemplate : AfaTemplate
     {
-        private Func<string, string, string> keyEqualityComparer;
-
-        private UngroupedDAfaTemplate(string className, Type keyType, Type payloadType, Type registerType, Type accumulatorType)
-            : base(className, keyType, payloadType, registerType, accumulatorType)
+        private UngroupedDAfaTemplate(string className, Type payloadType, Type registerType, Type accumulatorType)
+            : base(className, typeof(Empty), payloadType, registerType, accumulatorType)
         {
             if (Config.ForceRowBasedExecution)
             {
-                this.sourceBatchTypeName = string.Format("Microsoft.StreamProcessing.StreamMessage<{0}, {1}>", this.TKey, this.TPayload);
-                this.resultBatchTypeName = string.Format("Microsoft.StreamProcessing.StreamMessage<{0}, {1}>", this.TKey, this.TRegister);
+                this.sourceBatchTypeName = $"Microsoft.StreamProcessing.StreamMessage<Microsoft.StreamProcessing.Empty, {this.TPayload}>";
+                this.resultBatchTypeName = $"Microsoft.StreamProcessing.StreamMessage<Microsoft.StreamProcessing.Empty, {this.TRegister}>";
             }
             else
             {
-                this.sourceBatchTypeName = Transformer.GetBatchClassName(keyType, payloadType);
-                this.resultBatchTypeName = Transformer.GetBatchClassName(keyType, registerType);
+                this.sourceBatchTypeName = Transformer.GetBatchClassName(typeof(Empty), payloadType);
+                this.resultBatchTypeName = Transformer.GetBatchClassName(typeof(Empty), registerType);
             }
         }
 
@@ -38,16 +36,16 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                var className = string.Format("GeneratedUngroupedDAfa_{0}", AFASequenceNumber++);
-                var template = new UngroupedDAfaTemplate(className, typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(TAccumulator))
+                var className = $"GeneratedUngroupedDAfa_{AFASequenceNumber++}";
+                var template = new UngroupedDAfaTemplate(className, typeof(TPayload), typeof(TRegister), typeof(TAccumulator))
                 {
-                    TKey = typeof(TKey).GetCSharpSourceSyntax()
+                    TKey = typeof(Empty).GetCSharpSourceSyntax(),
+                    isFinal = stream.afa.isFinal,
+                    hasOutgoingArcs = stream.afa.hasOutgoingArcs,
+                    startStates = stream.afa.startStates,
+                    AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances,
+                    isSyncTimeSimultaneityFree = stream.Properties.IsSyncTimeSimultaneityFree,
                 };
-
-                template.isFinal = stream.afa.isFinal;
-                template.hasOutgoingArcs = stream.afa.hasOutgoingArcs;
-                template.startStates = stream.afa.startStates;
-                template.AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances;
 
                 var d1 = stream.afa.uncompiledAfa.transitionInfo;
                 var orderedKeys = d1.Keys.OrderBy(e => e).ToArray();
@@ -88,10 +86,6 @@ namespace Microsoft.StreamProcessing
 
                     template.newActivationInfo.Add(Tuple.Create(startState, edgeList2));
                 }
-                template.isSyncTimeSimultaneityFree = stream.Properties.IsSyncTimeSimultaneityFree;
-                template.keyEqualityComparer =
-                    (left, right) =>
-                        stream.Properties.KeyEqualityComparer.GetEqualsExpr().Inline(left, right);
 
                 var expandedCode = template.TransformText();
 

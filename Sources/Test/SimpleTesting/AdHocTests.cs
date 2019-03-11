@@ -934,10 +934,7 @@ namespace SimpleTesting
                 return this;
             }
 
-            public void Dispose()
-            {
-                this.observer = null;
-            }
+            public void Dispose() => this.observer = null;
 
             internal void Checkpoint()
             {
@@ -948,15 +945,9 @@ namespace SimpleTesting
                 }
             }
 
-            internal void SendEvent(StreamEvent<InputEvent> evt)
-            {
-                this.observer.OnNext(evt);
-            }
+            internal void SendEvent(StreamEvent<InputEvent> evt) => this.observer.OnNext(evt);
 
-            internal void Flush()
-            {
-                this.observer.OnCompleted();
-            }
+            internal void Flush() => this.observer.OnCompleted();
 
             private IStreamable<Empty, OutputEvent> Query(IObservableIngressStreamable<InputEvent> input)
             {
@@ -981,14 +972,13 @@ namespace SimpleTesting
                 string clusterName = (i % 15).ToString();
                 var evt = new InputEvent() { ClusterName = clusterName, IntValue = 0, };
 
-                DateTime start = startTime.AddMilliseconds(i * 111); // we want to cover about one hour with about 50,000 events --> 111 milliseconds
-                DateTime end = start.AddMinutes(60);
+                var start = startTime.AddMilliseconds(i * 111); // we want to cover about one hour with about 50,000 events --> 111 milliseconds
+                var end = start.AddMinutes(60);
                 bool isPunc = i % 5000 == 0;
 
-                if (isPunc)
-                    yield return StreamEvent.CreatePunctuation<InputEvent>(start.Ticks);
-                else
-                    yield return StreamEvent.CreateInterval(start.Ticks, end.Ticks, evt);
+                yield return isPunc
+                    ? StreamEvent.CreatePunctuation<InputEvent>(start.Ticks)
+                    : StreamEvent.CreateInterval(start.Ticks, end.Ticks, evt);
             }
         }
 
@@ -1135,10 +1125,9 @@ namespace SimpleTesting
             public Expression<Func<SomeClass, int>> GetGetHashCodeExpr()
                 => sc => sc.Timestamp.GetHashCode() ^ sc.CycleStart.GetHashCode() ^ sc.BC.GetHashCode();
         }
+
         private static long GetDateTimeTicks(int year, int month, int day, int hours, int minutes, int seconds)
-        {
-            return new DateTime(year, month, day, hours, minutes, seconds).Ticks;
-        }
+            => new DateTime(year, month, day, hours, minutes, seconds).Ticks;
 
         [TestMethod, TestCategory("Gated")]
         public void What_is_wrong()
@@ -1249,20 +1238,14 @@ namespace SimpleTesting
         {
             public DateTime Timestamp;
             public Guid SessionID;
-            public override string ToString()
-            {
-                return new { this.Timestamp, this.SessionID }.ToString();
-            }
+            public override string ToString() => new { this.Timestamp, this.SessionID }.ToString();
         }
 
         public class UlsSessionBootFinishedEvent
         {
             public DateTime Timestamp;
             public Guid SessionID;
-            public override string ToString()
-            {
-                return new { this.Timestamp, this.SessionID }.ToString();
-            }
+            public override string ToString() => new { this.Timestamp, this.SessionID }.ToString();
         }
 
         [TestMethod]
@@ -1283,17 +1266,13 @@ namespace SimpleTesting
 
             var inputStreamStarts =
                    inputDataStarts
-                         .Select(
-                                e =>
-                                       StreamEvent.CreatePoint(e.Timestamp.Ticks, e))
+                         .Select(e => StreamEvent.CreatePoint(e.Timestamp.Ticks, e))
                          .ToObservable()
                          .ToStreamable();
 
             var inputStreamFinishes =
                    inputDataFinishes
-                         .Select(
-                                e =>
-                                       StreamEvent.CreatePoint(e.Timestamp.Ticks, e))
+                         .Select(e => StreamEvent.CreatePoint(e.Timestamp.Ticks, e))
                          .ToObservable()
                          .ToStreamable();
 
@@ -1404,20 +1383,12 @@ namespace SimpleTesting
                 if (!(obj is ClassWithAutoProps other)) return false;
                 return this.IntAutoProp == other.IntAutoProp && this.IntField == other.IntField;
             }
-            public override int GetHashCode()
-            {
-                return this.IntAutoProp.GetHashCode() ^ this.IntField.GetHashCode();
-            }
+            public override int GetHashCode() => this.IntAutoProp.GetHashCode() ^ this.IntField.GetHashCode();
 
             public Expression<Func<ClassWithAutoProps, ClassWithAutoProps, bool>> GetEqualsExpr()
-            {
-                return (c1, c2) => c1.IntAutoProp == c2.IntAutoProp && c1.IntField == c2.IntField;
-            }
+                => (c1, c2) => c1.IntAutoProp == c2.IntAutoProp && c1.IntField == c2.IntField;
 
-            public Expression<Func<ClassWithAutoProps, int>> GetGetHashCodeExpr()
-            {
-                return c => c.IntAutoProp ^ c.IntField;
-            }
+            public Expression<Func<ClassWithAutoProps, int>> GetGetHashCodeExpr() => c => c.IntAutoProp ^ c.IntField;
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1538,10 +1509,7 @@ namespace SimpleTesting
 
             public override bool Equals(object obj) => obj is ClassOverridingEquals other && other.x == this.x;
 
-            public override int GetHashCode()
-            {
-                return this.x.GetHashCode();
-            }
+            public override int GetHashCode() => this.x.GetHashCode();
         }
 
         /// <summary>
@@ -1599,10 +1567,7 @@ namespace SimpleTesting
                 if (!(obj is Basetype other)) return false;
                 return other.x == this.x;
             }
-            public override int GetHashCode()
-            {
-                return this.x.GetHashCode();
-            }
+            public override int GetHashCode() => this.x.GetHashCode();
         }
 
         public class Subtype : Basetype
@@ -1610,10 +1575,7 @@ namespace SimpleTesting
             public int fieldOfSubtype;
 
             public override bool Equals(object obj) => obj is Subtype other && this.fieldOfSubtype == other.fieldOfSubtype && base.Equals(obj);
-            public override int GetHashCode()
-            {
-                return this.fieldOfSubtype.GetHashCode() ^ base.GetHashCode();
-            }
+            public override int GetHashCode() => this.fieldOfSubtype.GetHashCode() ^ base.GetHashCode();
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1650,7 +1612,6 @@ namespace SimpleTesting
             {
                 if (!a[j].Equals(b[j])) return false;
             }
-
             return true;
         }
 
@@ -1690,10 +1651,7 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
-        public void WhereWithNonColumnar()
-        {
-            Enumerable.Range(0, 100).Select(i => new NonColumnarClass(i, 'x')).TestWhere(r => r.x > 3);
-        }
+        public void WhereWithNonColumnar() => Enumerable.Range(0, 100).Select(i => new NonColumnarClass(i, 'x')).TestWhere(r => r.x > 3);
 
         // Total number of input events
         private const int NumEvents = 100;
@@ -1701,10 +1659,7 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private void TestWhere(Expression<Func<MyStruct2, bool>> predicate)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere<MyStruct2>(predicate));
-        }
+        private void TestWhere(Expression<Func<MyStruct2, bool>> predicate) => Assert.IsTrue(this.enumerable.TestWhere(predicate));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeWithColToRow()

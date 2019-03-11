@@ -429,8 +429,7 @@ if (latencyOption == "WithLatency") {
         {
             if (outOfOrder)
             {
-                var outOfOrderMessage = string.Format(System.Globalization.CultureInfo.InvariantCulture, ""Out-of-order event encountered during ingress, under a disorder policy of Throw: value.SyncTime: {0}, current:{1}"", value.SyncTime, current);
-                throw new IngressException(outOfOrderMessage);
+                throw new IngressException($""Out-of-order event encountered during ingress, under a disorder policy of Throw: value.SyncTime: {value.SyncTime}, current: {current}"");
             }
         }
         else

@@ -77,7 +77,7 @@ namespace Microsoft.StreamProcessing
                 template.TKeyTResultGenericParameters = tm.GenericTypeVariables(keyType, resultType).BracketedCommaSeparatedString();
                 template.genericParameters = tm.GenericTypeVariables(keyType, leftType, rightType, resultType).BracketedCommaSeparatedString();
 
-                template.className = string.Format("GeneratedFixedIntervalEquiJoin_{0}", EquiJoinSequenceNumber++);
+                template.className = $"GeneratedFixedIntervalEquiJoin_{EquiJoinSequenceNumber++}";
 
                 template.leftMessageRepresentation = new ColumnarRepresentation(leftType);
                 template.rightMessageRepresentation = new ColumnarRepresentation(rightType);
@@ -105,7 +105,7 @@ namespace Microsoft.StreamProcessing
                 if (keyType.IsAnonymousType())
                 {
                     template.keyComparerEquals =
-                        (left, right) => string.Format("keyComparerEquals({0}, {1})", left, right);
+                        (left, right) => $"keyComparerEquals({left}, {right})";
                 }
                 #endregion
 

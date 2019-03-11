@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -20,10 +19,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             var getLength = this.RuntimeType.GetTypeInfo().GetProperty("Length");
             if (getLength == null)
             {
-                throw new SerializationException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Runtime type '{0}' is being serialized as array, but does not have 'Length' property.", this.RuntimeType));
+                throw new SerializationException($"Runtime type '{this.RuntimeType}' is being serialized as array, but does not have 'Length' property.");
             }
 
             var body = new List<Expression>();

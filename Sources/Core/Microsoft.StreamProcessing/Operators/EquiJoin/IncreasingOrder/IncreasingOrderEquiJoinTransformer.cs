@@ -79,7 +79,7 @@ namespace Microsoft.StreamProcessing
                 template.TRight = rightType.GetCSharpSourceSyntax();
                 template.TResult = resultType.GetCSharpSourceSyntax(); // BUGBUG: need to get any generic parameters needed
 
-                template.className = string.Format("GeneratedIncreasingOrderEquiJoin_{0}", IOOEJSequenceNumber++);
+                template.className = $"GeneratedIncreasingOrderEquiJoin_{IOOEJSequenceNumber++}";
 
                 template.leftMessageRepresentation = new ColumnarRepresentation(leftType);
                 template.leftFields = template.leftMessageRepresentation.AllFields;

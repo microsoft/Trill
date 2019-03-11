@@ -12,13 +12,15 @@ namespace Microsoft.StreamProcessing
     {
         private readonly IStreamable<TKey, TPayload> source;
         private readonly TRegister defaultRegister;
+        private readonly TAccumulator defaultAccumulator;
 
         #region Constructors
-        public PatternMatcher(IStreamable<TKey, TPayload> source = default, Afa<TPayload, TRegister, TAccumulator> afa = default, TRegister defaultRegister = default)
+        public PatternMatcher(IStreamable<TKey, TPayload> source = default, Afa<TPayload, TRegister, TAccumulator> afa = default, TRegister defaultRegister = default, TAccumulator defaultAccumulator = default)
         {
             this.source = source;
             this.AFA = afa;
             this.defaultRegister = defaultRegister;
+            this.defaultAccumulator = defaultAccumulator;
         }
         #endregion
 
@@ -29,7 +31,7 @@ namespace Microsoft.StreamProcessing
         #region SingleElement
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<long, TPayload, TRegister, bool>> condition = null, Expression<Func<long, TPayload, TRegister, TRegister>> aggregator = null)
         {
-            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister);
+            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
             afa.AddArc(0, 1, new SingleElementArc<TPayload, TRegister> { Fence = condition, Transfer = aggregator });
             afa.Seal();
 
@@ -92,7 +94,7 @@ namespace Microsoft.StreamProcessing
         #region ListElement
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<long, List<TPayload>, TRegister, bool>> condition = null, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null)
         {
-            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister);
+            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
             afa.AddArc(0, 1, new ListElementArc<TPayload, TRegister> { Fence = condition, Transfer = aggregator });
             afa.Seal();
 
@@ -110,7 +112,6 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
             return ListElement(condition, aggregatorTemplate.InlineCalls());
         }
-
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, TRegister, bool>> condition, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null)
         {
@@ -156,7 +157,7 @@ namespace Microsoft.StreamProcessing
         #region EpsilonElement
         public IPattern<TKey, TPayload, TRegister, TAccumulator> Epsilon()
         {
-            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister);
+            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
             afa.AddArc(0, 1, new EpsilonArc<TPayload, TRegister> { });
             afa.Seal();
 
@@ -167,7 +168,7 @@ namespace Microsoft.StreamProcessing
         #region MultiElement
         public IPattern<TKey, TPayload, TRegister, TAccumulator> MultiElement(Expression<Func<long, TRegister, TAccumulator>> initialize, Expression<Func<long, TPayload, TRegister, TAccumulator, TAccumulator>> accumulate, Expression<Func<long, TPayload, TAccumulator, bool>> skipToEnd, Expression<Func<long, TAccumulator, TRegister, bool>> fence, Expression<Func<long, TAccumulator, TRegister, TRegister>> transfer, Expression<Action<TAccumulator>> dispose)
         {
-            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister);
+            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
             afa.AddArc(0, 1, new MultiElementArc<TPayload, TRegister, TAccumulator>
             {
                 Initialize = initialize,
@@ -189,7 +190,7 @@ namespace Microsoft.StreamProcessing
         {
             var newConcreteRegex = pattern(new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>());
 
-            var result = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister);
+            var result = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
 
             var pattern_ = newConcreteRegex.AFA;
 
@@ -262,7 +263,7 @@ namespace Microsoft.StreamProcessing
             for (int i = 0; i < patterns.Length; i++)
                 allPatterns[i + 2] = patterns[i](new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>()).AFA;
 
-            var result = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister);
+            var result = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
 
             int oldMax;
 
@@ -296,17 +297,16 @@ namespace Microsoft.StreamProcessing
             }
             result.StartState = 0;
 
-
             return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, result));
         }
         #endregion
 
         #region Set Register and Accumulator
         public IAbstractPattern<TKey, TPayload, TRegister, TAccumulatorNew> SetAccumulator<TAccumulatorNew>(TAccumulatorNew defaultAccumulator = default)
-            => new PatternMatcher<TKey, TPayload, TRegister, TAccumulatorNew>(this.source, null);
+            => new PatternMatcher<TKey, TPayload, TRegister, TAccumulatorNew>(this.source, null, this.defaultRegister, defaultAccumulator);
 
         public IAbstractPattern<TKey, TPayload, TRegisterNew, TAccumulator> SetRegister<TRegisterNew>(TRegisterNew defaultRegister = default)
-            => new PatternMatcher<TKey, TPayload, TRegisterNew, TAccumulator>(this.source, null, defaultRegister);
+            => new PatternMatcher<TKey, TPayload, TRegisterNew, TAccumulator>(this.source, null, defaultRegister, this.defaultAccumulator);
         #endregion
 
         #region Detect
@@ -413,10 +413,8 @@ namespace Microsoft.StreamProcessing
                             result.AddArc(from, to, kvp2.Value);
 
                             if (nextPattern.finalStates.Contains(kvp2.Key))
-                            {
                                 if (!result.finalStates.Contains(to))
                                     result.finalStates.Add(to);
-                            }
                         }
                     }
                 }

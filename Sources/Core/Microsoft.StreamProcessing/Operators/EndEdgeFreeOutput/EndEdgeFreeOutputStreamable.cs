@@ -21,29 +21,25 @@ namespace Microsoft.StreamProcessing
             // This operator uses the equality method on payloads
             if (this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of payload, '{0}', to EndEdgeFreeOutputStreamable does not have a valid equality operator for columnar mode.", typeof(TPayload).FullName));
+                throw new InvalidOperationException($"Type of payload, '{typeof(TPayload).FullName}', to EndEdgeFreeOutputStreamable does not have a valid equality operator for columnar mode.");
             }
 
             Initialize();
         }
 
         public override sealed IDisposable Subscribe(IStreamObserver<TKey, TPayload> observer)
-        {
-            if (this.Source.Properties.IsConstantDuration)
-            {
-                return this.Source.Subscribe(observer);
-            }
-
-            return this.Source.Subscribe(CreatePipe(observer));
-        }
+            => this.Source.Properties.IsConstantDuration
+                ? this.Source.Subscribe(observer)
+                : this.Source.Subscribe(CreatePipe(observer));
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
         {
             var part = typeof(TKey).GetPartitionType();
             if (part == null)
             {
-                if (this.Source.Properties.IsColumnar) return GetPipe(observer);
-                else return new EndEdgeFreeOutputPipe<TKey, TPayload>(this, observer);
+                return this.Source.Properties.IsColumnar
+                    ? GetPipe(observer)
+                    : new EndEdgeFreeOutputPipe<TKey, TPayload>(this, observer);
             }
 
             var outputType = typeof(PartitionedEndEdgeFreeOutputPipe<,,>).MakeGenericType(

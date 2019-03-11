@@ -71,16 +71,13 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create(this.Selector.ExpressionToCSharp(), this.HasStartEdge, this.HasKey);
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => SelectTemplate.Generate(this));
-            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SelectPlanNode(p, o, typeof(TKey), typeof(TPayload), typeof(TResult), this.Selector, this.HasKey, this.HasStartEdge, true, generatedPipeType.Item2));
+            Func<PlanNode, IQueryObject, PlanNode> planNode = (PlanNode p, IQueryObject o) => new SelectPlanNode(p, o, typeof(TKey), typeof(TPayload), typeof(TResult), this.Selector, this.HasKey, this.HasStartEdge, true, generatedPipeType.Item2);
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode);
             var returnValue = (UnaryPipe<TKey, TPayload, TResult>)instance;
             return returnValue;
         }
 
-        public override string ToString()
-        {
-            return "Select(" + this.Selector.ExpressionToCSharp() + ")";
-        }
+        public override string ToString() => "Select(" + this.Selector.ExpressionToCSharp() + ")";
     }
 }

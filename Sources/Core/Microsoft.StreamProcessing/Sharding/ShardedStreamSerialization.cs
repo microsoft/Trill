@@ -103,7 +103,6 @@ namespace Microsoft.StreamProcessing.Sharding
         }
     }
 
-
     /// <summary>
     /// Static class to provide deserialization services to sharded streamable from and to binary streams
     /// </summary>
@@ -156,8 +155,6 @@ namespace Microsoft.StreamProcessing.Sharding
         /// <param name="async">States whether serialization should be able to be done asynchronously</param>
         /// <param name="writePropertiesToStream">Write stream properties to the binary stream</param>
         public static void ToBinaryStream<TKey, TPayload>(this IShardedStreamable<TKey, TPayload> source, Stream[] destinations, bool async = false, bool writePropertiesToStream = false)
-        {
-            new ShardedStreamSerializer<TKey, TPayload>(source, destinations, async, writePropertiesToStream);
-        }
+            => new ShardedStreamSerializer<TKey, TPayload>(source, destinations, async, writePropertiesToStream);
     }
 }

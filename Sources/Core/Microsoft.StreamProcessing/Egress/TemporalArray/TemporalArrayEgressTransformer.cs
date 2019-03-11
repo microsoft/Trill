@@ -41,7 +41,7 @@ namespace Microsoft.StreamProcessing
         {
             var tm = new TypeMapper(tKey, tPayload, tResult);
 
-            this.className = string.Format("GeneratedTemporalArrayEgress_{0}", TemporalArrayEgressSequenceNumber++);
+            this.className = $"GeneratedTemporalArrayEgress_{TemporalArrayEgressSequenceNumber++}";
 
             this.payloadRepresentation = new ColumnarRepresentation(tPayload);
 

@@ -649,7 +649,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 private void CreateNewInstance(string s) {
 
  if (payloadIsAnon) {
-  var fieldArgs = String.Join(",", this.sourceFields.Select(f => string.Format("{0}.{1}", s, f.Name)));
+  var fieldArgs = String.Join(",", this.sourceFields.Select(f => $"{s}.{f.Name}"));
 
 this.Write("                                        var payload = (");
 

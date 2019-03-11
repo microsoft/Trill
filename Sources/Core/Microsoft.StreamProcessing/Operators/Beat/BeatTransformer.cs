@@ -38,7 +38,7 @@ namespace Microsoft.StreamProcessing
           sw.Start();
 #endif
             var template = new BeatTemplate(
-                string.Format("GeneratedBeat_{0}", BeatSequenceNumber++),
+                $"GeneratedBeat_{BeatSequenceNumber++}",
                 typeof(TKey), typeof(TPayload));
 
             template.ActiveEventType = typeof(TPayload).GetTypeInfo().IsValueType ? template.TPayload : "Active_Event";

@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -159,7 +158,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.doMultiStringTransform && IsMultiStringCall(body, out string s))
                 {
-                    this.multiStringOperations.Add(string.Format(CultureInfo.InvariantCulture, "resultBatch.{0} = {1};", this.resultTypeInformation.PseudoField.Name, s));
+                    this.multiStringOperations.Add($"resultBatch.{this.resultTypeInformation.PseudoField.Name} = {s};");
                 }
                 else
                 {
@@ -330,7 +329,7 @@ namespace Microsoft.StreamProcessing
                     if (this.doMultiStringTransform && IsMultiStringCall(argument, out string s))
                     {
                         this.multiStringResultFields.Add(resultField);
-                        this.multiStringOperations.Add(string.Format(CultureInfo.InvariantCulture, "resultBatch.{0} = {1};", resultField.Name, s));
+                        this.multiStringOperations.Add($"resultBatch.{resultField.Name} = {s};");
                         continue;
                     }
                 }
@@ -374,7 +373,7 @@ namespace Microsoft.StreamProcessing
             if (this.doMultiStringTransform && IsMultiStringCall(node.Expression, out string s))
             {
                 this.multiStringResultFields.Add(destinationColumn);
-                this.multiStringOperations.Add(string.Format(CultureInfo.InvariantCulture, "resultBatch.{0} = {1};", destinationColumn.Name, s));
+                this.multiStringOperations.Add($"resultBatch.{destinationColumn.Name} = {s};");
             }
             else
             {
@@ -475,7 +474,7 @@ namespace Microsoft.StreamProcessing
                 }
                 if (e == null) return false;
 
-                var s = string.Format(CultureInfo.InvariantCulture, "sourceBatch.{0}{1}.{2}", Transformer.ColumnFieldPrefix, memberInfo.Name, MapStringArgsToMultiStringArgs(methodCall));
+                var s = $"sourceBatch.{Transformer.ColumnFieldPrefix}{memberInfo.Name}.{MapStringArgsToMultiStringArgs(methodCall)}";
                 vectorCall = s;
                 return true;
             }
@@ -494,12 +493,7 @@ namespace Microsoft.StreamProcessing
                 }
                 if (e == null) return false;
 
-                var s = string.Format(
-                    CultureInfo.InvariantCulture,
-                    "{0}{1}_col.{2}(batch.bitvector, false);",
-                    Transformer.ColumnFieldPrefix,
-                    memberInfo.Name,
-                    memberBinding.Member.Name);
+                var s = $"{Transformer.ColumnFieldPrefix}{memberInfo.Name}_col.{memberBinding.Member.Name}(batch.bitvector, false);";
                 vectorCall = s;
                 return true;
             }
@@ -559,8 +553,8 @@ namespace Microsoft.StreamProcessing
                     if (n == 1)
                     {
                         firstArgsToMultiStringCall = firstArgIsChar
-                            ? string.Format(CultureInfo.InvariantCulture, "{0}.ToString(), 0, StringComparison.Ordinal", firstArgAsCSharpString)
-                            : string.Format(CultureInfo.InvariantCulture, "{0}, 0, StringComparison.Ordinal", firstArgAsCSharpString);
+                            ? $"{firstArgAsCSharpString}.ToString(), 0, StringComparison.Ordinal"
+                            : $"{firstArgAsCSharpString}, 0, StringComparison.Ordinal";
                     }
                     else
                     {
@@ -570,13 +564,13 @@ namespace Microsoft.StreamProcessing
                             if (methodCall.Arguments.ElementAt(1).Type.Equals(typeof(int)))
                             {
                                 firstArgsToMultiStringCall = firstArgIsChar
-                                    ? string.Format(CultureInfo.InvariantCulture, "{0}.ToString(), {1}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString)
-                                    : string.Format(CultureInfo.InvariantCulture, "{0}, {1}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString);
+                                    ? $"{firstArgAsCSharpString}.ToString(), {secondArgAsCSharpString}, StringComparison.Ordinal"
+                                    : $"{firstArgAsCSharpString}, {secondArgAsCSharpString}, StringComparison.Ordinal";
                             }
                             else
                             {
                                 // IndexOf/LastIndexOf(string, StringComparison)
-                                firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}, 0, {1}", firstArgAsCSharpString, secondArgAsCSharpString);
+                                firstArgsToMultiStringCall = $"{firstArgAsCSharpString}, 0, {secondArgAsCSharpString}";
                             }
                         }
                         else
@@ -585,12 +579,12 @@ namespace Microsoft.StreamProcessing
                             if (n == 3)
                             {
                                 if (firstArgIsChar) // IndexOf/LastIndexOf(char, int, int)
-                                    firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}.ToString(), {1}, {2}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString, thirdArgAsCSharpString);
+                                    firstArgsToMultiStringCall = $"{firstArgAsCSharpString}.ToString(), {secondArgAsCSharpString}, {thirdArgAsCSharpString}, StringComparison.Ordinal";
                                 else
                                 {
                                     firstArgsToMultiStringCall = methodCall.Method.GetParameters().ElementAt(2).ParameterType.Equals(typeof(int))
-                                        ? string.Format(CultureInfo.InvariantCulture, "{0}, {1}, {2}, StringComparison.Ordinal", firstArgAsCSharpString, secondArgAsCSharpString, thirdArgAsCSharpString)
-                                        : string.Format(CultureInfo.InvariantCulture, "{0}, {1}, {2}", firstArgAsCSharpString, secondArgAsCSharpString, thirdArgAsCSharpString);
+                                        ? $"{firstArgAsCSharpString}, {secondArgAsCSharpString}, {thirdArgAsCSharpString}, StringComparison.Ordinal"
+                                        : $"{firstArgAsCSharpString}, {secondArgAsCSharpString}, {thirdArgAsCSharpString}";
                                 }
                             }
                             else
@@ -598,7 +592,7 @@ namespace Microsoft.StreamProcessing
                                 Contract.Assume(n == 4, "meant to be exhaustive");
                                 var fourthArgAsCSharpString = args[3];
                                 // IndexOf/LastIndexOf(string, int, int, StringComparison)
-                                firstArgsToMultiStringCall = string.Format(CultureInfo.InvariantCulture, "{0}, {1}, {2}, {3}", firstArgAsCSharpString, secondArgAsCSharpString, thirdArgAsCSharpString, fourthArgAsCSharpString);
+                                firstArgsToMultiStringCall = $"{firstArgAsCSharpString}, {secondArgAsCSharpString}, {thirdArgAsCSharpString}, {fourthArgAsCSharpString}";
                             }
                         }
                     }
@@ -610,8 +604,8 @@ namespace Microsoft.StreamProcessing
 
             }
             var s = methodName.Equals("Substring")
-                ? string.Format(CultureInfo.InvariantCulture, "{0}({1}, sourceBatch.bitvector)", methodToCall, firstArgsToMultiStringCall)
-                : string.Format(CultureInfo.InvariantCulture, "{0}({1}, sourceBatch.bitvector, false)", methodToCall, firstArgsToMultiStringCall);
+                ? $"{methodToCall}({firstArgsToMultiStringCall}, sourceBatch.bitvector)"
+                : $"{methodToCall}({firstArgsToMultiStringCall}, sourceBatch.bitvector, false)";
             return s;
         }
 

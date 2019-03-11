@@ -65,7 +65,7 @@ namespace Microsoft.StreamProcessing
                 var gps = tm.GenericTypeVariables(keyType, leftType, rightType);
                 template.genericParameters = gps.BracketedCommaSeparatedString();
 
-                template.className = string.Format("GeneratedClip_{0}", ClipSequenceNumber++);
+                template.className = $"GeneratedClip_{ClipSequenceNumber++}";
 
                 var resultRepresentation = new ColumnarRepresentation(leftType);
 
