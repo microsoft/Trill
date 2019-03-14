@@ -56,9 +56,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
-            this.Write(">\r\n{\r\n    // transient; don\'t need to contract it\r\n    private DataStructurePool<" +
-                    "FastDictionary2<KHP, List<ActiveEvent>>> dictPool;\r\n    private readonly MemoryP" +
-                    "ool<");
+            this.Write(">\r\n{\r\n    // transient; don\'t need to contract it\r\n    private readonly DataStruc" +
+                    "turePool<FastDictionary2<KHP, List<ActiveEvent>>> dictPool;\r\n    private readonl" +
+                    "y MemoryPool<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
@@ -390,18 +390,19 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "lst.Add(value);\r\n        }\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions.Aggressiv" +
                     "eInlining)]\r\n    private static ActiveEvent RemoveOne(FastDictionary2<KHP, List<" +
                     "ActiveEvent>> events, KHP key)\r\n    {\r\n        int indx;\r\n        if (!events.Lo" +
-                    "okup(key, out indx))\r\n            throw new Exception(\"Can\'t remove if it\'s not " +
-                    "already there!\");\r\n\r\n        var lst = events.entries[indx].value;\r\n        var " +
-                    "rv = lst[0];\r\n        lst.RemoveAt(0);\r\n        return rv;\r\n    }\r\n\r\n    [Method" +
-                    "Impl(MethodImplOptions.AggressiveInlining)]\r\n    private static ActiveEventExt R" +
-                    "emoveOne(FastDictionary2<KHP, List<ActiveEventExt>> events, KHP key, long startM" +
-                    "atch)\r\n    {\r\n        int indx;\r\n        if (!events.Lookup(key, out indx))\r\n   " +
-                    "         throw new Exception(\"Can\'t remove if it\'s not already there!\");\r\n\r\n    " +
-                    "    var lst = events.entries[indx].value;\r\n        var itemIndex = lst.FindIndex" +
-                    "(s => s.Start == startMatch);\r\n        if (itemIndex > -1)\r\n        {\r\n         " +
-                    "   var item = lst[itemIndex];\r\n            lst.RemoveAt(itemIndex);\r\n           " +
-                    " return item;\r\n        }\r\n        throw new Exception(\"Can\'t remove if it\'s not " +
-                    "in the item list!\");\r\n    }\r\n\r\n    private void ActOnEnd(");
+                    "okup(key, out indx))\r\n            throw new InvalidOperationException(\"Can\'t rem" +
+                    "ove if it\'s not already there!\");\r\n\r\n        var lst = events.entries[indx].valu" +
+                    "e;\r\n        var rv = lst[0];\r\n        lst.RemoveAt(0);\r\n        return rv;\r\n    " +
+                    "}\r\n\r\n    [MethodImpl(MethodImplOptions.AggressiveInlining)]\r\n    private static " +
+                    "ActiveEventExt RemoveOne(FastDictionary2<KHP, List<ActiveEventExt>> events, KHP " +
+                    "key, long startMatch)\r\n    {\r\n        int indx;\r\n        if (!events.Lookup(key," +
+                    " out indx))\r\n            throw new InvalidOperationException(\"Can\'t remove if it" +
+                    "\'s not already there!\");\r\n\r\n        var lst = events.entries[indx].value;\r\n     " +
+                    "   var itemIndex = lst.FindIndex(s => s.Start == startMatch);\r\n        if (itemI" +
+                    "ndex > -1)\r\n        {\r\n            var item = lst[itemIndex];\r\n            lst.R" +
+                    "emoveAt(itemIndex);\r\n            return item;\r\n        }\r\n        throw new Inva" +
+                    "lidOperationException(\"Can\'t remove if it\'s not in the item list!\");\r\n    }\r\n\r\n " +
+                    "   private void ActOnEnd(");
             this.Write(this.ToStringHelper.ToStringWithCulture(BatchGeneratedFrom_TKey_TPayload));
             this.Write(this.ToStringHelper.ToStringWithCulture(TKeyTPayloadGenericParameters));
             this.Write(" batch, int index, long start, long endTime)\r\n    {\r\n        var matchSmall = new" +

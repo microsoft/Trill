@@ -65,9 +65,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
     }
 
     public override void ProduceQueryPlan(PlanNode previous)
-    {
-        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
-    }
+        => Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
 
     protected override void DisposeState()
     {

@@ -27,13 +27,11 @@ namespace Microsoft.StreamProcessing
         private FastDictionary2<TPartitionKey, long> lastSyncTime = new FastDictionary2<TPartitionKey, long>();
 
         // Field instead of local variable to avoid re-initializing it
-        private Stack<int> stack = new Stack<int>();
+        private readonly Stack<int> stack = new Stack<int>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledPartitionedAfaPipe_EventList()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         public CompiledPartitionedAfaPipe_EventList(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
             : base(stream, observer, afa, maxDuration, false)

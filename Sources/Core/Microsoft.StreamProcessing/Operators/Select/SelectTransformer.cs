@@ -146,8 +146,8 @@ namespace Microsoft.StreamProcessing
                 template.nonSwingingFields = template.fields.Where(sf => !template.swingingFields.Any(swingingField => swingingField.Item2.Equals(sf)));
                 var expandedCode = template.TransformText();
 
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeof(TKey), typeof(TPayload), typeof(TResult));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(
+                    typeof(TKey), typeof(TPayload), typeof(TResult), typeof(IStreamable<,>));
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TResult>());
                 assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TResult>());
@@ -161,9 +161,8 @@ namespace Microsoft.StreamProcessing
             catch
             {
                 if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
-                {
                     throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!");
-                }
+
                 return Tuple.Create((Type)null, errorMessages);
             }
         }

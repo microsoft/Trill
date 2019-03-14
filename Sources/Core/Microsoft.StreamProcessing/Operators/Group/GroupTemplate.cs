@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class GroupTemplate : CommonBaseTemplate
+    internal partial class GroupTemplate : CommonPipeTemplate
     {
         /// <summary>
         /// Create the template output
@@ -76,7 +76,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write("\r\n// TSource: ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TSource));
             this.Write("\r\n\r\n[DataContract]\r\ninternal sealed class ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(CLASSNAME));
+            this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write(this.ToStringHelper.ToStringWithCulture(genericParameters));
             this.Write(" :\r\n                       Pipe<");
             this.Write(this.ToStringHelper.ToStringWithCulture(outputKey));
@@ -107,9 +107,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write("\r\n    ");
             this.Write(this.ToStringHelper.ToStringWithCulture(staticCtor));
             this.Write("\r\n\r\n    public ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(CLASSNAME));
+            this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write("() { }\r\n\r\n    public ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(CLASSNAME));
+            this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write("(\r\n        IStreamable<");
             this.Write(this.ToStringHelper.ToStringWithCulture(outputKey));
             this.Write(", ");

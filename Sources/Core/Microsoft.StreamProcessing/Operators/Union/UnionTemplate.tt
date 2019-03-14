@@ -1,10 +1,6 @@
-﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+﻿<#@ template language="C#" inherits="CommonBinaryTemplate" visibility="internal" linePragmas="false" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
-<#@ import namespace="System.Text" #>
-<#@ import namespace="System.Collections.Generic" #>
-<#@ import namespace="System.Linq.Expressions" #>
-<#@ import namespace="System.Reflection" #>
 // *********************************************************************
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
@@ -23,14 +19,14 @@ using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Internal.Collections;
 
 // TKey: <#= TKey #>
-// TPayload: <#= TPayload #>
+// TPayload: <#= TResult #>
 
 [DataContract]
-internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>, <#= TPayload #>>
+internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= TKey #>, <#= TResult #>, <#= TResult #>, <#= TResult #>>
 {
-    private readonly MemoryPool<<#= TKey #>, <#= TPayload #>> pool;
+    private readonly MemoryPool<<#= TKey #>, <#= TResult #>> pool;
 
-    private StreamMessage<<#= TKey #>, <#= TPayload #>> genericOutputBatch;
+    private StreamMessage<<#= TKey #>, <#= TResult #>> genericOutputBatch;
     [DataMember]
     private <#= GeneratedBatchName #> output;
     [DataMember]
@@ -44,13 +40,13 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     public <#= className #>() { }
 
     public <#= className #>(
-        IStreamable<<#= TKey #>, <#= TPayload #>> stream,
-        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer,
+        IStreamable<<#= TKey #>, <#= TResult #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TResult #>> observer,
         Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator)
         : base(stream, observer)
     {
         this.queryPlanGenerator = queryPlanGenerator;
-        this.pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TPayload #>>(true /*stream.Properties.IsColumnar*/);
+        this.pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TResult #>>(true /*stream.Properties.IsColumnar*/);
         GetOutputBatch();
     }
 
@@ -71,7 +67,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     protected override void DisposeState() => this.output.Free();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected override void ProcessBothBatches(StreamMessage<<#= TKey #>, <#= TPayload #>> leftBatch, StreamMessage<<#= TKey #>, <#= TPayload #>> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
+    protected override void ProcessBothBatches(StreamMessage<<#= TKey #>, <#= TResult #>> leftBatch, StreamMessage<<#= TKey #>, <#= TResult #>> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
     {
         leftBatchFree = rightBatchFree = true;
 
@@ -157,7 +153,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected override void ProcessLeftBatch(StreamMessage<<#= TKey #>, <#= TPayload #>> batch, out bool isBatchDone, out bool isBatchFree)
+    protected override void ProcessLeftBatch(StreamMessage<<#= TKey #>, <#= TResult #>> batch, out bool isBatchDone, out bool isBatchFree)
     {
         isBatchFree = true;
         if (batch.iter == 0)
@@ -194,7 +190,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected override void ProcessRightBatch(StreamMessage<<#= TKey #>, <#= TPayload #>> batch, out bool isBatchDone, out bool isBatchFree)
+    protected override void ProcessRightBatch(StreamMessage<<#= TKey #>, <#= TResult #>> batch, out bool isBatchDone, out bool isBatchFree)
     {
         isBatchFree = true;
         if (batch.iter == 0)
@@ -231,7 +227,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool GoToVisibleRow(StreamMessage<<#= TKey #>, <#= TPayload #>> batch)
+    private bool GoToVisibleRow(StreamMessage<<#= TKey #>, <#= TResult #>> batch)
     {
         while (batch.iter < batch.Count && (batch.bitvector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0 && batch.vother.col[batch.iter] >= 0)
             batch.iter++;
@@ -240,7 +236,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void OutputCurrentTuple(StreamMessage<<#= TKey #>, <#= TPayload #>> batch)
+    private void OutputCurrentTuple(StreamMessage<<#= TKey #>, <#= TResult #>> batch)
     {
         if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
         {
@@ -265,7 +261,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void OutputBatch(StreamMessage<<#= TKey #>, <#= TPayload #>> batch)
+    private void OutputBatch(StreamMessage<<#= TKey #>, <#= TResult #>> batch)
     {
         long updatedCTI = lastCTI;
         for (int i = 0; i < batch.Count; i++)

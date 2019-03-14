@@ -20,7 +20,6 @@ namespace Microsoft.StreamProcessing
         private Type stateType;
         private Type outputType;
         private Type resultType;
-        private string className;
         private string BatchGeneratedFrom_Unit_TInput;
         private string UnitTInputGenericParameters;
         protected Func<string, string, string> finalResultSelector;
@@ -29,7 +28,6 @@ namespace Microsoft.StreamProcessing
         private string TResult;
         private string UnitTResultGenericParameters;
         private string keySelector;
-        private string staticCtor;
 
         private IEnumerable<MyFieldInfo> inputFields;
         private IEnumerable<MyFieldInfo> outputFields;
@@ -46,7 +44,7 @@ namespace Microsoft.StreamProcessing
         private bool useCompiledDifference;
         private bool isUngrouped;
 
-        private GroupedWindowTemplate() { }
+        private GroupedWindowTemplate(string className) : base(className) { }
 
         /// <summary>
         /// Generate a batch class definition to be used as an aggreate definition.
@@ -72,7 +70,7 @@ namespace Microsoft.StreamProcessing
             {
                 string expandedCode;
 
-                var template = new GroupedWindowTemplate();
+                var template = new GroupedWindowTemplate($"GeneratedGroupedAggregate_{GroupedAggregateSequenceNumber++}");
 
                 var keyType = template.keyType = typeof(TKey);
                 var inputType = template.inputType = typeof(TInput);
@@ -82,7 +80,6 @@ namespace Microsoft.StreamProcessing
 
                 template.TResult = resultType.GetCSharpSourceSyntax(); // BUGBUG: need to get any generic parameters needed
                 template.isUngrouped = (keyType == typeof(Empty));
-                template.className = $"GeneratedGroupedAggregate_{GroupedAggregateSequenceNumber++}";
 
                 var inputMessageRepresentation = new ColumnarRepresentation(inputType);
 
@@ -274,7 +271,6 @@ namespace Microsoft.StreamProcessing
                     };
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(resultSelector));
 
-                template.staticCtor = Transformer.StaticCtor(template.className);
                 expandedCode = template.TransformText();
 
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(typeof(Empty), typeof(TKey), typeof(TInput), typeof(TState), typeof(TOutput), typeof(FastDictionaryGenerator3)));

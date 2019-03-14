@@ -1,4 +1,4 @@
-﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+﻿<#@ template language="C#" inherits="CommonPipeTemplate" visibility="internal" linePragmas="false" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Collections.Generic" #>
@@ -33,7 +33,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 #>
 
 [DataContract]
-internal sealed class <#= CLASSNAME #><#= genericParameters #> :
+internal sealed class <#= className #><#= genericParameters #> :
                        Pipe<<#= TOuterKey #>, <#= TResult #>>, IStreamObserver<<#= inputKey #>, <#= TInnerResult #>>
 {
     private readonly <#= memoryPoolClassName #> outPool;
@@ -52,9 +52,9 @@ internal sealed class <#= CLASSNAME #><#= genericParameters #> :
 
     <#= staticCtor #>
 
-    public <#= CLASSNAME #>() { }
+    public <#= className #>() { }
 
-    public <#= CLASSNAME #>(
+    public <#= className #>(
         IStreamable<<#= TOuterKey #>, <#= TResult #>> stream,
         IStreamObserver<<#= TOuterKey #>, <#= TResult #>> observer,
         Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)

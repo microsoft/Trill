@@ -13,9 +13,6 @@ namespace Microsoft.StreamProcessing
     {
         private static int TemporalArrayEgressSequenceNumber = 0;
 
-        private string className;
-        private string staticCtor;
-
         private string TKey;
         private string TPayload;
         private string TResult;
@@ -38,10 +35,9 @@ namespace Microsoft.StreamProcessing
         private bool isColumnar;
 
         private TemporalArrayEgressTemplate(Type tKey, Type tPayload, Type tResult, string partitionString, string ingressType, bool isColumnar)
+            : base($"GeneratedTemporalArrayEgress_{TemporalArrayEgressSequenceNumber++}")
         {
             var tm = new TypeMapper(tKey, tPayload, tResult);
-
-            this.className = $"GeneratedTemporalArrayEgress_{TemporalArrayEgressSequenceNumber++}";
 
             this.payloadRepresentation = new ColumnarRepresentation(tPayload);
 
@@ -52,8 +48,6 @@ namespace Microsoft.StreamProcessing
             this.TKeyTPayloadGenericParameters = tm.GenericTypeVariables(tKey, tPayload).BracketedCommaSeparatedString();
 
             this.fields = this.payloadRepresentation.AllFields;
-
-            this.staticCtor = Transformer.StaticCtor(this.className);
 
             this.TKey = tm.CSharpNameFor(tKey);
             this.TPayload = tm.CSharpNameFor(tPayload);

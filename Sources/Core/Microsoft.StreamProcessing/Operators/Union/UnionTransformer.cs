@@ -12,17 +12,12 @@ namespace Microsoft.StreamProcessing
     internal partial class UnionTemplate
     {
         private static int UnionSequenceNumber = 0;
-        private Type keyType;
-        private Type payloadType;
-        private string TKey;
-        private string TPayload;
-        private string className;
         private string genericParameters = string.Empty;
         private string GeneratedBatchName;
         private IEnumerable<MyFieldInfo> fields;
-        private string staticCtor;
 
-        private UnionTemplate() { }
+        private UnionTemplate(string className, Type keyType, Type payloadType)
+            : base(className, keyType, payloadType, payloadType, payloadType) { }
 
         /// <summary>
         /// Generate a batch class definition to be used as a Union pipe.
@@ -44,60 +39,20 @@ namespace Microsoft.StreamProcessing
           Stopwatch sw = new Stopwatch();
           sw.Start();
 #endif
-            string errorMessages = null;
-            try
-            {
-                var template = new UnionTemplate();
+            var template = new UnionTemplate($"GeneratedUnion_{UnionSequenceNumber++}", typeof(TKey), typeof(TPayload));
 
-                var keyType = template.keyType = typeof(TKey);
-                var payloadType = template.payloadType = typeof(TPayload);
+            var gps = template.tm.GenericTypeVariables(template.keyType, template.resultType);
+            template.genericParameters = gps.BracketedCommaSeparatedString();
 
-                var tm = new TypeMapper(keyType, payloadType);
-                template.TKey = tm.CSharpNameFor(keyType);
-                template.TPayload = tm.CSharpNameFor(payloadType);
-                var gps = tm.GenericTypeVariables(keyType, payloadType);
-                template.genericParameters = gps.BracketedCommaSeparatedString();
+            var resultRepresentation = new ColumnarRepresentation(template.resultType);
 
-                template.className = string.Format("GeneratedUnion_{0}", UnionSequenceNumber++);
+            var batchGeneratedFrom_TKey_TPayload = Transformer.GetBatchClassName(template.keyType, template.resultType);
+            var keyAndPayloadGenericParameters = template.tm.GenericTypeVariables(template.keyType, template.resultType).BracketedCommaSeparatedString();
+            template.GeneratedBatchName = batchGeneratedFrom_TKey_TPayload + keyAndPayloadGenericParameters;
 
-                var resultRepresentation = new ColumnarRepresentation(payloadType);
+            template.fields = resultRepresentation.AllFields;
 
-                var batchGeneratedFrom_TKey_TPayload = Transformer.GetBatchClassName(keyType, payloadType);
-                var keyAndPayloadGenericParameters = tm.GenericTypeVariables(keyType, payloadType).BracketedCommaSeparatedString();
-                template.GeneratedBatchName = batchGeneratedFrom_TKey_TPayload + keyAndPayloadGenericParameters;
-
-                template.fields = resultRepresentation.AllFields;
-
-                template.staticCtor = Transformer.StaticCtor(template.className);
-                var expandedCode = template.TransformText();
-
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeof(TKey), typeof(TPayload));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
-
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var realClassName = template.className.AddNumberOfNecessaryGenericArguments(keyType, payloadType);
-                var t = a.GetType(realClassName);
-                if (t.GetTypeInfo().IsGenericType)
-                {
-                    var list = keyType.GetAnonymousTypes();
-                    list.AddRange(payloadType.GetAnonymousTypes());
-                    return Tuple.Create(t.MakeGenericType(list.ToArray()), errorMessages);
-                }
-                else
-                {
-                    return Tuple.Create(t, errorMessages);
-                }
-            }
-            catch
-            {
-                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
-                {
-                    throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!");
-                }
-                return Tuple.Create((Type)null, errorMessages);
-            }
+            return template.Generate<TKey, TPayload>();
         }
-
     }
 }

@@ -1,4 +1,4 @@
-﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+﻿<#@ template language="C#" inherits="CommonPipeTemplate" visibility="internal" linePragmas="false" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 // *********************************************************************
@@ -27,7 +27,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 // outputKey: <#= outputKey #>
 
 [DataContract]
-internal sealed class <#= CLASSNAME #><#= genericParameters #> :
+internal sealed class <#= className #><#= genericParameters #> :
                        Pipe<<#= outputKey #>, <#= TSource #>>,
                        IStreamObserverAnd<#= nestedInfix #>GroupedStreamObservable<<#= TOuterKey #>, <#= TSource #>, <#= TInnerKey #>>
 
@@ -51,9 +51,9 @@ internal sealed class <#= CLASSNAME #><#= genericParameters #> :
 
     <#= staticCtor #>
 
-    public <#= CLASSNAME #>() { }
+    public <#= className #>() { }
 
-    public <#= CLASSNAME #>(
+    public <#= className #>(
         IStreamable<<#= outputKey #>, <#= TSource #>> stream,
         IStreamObserver<<#= outputKey #>, <#= TSource #>> observer,
         int _totalBranchesL2,

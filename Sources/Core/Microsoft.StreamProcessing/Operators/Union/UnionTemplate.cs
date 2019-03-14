@@ -10,17 +10,13 @@
 namespace Microsoft.StreamProcessing
 {
     using System.Linq;
-    using System.Text;
-    using System.Collections.Generic;
-    using System.Linq.Expressions;
-    using System.Reflection;
     using System;
     
     /// <summary>
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class UnionTemplate : CommonBaseTemplate
+    internal partial class UnionTemplate : CommonBinaryTemplate
     {
         /// <summary>
         /// Create the template output
@@ -47,26 +43,26 @@ using Microsoft.StreamProcessing.Internal.Collections;
 // TKey: ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write("\r\n// TPayload: ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write("\r\n\r\n[DataContract]\r\ninternal sealed class ");
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write(this.ToStringHelper.ToStringWithCulture(genericParameters));
             this.Write(" : BinaryPipe<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(">\r\n{\r\n    private readonly MemoryPool<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write("> pool;\r\n\r\n    private StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write("> genericOutputBatch;\r\n    [DataMember]\r\n    private ");
             this.Write(this.ToStringHelper.ToStringWithCulture(GeneratedBatchName));
             this.Write(@" output;
@@ -85,18 +81,18 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write("(\r\n        IStreamable<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write("> stream,\r\n        IStreamObserver<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write("> observer,\r\n        Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> qu" +
                     "eryPlanGenerator)\r\n        : base(stream, observer)\r\n    {\r\n        this.queryPl" +
                     "anGenerator = queryPlanGenerator;\r\n        this.pool = MemoryManager.GetMemoryPo" +
                     "ol<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(@">(true /*stream.Properties.IsColumnar*/);
         GetOutputBatch();
     }
@@ -121,11 +117,11 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "ssage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write("> leftBatch, StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write("> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatch" +
                     "Free, out bool rightBatchFree)\r\n    {\r\n        leftBatchFree = rightBatchFree = " +
                     "true;\r\n\r\n        long lastLeftTime = -1;\r\n        long lastRightTime = -1;\r\n\r\n  " +
@@ -162,7 +158,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "ocessLeftBatch(StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(@"> batch, out bool isBatchDone, out bool isBatchFree)
     {
         isBatchFree = true;
@@ -203,7 +199,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
     protected override void ProcessRightBatch(StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(@"> batch, out bool isBatchDone, out bool isBatchFree)
     {
         isBatchFree = true;
@@ -244,7 +240,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
     private bool GoToVisibleRow(StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(@"> batch)
     {
         while (batch.iter < batch.Count && (batch.bitvector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0 && batch.vother.col[batch.iter] >= 0)
@@ -257,7 +253,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
     private void OutputCurrentTuple(StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(@"> batch)
     {
         if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
@@ -288,7 +284,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
     private void OutputBatch(StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
             this.Write(@"> batch)
     {
         long updatedCTI = lastCTI;

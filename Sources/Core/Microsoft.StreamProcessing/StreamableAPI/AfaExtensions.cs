@@ -36,9 +36,7 @@ namespace Microsoft.StreamProcessing
             if (maxDuration == 0)
             {
                 if (!(source.Properties.IsConstantDuration && (source.Properties.ConstantDurationLength != null)))
-                {
-                    throw new Exception("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
-                }
+                    throw new InvalidOperationException("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
 
                 maxDuration = source.Properties.ConstantDurationLength.Value;
             }
@@ -70,7 +68,7 @@ namespace Microsoft.StreamProcessing
             if (maxDuration == 0)
             {
                 if (!(source.Properties.IsConstantDuration && (source.Properties.ConstantDurationLength != null)))
-                    throw new Exception("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
+                    throw new InvalidOperationException("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
 
                 maxDuration = source.Properties.ConstantDurationLength.Value;
             }
@@ -106,7 +104,7 @@ namespace Microsoft.StreamProcessing
             if (maxDuration == 0)
             {
                 if (!(source.Properties.IsConstantDuration && (source.Properties.ConstantDurationLength != null)))
-                    throw new Exception("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
+                    throw new InvalidOperationException("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
 
                 maxDuration = source.Properties.ConstantDurationLength.Value;
             }

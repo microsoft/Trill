@@ -30,9 +30,9 @@ namespace Microsoft.StreamProcessing
     var TKEY = keyType.GetCSharpSourceSyntax(ref genericParamList);
     var keyGenericParameterCount = genericParamList.Count;
     var TPAYLOAD = payloadType.GetCSharpSourceSyntax(ref genericParamList);
-    var payloadGenericParameterList = genericParamList.Skip(keyGenericParameterCount);
+    var payloadGenericParmeterList = genericParamList.Skip(keyGenericParameterCount);
     var genericParameters = 0 < genericParamList.Count ? "<" + String.Join(",", genericParamList) + ">" : string.Empty;
-    var payloadGenericParameters = 0 < payloadGenericParameterList.Count() ? "<" + String.Join(",", payloadGenericParameterList) + ">" : string.Empty;
+    var payloadGenericParameters = 0 < payloadGenericParmeterList.Count() ? "<" + String.Join(",", payloadGenericParmeterList) + ">" : string.Empty;
     var payloadIsAnon = payloadType.IsAnonymousType();
     if (payloadIsAnon) TPAYLOAD = TPAYLOAD.CleanUpIdentifierName();
 
@@ -1392,8 +1392,8 @@ if (f.Type == this.payloadType) {
             this.Write("        ");
  if (payloadIsAnon) { 
  if (f.OptimizeString()) { 
-            this.Write("\r\n        //if (index != Count) throw new Exception(\"Bad invocation of setter wit" +
-                    "h multi-strings\");\r\n        this.");
+            this.Write("\r\n        //if (index != Count) throw new InvalidOperationException(\"Bad invocati" +
+                    "on of setter with multi-strings\");\r\n        this.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));
             this.Write(".AddString((");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Type.GetCSharpSourceSyntax()));
@@ -1412,8 +1412,8 @@ if (f.Type == this.payloadType) {
             this.Write("\r\n        ");
  } else { 
  if (f.OptimizeString()) { 
-            this.Write("\r\n        //if (index != Count) throw new Exception(\"Bad invocation of setter wit" +
-                    "h multi-strings\");\r\n        this.");
+            this.Write("\r\n        //if (index != Count) throw new InvalidOperationException(\"Bad invocati" +
+                    "on of setter with multi-strings\");\r\n        this.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));
             this.Write(".AddString(value.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.OriginalName));
@@ -1431,7 +1431,7 @@ if (f.Type == this.payloadType) {
  } 
             this.Write("        ");
  } 
-            this.Write("\r\n    }\r\n}\r\n\r\n}\r\n");
+            this.Write("    }\r\n}\r\n\r\n}\r\n");
             return this.GenerationEnvironment.ToString();
         }
     }

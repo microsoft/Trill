@@ -14,7 +14,6 @@ namespace Microsoft.StreamProcessing
 {
     internal partial class UngroupTemplate
     {
-        private readonly string CLASSNAME;
         private readonly Type outerKeyType;
         private readonly Type innerKeyType;
         private readonly Type innerResultType;
@@ -28,7 +27,7 @@ namespace Microsoft.StreamProcessing
             Type outerKeyType,
             Type innerKeyType,
             Type innerResultType,
-            Type resultType)
+            Type resultType) : base(className)
         {
             Contract.Requires(className != null);
             Contract.Requires(outerKeyType != null);
@@ -36,7 +35,6 @@ namespace Microsoft.StreamProcessing
             Contract.Requires(innerResultType != null);
             Contract.Requires(resultType != null);
 
-            this.CLASSNAME = className;
             this.outerKeyType = outerKeyType;
             this.innerKeyType = innerKeyType;
             this.innerResultType = innerResultType;
@@ -80,18 +78,13 @@ namespace Microsoft.StreamProcessing
         private string resultBatchGenericParameters;
         private string genericParameters;
         private int numberOfGenericParameters;
-        private string staticCtor;
         private IEnumerable<MyFieldInfo> unassignedFields;
 
         internal static Tuple<Type, string> Generate<TOuterKey, TInnerKey, TInnerResult, TResult>(Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelector)
-        {
-            return GenerateInternal<TOuterKey, TInnerKey, TInnerResult, TResult>(resultSelector, false);
-        }
+            => GenerateInternal<TOuterKey, TInnerKey, TInnerResult, TResult>(resultSelector, false);
 
         internal static Tuple<Type, string> Generate<TInnerKey, TInnerResult, TResult>(Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelector)
-        {
-            return GenerateInternal<Empty, TInnerKey, TInnerResult, TResult>(resultSelector, true);
-        }
+            => GenerateInternal<Empty, TInnerKey, TInnerResult, TResult>(resultSelector, true);
 
         private static Tuple<Type, string> GenerateInternal<TOuterKey, TInnerKey, TInnerResult, TResult>(Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelector, bool isFirstLevelGroup)
         {
@@ -143,7 +136,6 @@ namespace Microsoft.StreamProcessing
                     keyParameter = resultSelector.Parameters.First()
                 };
 
-                template.staticCtor = Transformer.StaticCtor(template.CLASSNAME);
                 expandedCode = template.TransformText();
 
                 assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeOfTOuterKey, typeOfTInnerKey, typeofTInnerResult, typeofTResult);
