@@ -26,7 +26,7 @@ namespace Microsoft.StreamProcessing
         public override string TransformText()
         {
             this.Write("// *********************************************************************\r\n// Copy" +
-                    "right (C) Microsoft Corporation.  All rights reserved.\r\n// Licensed under the MI" +
+                    "right (c) Microsoft Corporation.  All rights reserved.\r\n// Licensed under the MI" +
                     "T License\r\n// ******************************************************************" +
                     "***\r\n/*\\\r\n    * Spec:\r\n    *\r\n    * Apply punctuation policy first. This means t" +
                     "hat even dropped events\r\n    * count towards the number of events seen since the" +
@@ -58,7 +58,7 @@ namespace Microsoft.StreamProcessing
   bool partitioned = (partitionString == "Partitioned");
     string baseStructure = partitionString + "StreamEvent<" + adjustedGenericArgs + ">";
     string globalPunctuation = partitioned ? "LowWatermark" : "Punctuation";
-    string highWatermark = partitioned ? "partitionHighWatermarks[value.PartitionKey]" : "highWatermark";
+    string highWatermark = partitioned ? "this.partitionHighWatermarks[value.PartitionKey]" : "this.highWatermark";
     string keyType = !partitioned ? "Microsoft.StreamProcessing.Empty" : "PartitionKey<TKey>";
     string streamEventFromValue = fusionOption == "Disordered" ? ("new " + partitionString + "StreamEvent<" + genericArguments + ">(" + (!partitioned ? string.Empty : "value.PartitionKey, ") + "value.SyncTime, value.OtherTime, default)") : "value";
 
@@ -196,33 +196,33 @@ namespace Microsoft.StreamProcessing
     {
         if (partitioned)
         { 
-            this.Write(@"            // Check to see if we need to generate a low watermark due to PeriodicLowWatermarkPolicy
-            if (lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
-                value.SyncTime > lowWatermarkTimestampLag)
-            {
-                var newLowWatermark = value.SyncTime - lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - lowWatermark) >= lowWatermarkGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
-                    var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)lowWatermarkGenerationPeriod);
-                    GenerateAndProcessLowWatermark(newLowWatermarkSnapped);
-                }
-            }
-
-        long moveFrom;
-        if (!currentTime.TryGetValue(value.PartitionKey, out moveFrom)) moveFrom = lowWatermark;
-        if (!partitionHighWatermarks.ContainsKey(value.PartitionKey))
-        {
-            partitionHighWatermarks.Add(value.PartitionKey, lowWatermark);
-
-            if (highWatermarkToPartitionsMap.TryGetValue(lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
-            else highWatermarkToPartitionsMap.Add(lowWatermark, new HashSet<TKey> { value.PartitionKey });
-        }
-");
+            this.Write("            // Check to see if we need to generate a low watermark due to Periodi" +
+                    "cLowWatermarkPolicy\r\n            if (this.lowWatermarkPolicyType == PeriodicLowW" +
+                    "atermarkPolicyType.Time &&\r\n                value.SyncTime > this.lowWatermarkTi" +
+                    "mestampLag)\r\n            {\r\n                // Generated lowWatermark is always " +
+                    "quantized to the last lowWatermarkGenerationPeriod boundary, but\r\n              " +
+                    "  // since the last lowWatermark time may have been explicitly ingressed, it is " +
+                    "not necessarily quantized,\r\n                // so use the quantized value when c" +
+                    "omputing the delta.\r\n                var newLowWatermark = value.SyncTime - this" +
+                    ".lowWatermarkTimestampLag;\r\n                if ((ulong)(newLowWatermark - this.l" +
+                    "owWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this" +
+                    ".lowWatermarkGenerationPeriod)\r\n                {\r\n                    // SyncTi" +
+                    "me is sufficiently high to generate a new watermark, but first snap it to the ne" +
+                    "arest generationPeriod boundary\r\n                    var newLowWatermarkSnapped " +
+                    "= newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);\r\n" +
+                    "                    GenerateAndProcessLowWatermark(newLowWatermarkSnapped);\r\n   " +
+                    "             }\r\n            }\r\n\r\n        long moveFrom;\r\n        if (!this.curre" +
+                    "ntTime.TryGetValue(value.PartitionKey, out moveFrom)) moveFrom = this.lowWaterma" +
+                    "rk;\r\n        if (!this.partitionHighWatermarks.ContainsKey(value.PartitionKey))\r" +
+                    "\n        {\r\n            this.partitionHighWatermarks.Add(value.PartitionKey, thi" +
+                    "s.lowWatermark);\r\n\r\n            if (this.highWatermarkToPartitionsMap.TryGetValu" +
+                    "e(this.lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);\r" +
+                    "\n            else this.highWatermarkToPartitionsMap.Add(this.lowWatermark, new H" +
+                    "ashSet<TKey> { value.PartitionKey });\r\n        }\r\n");
       }
         else
         { 
-            this.Write("        long moveFrom = currentTime;\r\n");
+            this.Write("        long moveFrom = this.currentTime;\r\n");
       } 
             this.Write(@"        long moveTo = moveFrom;
 
@@ -246,32 +246,34 @@ namespace Microsoft.StreamProcessing
             this.Write(" = value.SyncTime;\r\n\r\n");
           if (partitioned)
             { 
-            this.Write(@"            var oldSet = highWatermarkToPartitionsMap[oldTime];
-            if (oldSet.Count <= 1) highWatermarkToPartitionsMap.Remove(oldTime);
+            this.Write(@"            var oldSet = this.highWatermarkToPartitionsMap[oldTime];
+            if (oldSet.Count <= 1) this.highWatermarkToPartitionsMap.Remove(oldTime);
             else oldSet.Remove(value.PartitionKey);
 
-            if (highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
-            else highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
+            if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
+            else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
 
 ");
           } 
-            this.Write("            moveTo = value.SyncTime - reorderLatency;\r\n            if (moveTo < S" +
-                    "treamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;\r\n            if (moveT" +
-                    "o < moveFrom) moveTo = moveFrom;\r\n            }\r\n");
+            this.Write("            moveTo = value.SyncTime - this.reorderLatency;\r\n            if (moveT" +
+                    "o < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;\r\n            if (" +
+                    "moveTo < moveFrom) moveTo = moveFrom;\r\n            }\r\n");
       if (ingressType == "StreamEvent")
         {
             PopIndent(); 
             this.Write("        }\r\n");
       } 
-            this.Write("\r\n        if (moveTo > moveFrom)\r\n        {\r\n            if (priorityQueueSorter " +
-                    "!= null)\r\n            {\r\n                ");
+            this.Write("\r\n        if (moveTo > moveFrom)\r\n        {\r\n            if (this.priorityQueueSo" +
+                    "rter != null)\r\n            {\r\n                ");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent<");
             this.Write(this.ToStringHelper.ToStringWithCulture(adjustedGenericArgs));
-            this.Write("> resultEvent;\r\n\r\n                while ((!priorityQueueSorter.IsEmpty()) && prio" +
-                    "rityQueueSorter.Peek().SyncTime <= moveTo)\r\n                {\r\n                 " +
-                    "   resultEvent = priorityQueueSorter.Dequeue();\r\n                    Process(ref" +
-                    " resultEvent");
+            this.Write(@"> resultEvent;
+
+                while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= moveTo)
+                {
+                    resultEvent = this.priorityQueueSorter.Dequeue();
+                    Process(ref resultEvent");
 if (partitioned) {
             this.Write(", updateCurrentTime : false");
 }
@@ -279,7 +281,7 @@ if (partitioned) {
                     "      // Extract and process data in-order from impatience, until timestamp of m" +
                     "oveTo\r\n                PooledElasticCircularBuffer<");
             this.Write(this.ToStringHelper.ToStringWithCulture(baseStructure));
-            this.Write("> streamEvents = impatienceSorter.DequeueUntil(");
+            this.Write("> streamEvents = this.impatienceSorter.DequeueUntil(");
             this.Write(this.ToStringHelper.ToStringWithCulture(!partitioned ? string.Empty : "value.PartitionKey, "));
             this.Write(" moveTo, out bool recheck);\r\n\r\n                if (streamEvents != null)\r\n       " +
                     "         {\r\n                    ");
@@ -293,7 +295,7 @@ if (partitioned) {
             this.Write(", updateCurrentTime : false");
 }
             this.Write(");\r\n                    }\r\n                }\r\n\r\n                if (!recheck && (" +
-                    "streamEvents != null))\r\n                    impatienceSorter.Return(");
+                    "streamEvents != null))\r\n                    this.impatienceSorter.Return(");
             this.Write(this.ToStringHelper.ToStringWithCulture(!partitioned ? string.Empty : "value.PartitionKey, "));
             this.Write(@" streamEvents);
             }
@@ -306,20 +308,21 @@ if (partitioned) {
         }
 
         // Enqueue value into impatience
-        if (priorityQueueSorter != null) priorityQueueSorter.Enqueue(value);
-        else impatienceSorter.Enqueue(ref value);
+        if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
+        else this.impatienceSorter.Enqueue(ref value);
 
         // Move currentTime forward
 ");
       if (!partitioned)
         { 
-            this.Write("        currentTime = moveTo;\r\n");
+            this.Write("        this.currentTime = moveTo;\r\n");
       }
         else
         { 
-            this.Write("        if (!currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime)" +
-                    ")\r\n            currentTime.Add(value.PartitionKey, moveTo);\r\n        else if (ol" +
-                    "dCurrentTime < moveTo)\r\n            currentTime[value.PartitionKey] = moveTo;\r\n");
+            this.Write("        if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrent" +
+                    "Time))\r\n            this.currentTime.Add(value.PartitionKey, moveTo);\r\n        e" +
+                    "lse if (oldCurrentTime < moveTo)\r\n            this.currentTime[value.PartitionKe" +
+                    "y] = moveTo;\r\n");
       } 
             this.Write("        }\r\n\r\n    private void Process(ref ");
             this.Write(this.ToStringHelper.ToStringWithCulture(baseStructure));
@@ -349,19 +352,19 @@ if (partitioned) {
   }
     if (!partitioned)
     { 
-            this.Write("        long current = currentTime;\r\n");
+            this.Write("        long current = this.currentTime;\r\n");
   }
     else
     { 
             this.Write(@"        // Update global high water mark if necessary
-        highWatermark = Math.Max(highWatermark, value.SyncTime);
+        this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
-        if (punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !lastPunctuationTime.ContainsKey(value.PartitionKey))
-            lastPunctuationTime.Add(value.PartitionKey, lowWatermark);
+        if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
+            this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
 
         // Retrieve current time for this partition, updating currentTime if necessary
         long current;
-        if (!currentTime.TryGetValue(value.PartitionKey, out current))
+        if (!this.currentTime.TryGetValue(value.PartitionKey, out current))
         {
 ");
           if (latencyOption == "WithLatency")
@@ -370,32 +373,37 @@ if (partitioned) {
                     "t\r\n            if (!updateCurrentTime) throw new IngressException(\"Partition exp" +
                     "ected to have a valid currentTime!\");\r\n");
           }
-            this.Write("            current = lowWatermark;\r\n        }\r\n        else if (");
+            this.Write("            current = this.lowWatermark;\r\n        }\r\n        else if (");
 if (latencyOption == "WithLatency") {
             this.Write("updateCurrentTime && ");
 }
-            this.Write("current < lowWatermark)\r\n        {\r\n            current = lowWatermark;\r\n        " +
-                    "    currentTime[value.PartitionKey] = lowWatermark;\r\n        }\r\n");
+            this.Write("current < this.lowWatermark)\r\n        {\r\n            current = this.lowWatermark;" +
+                    "\r\n            this.currentTime[value.PartitionKey] = this.lowWatermark;\r\n       " +
+                    " }\r\n");
   } 
-            this.Write("\r\n        var outOfOrder = value.SyncTime < current;\r\n        if (punctuationPoli" +
-                    "cyType == PeriodicPunctuationPolicyType.Time)\r\n        {\r\n");
+            this.Write("\r\n        var outOfOrder = value.SyncTime < current;\r\n        if (this.punctuatio" +
+                    "nPolicyType == PeriodicPunctuationPolicyType.Time)\r\n        {\r\n");
   if (ingressType == "StreamEvent" && partitioned)
     { 
             this.Write("            // Track punctuation\r\n            if (value.IsPunctuation && value.Sy" +
-                    "ncTime > lastPunctuationTime[value.PartitionKey])\r\n                lastPunctuati" +
-                    "onTime[value.PartitionKey] = value.SyncTime;\r\n\r\n");
+                    "ncTime > this.lastPunctuationTime[value.PartitionKey])\r\n                this.las" +
+                    "tPunctuationTime[value.PartitionKey] = value.SyncTime;\r\n\r\n");
   } 
             this.Write(@"            // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
             // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
             // (if necessary) when that timestamp was seen.
+            // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+            // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+            // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+            // the previous data event.
 ");
   if (!partitioned)
     { 
-            this.Write(@"            ulong delta = (ulong)(value.SyncTime - lastPunctuationTime);
-            if (!outOfOrder && delta >= punctuationGenerationPeriod)
+            this.Write(@"            ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
+            if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
             {
                 // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)punctuationGenerationPeriod);
+                var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
                 OnPunctuation(StreamEvent.CreatePunctuation<");
             this.Write(this.ToStringHelper.ToStringWithCulture(fusionOption == "Disordered" ? TResult : TPayload));
             this.Write(">(punctuationTimeSnapped));\r\n            }\r\n");
@@ -404,11 +412,12 @@ if (latencyOption == "WithLatency") {
     { 
             this.Write(@"            // We use lowWatermark as the baseline in the delta computation because a low watermark implies
             // punctuations for all partitions
-            ulong delta = (ulong)(value.SyncTime - Math.Max(lastPunctuationTime[value.PartitionKey], lowWatermark));
-            if (!outOfOrder && punctuationGenerationPeriod > 0 && delta >= punctuationGenerationPeriod)
+            var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+            var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
+            if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
             {
                 // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)punctuationGenerationPeriod);
+                var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
                 OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(fusionOption == "Disordered" ? TResult : TPayload));
             this.Write(">(value.PartitionKey, punctuationTimeSnapped));\r\n            }\r\n");
@@ -425,7 +434,7 @@ if (latencyOption == "WithLatency") {
               PushIndent("    ");
             }
         } 
-            this.Write(@"        if (disorderPolicyType == DisorderPolicyType.Throw)
+            this.Write(@"        if (this.disorderPolicyType == DisorderPolicyType.Throw)
         {
             if (outOfOrder)
             {
@@ -448,10 +457,10 @@ if (latencyOption == "WithLatency") {
                     if (outOfOrder)
                     {
                         key = Tuple.Create(value.SyncTime, value.Payload);
-                        if (!startEventInformation.TryGetValue(key, out q))
+                        if (!this.startEventInformation.TryGetValue(key, out q))
                         {
                             q = new ElasticCircularBuffer<AdjustInfo>();
-                            startEventInformation.Add(key, q);
+                            this.startEventInformation.Add(key, q);
                             var x = new AdjustInfo(current);
                             q.Enqueue(ref x);
                         }
@@ -466,15 +475,15 @@ if (latencyOption == "WithLatency") {
                             }
                         }
 
-                        if (disorderPolicyType == DisorderPolicyType.Drop)
+                        if (this.disorderPolicyType == DisorderPolicyType.Drop)
                         {
-                            diagnosticOutput?.OnNext(OutOfOrder");
+                            this.diagnosticOutput?.OnNext(OutOfOrder");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.Create(");
             this.Write(this.ToStringHelper.ToStringWithCulture(streamEventFromValue));
             this.Write(", new long?()));\r\n                            return; // drop\r\n                  " +
                     "      }\r\n                        else\r\n                        {\r\n              " +
-                    "              diagnosticOutput?.OnNext(OutOfOrder");
+                    "              this.diagnosticOutput?.OnNext(OutOfOrder");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.Create(");
             this.Write(this.ToStringHelper.ToStringWithCulture(streamEventFromValue));
@@ -490,8 +499,8 @@ if (latencyOption == "WithLatency") {
                     "amEventKind.Interval:\r\n");
       } 
             this.Write("                    if (outOfOrder)\r\n                    {\r\n                     " +
-                    "   if (disorderPolicyType == DisorderPolicyType.Drop)\r\n                        {" +
-                    "\r\n                            diagnosticOutput?.OnNext(OutOfOrder");
+                    "   if (this.disorderPolicyType == DisorderPolicyType.Drop)\r\n                    " +
+                    "    {\r\n                            this.diagnosticOutput?.OnNext(OutOfOrder");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.Create(");
             this.Write(this.ToStringHelper.ToStringWithCulture(streamEventFromValue));
@@ -502,13 +511,13 @@ if (latencyOption == "WithLatency") {
                         {
                             if (current >= value.OtherTime)
                             {
-                                diagnosticOutput?.OnNext(OutOfOrder");
+                                this.diagnosticOutput?.OnNext(OutOfOrder");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.Create(");
             this.Write(this.ToStringHelper.ToStringWithCulture(streamEventFromValue));
             this.Write(", new long?()));\r\n                                return; // drop\r\n              " +
-                    "              }\r\n\r\n                            diagnosticOutput?.OnNext(OutOfOrd" +
-                    "er");
+                    "              }\r\n\r\n                            this.diagnosticOutput?.OnNext(Out" +
+                    "OfOrder");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.Create(");
             this.Write(this.ToStringHelper.ToStringWithCulture(streamEventFromValue));
@@ -528,7 +537,7 @@ if (latencyOption == "WithLatency") {
                 case StreamEventKind.End:
                     // it may not be out of order, but did we drop/adjust the corresponding start event?
                     key = Tuple.Create(value.OtherTime, value.Payload);
-                    if (startEventInformation.TryGetValue(key, out q))
+                    if (this.startEventInformation.TryGetValue(key, out q))
                     {
                         Contract.Assume(!q.IsEmpty());
                         var firstElement = q.PeekFirst();
@@ -536,19 +545,19 @@ if (latencyOption == "WithLatency") {
                         if (firstElement.numberOfOccurrences == 0)
                         {
                             q.Dequeue(); // throw away returned value
-                            if (q.Count == 0) startEventInformation.Remove(key);
+                            if (q.Count == 0) this.startEventInformation.Remove(key);
                         }
                         var adjustedTime = firstElement.modifiedStartTime;
 
-                        if (disorderPolicyType == DisorderPolicyType.Drop)
+                        if (this.disorderPolicyType == DisorderPolicyType.Drop)
                         {
-                            diagnosticOutput?.OnNext(OutOfOrder");
+                            this.diagnosticOutput?.OnNext(OutOfOrder");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.Create(");
             this.Write(this.ToStringHelper.ToStringWithCulture(streamEventFromValue));
             this.Write(", new long?()));\r\n                            return; // drop\r\n                  " +
                     "      }\r\n                        else\r\n                        {\r\n              " +
-                    "              diagnosticOutput?.OnNext(OutOfOrder");
+                    "              this.diagnosticOutput?.OnNext(OutOfOrder");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.Create(");
             this.Write(this.ToStringHelper.ToStringWithCulture(streamEventFromValue));
@@ -564,15 +573,15 @@ if (latencyOption == "WithLatency") {
                     }
                     else if (outOfOrder)
                     {
-                        if (disorderPolicyType == DisorderPolicyType.Drop)
+                        if (this.disorderPolicyType == DisorderPolicyType.Drop)
                         {
-                            diagnosticOutput?.OnNext(OutOfOrder");
+                            this.diagnosticOutput?.OnNext(OutOfOrder");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.Create(");
             this.Write(this.ToStringHelper.ToStringWithCulture(streamEventFromValue));
             this.Write(", new long?()));\r\n                            return; // drop\r\n                  " +
                     "      }\r\n                        else\r\n                        {\r\n              " +
-                    "              diagnosticOutput?.OnNext(OutOfOrder");
+                    "              this.diagnosticOutput?.OnNext(OutOfOrder");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.Create(");
             this.Write(this.ToStringHelper.ToStringWithCulture(streamEventFromValue));
@@ -610,37 +619,55 @@ if (latencyOption == "WithLatency") {
             this.Write("\r\n");
       if (!partitioned)
         { 
-            this.Write("        if (currentTime < value.SyncTime) currentTime = value.SyncTime;\r\n");
+            this.Write("        if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;" +
+                    "\r\n");
       }
         else
         { 
-            this.Write("        if (!currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime)" +
-                    " || oldCurrentTime < value.SyncTime)\r\n            currentTime[value.PartitionKey" +
-                    "] = value.SyncTime;\r\n");
+            this.Write("        if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrent" +
+                    "Time) || oldCurrentTime < value.SyncTime)\r\n            this.currentTime[value.Pa" +
+                    "rtitionKey] = value.SyncTime;\r\n");
       } 
             this.Write("    }\r\n\r\n    private void GenerateAndProcess");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
             this.Write("(long syncTime)\r\n    {\r\n        if (syncTime <= ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(partitioned ? "lowWatermark" : "lastPunctuationTime"));
+            this.Write(this.ToStringHelper.ToStringWithCulture(partitioned ? "this.lowWatermark" : "this.lastPunctuationTime"));
             this.Write(") return;\r\n\r\n");
+      if (!partitioned)
+        { 
+            this.Write("        \r\n            // Update the ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
+            this.Write(" to be at least the currentTime, so the ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
+            this.Write("\r\n            // is not before the preceding data event.\r\n");
+          if (latencyOption == "WithLatency")
+            { 
+            this.Write("            // Note that currentTime only reflects events already processed, and " +
+                    "excludes events in the reorder buffer.\r\n");
+          } 
+            this.Write("            syncTime = Math.Max(syncTime, this.currentTime);\r\n");
+      } 
+            this.Write("\r\n");
       if (latencyOption == "WithLatency")
         { 
             this.Write("        // Process events queued for reorderLatency up to the ");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
-            this.Write(" syncTime\r\n        if (priorityQueueSorter != null)\r\n        {\r\n            ");
+            this.Write(" syncTime\r\n        if (this.priorityQueueSorter != null)\r\n        {\r\n            " +
+                    "");
             this.Write(this.ToStringHelper.ToStringWithCulture(baseStructure));
-            this.Write(" resultEvent;\r\n            while ((!priorityQueueSorter.IsEmpty()) && priorityQue" +
-                    "ueSorter.Peek().SyncTime <= syncTime)\r\n            {\r\n                resultEven" +
-                    "t = priorityQueueSorter.Dequeue();\r\n                Process(ref resultEvent");
+            this.Write(" resultEvent;\r\n            while ((!this.priorityQueueSorter.IsEmpty()) && this.p" +
+                    "riorityQueueSorter.Peek().SyncTime <= syncTime)\r\n            {\r\n                " +
+                    "resultEvent = this.priorityQueueSorter.Dequeue();\r\n                Process(ref r" +
+                    "esultEvent");
 if (partitioned) {
             this.Write(", updateCurrentTime : false");
 }
             this.Write(");\r\n            }\r\n        }\r\n        else\r\n        {\r\n");
           if (partitioned)
             { 
-            this.Write("            bool recheck;\r\n            var PartitionedstreamEvents = impatienceSo" +
-                    "rter.DequeueUntil(syncTime);\r\n\r\n            int index = FastDictionary<TKey, Tup" +
-                    "le<bool, PooledElasticCircularBuffer<PartitionedStreamEvent<TKey, ");
+            this.Write("            bool recheck;\r\n            var PartitionedstreamEvents = this.impatie" +
+                    "nceSorter.DequeueUntil(syncTime);\r\n\r\n            int index = FastDictionary<TKey" +
+                    ", Tuple<bool, PooledElasticCircularBuffer<PartitionedStreamEvent<TKey, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
             this.Write(">>>>.IteratorStart;\r\n            while(");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
@@ -652,8 +679,8 @@ if (partitioned) {
             }
             else
             { 
-            this.Write("            var streamEvents = impatienceSorter.DequeueUntil(syncTime, out bool r" +
-                    "echeck);\r\n");
+            this.Write("            var streamEvents = this.impatienceSorter.DequeueUntil(syncTime, out b" +
+                    "ool recheck);\r\n");
           } 
             this.Write("            if (streamEvents != null)\r\n            {\r\n                ");
             this.Write(this.ToStringHelper.ToStringWithCulture(baseStructure));
@@ -664,7 +691,8 @@ if (partitioned) {
 if (partitioned) {
             this.Write(", updateCurrentTime : false");
 }
-            this.Write(");\r\n                }\r\n                if (!recheck) impatienceSorter.Return(");
+            this.Write(");\r\n                }\r\n                if (!recheck) this.impatienceSorter.Return" +
+                    "(");
             this.Write(this.ToStringHelper.ToStringWithCulture(!partitioned ? string.Empty : "entry.key , "));
             this.Write(" streamEvents);\r\n            }\r\n");
           if (partitioned)
@@ -674,20 +702,20 @@ if (partitioned) {
           } 
             this.Write("        }\r\n\r\n");
       } 
-            this.Write("        // Update cached global times\r\n        highWatermark = Math.Max(syncTime," +
-                    " highWatermark);\r\n");
+            this.Write("        // Update cached global times\r\n        this.highWatermark = Math.Max(sync" +
+                    "Time, this.highWatermark);\r\n");
       if (partitioned)
         { 
-            this.Write(@"        if (lowWatermark < syncTime)
+            this.Write(@"        if (this.lowWatermark < syncTime)
         {
-            lowWatermark = syncTime;
+            this.lowWatermark = syncTime;
 
             // Gather keys whose high watermarks are before the new low watermark
             var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
-            foreach (var keyValuePair in highWatermarkToPartitionsMap)
+            foreach (var keyValuePair in this.highWatermarkToPartitionsMap)
             {
                 // Since highWatermarkToPartitionsMap is sorted, we can stop as soon as we reach the threshold
-                if (keyValuePair.Key >= lowWatermark) break;
+                if (keyValuePair.Key >= this.lowWatermark) break;
 
                 expiredWatermarkKVPs.Add(keyValuePair);
             }
@@ -696,14 +724,14 @@ if (partitioned) {
             foreach (var expiredWatermarkKVP in expiredWatermarkKVPs)
             {
                 var expiredWatermark = expiredWatermarkKVP.Key;
-                highWatermarkToPartitionsMap.Remove(expiredWatermark);
+                this.highWatermarkToPartitionsMap.Remove(expiredWatermark);
 
                 var expiredKeys = expiredWatermarkKVP.Value;
                 foreach (var expiredKey in expiredKeys)
                 {
-                    lastPunctuationTime.Remove(expiredKey);
-                    partitionHighWatermarks.Remove(expiredKey);
-                    currentTime.Remove(expiredKey);
+                    this.lastPunctuationTime.Remove(expiredKey);
+                    this.partitionHighWatermarks.Remove(expiredKey);
+                    this.currentTime.Remove(expiredKey);
                 }
             }
         }
@@ -711,44 +739,51 @@ if (partitioned) {
       }
         else
         { 
-            this.Write("        currentTime = Math.Max(syncTime, currentTime);\r\n        lastPunctuationTi" +
-                    "me = Math.Max(syncTime, lastPunctuationTime);\r\n");
+            this.Write("        this.currentTime = Math.Max(syncTime, this.currentTime);\r\n        this.la" +
+                    "stPunctuationTime = Math.Max(syncTime, this.lastPunctuationTime);\r\n");
       } 
             this.Write("\r\n        // Add ");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
-            this.Write(" to batch\r\n        var count = currentBatch.Count;\r\n        currentBatch.vsync.co" +
-                    "l[count] = syncTime;\r\n        currentBatch.vother.col[count] = ");
+            this.Write(" to batch\r\n        var count = this.currentBatch.Count;\r\n        this.currentBatc" +
+                    "h.vsync.col[count] = syncTime;\r\n        this.currentBatch.vother.col[count] = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("StreamEvent.");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
             this.Write(@"OtherTime;
-        currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
-        currentBatch.key.col[count] = default;
-        currentBatch[count] = default;
-        currentBatch.hash.col[count] = 0;
-        currentBatch.Count = count + 1;
+        this.currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
+        this.currentBatch.key.col[count] = default;
+        this.currentBatch[count] = default;
+        this.currentBatch.hash.col[count] = 0;
+        this.currentBatch.Count = count + 1;
 
         // Flush if necessary
-        if (flushPolicy == ");
+        if (this.flushPolicy == ");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("FlushPolicy.FlushOn");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
-            this.Write(" ||\r\n            (flushPolicy == ");
+            this.Write(" ||\r\n            (this.flushPolicy == ");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
-            this.Write("FlushPolicy.FlushOnBatchBoundary && currentBatch.Count == Config.DataBatchSize))\r" +
-                    "\n        {\r\n            OnFlush();\r\n        }\r\n        else if (currentBatch.Cou" +
-                    "nt == Config.DataBatchSize)\r\n        {\r\n            FlushContents();\r\n        }\r" +
-                    "\n    }\r\n\r\n");
+            this.Write(@"FlushPolicy.FlushOnBatchBoundary && this.currentBatch.Count == Config.DataBatchSize))
+        {
+            OnFlush();
+        }
+        else if (this.currentBatch.Count == Config.DataBatchSize)
+        {
+            FlushContents();
+        }
+    }
+
+");
       if (partitioned && latencyOption == "WithLatency")
         { 
             this.Write(@"    protected override void UpdatePointers()
     {
-        foreach (var kvp in partitionHighWatermarks)
+        foreach (var kvp in this.partitionHighWatermarks)
         {
-            if (highWatermarkToPartitionsMap.TryGetValue(kvp.Value, out HashSet<TKey> set))
+            if (this.highWatermarkToPartitionsMap.TryGetValue(kvp.Value, out HashSet<TKey> set))
                 set.Add(kvp.Key);
             else
-                highWatermarkToPartitionsMap.Add(kvp.Value, new HashSet<TKey> { kvp.Key });
+                this.highWatermarkToPartitionsMap.Add(kvp.Value, new HashSet<TKey> { kvp.Key });
         }
     }
 
@@ -758,7 +793,7 @@ if (partitioned) {
                     "erateAndProcess");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
             this.Write("(punctuationTime);\r\n        // Flush, but if we just flushed due to the punctuati" +
-                    "on generated above\r\n        if (flushPolicy != ");
+                    "on generated above\r\n        if (this.flushPolicy != ");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("FlushPolicy.FlushOn");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
@@ -777,16 +812,17 @@ this.Write(" generatedBatch = (");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(GeneratedBatchName));
 
-this.Write(") this.currentBatch;\r\n    var count = currentBatch.Count;\r\n    currentBatch.vsync" +
-        ".col[count] = value.SyncTime;\r\n    currentBatch.vother.col[count] = ");
+this.Write(") this.currentBatch;\r\n    var count = this.currentBatch.Count;\r\n    this.currentB" +
+        "atch.vsync.col[count] = value.SyncTime;\r\n    this.currentBatch.vother.col[count]" +
+        " = ");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(generatedEndTimeVariable));
 
-this.Write(";\r\n    currentBatch.key.col[count] = ");
+this.Write(";\r\n    this.currentBatch.key.col[count] = ");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(emptyOrPartition));
 
-this.Write(";\r\n    currentBatch.hash.col[count] = ");
+this.Write(";\r\n    this.currentBatch.hash.col[count] = ");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(partitionString == "Partitioned" ? "GetHashCode(value.PartitionKey)" : "0"));
 
@@ -858,8 +894,8 @@ this.Write(";\r\n");
 this.Write("    }\r\n");
 
  } 
-this.Write("\r\n    currentBatch.Count++;\r\n    if (currentBatch.Count == Config.DataBatchSize)\r" +
-        "\n    {\r\n        if (flushPolicy == ");
+this.Write("\r\n    this.currentBatch.Count++;\r\n    if (this.currentBatch.Count == Config.DataB" +
+        "atchSize)\r\n    {\r\n        if (this.flushPolicy == ");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
 

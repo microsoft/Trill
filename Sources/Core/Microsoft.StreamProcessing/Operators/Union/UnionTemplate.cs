@@ -130,34 +130,34 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "      bool first = (leftBatch.iter == 0);\r\n        if (!GoToVisibleRow(leftBatch" +
                     "))\r\n        {\r\n            leftBatchDone = true;\r\n            rightBatchDone = f" +
                     "alse;\r\n            return;\r\n        }\r\n\r\n        this.nextLeftTime = leftBatch.v" +
-                    "sync.col[leftBatch.iter];\r\n        if (first) lastLeftTime = MaxBatchSyncTime(le" +
-                    "ftBatch);\r\n\r\n        first = (rightBatch.iter == 0);\r\n        if (!GoToVisibleRo" +
-                    "w(rightBatch))\r\n        {\r\n            leftBatchDone = false;\r\n            right" +
-                    "BatchDone = true;\r\n\r\n            return;\r\n        }\r\n\r\n        this.nextRightTim" +
-                    "e = rightBatch.vsync.col[rightBatch.iter];\r\n        if (first) lastRightTime = M" +
-                    "axBatchSyncTime(rightBatch);\r\n\r\n        if ((lastLeftTime != -1) && (lastRightTi" +
-                    "me != -1))\r\n        {\r\n            leftBatchDone = rightBatchDone = false;\r\n    " +
-                    "        if (lastLeftTime <= this.nextRightTime)\r\n            {\r\n                " +
-                    "OutputBatch(leftBatch);\r\n                leftBatchDone = true;\r\n                " +
-                    "leftBatchFree = false;\r\n            }\r\n\r\n            if (Config.DeterministicWit" +
-                    "hinTimestamp ? (lastRightTime < this.nextLeftTime) : (lastRightTime <= this.next" +
-                    "LeftTime))\r\n            {\r\n                OutputBatch(rightBatch);\r\n           " +
-                    "     rightBatchDone = true;\r\n                rightBatchFree = false;\r\n          " +
-                    "  }\r\n\r\n            if (leftBatchDone || rightBatchDone) return;\r\n        }\r\n\r\n  " +
-                    "      while (true)\r\n        {\r\n            if (this.nextLeftTime <= this.nextRig" +
-                    "htTime)\r\n            {\r\n                OutputCurrentTuple(leftBatch);\r\n\r\n      " +
-                    "          leftBatch.iter++;\r\n\r\n                if (!GoToVisibleRow(leftBatch))\r\n" +
-                    "                {\r\n                    leftBatchDone = true;\r\n                  " +
-                    "  rightBatchDone = false;\r\n                    return;\r\n                }\r\n\r\n   " +
-                    "             this.nextLeftTime = leftBatch.vsync.col[leftBatch.iter];\r\n         " +
-                    "   }\r\n            else\r\n            {\r\n                OutputCurrentTuple(rightB" +
-                    "atch);\r\n\r\n                rightBatch.iter++;\r\n\r\n                if (!GoToVisible" +
-                    "Row(rightBatch))\r\n                {\r\n                    leftBatchDone = false;\r" +
-                    "\n                    rightBatchDone = true;\r\n                    return;\r\n      " +
-                    "          }\r\n\r\n                this.nextRightTime = rightBatch.vsync.col[rightBa" +
-                    "tch.iter];\r\n            }\r\n        }\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions" +
-                    ".AggressiveInlining)]\r\n    protected override void ProcessLeftBatch(StreamMessag" +
-                    "e<");
+                    "sync.col[leftBatch.iter];\r\n        if (first) lastLeftTime = leftBatch.vsync.col" +
+                    "[leftBatch.Count - 1];\r\n\r\n        first = (rightBatch.iter == 0);\r\n        if (!" +
+                    "GoToVisibleRow(rightBatch))\r\n        {\r\n            leftBatchDone = false;\r\n    " +
+                    "        rightBatchDone = true;\r\n\r\n            return;\r\n        }\r\n\r\n        this" +
+                    ".nextRightTime = rightBatch.vsync.col[rightBatch.iter];\r\n        if (first) last" +
+                    "RightTime = rightBatch.vsync.col[rightBatch.Count - 1];\r\n\r\n        if ((lastLeft" +
+                    "Time != -1) && (lastRightTime != -1))\r\n        {\r\n            leftBatchDone = ri" +
+                    "ghtBatchDone = false;\r\n            if (lastLeftTime <= this.nextRightTime)\r\n    " +
+                    "        {\r\n                OutputBatch(leftBatch);\r\n                leftBatchDon" +
+                    "e = true;\r\n                leftBatchFree = false;\r\n            }\r\n\r\n            " +
+                    "if (Config.DeterministicWithinTimestamp ? (lastRightTime < this.nextLeftTime) : " +
+                    "(lastRightTime <= this.nextLeftTime))\r\n            {\r\n                OutputBatc" +
+                    "h(rightBatch);\r\n                rightBatchDone = true;\r\n                rightBat" +
+                    "chFree = false;\r\n            }\r\n\r\n            if (leftBatchDone || rightBatchDon" +
+                    "e) return;\r\n        }\r\n\r\n        while (true)\r\n        {\r\n            if (this.n" +
+                    "extLeftTime <= this.nextRightTime)\r\n            {\r\n                OutputCurrent" +
+                    "Tuple(leftBatch);\r\n\r\n                leftBatch.iter++;\r\n\r\n                if (!G" +
+                    "oToVisibleRow(leftBatch))\r\n                {\r\n                    leftBatchDone " +
+                    "= true;\r\n                    rightBatchDone = false;\r\n                    return" +
+                    ";\r\n                }\r\n\r\n                this.nextLeftTime = leftBatch.vsync.col[" +
+                    "leftBatch.iter];\r\n            }\r\n            else\r\n            {\r\n              " +
+                    "  OutputCurrentTuple(rightBatch);\r\n\r\n                rightBatch.iter++;\r\n\r\n     " +
+                    "           if (!GoToVisibleRow(rightBatch))\r\n                {\r\n                " +
+                    "    leftBatchDone = false;\r\n                    rightBatchDone = true;\r\n        " +
+                    "            return;\r\n                }\r\n\r\n                this.nextRightTime = r" +
+                    "ightBatch.vsync.col[rightBatch.iter];\r\n            }\r\n        }\r\n    }\r\n\r\n    [M" +
+                    "ethodImpl(MethodImplOptions.AggressiveInlining)]\r\n    protected override void Pr" +
+                    "ocessLeftBatch(StreamMessage<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
@@ -166,8 +166,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
         isBatchFree = true;
         if (batch.iter == 0)
         {
-            long maxLeftTime = MaxBatchSyncTime(batch);
-            if (maxLeftTime <= nextRightTime)
+            if (batch.vsync.col[batch.Count - 1] <= this.nextRightTime)
             {
                 OutputBatch(batch);
                 isBatchDone = true;
@@ -208,8 +207,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
         isBatchFree = true;
         if (batch.iter == 0)
         {
-            long maxRightTime = MaxBatchSyncTime(batch);
-            if (Config.DeterministicWithinTimestamp ? (maxRightTime < nextLeftTime) : (maxRightTime <= nextLeftTime))
+            if (Config.DeterministicWithinTimestamp ? (batch.vsync.col[batch.Count - 1] < this.nextLeftTime) : (batch.vsync.col[batch.Count - 1] <= this.nextLeftTime))
             {
                 OutputBatch(batch);
                 isBatchDone = true;
@@ -251,35 +249,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
             batch.iter++;
 
         return batch.iter != batch.Count;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static long MaxBatchSyncTime(StreamMessage<");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
-            this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
-            this.Write(@"> batch)
-    {
-        // Punctuations are not necessarily monotonically increasing with respect to data events, so we cannot
-        // simply retrieve the last event.
-        // Iterate from end of batch until we hit a data event, then take the maximum of the events we have seen.
-        long max = -1;
-        for (int i = batch.Count - 1; i >= 0; i--)
-        {
-            // Skip deleted data events
-            if ((batch.bitvector.col[i >> 6] & (1L << (i & 0x3f))) != 0 && batch.vother.col[i] >= 0)
-            {
-                continue;
-            }
-
-            max = Math.Max(max, batch.vsync.col[i]);
-            if (batch.vother.col[i] != StreamEvent.PunctuationOtherTime)
-            {
-                break;
-            }
-        }
-
-        return max;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

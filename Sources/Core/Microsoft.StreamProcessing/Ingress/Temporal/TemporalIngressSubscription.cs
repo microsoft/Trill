@@ -367,7 +367,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -512,6 +516,11 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Process events queued for reorderLatency up to the Punctuation syncTime
             if (this.priorityQueueSorter != null)
@@ -731,7 +740,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -871,6 +884,11 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Process events queued for reorderLatency up to the Punctuation syncTime
             if (this.priorityQueueSorter != null)
@@ -1093,7 +1111,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -1238,6 +1260,11 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Process events queued for reorderLatency up to the Punctuation syncTime
             if (this.priorityQueueSorter != null)
@@ -1360,7 +1387,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -1506,6 +1537,10 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lastPunctuationTime) return;
 
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            syncTime = Math.Max(syncTime, this.currentTime);
+
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
             this.currentTime = Math.Max(syncTime, this.currentTime);
@@ -1617,7 +1652,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -1758,6 +1797,10 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lastPunctuationTime) return;
 
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            syncTime = Math.Max(syncTime, this.currentTime);
+
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
             this.currentTime = Math.Max(syncTime, this.currentTime);
@@ -1872,7 +1915,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -2017,6 +2064,10 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
@@ -2198,7 +2249,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -2254,6 +2309,11 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Process events queued for reorderLatency up to the Punctuation syncTime
             if (this.priorityQueueSorter != null)
@@ -2475,7 +2535,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -2526,6 +2590,11 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Process events queued for reorderLatency up to the Punctuation syncTime
             if (this.priorityQueueSorter != null)
@@ -2749,7 +2818,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -2805,6 +2878,11 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Process events queued for reorderLatency up to the Punctuation syncTime
             if (this.priorityQueueSorter != null)
@@ -2938,7 +3016,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -2994,6 +3076,10 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
@@ -3117,7 +3203,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -3168,6 +3258,10 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
@@ -3293,7 +3387,11 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -3349,6 +3447,10 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessPunctuation(long syncTime)
         {
             if (syncTime <= this.lastPunctuationTime) return;
+
+            // Update the Punctuation to be at least the currentTime, so the Punctuation
+            // is not before the preceding data event.
+            syncTime = Math.Max(syncTime, this.currentTime);
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
@@ -3441,8 +3543,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -3580,9 +3685,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -3735,6 +3845,7 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
+
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -3914,8 +4025,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -4053,9 +4167,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -4203,6 +4322,7 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
+
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -4385,8 +4505,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -4524,9 +4647,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -4679,6 +4807,7 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
+
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -4843,8 +4972,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -4881,9 +5013,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -5037,6 +5174,7 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lowWatermark) return;
 
+
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
             if (this.lowWatermark < syncTime)
@@ -5145,8 +5283,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -5183,9 +5324,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -5334,6 +5480,7 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lowWatermark) return;
 
+
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
             if (this.lowWatermark < syncTime)
@@ -5445,8 +5592,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -5483,9 +5633,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -5639,6 +5794,7 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lowWatermark) return;
 
+
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
             if (this.lowWatermark < syncTime)
@@ -5751,8 +5907,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -5875,9 +6034,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -5934,6 +6098,7 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
+
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -6132,8 +6297,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -6256,9 +6424,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -6310,6 +6483,7 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
+
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -6510,8 +6684,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -6634,9 +6811,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -6693,6 +6875,7 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
+
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -6876,8 +7059,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -6908,9 +7094,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -6967,6 +7158,7 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
+
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
@@ -7095,8 +7287,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -7127,9 +7322,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -7181,6 +7381,7 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
+
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
@@ -7311,8 +7512,11 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time &&
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
+                // Generated lowWatermark is always quantized to the last lowWatermarkGenerationPeriod boundary, but
+                // since the last lowWatermark time may have been explicitly ingressed, it is not necessarily quantized,
+                // so use the quantized value when computing the delta.
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod)) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -7343,9 +7547,14 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
+                // Generated punctuation is always quantized to the last generationPeriod boundary, but since the last
+                // punctuation time may have been explicitly ingressed, it is not necessarily quantized, so use the
+                // quantized value when computing the delta, otherwise, we could produce a punctuation that is before
+                // the previous data event.
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                var baselinePunctuationTime = Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark);
+                var delta = (ulong)(value.SyncTime - baselinePunctuationTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -7402,6 +7611,7 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
+
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);

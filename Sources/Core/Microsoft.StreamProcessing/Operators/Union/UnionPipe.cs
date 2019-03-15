@@ -58,7 +58,7 @@ namespace Microsoft.StreamProcessing
             }
 
             this.nextLeftTime = leftBatch.vsync.col[leftBatch.iter];
-            if (first) lastLeftTime = MaxBatchSyncTime(leftBatch);
+            if (first) lastLeftTime = leftBatch.vsync.col[leftBatch.Count - 1];
 
             first = (rightBatch.iter == 0);
             if (!GoToVisibleRow(rightBatch))
@@ -70,7 +70,7 @@ namespace Microsoft.StreamProcessing
             }
 
             this.nextRightTime = rightBatch.vsync.col[rightBatch.iter];
-            if (first) lastRightTime = MaxBatchSyncTime(rightBatch);
+            if (first) lastRightTime = rightBatch.vsync.col[rightBatch.Count - 1];
 
             if ((lastLeftTime != -1) && (lastRightTime != -1))
             {
@@ -133,8 +133,7 @@ namespace Microsoft.StreamProcessing
             isBatchFree = true;
             if (batch.iter == 0)
             {
-                long maxLeftTime = MaxBatchSyncTime(batch);
-                if (maxLeftTime <= nextRightTime)
+                if (batch.vsync.col[batch.Count - 1] <= this.nextRightTime)
                 {
                     OutputBatch(batch);
                     isBatchDone = true;
@@ -171,8 +170,7 @@ namespace Microsoft.StreamProcessing
             isBatchFree = true;
             if (batch.iter == 0)
             {
-                long maxRightTime = MaxBatchSyncTime(batch);
-                if (Config.DeterministicWithinTimestamp ? (maxRightTime < nextLeftTime) : (maxRightTime <= nextLeftTime))
+                if (Config.DeterministicWithinTimestamp ? (batch.vsync.col[batch.Count - 1] < this.nextLeftTime) : (batch.vsync.col[batch.Count - 1] <= this.nextLeftTime))
                 {
                     OutputBatch(batch);
                     isBatchDone = true;
@@ -210,31 +208,6 @@ namespace Microsoft.StreamProcessing
                 batch.iter++;
 
             return (batch.iter != batch.Count);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static long MaxBatchSyncTime(StreamMessage<TKey, TPayload> batch)
-        {
-            // Punctuations are not necessarily monotonically increasing with respect to data events, so we cannot
-            // simply retrieve the last event.
-            // Iterate from end of batch until we hit a data event, then take the maximum of the events we have seen.
-            long max = -1;
-            for (int i = batch.Count - 1; i >= 0; i--)
-            {
-                // Skip deleted data events
-                if ((batch.bitvector.col[i >> 6] & (1L << (i & 0x3f))) != 0 && batch.vother.col[i] >= 0)
-                {
-                    continue;
-                }
-
-                max = Math.Max(max, batch.vsync.col[i]);
-                if (batch.vother.col[i] != StreamEvent.PunctuationOtherTime)
-                {
-                    break;
-                }
-            }
-
-            return max;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

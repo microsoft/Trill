@@ -20,6 +20,29 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting
 {
+    public static class Helpers
+    {
+        public static void RunTwiceForRowAndColumnar(Action action)
+        {
+            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+            var savedRowFallback = Config.CodegenOptions.DontFallBackToRowBasedExecution;
+            try
+            {
+                foreach (var rowBased in new bool[] { true, false })
+                {
+                    Config.ForceRowBasedExecution = rowBased;
+                    Config.CodegenOptions.DontFallBackToRowBasedExecution = !rowBased;
+                    action();
+                }
+            }
+            finally
+            {
+                Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                Config.CodegenOptions.DontFallBackToRowBasedExecution = savedRowFallback;
+            }
+        }
+    }
+
     [TestClass]
     public class AdHoc : TestWithConfigSettingsAndMemoryLeakDetection
     {
@@ -584,6 +607,68 @@ namespace SimpleTesting
                     Assert.IsTrue(inputData.SequenceEqual(output));
                 }
             }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExplicitAndGeneratedPunctuations()
+        {
+            Helpers.RunTwiceForRowAndColumnar(() =>
+            {
+                var input = new StreamEvent<int>[]
+                {
+                    StreamEvent.CreateInterval(90, 91, 0),
+                    StreamEvent.CreatePunctuation<int>(80),
+                    StreamEvent.CreateInterval(110, 111, 0),
+                    StreamEvent.CreateInterval(195, 200, 0),
+                }.ToObservable().ToStreamable(periodicPunctuationPolicy: PeriodicPunctuationPolicy.Time(100));
+
+                var output = new List<StreamEvent<int>>();
+                input.ToStreamEventObservable()
+                    .ForEachAsync(x => output.Add(x))
+                    .Wait();
+
+                var expected = new List<StreamEvent<int>>
+                {
+                    StreamEvent.CreateInterval(90, 91, 0),
+                    StreamEvent.CreatePunctuation<int>(90),  // Explicitly ingressed punctuation is adjusted to currentTime
+                    StreamEvent.CreatePunctuation<int>(100), // Generated punctuation based on quantized previous punctuation
+                    StreamEvent.CreateInterval(110, 111, 0),
+                    StreamEvent.CreateInterval(195, 200, 0),
+                    StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+                };
+
+                Assert.IsTrue(expected.SequenceEqual(output));
+            });
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExplicitAndGeneratedLowWatermarks()
+        {
+            var input = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreateInterval(0, 90, 91, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(80),
+                PartitionedStreamEvent.CreateInterval(0, 110, 111, 0),
+                PartitionedStreamEvent.CreateInterval(0, 195, 200, 0),
+            }.ToObservable()
+            .ToStreamable(periodicLowWatermarkPolicy: PeriodicLowWatermarkPolicy.Time(generationPeriod: 100, lowWatermarkTimestampLag: 0));
+
+            var output = new List<PartitionedStreamEvent<int, int>>();
+            input.ToStreamEventObservable()
+                .ForEachAsync(x => output.Add(x))
+                .Wait();
+
+            var expected = new List<PartitionedStreamEvent<int, int>>
+            {
+                PartitionedStreamEvent.CreateInterval(0, 90, 91, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(80),  // Explicitly ingressed low watermark
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(100), // Generated punctuation based on quantized previous lowWatermark
+                PartitionedStreamEvent.CreateInterval(0, 110, 111, 0),
+                PartitionedStreamEvent.CreateInterval(0, 195, 200, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(PartitionedStreamEvent.InfinitySyncTime)
+            };
+
+            Assert.IsTrue(expected.SequenceEqual(output));
         }
     }
 
@@ -1442,34 +1527,37 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void UnionWithBatchEndingInPastPunctuation()
         {
-            var leftInput = new StreamEvent<int>[]
+            Helpers.RunTwiceForRowAndColumnar(() =>
             {
-                StreamEvent.CreateInterval(100, 101, 0),
-                StreamEvent.CreatePunctuation<int>(50)
-            }.ToObservable().ToStreamable();
-            var rightInput = new StreamEvent<int>[]
-            {
-                StreamEvent.CreateInterval(50, 51, 0),
-                StreamEvent.CreatePunctuation<int>(200)
-            }.ToObservable().ToStreamable();
+                var leftInput = new StreamEvent<int>[]
+                {
+                        StreamEvent.CreateInterval(100, 101, 0),
+                        StreamEvent.CreatePunctuation<int>(50)
+                }.ToObservable().ToStreamable();
+                var rightInput = new StreamEvent<int>[]
+                {
+                        StreamEvent.CreateInterval(50, 51, 0),
+                        StreamEvent.CreatePunctuation<int>(200)
+                }.ToObservable().ToStreamable();
 
-            var query = leftInput.Union(rightInput);
+                var query = leftInput.Union(rightInput);
 
-            var output = new List<StreamEvent<int>>();
-            query.ToStreamEventObservable()
-                .ForEachAsync(x => output.Add(x))
-                .Wait();
+                var output = new List<StreamEvent<int>>();
+                query.ToStreamEventObservable()
+                    .ForEachAsync(x => output.Add(x))
+                    .Wait();
 
-            var expected = new List<StreamEvent<int>>
-            {
-                StreamEvent.CreateInterval(50, 51, 0),
-                StreamEvent.CreateInterval(100, 101, 0),
-                StreamEvent.CreatePunctuation<int>(50),
-                StreamEvent.CreatePunctuation<int>(200),
-                StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
-            };
+                var expected = new List<StreamEvent<int>>
+                    {
+                        StreamEvent.CreateInterval(50, 51, 0),
+                        StreamEvent.CreateInterval(100, 101, 0),
+                        StreamEvent.CreatePunctuation<int>(100),
+                        StreamEvent.CreatePunctuation<int>(200),
+                        StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+                    };
 
-            Assert.IsTrue(expected.SequenceEqual(output));
+                Assert.IsTrue(expected.SequenceEqual(output));
+            });
         }
     }
 

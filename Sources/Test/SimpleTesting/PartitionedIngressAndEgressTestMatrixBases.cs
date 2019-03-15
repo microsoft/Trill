@@ -108,7 +108,7 @@ namespace SimpleTesting.PartitionedIngressAndEgress
 
                         if (interruptingWatermarks.Any())
                         {
-                            last = (int)interruptingWatermarks.Last().LowWatermark.StartTime;
+                            last = (int)interruptingWatermarks.Last().LowWatermark.StartTime.SnapToLeftBoundary((long)this.punctuationPolicy.generationPeriod);
                             if (t - last < (uint)this.punctuationPolicy.generationPeriod)
                             {
                                 continue;

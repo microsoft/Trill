@@ -286,7 +286,12 @@ namespace Microsoft.StreamProcessing.Internal
         {
             Contract.Requires(value.IsPunctuation);
 
-            this.lastPunctuationTime = Math.Max(value.SyncTime, this.lastPunctuationTime);
+            if (value.SyncTime < this.lastPunctuationTime)
+            {
+                throw new InvalidOperationException($"Received out of order punctuation {value.SyncTime}! Previous punctuation time {this.lastPunctuationTime}");
+            }
+
+            this.lastPunctuationTime = value.SyncTime;
 
             var count = this.currentBatch.Count;
             this.currentBatch.vsync.col[count] = value.SyncTime;
@@ -774,7 +779,12 @@ namespace Microsoft.StreamProcessing.Internal
         {
             Contract.Requires(value.IsPunctuation);
 
-            this.lastPunctuationTime = Math.Max(value.SyncTime, this.lastPunctuationTime);
+            if (value.SyncTime < this.lastPunctuationTime)
+            {
+                throw new InvalidOperationException($"Received out of order punctuation {value.SyncTime}! Previous punctuation time {this.lastPunctuationTime}");
+            }
+
+            this.lastPunctuationTime = value.SyncTime;
 
             var count = this.currentBatch.Count;
             this.currentBatch.vsync.col[count] = value.SyncTime;
@@ -1321,7 +1331,12 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                this.lastPunctuationTime[value.PartitionKey] = Math.Max(value.SyncTime, this.lastPunctuationTime[value.PartitionKey]);
+                if (value.SyncTime < this.lastPunctuationTime[value.PartitionKey])
+                {
+                    throw new InvalidOperationException($"Received out of order punctuation {value.SyncTime}! Previous punctuation time {this.lastPunctuationTime[value.PartitionKey]}");
+                }
+
+                this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
             }
 
             var count = this.currentBatch.Count;
@@ -1860,7 +1875,12 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                this.lastPunctuationTime[value.PartitionKey] = Math.Max(value.SyncTime, this.lastPunctuationTime[value.PartitionKey]);
+                if (value.SyncTime < this.lastPunctuationTime[value.PartitionKey])
+                {
+                    throw new InvalidOperationException($"Received out of order punctuation {value.SyncTime}! Previous punctuation time {this.lastPunctuationTime[value.PartitionKey]}");
+                }
+
+                this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
             }
 
             var count = this.currentBatch.Count;
