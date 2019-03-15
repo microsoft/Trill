@@ -13,22 +13,12 @@ namespace Microsoft.StreamProcessing
     internal partial class FixedIntervalEquiJoinTemplate
     {
         private static int EquiJoinSequenceNumber = 0;
-        private Type keyType;
-        private Type leftType;
-        private Type rightType;
-        private Type resultType;
-        private string TKey;
-        private string TLeft;
-        private string TRight;
-        private string TResult;
-        private string className;
         private string BatchGeneratedFrom_TKey_TResult;
         private string TKeyTResultGenericParameters = string.Empty;
         private string genericParameters;
         private IEnumerable<MyFieldInfo> leftFields;
         private IEnumerable<MyFieldInfo> rightFields;
         private IEnumerable<MyFieldInfo> resultFields;
-        private string staticCtor;
         private Func<string, string, string> keyComparerEquals;
         private Func<string, string, string> leftComparerEquals;
         private Func<string, string, string> rightComparerEquals;
@@ -44,9 +34,10 @@ namespace Microsoft.StreamProcessing
         private long leftDuration;
         private long rightDuration;
 
-        private FixedIntervalEquiJoinTemplate() { }
+        private FixedIntervalEquiJoinTemplate(string className, Type keyType, Type leftType, Type rightType, Type resultType)
+            : base(className, keyType, leftType, rightType, resultType) { }
 
-        internal static Tuple<Type, string> Generate<TKey, TLeft, TRight, TResult>(
+    internal static Tuple<Type, string> Generate<TKey, TLeft, TRight, TResult>(
             BinaryStreamable<TKey, TLeft, TRight, TResult> stream,
             Expression<Func<TLeft, TRight, TResult>> selector)
         {
@@ -56,36 +47,24 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                var template = new FixedIntervalEquiJoinTemplate
+                var template = new FixedIntervalEquiJoinTemplate($"GeneratedFixedIntervalEquiJoin_{EquiJoinSequenceNumber++}", typeof(TKey), typeof(TLeft), typeof(TRight), typeof(TResult))
                 {
                     leftDuration = stream.Left.Properties.ConstantDurationLength.Value,
                     rightDuration = stream.Right.Properties.ConstantDurationLength.Value
                 };
 
-                var keyType = template.keyType = typeof(TKey);
-                var leftType = template.leftType = typeof(TLeft);
-                var rightType = template.rightType = typeof(TRight);
-                var resultType = template.resultType = typeof(TResult);
+                var keyAndLeftGenericParameters = template.tm.GenericTypeVariables(template.keyType, template.leftType).BracketedCommaSeparatedString();
+                var keyAndRightGenericParameters = template.tm.GenericTypeVariables(template.keyType, template.rightType).BracketedCommaSeparatedString();
+                template.TKeyTResultGenericParameters = template.tm.GenericTypeVariables(template.keyType, template.resultType).BracketedCommaSeparatedString();
+                template.genericParameters = template.tm.GenericTypeVariables(template.keyType, template.leftType, template.rightType, template.resultType).BracketedCommaSeparatedString();
 
-                var tm = new TypeMapper(keyType, leftType, rightType, resultType);
-                template.TKey = tm.CSharpNameFor(keyType);
-                template.TLeft = tm.CSharpNameFor(leftType);
-                template.TRight = tm.CSharpNameFor(rightType);
-                template.TResult = tm.CSharpNameFor(resultType);
-                var keyAndLeftGenericParameters = tm.GenericTypeVariables(keyType, leftType).BracketedCommaSeparatedString();
-                var keyAndRightGenericParameters = tm.GenericTypeVariables(keyType, rightType).BracketedCommaSeparatedString();
-                template.TKeyTResultGenericParameters = tm.GenericTypeVariables(keyType, resultType).BracketedCommaSeparatedString();
-                template.genericParameters = tm.GenericTypeVariables(keyType, leftType, rightType, resultType).BracketedCommaSeparatedString();
+                template.leftMessageRepresentation = new ColumnarRepresentation(template.leftType);
+                template.rightMessageRepresentation = new ColumnarRepresentation(template.rightType);
+                var resultMessageRepresentation = new ColumnarRepresentation(template.resultType);
 
-                template.className = $"GeneratedFixedIntervalEquiJoin_{EquiJoinSequenceNumber++}";
-
-                template.leftMessageRepresentation = new ColumnarRepresentation(leftType);
-                template.rightMessageRepresentation = new ColumnarRepresentation(rightType);
-                var resultMessageRepresentation = new ColumnarRepresentation(resultType);
-
-                var batchGeneratedFrom_TKey_TLeft = Transformer.GetBatchClassName(keyType, leftType);
-                var batchGeneratedFrom_TKey_TRight = Transformer.GetBatchClassName(keyType, rightType);
-                template.BatchGeneratedFrom_TKey_TResult = Transformer.GetBatchClassName(keyType, resultType);
+                var batchGeneratedFrom_TKey_TLeft = Transformer.GetBatchClassName(template.keyType, template.leftType);
+                var batchGeneratedFrom_TKey_TRight = Transformer.GetBatchClassName(template.keyType, template.rightType);
+                template.BatchGeneratedFrom_TKey_TResult = Transformer.GetBatchClassName(template.keyType, template.resultType);
 
                 template.LeftBatchType = batchGeneratedFrom_TKey_TLeft + keyAndLeftGenericParameters;
                 template.RightBatchType = batchGeneratedFrom_TKey_TRight + keyAndRightGenericParameters;
@@ -94,15 +73,15 @@ namespace Microsoft.StreamProcessing
                 template.rightFields = template.rightMessageRepresentation.AllFields;
                 template.resultFields = resultMessageRepresentation.AllFields;
 
-                template.ActiveEventTypeLeft = leftType.GetTypeInfo().IsValueType ? template.TLeft : "Active_Event_Left";
-                template.ActiveEventTypeRight = rightType.GetTypeInfo().IsValueType ? template.TRight : "Active_Event_Right";
+                template.ActiveEventTypeLeft = template.leftType.GetTypeInfo().IsValueType ? template.TLeft : "Active_Event_Left";
+                template.ActiveEventTypeRight = template.rightType.GetTypeInfo().IsValueType ? template.TRight : "Active_Event_Right";
 
                 #region Key Equals
                 var keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
                 template.keyComparerEquals =
                     (left, right) =>
                         keyComparer.Inline(left, right);
-                if (keyType.IsAnonymousType())
+                if (template.keyType.IsAnonymousType())
                 {
                     template.keyComparerEquals =
                         (left, right) => $"keyComparerEquals({left}, {right})";
@@ -273,35 +252,7 @@ namespace Microsoft.StreamProcessing
                 }
                 #endregion
 
-                template.staticCtor = Transformer.StaticCtor(template.className);
-                var expandedCode = template.TransformText();
-
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(keyType, leftType, rightType, resultType);
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TLeft>());
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TRight>());
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TResult>());
-
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                if (keyType.IsAnonymousType())
-                {
-                    if (errorMessages == null) errorMessages = string.Empty;
-                    errorMessages += "\nCodegen Warning: The key type for an equi-join is an anonymous type (or contains an anonymous type), preventing the inlining of the key equality and hashcode functions. This may lead to poor performance.\n";
-                }
-                var realClassName = template.className.AddNumberOfNecessaryGenericArguments(keyType, leftType, rightType, resultType);
-                var t = a.GetType(realClassName);
-                if (t.GetTypeInfo().IsGenericType)
-                {
-                    var list = keyType.GetAnonymousTypes();
-                    list.AddRange(leftType.GetAnonymousTypes());
-                    list.AddRange(rightType.GetAnonymousTypes());
-                    list.AddRange(resultType.GetAnonymousTypes());
-                    return Tuple.Create(t.MakeGenericType(list.ToArray()), errorMessages);
-                }
-                else
-                {
-                    return Tuple.Create(t, errorMessages);
-                }
+                return template.Generate<TKey, TLeft, TRight, TResult>();
             }
             catch
             {

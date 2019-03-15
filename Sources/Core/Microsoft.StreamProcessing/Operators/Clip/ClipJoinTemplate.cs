@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class ClipJoinTemplate : CommonBaseTemplate
+    internal partial class ClipJoinTemplate : CommonBinaryTemplate
     {
         /// <summary>
         /// Create the template output

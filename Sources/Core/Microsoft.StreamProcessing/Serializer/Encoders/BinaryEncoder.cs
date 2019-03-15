@@ -156,7 +156,7 @@ namespace Microsoft.StreamProcessing.Serializer
             if (numElements < 0) numElements = blob.Length;
 
             if ((numElements <= 0) || (numElements > blob.Length))
-                throw new Exception("Out of bounds");
+                throw new InvalidOperationException("Out of bounds");
 
             Buffer.BlockCopy(blob, 0, buffer, 0, buffer.Length);
             this.stream.Write(buffer, 0, buffer.Length);

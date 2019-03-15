@@ -35,92 +35,61 @@ namespace Microsoft.StreamProcessing
             Contract.Requires(stream != null);
             Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TRegister>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
-            string errorMessages = null;
-            try
+            var className = $"GeneratedGroupedAfa_{AFASequenceNumber++}";
+            var template = new GroupedAfaTemplate(className, typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(TAccumulator))
             {
-                var className = $"GeneratedGroupedAfa_{AFASequenceNumber++}";
-                var template = new GroupedAfaTemplate(className, typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(TAccumulator))
-                {
-                    TKey = typeof(TKey).GetCSharpSourceSyntax(),
-                    isFinal = stream.afa.isFinal,
-                    hasOutgoingArcs = stream.afa.hasOutgoingArcs,
-                    startStates = stream.afa.startStates,
-                    AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances,
-                    isSyncTimeSimultaneityFree = stream.Properties.IsSyncTimeSimultaneityFree,
-                    keyEqualityComparer =
-                        (left, right) =>
-                            stream.Properties.KeyEqualityComparer.GetEqualsExpr().Inline(left, right),
-                };
+                TKey = typeof(TKey).GetCSharpSourceSyntax(),
+                isFinal = stream.afa.isFinal,
+                hasOutgoingArcs = stream.afa.hasOutgoingArcs,
+                startStates = stream.afa.startStates,
+                AllowOverlappingInstances = stream.afa.uncompiledAfa.AllowOverlappingInstances,
+                isSyncTimeSimultaneityFree = stream.Properties.IsSyncTimeSimultaneityFree,
+                keyEqualityComparer =
+                    (left, right) =>
+                        stream.Properties.KeyEqualityComparer.GetEqualsExpr().Inline(left, right),
+            };
 
-                var d1 = stream.afa.uncompiledAfa.transitionInfo;
-                var orderedKeys = d1.Keys.OrderBy(e => e).ToArray();
-                for (int i = 0; i < orderedKeys.Length; i++)
+            var d1 = stream.afa.uncompiledAfa.transitionInfo;
+            var orderedKeys = d1.Keys.OrderBy(e => e).ToArray();
+            for (int i = 0; i < orderedKeys.Length; i++)
+            {
+                var sourceNodeNumber = orderedKeys[i];
+                var outgoingEdgesDictionary = d1[sourceNodeNumber];
+                var orderedTargetNodes = outgoingEdgesDictionary.Keys.OrderBy(e => e).ToArray();
+                var edgeList1 = new List<EdgeInfo>();
+                for (int j = 0; j < orderedTargetNodes.Length; j++)
                 {
-                    var sourceNodeNumber = orderedKeys[i];
-                    var outgoingEdgesDictionary = d1[sourceNodeNumber];
-                    var orderedTargetNodes = outgoingEdgesDictionary.Keys.OrderBy(e => e).ToArray();
-                    var edgeList1 = new List<EdgeInfo>();
-                    for (int j = 0; j < orderedTargetNodes.Length; j++)
+                    var targetNodeNumber = orderedTargetNodes[j];
+                    var edge = outgoingEdgesDictionary[targetNodeNumber];
+                    if (edge is SingleElementArc<TPayload, TRegister> searc)
                     {
-                        var targetNodeNumber = orderedTargetNodes[j];
-                        var edge = outgoingEdgesDictionary[targetNodeNumber];
-                        if (edge is SingleElementArc<TPayload, TRegister> searc)
-                        {
-                            var edgeInfo = CreateSingleEdgeInfo(stream, targetNodeNumber, searc, "i");
-                            edgeList1.Add(edgeInfo);
-                        }
-
-                    }
-                    template.currentlyActiveInfo.Add(Tuple.Create(sourceNodeNumber, edgeList1));
-                }
-                for (int i = 0; i < stream.afa.startStates.Length; i++)
-                {
-                    var startState = stream.afa.startStates[i];
-                    var edgeList2 = new List<EdgeInfo>();
-                    var outgoingEdgeDictionary = stream.afa.uncompiledAfa.transitionInfo[startState];
-                    foreach (var edge in outgoingEdgeDictionary)
-                    {
-                        var targetNode = edge.Key;
-                        var arc = edge.Value;
-                        if (arc is SingleElementArc<TPayload, TRegister> searc)
-                        {
-                            var edgeInfo = CreateSingleEdgeInfo(stream, targetNode, searc, "i");
-                            edgeList2.Add(edgeInfo);
-                        }
+                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNodeNumber, searc, "i");
+                        edgeList1.Add(edgeInfo);
                     }
 
-                    template.newActivationInfo.Add(Tuple.Create(startState, edgeList2));
                 }
-
-                var expandedCode = template.TransformText();
-
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeof(TKey), typeof(TPayload), typeof(TRegister));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TRegister>());
-                assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TRegister>());
-
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(template.className);
-                if (t.GetTypeInfo().IsGenericType)
-                {
-                    var list = typeof(TKey).GetAnonymousTypes();
-                    list.AddRange(template.payloadType.GetAnonymousTypes());
-                    list.AddRange(template.registerType.GetAnonymousTypes());
-                    t = t.MakeGenericType(list.ToArray());
-                }
-                return Tuple.Create(t, errorMessages);
+                template.currentlyActiveInfo.Add(Tuple.Create(sourceNodeNumber, edgeList1));
             }
-            catch
+            for (int i = 0; i < stream.afa.startStates.Length; i++)
             {
-                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
+                var startState = stream.afa.startStates[i];
+                var edgeList2 = new List<EdgeInfo>();
+                var outgoingEdgeDictionary = stream.afa.uncompiledAfa.transitionInfo[startState];
+                foreach (var edge in outgoingEdgeDictionary)
                 {
-                    throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!");
+                    var targetNode = edge.Key;
+                    var arc = edge.Value;
+                    if (arc is SingleElementArc<TPayload, TRegister> searc)
+                    {
+                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNode, searc, "i");
+                        edgeList2.Add(edgeInfo);
+                    }
                 }
-                return Tuple.Create((Type)null, errorMessages);
+
+                template.newActivationInfo.Add(Tuple.Create(startState, edgeList2));
             }
+
+            return template.Generate<TKey, TPayload, TRegister, TAccumulator>();
         }
-
     }
-
 }

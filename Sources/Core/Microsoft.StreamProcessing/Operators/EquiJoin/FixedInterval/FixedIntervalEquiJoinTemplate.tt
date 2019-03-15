@@ -1,4 +1,4 @@
-﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+﻿<#@ template language="C#" inherits="CommonBinaryTemplate" visibility="internal" linePragmas="false" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Reflection" #>
@@ -30,6 +30,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= TKey #>, <#= TLeft #>, <#= TRight #>, <#= TResult #>>
 {
     private readonly MemoryPool<<#= TKey #>, <#= TResult #>> pool;
+    private readonly Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator;
 
     [SchemaSerialization]
     private readonly Expression<Func<<#= TKey #>, <#= TKey #>, bool>> keyComparer;
@@ -49,8 +50,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     [DataMember]
     private long currTime = long.MinValue;
 
-    private readonly Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator;
-
     <#= staticCtor #>
 
     [Obsolete("Used only by serialization. Do not call directly.")]
@@ -64,10 +63,10 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     {
         this.queryPlanGenerator = queryPlanGenerator;
 
-        keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
-        keyComparerEquals = keyComparer.Compile();
+        this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
+        this.keyComparerEquals = this.keyComparer.Compile();
 
-        pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TResult #>>(true /*stream.Properties.IsColumnar*/);
+        this.pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TResult #>>(true /*stream.Properties.IsColumnar*/);
         GetOutputBatch();
     }
 

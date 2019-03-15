@@ -14,7 +14,6 @@ namespace Microsoft.StreamProcessing
     internal partial class GroupTemplate
     {
         private static int GroupStreamableSequenceNumber = 0;
-        private readonly string CLASSNAME;
         private readonly Type outerKeyType;
         private readonly Type sourceType;
         private readonly Type innerKeyType;
@@ -22,7 +21,6 @@ namespace Microsoft.StreamProcessing
         private string transformedKeySelectorAsString;
         private string inlinedHashCodeComputation;
         private ColumnarRepresentation innerKeyFieldRepresentation;
-        private string staticCtor;
         private bool isFirstLevelGroup;
         private MyFieldInfo swingingField;
         public string vectorHashCodeInitialization = string.Empty;
@@ -36,14 +34,13 @@ namespace Microsoft.StreamProcessing
             Type innerKeyType,
             string transformedKeySelectorAsString,
             string inlinedHashCodeComputation,
-            bool nested)
+            bool nested) : base(className)
         {
             Contract.Requires(className != null);
             Contract.Requires(outerKeyType != null);
             Contract.Requires(sourceType != null);
             Contract.Requires(innerKeyType != null);
 
-            this.CLASSNAME = className;
             this.outerKeyType = outerKeyType;
             this.sourceType = sourceType;
             this.innerKeyType = innerKeyType;
@@ -140,7 +137,6 @@ namespace Microsoft.StreamProcessing
                 template.fields = new ColumnarRepresentation(typeOfTSource).AllFields;
                 template.innerKeyFieldRepresentation = new ColumnarRepresentation(typeOfTInnerKey);
 
-                template.staticCtor = Transformer.StaticCtor(template.CLASSNAME);
                 expandedCode = template.TransformText();
 
                 assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeOfTOuterKey, typeOfTSource, typeOfTInnerKey);

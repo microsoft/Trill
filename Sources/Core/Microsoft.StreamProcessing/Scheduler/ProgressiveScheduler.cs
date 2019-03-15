@@ -203,7 +203,7 @@ namespace Microsoft.StreamProcessing
                         {
                             now = mt;
                             if (!te.tasks.TryDequeue(out message))
-                                throw new Exception("Could not dequeue task from task entry");
+                                throw new InvalidOperationException("Could not dequeue task from task entry");
 
                             var newCount = Interlocked.Decrement(ref te.TaskCount);
 

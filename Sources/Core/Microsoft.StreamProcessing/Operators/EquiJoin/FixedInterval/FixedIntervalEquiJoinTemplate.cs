@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class FixedIntervalEquiJoinTemplate : CommonBaseTemplate
+    internal partial class FixedIntervalEquiJoinTemplate : CommonBinaryTemplate
     {
         /// <summary>
         /// Create the template output
@@ -66,7 +66,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
-            this.Write("> pool;\r\n\r\n    [SchemaSerialization]\r\n    private readonly Expression<Func<");
+            this.Write("> pool;\r\n    private readonly Func<PlanNode, PlanNode, IBinaryObserver, BinaryPla" +
+                    "nNode> queryPlanGenerator;\r\n\r\n    [SchemaSerialization]\r\n    private readonly Ex" +
+                    "pression<Func<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
@@ -93,8 +95,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
     [DataMember]
     private long currTime = long.MinValue;
 
-    private readonly Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> queryPlanGenerator;
-
     ");
             this.Write(this.ToStringHelper.ToStringWithCulture(staticCtor));
             this.Write("\r\n\r\n    [Obsolete(\"Used only by serialization. Do not call directly.\")]\r\n    publ" +
@@ -116,10 +116,10 @@ using Microsoft.StreamProcessing.Internal.Collections;
     {
         this.queryPlanGenerator = queryPlanGenerator;
 
-        keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
-        keyComparerEquals = keyComparer.Compile();
+        this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
+        this.keyComparerEquals = this.keyComparer.Compile();
 
-        pool = MemoryManager.GetMemoryPool<");
+        this.pool = MemoryManager.GetMemoryPool<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TResult));

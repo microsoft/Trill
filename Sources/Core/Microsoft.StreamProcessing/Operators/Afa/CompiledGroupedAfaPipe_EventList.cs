@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing
         private long lastSyncTime;
 
         // Field instead of local variable to avoid re-initializing it
-        private Stack<int> stack = new Stack<int>();
+        private readonly Stack<int> stack = new Stack<int>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledGroupedAfaPipe_EventList() { }

@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class StartEdgeEquiJoinTemplate : CommonBaseTemplate
+    internal partial class StartEdgeEquiJoinTemplate : CommonBinaryTemplate
     {
         /// <summary>
         /// Create the template output
