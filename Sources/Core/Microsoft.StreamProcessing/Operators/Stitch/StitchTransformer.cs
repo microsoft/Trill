@@ -37,7 +37,7 @@ namespace Microsoft.StreamProcessing
             Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TPayload>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             var template = new StitchTemplate(
-                string.Format("GeneratedStitch_{0}", StitchSequenceNumber++),
+                $"GeneratedStitch_{StitchSequenceNumber++}",
                 typeof(TKey), typeof(TPayload));
 
             #region Key Equals

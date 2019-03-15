@@ -218,7 +218,7 @@ namespace Microsoft.StreamProcessing.Serializer
             if (numElements == 0) return;
             if (numElements < 0) numElements = blob.Length;
 
-            if ((numElements <= 0) || (numElements > blob.Length)) throw new Exception("Out of bounds");
+            if ((numElements <= 0) || (numElements > blob.Length)) throw new InvalidOperationException("Out of bounds");
 
             this.stream.ReadAllRequiredBytes(buffer, 0, numElements * typeof(T).GetSizeOf());
             Buffer.BlockCopy(buffer, 0, blob, 0, buffer.Length);

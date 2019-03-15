@@ -1,4 +1,4 @@
-﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+﻿<#@ template language="C#" inherits="CommonPipeTemplate" visibility="internal" linePragmas="false" #>
 <#@ assembly name="System.Core" #>
 // *********************************************************************
 // Copyright (c) Microsoft Corporation.  All rights reserved.

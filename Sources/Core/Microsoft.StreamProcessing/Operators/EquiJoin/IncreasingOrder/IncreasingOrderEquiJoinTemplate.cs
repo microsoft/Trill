@@ -9,16 +9,13 @@
 // ------------------------------------------------------------------------------
 namespace Microsoft.StreamProcessing
 {
-    using System.Linq;
-    using System.Text;
-    using System.Collections.Generic;
     using System;
     
     /// <summary>
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class IncreasingOrderEquiJoinTemplate : CommonBaseTemplate
+    internal partial class IncreasingOrderEquiJoinTemplate : CommonBinaryTemplate
     {
         /// <summary>
         /// Create the template output

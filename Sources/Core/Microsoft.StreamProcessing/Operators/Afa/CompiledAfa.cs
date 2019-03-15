@@ -124,11 +124,9 @@ namespace Microsoft.StreamProcessing
 
                 if (epsilonCount > 0) this.epsilonStateMap[from] = new int[epsilonCount];
 
-                if (singleEventCount + eventListCount + multiEventCount + epsilonCount > 1)
-                    knownDet = false;
+                if (singleEventCount + eventListCount + multiEventCount + epsilonCount > 1) knownDet = false;
 
                 singleEventCount = epsilonCount = eventListCount = multiEventCount = 0;
-
 
                 ListElementArc<TPayload, TRegister> learc;
                 MultiElementArc<TPayload, TRegister, TAccumulator> mearc;

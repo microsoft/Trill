@@ -26,7 +26,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing
 {
-    internal class Transformer
+    internal static class Transformer
     {
         // used so the compiler has access to the Microsoft.StramProcessing types it needs.
         // Fix this when there is a static location so we don't have to use Reflection to get it each time
@@ -80,31 +80,6 @@ namespace Microsoft.StreamProcessing
         /// This is used as part of constructing the name of a field in a StreamMessage that is a column representing a field of the payload type.
         /// </summary>
         internal const string ColumnFieldPrefix = "c_";
-
-        /// <summary>
-        /// The string to inject into operators that is their static constructor.
-        /// </summary>
-        /// <param name="className"></param>
-        /// <returns></returns>
-        public static string StaticCtor(string className)
-        {
-            var includeDebugInfo = Config.CodegenOptions.GenerateDebugInfo
-                && ((Config.CodegenOptions.BreakIntoCodeGen & Config.CodegenOptions.DebugFlags.Operators) != 0);
-#if DEBUG
-            includeDebugInfo = (Config.CodegenOptions.BreakIntoCodeGen & Config.CodegenOptions.DebugFlags.Operators) != 0;
-#endif
-            return includeDebugInfo
-                ? string.Format(
-                    CultureInfo.InvariantCulture,
-@"
-    static {0}() {{
-        if (System.Diagnostics.Debugger.IsAttached)
-            System.Diagnostics.Debugger.Break();
-        else
-            System.Diagnostics.Debugger.Launch();
-    }}", className)
-                : string.Empty;
-        }
 
         /// <summary>
         /// Generate a batch class definition from the types <typeparamref name="TKey"/> and <typeparamref name="TPayload"/>.
@@ -349,7 +324,7 @@ namespace Microsoft.StreamProcessing
         public static IEnumerable<Assembly> AssemblyReferencesNeededFor(Expression expression)
             => AssemblyLocationFinder.GetAssemblyLocationsFor(expression);
 
-        private class AssemblyLocationFinder : ExpressionVisitor
+        private sealed class AssemblyLocationFinder : ExpressionVisitor
         {
             private HashSet<Assembly> assemblyLocations = new HashSet<Assembly>();
             private AssemblyLocationFinder() { }
@@ -515,7 +490,7 @@ namespace System.Runtime.CompilerServices
             => MemoryManager.GetMemoryPool<TKey, TPayload>().GetType().GetTypeInfo().Assembly;
     }
 
-    internal class TypeMapper
+    internal sealed class TypeMapper
     {
         private readonly Dictionary<Type, string> typeMap;
 
@@ -589,7 +564,7 @@ namespace System.Runtime.CompilerServices
         }
     }
 
-    internal class ColumnarRepresentation
+    internal sealed class ColumnarRepresentation
     {
         public readonly Type RepresentationFor;
         public readonly IDictionary<string, MyFieldInfo> Fields; // keyed by field name
@@ -769,295 +744,21 @@ namespace System.Runtime.CompilerServices
             this.assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(keyType));
             this.keyType = keyType;
 
-
 #region Decompose TPayload into columns
             var payloadType = payloadRepresentation.RepresentationFor;
             this.assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(payloadType));
             this.payloadType = payloadType;
-            IEnumerable<Type> payloadTypes = payloadRepresentation.AllFields.Select(f => f.Type).Where(t => !t.MemoryPoolHasGetMethodFor());
+            var payloadTypes = payloadRepresentation.AllFields.Select(f => f.Type).Where(t => !t.MemoryPoolHasGetMethodFor());
 
             this.types = new HashSet<Type>(payloadTypes.Distinct());
 
             this.assemblyReferences.AddRange(this.types.SelectMany(t => Transformer.AssemblyReferencesNeededFor(t)));
-
 #endregion
 
             this.generatedClassName = Transformer.GetMemoryPoolClassName(keyType, payloadType);
             this.className = this.generatedClassName.CleanUpIdentifierName();
             this.generatedClassName += "`2";
             this.expandedCode = TransformText();
-        }
-    }
-
-    internal abstract class CommonBaseTemplate
-    {
-        public abstract string TransformText();
-#region Fields
-        private bool endsWithNewline;
-#endregion
-#region Properties
-        /// <summary>
-        /// The string builder that generation-time code is using to assemble generated output
-        /// </summary>
-        protected StringBuilder GenerationEnvironment { get; } = new StringBuilder();
-
-        /// <summary>
-        /// A list of the lengths of each indent that was added with PushIndent
-        /// </summary>
-        private List<int> IndentLengths { get; } = new List<int>();
-
-        /// <summary>
-        /// Gets the current indent we use when adding lines to the output
-        /// </summary>
-        public string CurrentIndent { get; private set; } = string.Empty;
-#endregion
-#region Transform-time helpers
-        /// <summary>
-        /// Write text directly into the generated output
-        /// </summary>
-        public void Write(string textToAppend)
-        {
-            if (string.IsNullOrEmpty(textToAppend)) return;
-
-            // If we're starting off, or if the previous text ended with a newline,
-            // we have to append the current indent first.
-            if ((this.GenerationEnvironment.Length == 0) || this.endsWithNewline)
-            {
-                this.GenerationEnvironment.Append(this.CurrentIndent);
-                this.endsWithNewline = false;
-            }
-            // Check if the current text ends with a newline
-            if (textToAppend.EndsWith(Environment.NewLine, StringComparison.CurrentCulture))
-            {
-                this.endsWithNewline = true;
-            }
-            // This is an optimization. If the current indent is "", then we don't have to do any
-            // of the more complex stuff further down.
-            if (this.CurrentIndent.Length == 0)
-            {
-                this.GenerationEnvironment.Append(textToAppend);
-                return;
-            }
-
-            // Everywhere there is a newline in the text, add an indent after it
-            textToAppend = textToAppend.Replace(Environment.NewLine, (Environment.NewLine + this.CurrentIndent));
-            // If the text ends with a newline, then we should strip off the indent added at the very end
-            // because the appropriate indent will be added when the next time Write() is called
-            if (this.endsWithNewline)
-                this.GenerationEnvironment.Append(textToAppend, 0, (textToAppend.Length - this.CurrentIndent.Length));
-            else
-                this.GenerationEnvironment.Append(textToAppend);
-        }
-        /// <summary>
-        /// Write text directly into the generated output
-        /// </summary>
-        public void WriteLine(string textToAppend)
-        {
-            Write(textToAppend);
-            this.GenerationEnvironment.AppendLine();
-            this.endsWithNewline = true;
-        }
-
-        /// <summary>
-        /// Write formatted text directly into the generated output
-        /// </summary>
-        public void Write(string format, params object[] args)
-            => Write(string.Format(CultureInfo.CurrentCulture, format, args));
-
-        /// <summary>
-        /// Write formatted text directly into the generated output
-        /// </summary>
-        public void WriteLine(string format, params object[] args)
-            => WriteLine(string.Format(CultureInfo.CurrentCulture, format, args));
-
-        /// <summary>
-        /// Increase the indent
-        /// </summary>
-        public void PushIndent(string indent)
-        {
-            this.CurrentIndent += indent ?? throw new ArgumentNullException(nameof(indent));
-            this.IndentLengths.Add(indent.Length);
-        }
-
-        /// <summary>
-        /// Remove the last indent that was added with PushIndent
-        /// </summary>
-        public string PopIndent()
-        {
-            string returnValue = string.Empty;
-            if (this.IndentLengths.Count > 0)
-            {
-                int indentLength = this.IndentLengths[this.IndentLengths.Count - 1];
-                this.IndentLengths.RemoveAt(this.IndentLengths.Count - 1);
-                if (indentLength > 0)
-                {
-                    returnValue = this.CurrentIndent.Substring(this.CurrentIndent.Length - indentLength);
-                    this.CurrentIndent = this.CurrentIndent.Remove(this.CurrentIndent.Length - indentLength);
-                }
-            }
-            return returnValue;
-        }
-
-        /// <summary>
-        /// Remove any indentation
-        /// </summary>
-        public void ClearIndent()
-        {
-            this.IndentLengths.Clear();
-            this.CurrentIndent = string.Empty;
-        }
-#endregion
-#region ToString Helpers
-        /// <summary>
-        /// Utility class to produce culture-oriented representation of an object as a string.
-        /// </summary>
-        public sealed class ToStringInstanceHelper
-        {
-            private IFormatProvider formatProviderField = CultureInfo.InvariantCulture;
-            /// <summary>
-            /// Gets or sets format provider to be used by ToStringWithCulture method.
-            /// </summary>
-            public IFormatProvider FormatProvider
-            {
-                get => this.formatProviderField;
-                set
-                {
-                    if (value != null) this.formatProviderField = value;
-                }
-            }
-            /// <summary>
-            /// This is called from the compile/run appdomain to convert objects within an expression block to a string
-            /// </summary>
-            public string ToStringWithCulture(object objectToConvert)
-            {
-                if (objectToConvert == null) throw new ArgumentNullException(nameof(objectToConvert));
-
-                var t = objectToConvert.GetType();
-                var method = t.GetTypeInfo().GetMethod("ToString", new Type[] { typeof(IFormatProvider) });
-
-                return method == null
-                    ? objectToConvert.ToString()
-                    : (string)method.Invoke(objectToConvert, new object[] { this.formatProviderField });
-            }
-        }
-
-        /// <summary>
-        /// Helper to produce culture-oriented representation of an object as a string
-        /// </summary>
-        public ToStringInstanceHelper ToStringHelper { get; } = new ToStringInstanceHelper();
-        #endregion
-    }
-
-    internal abstract class CommonUnaryTemplate : CommonBaseTemplate
-    {
-        protected Type keyType;
-        protected Type payloadType;
-        protected Type resultType;
-
-        protected string TKey;
-        protected string TPayload;
-        protected string TResult;
-
-        protected string BatchGeneratedFrom_TKey_TPayload;
-        protected string TKeyTPayloadGenericParameters;
-
-        protected string staticCtor;
-        protected string className;
-
-        protected ColumnarRepresentation payloadRepresentation;
-        protected ColumnarRepresentation resultRepresentation;
-
-        protected IEnumerable<MyFieldInfo> fields;
-        protected bool noFields;
-
-        protected CommonUnaryTemplate(string className, Type keyType, Type payloadType, Type resultType, bool suppressPayloadBatch = false)
-        {
-            this.keyType = keyType;
-            this.payloadType = payloadType;
-            this.resultType = resultType;
-
-            var tm = new TypeMapper(keyType, payloadType, resultType);
-            this.TKey = tm.CSharpNameFor(keyType);
-            this.TPayload = tm.CSharpNameFor(payloadType);
-            this.TResult = tm.CSharpNameFor(resultType);
-
-            if (!suppressPayloadBatch)
-            {
-                this.TKeyTPayloadGenericParameters = tm.GenericTypeVariables(keyType, payloadType).BracketedCommaSeparatedString();
-                this.BatchGeneratedFrom_TKey_TPayload = Transformer.GetBatchClassName(keyType, payloadType);
-            }
-
-            this.className = className;
-            this.staticCtor = Transformer.StaticCtor(className);
-
-            this.payloadRepresentation = new ColumnarRepresentation(payloadType);
-            this.fields = this.payloadRepresentation.AllFields;
-            this.noFields = this.payloadRepresentation.noFields;
-
-            this.resultRepresentation = new ColumnarRepresentation(resultType);
-        }
-
-        protected Tuple<Type, string> Generate<TKey, TPayload>(params Type[] types)
-        {
-            string errorMessages = null;
-            try
-            {
-                var expandedCode = TransformText();
-
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(this.keyType, this.payloadType, typeof(SortedDictionary<,>));
-                assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(types));
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
-
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var realClassName = this.className.AddNumberOfNecessaryGenericArguments(this.keyType, this.payloadType);
-                var t = a.GetType(realClassName);
-                if (t.GetTypeInfo().IsGenericType)
-                {
-                    var list = this.keyType.GetAnonymousTypes();
-                    list.AddRange(this.payloadType.GetAnonymousTypes());
-                    return Tuple.Create(t.MakeGenericType(list.ToArray()), errorMessages);
-                }
-                else return Tuple.Create(t, errorMessages);
-            }
-            catch (Exception e)
-            {
-                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
-                    throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!", e);
-
-                return Tuple.Create((Type)null, errorMessages);
-            }
-        }
-
-        protected Tuple<Type, string> Generate<TKey, TPayload, TResult>(params Type[] types)
-        {
-            string errorMessages = null;
-            try
-            {
-                var expandedCode = TransformText();
-
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(this.keyType, this.payloadType, this.resultType, typeof(SortedDictionary<,>));
-                assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(types));
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TResult>());
-
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var realClassName = this.className.AddNumberOfNecessaryGenericArguments(this.keyType, this.payloadType);
-                var t = a.GetType(realClassName);
-                if (t.GetTypeInfo().IsGenericType)
-                {
-                    var list = this.keyType.GetAnonymousTypes();
-                    list.AddRange(this.payloadType.GetAnonymousTypes());
-                    return Tuple.Create(t.MakeGenericType(list.ToArray()), errorMessages);
-                }
-                else return Tuple.Create(t, errorMessages);
-            }
-            catch (Exception e)
-            {
-                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
-                    throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!", e);
-
-                return Tuple.Create((Type)null, errorMessages);
-            }
         }
     }
 }

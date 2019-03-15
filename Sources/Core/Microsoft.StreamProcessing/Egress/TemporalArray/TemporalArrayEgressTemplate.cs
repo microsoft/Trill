@@ -15,7 +15,7 @@ namespace Microsoft.StreamProcessing
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class TemporalArrayEgressTemplate : CommonBaseTemplate
+    internal partial class TemporalArrayEgressTemplate : CommonPipeTemplate
     {
         /// <summary>
         /// Create the template output

@@ -173,7 +173,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="arc">The arc, defined as a method.</param>
         internal void AddArc(int fromState, int toState, Arc<TInput, TRegister> arc)
         {
-            if (this.isSealed) throw new Exception("Cannot add arcs to a sealed AFA");
+            if (this.isSealed) throw new InvalidOperationException("Cannot add arcs to a sealed AFA");
 
             if (fromState > this.MaxState) this.MaxState = fromState;
             if (toState > this.MaxState) this.MaxState = toState;

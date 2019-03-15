@@ -316,7 +316,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (!(this.source.Properties.IsConstantDuration && (this.source.Properties.ConstantDurationLength != null)))
                 {
-                    throw new Exception("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
+                    throw new InvalidOperationException("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
                 }
 
                 maxDuration = this.source.Properties.ConstantDurationLength.Value;

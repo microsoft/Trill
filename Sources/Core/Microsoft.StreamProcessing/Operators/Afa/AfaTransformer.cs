@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Microsoft.StreamProcessing
 {
@@ -14,8 +15,6 @@ namespace Microsoft.StreamProcessing
         protected Type payloadType;
         protected Type registerType;
         protected Type accumulatorType;
-        protected string className;
-        protected string staticCtor;
         protected bool hasRegister;
         protected bool isSyncTimeSimultaneityFree;
         protected readonly List<Tuple<int, List<EdgeInfo>>> currentlyActiveInfo = new List<Tuple<int, List<EdgeInfo>>>();
@@ -35,8 +34,8 @@ namespace Microsoft.StreamProcessing
         protected bool AllowOverlappingInstances;
 
         internal AfaTemplate(string className, Type keyType, Type payloadType, Type registerType, Type accumulatorType)
+            : base(className)
         {
-            this.className = className;
             this.keyType = keyType;
             this.payloadType = payloadType;
             this.registerType = registerType;
@@ -46,13 +45,10 @@ namespace Microsoft.StreamProcessing
             this.TPayload = payloadType.GetCSharpSourceSyntax();
             this.TRegister = registerType.GetCSharpSourceSyntax();
             this.TAccumulator = accumulatorType.GetCSharpSourceSyntax();
-            this.staticCtor = Transformer.StaticCtor(className);
             if (Config.ForceRowBasedExecution)
             {
                 // then need to use the field "payload" that is defined on the generic StreamMessage
-                this.sourceFields = new MyFieldInfo[] {
-                    new MyFieldInfo(payloadType, "payload"),
-                };
+                this.sourceFields = new MyFieldInfo[] { new MyFieldInfo(payloadType, "payload") };
             }
             else
             {
@@ -61,6 +57,39 @@ namespace Microsoft.StreamProcessing
             var resultFieldInfo = registerType.GetAnnotatedFields();
             this.resultFields = resultFieldInfo.Item1;
             this.noPublicResultFields = resultFieldInfo.Item2;
+        }
+
+        protected Tuple<Type, string> Generate<TKey, TPayload, TRegister, TAccumulator>()
+        {
+            string errorMessages = null;
+            try
+            {
+                var expandedCode = TransformText();
+
+                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(
+                    typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(Stack<>), typeof(IStreamable<,>));
+                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
+                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TRegister>());
+                assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TRegister>());
+
+                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
+                var t = a.GetType(this.className);
+                if (t.GetTypeInfo().IsGenericType)
+                {
+                    var list = typeof(TKey).GetAnonymousTypes();
+                    list.AddRange(this.payloadType.GetAnonymousTypes());
+                    list.AddRange(this.registerType.GetAnonymousTypes());
+                    t = t.MakeGenericType(list.ToArray());
+                }
+                return Tuple.Create(t, errorMessages);
+            }
+            catch
+            {
+                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
+                    throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!");
+
+                return Tuple.Create((Type)null, errorMessages);
+            }
         }
 
         internal class EdgeInfo
@@ -74,7 +103,7 @@ namespace Microsoft.StreamProcessing
 
         }
 
-        internal class MultiEdgeInfo : EdgeInfo
+        internal sealed class MultiEdgeInfo : EdgeInfo
         {
             public int TargetNode;
             public bool fromStartState = false;
@@ -132,7 +161,6 @@ namespace Microsoft.StreamProcessing
                 : e.Transfer(ts, payloadList, reg);
             WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
             return;
-
         }
 
         protected void UpdateRegisterValue(MultiEdgeInfo e, string defaultRegisterValue, string ts, string acc, string reg)
@@ -142,7 +170,6 @@ namespace Microsoft.StreamProcessing
                 : e.Transfer(ts, acc, reg);
             WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
             return;
-
         }
 
         private static void EpsilonClosureHelper<TPayload, TRegister, TAccumulator>(CompiledAfa<TPayload, TRegister, TAccumulator> afa, int node, List<int> accumulator)
@@ -177,7 +204,5 @@ namespace Microsoft.StreamProcessing
             => f.OptimizeString()
                 ? string.Format("this.{1}_{0}_col = {1}.{0};", f.Name, batchName)
                 : string.Format("this.{1}_{0}_col = {1}.{0}.col;", f.Name, batchName);
-
     }
-
 }

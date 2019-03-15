@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
             if ((startTime > StreamEvent.MaxSyncTime - period) && // Cheap check which fails the vast majority of the time
                 (startTime > (StreamEvent.MaxSyncTime / period) * period)) // More expensive precise check
             {
-                throw new Exception("Window start out of range");
+                throw new InvalidOperationException("Window start out of range");
             }
             return (startTime + period - 1).SnapToLeftBoundary(period, offset);
         }

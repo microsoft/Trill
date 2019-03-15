@@ -346,7 +346,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             this.msb.Append(str);
             this.starts.col[this.Count] = this.EndOffset;
             var len = str.Length;
-            if (len > 1 << 15) throw new Exception("String too long");
+            if (len > 1 << 15) throw new InvalidOperationException("String too long");
             this.lengths.col[this.Count] = (short)len;
             this.EndOffset = this.EndOffset + len;
             this.Count++;
@@ -1223,14 +1223,10 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
             if ((regex.Options & RegexOptions.RightToLeft) == RegexOptions.RightToLeft)
-            {
-                throw new Exception("Right-to-left is not supported for split");
-            }
+                throw new NotSupportedException("Right-to-left is not supported for split");
 
             if (!IsSimpleRegex(regex.ToString()))
-            {
-                throw new Exception("Split is not currently supported with this RegEx");
-            }
+                throw new NotSupportedException("Split is not currently supported with this RegEx");
 
             var resultList = new List<MultiString>();
             this.intPool.Get(out multiplicity);

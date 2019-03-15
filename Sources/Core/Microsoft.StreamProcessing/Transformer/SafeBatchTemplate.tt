@@ -1066,7 +1066,7 @@ public override <#= TPAYLOAD #> this[int index]
         <# if (payloadIsAnon) { #>
 <# if (f.OptimizeString()) { #>
 
-        //if (index != Count) throw new Exception("Bad invocation of setter with multi-strings");
+        //if (index != Count) throw new InvalidOperationException("Bad invocation of setter with multi-strings");
         this.<#= f.Name #>.AddString((<#= f.Type.GetCSharpSourceSyntax() #>) <#= f.OriginalName #>_Property.GetValue(value, null));
 <# } else { #>
 
@@ -1076,7 +1076,7 @@ public override <#= TPAYLOAD #> this[int index]
         <# } else { #>
 <# if (f.OptimizeString()) { #>
 
-        //if (index != Count) throw new Exception("Bad invocation of setter with multi-strings");
+        //if (index != Count) throw new InvalidOperationException("Bad invocation of setter with multi-strings");
         this.<#= f.Name #>.AddString(value.<#= f.OriginalName #>);
 <# } else { #>
 
@@ -1085,7 +1085,6 @@ public override <#= TPAYLOAD #> this[int index]
         <# } #>
         <# } #>
         <# } #>
-
     }
 }
 

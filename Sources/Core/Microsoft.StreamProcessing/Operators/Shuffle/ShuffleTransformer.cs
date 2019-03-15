@@ -14,7 +14,6 @@ namespace Microsoft.StreamProcessing
 {
     internal partial class ShuffleTemplate
     {
-        internal readonly string CLASSNAME;
         private readonly Type outerKeyType;
         private readonly Type sourceType;
         private readonly Type innerKeyType;
@@ -30,7 +29,6 @@ namespace Microsoft.StreamProcessing
         private string resultBatchClassType;
         private string sourceBatchClassType;
         private string resultBatchGenericParameters;
-        public string staticCtor;
         private bool isFirstLevelGroup;
         private bool powerOf2;
         public string vectorHashCodeInitialization = string.Empty;
@@ -43,14 +41,13 @@ namespace Microsoft.StreamProcessing
             Type sourceType,
             Type innerKeyType,
             string inlinedHashCodeComputation,
-            bool nested, bool powerOf2)
+            bool nested, bool powerOf2) : base(className)
         {
             Contract.Requires(className != null);
             Contract.Requires(outerKeyType != null);
             Contract.Requires(sourceType != null);
             Contract.Requires(innerKeyType != null);
 
-            this.CLASSNAME = className;
             this.outerKeyType = outerKeyType;
             this.sourceType = sourceType;
             this.innerKeyType = innerKeyType;
@@ -133,7 +130,6 @@ namespace Microsoft.StreamProcessing
                 }
 
                 template.innerKeyIsAnonymous = innerKeyIsAnonymous;
-                template.staticCtor = Transformer.StaticCtor(template.CLASSNAME);
                 var expandedCode = template.TransformText();
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeOfTOuterKey, typeOfTSource, typeOfTInnerKey);
