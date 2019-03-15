@@ -1439,6 +1439,38 @@ namespace SimpleTesting
             Assert.IsTrue(expected.SequenceEqual(output));
         }
 
+        [TestMethod, TestCategory("Gated")]
+        public void UnionWithBatchEndingInPastPunctuation()
+        {
+            var leftInput = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(100, 101, 0),
+                StreamEvent.CreatePunctuation<int>(50)
+            }.ToObservable().ToStreamable();
+            var rightInput = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(50, 51, 0),
+                StreamEvent.CreatePunctuation<int>(200)
+            }.ToObservable().ToStreamable();
+
+            var query = leftInput.Union(rightInput);
+
+            var output = new List<StreamEvent<int>>();
+            query.ToStreamEventObservable()
+                .ForEachAsync(x => output.Add(x))
+                .Wait();
+
+            var expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreateInterval(50, 51, 0),
+                StreamEvent.CreateInterval(100, 101, 0),
+                StreamEvent.CreatePunctuation<int>(50),
+                StreamEvent.CreatePunctuation<int>(200),
+                StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+            };
+
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
     }
 
     [TestClass]
