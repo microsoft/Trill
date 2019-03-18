@@ -286,12 +286,9 @@ namespace Microsoft.StreamProcessing.Internal
         {
             Contract.Requires(value.IsPunctuation);
 
-            if (value.SyncTime < this.lastPunctuationTime)
-            {
-                throw new InvalidOperationException($"Received out of order punctuation {value.SyncTime}! Previous punctuation time {this.lastPunctuationTime}");
-            }
-
-            this.lastPunctuationTime = value.SyncTime;
+            this.lastPunctuationTime = Math.Max(
+                value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                this.lastPunctuationTime);
 
             var count = this.currentBatch.Count;
             this.currentBatch.vsync.col[count] = value.SyncTime;
@@ -779,12 +776,9 @@ namespace Microsoft.StreamProcessing.Internal
         {
             Contract.Requires(value.IsPunctuation);
 
-            if (value.SyncTime < this.lastPunctuationTime)
-            {
-                throw new InvalidOperationException($"Received out of order punctuation {value.SyncTime}! Previous punctuation time {this.lastPunctuationTime}");
-            }
-
-            this.lastPunctuationTime = value.SyncTime;
+            this.lastPunctuationTime = Math.Max(
+                value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                this.lastPunctuationTime);
 
             var count = this.currentBatch.Count;
             this.currentBatch.vsync.col[count] = value.SyncTime;
@@ -1218,6 +1212,14 @@ namespace Microsoft.StreamProcessing.Internal
         protected long lowWatermark = 0;
 
         /// <summary>
+        /// Baseline low watermark value used for low watermark and punctuation generation policies. This value will be
+        /// quantized to lowWatermarkGenerationPeriod boundaries.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long baselineLowWatermarkForPolicy = 0;
+
+        /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
@@ -1331,12 +1333,9 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                if (value.SyncTime < this.lastPunctuationTime[value.PartitionKey])
-                {
-                    throw new InvalidOperationException($"Received out of order punctuation {value.SyncTime}! Previous punctuation time {this.lastPunctuationTime[value.PartitionKey]}");
-                }
-
-                this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+                this.lastPunctuationTime[value.PartitionKey] = Math.Max(
+                    value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                    this.lastPunctuationTime[value.PartitionKey]);
             }
 
             var count = this.currentBatch.Count;
@@ -1762,6 +1761,14 @@ namespace Microsoft.StreamProcessing.Internal
         protected long lowWatermark = 0;
 
         /// <summary>
+        /// Baseline low watermark value used for low watermark and punctuation generation policies. This value will be
+        /// quantized to lowWatermarkGenerationPeriod boundaries.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long baselineLowWatermarkForPolicy = 0;
+
+        /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
@@ -1875,12 +1882,9 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                if (value.SyncTime < this.lastPunctuationTime[value.PartitionKey])
-                {
-                    throw new InvalidOperationException($"Received out of order punctuation {value.SyncTime}! Previous punctuation time {this.lastPunctuationTime[value.PartitionKey]}");
-                }
-
-                this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+                this.lastPunctuationTime[value.PartitionKey] = Math.Max(
+                    value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                    this.lastPunctuationTime[value.PartitionKey]);
             }
 
             var count = this.currentBatch.Count;

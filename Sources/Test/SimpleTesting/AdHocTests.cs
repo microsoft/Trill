@@ -620,6 +620,10 @@ namespace SimpleTesting
                     StreamEvent.CreatePunctuation<int>(80),
                     StreamEvent.CreateInterval(110, 111, 0),
                     StreamEvent.CreateInterval(195, 200, 0),
+
+                    StreamEvent.CreateInterval(200, 201, 0),
+                    StreamEvent.CreatePunctuation<int>(300),
+                    StreamEvent.CreateInterval(300, 301, 0),
                 }.ToObservable().ToStreamable(periodicPunctuationPolicy: PeriodicPunctuationPolicy.Time(100));
 
                 var output = new List<StreamEvent<int>>();
@@ -634,6 +638,12 @@ namespace SimpleTesting
                     StreamEvent.CreatePunctuation<int>(100), // Generated punctuation based on quantized previous punctuation
                     StreamEvent.CreateInterval(110, 111, 0),
                     StreamEvent.CreateInterval(195, 200, 0),
+
+                    StreamEvent.CreatePunctuation<int>(200), // Generated punctuation
+                    StreamEvent.CreateInterval(200, 201, 0),
+                    StreamEvent.CreatePunctuation<int>(300), // Explicitly ingressed punctuation should not be replicated
+                    StreamEvent.CreateInterval(300, 301, 0),
+
                     StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
                 };
 
@@ -649,9 +659,19 @@ namespace SimpleTesting
                 PartitionedStreamEvent.CreateInterval(0, 90, 91, 0),
                 PartitionedStreamEvent.CreateLowWatermark<int, int>(80),
                 PartitionedStreamEvent.CreateInterval(0, 110, 111, 0),
-                PartitionedStreamEvent.CreateInterval(0, 195, 200, 0),
+                PartitionedStreamEvent.CreateInterval(0, 195, 196, 0),
+
+                PartitionedStreamEvent.CreateInterval(0, 200, 201, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(300),
+                PartitionedStreamEvent.CreateInterval(0, 300, 301, 0),
+
+                PartitionedStreamEvent.CreateInterval(0, 400, 401, 0),
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 450),
+                PartitionedStreamEvent.CreateInterval(0, 450, 451, 0),
             }.ToObservable()
-            .ToStreamable(periodicLowWatermarkPolicy: PeriodicLowWatermarkPolicy.Time(generationPeriod: 100, lowWatermarkTimestampLag: 0));
+            .ToStreamable(
+                periodicPunctuationPolicy: PeriodicPunctuationPolicy.Time(50),
+                periodicLowWatermarkPolicy: PeriodicLowWatermarkPolicy.Time(generationPeriod: 100, lowWatermarkTimestampLag: 0));
 
             var output = new List<PartitionedStreamEvent<int, int>>();
             input.ToStreamEventObservable()
@@ -660,11 +680,24 @@ namespace SimpleTesting
 
             var expected = new List<PartitionedStreamEvent<int, int>>
             {
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 50),
                 PartitionedStreamEvent.CreateInterval(0, 90, 91, 0),
-                PartitionedStreamEvent.CreateLowWatermark<int, int>(80),  // Explicitly ingressed low watermark
-                PartitionedStreamEvent.CreateLowWatermark<int, int>(100), // Generated punctuation based on quantized previous lowWatermark
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(80),    // Explicitly ingressed low watermark
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(100),   // Generated punctuation based on quantized previous lowWatermark
                 PartitionedStreamEvent.CreateInterval(0, 110, 111, 0),
-                PartitionedStreamEvent.CreateInterval(0, 195, 200, 0),
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 150), // Generated punctuation
+                PartitionedStreamEvent.CreateInterval(0, 195, 196, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(200),   // Generated low watermark
+                PartitionedStreamEvent.CreateInterval(0, 200, 201, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(300),   // Explicitly ingressed low watermark should not be replicated
+                PartitionedStreamEvent.CreateInterval(0, 300, 301, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(400),   // Generated low watermark
+                PartitionedStreamEvent.CreateInterval(0, 400, 401, 0),
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 450), // Explicitly ingressed punctuation should not be replicated
+                PartitionedStreamEvent.CreateInterval(0, 450, 451, 0),
+
                 PartitionedStreamEvent.CreateLowWatermark<int, int>(PartitionedStreamEvent.InfinitySyncTime)
             };
 
