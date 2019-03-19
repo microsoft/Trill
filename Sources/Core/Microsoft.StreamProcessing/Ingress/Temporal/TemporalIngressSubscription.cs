@@ -285,17 +285,14 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            if (value.IsData)
+            var oldTime = this.highWatermark;
+            if (value.SyncTime > oldTime)
             {
-                var oldTime = this.highWatermark;
-                if (value.SyncTime > oldTime)
-                {
-                    this.highWatermark = value.SyncTime;
-    
-                    moveTo = value.SyncTime - this.reorderLatency;
-                    if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
-                    if (moveTo < moveFrom) moveTo = moveFrom;
-                }
+                this.highWatermark = value.SyncTime;
+
+                moveTo = value.SyncTime - this.reorderLatency;
+                if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
+                if (moveTo < moveFrom) moveTo = moveFrom;
             }
 
             if (moveTo > moveFrom)
@@ -656,17 +653,14 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            if (value.IsData)
+            var oldTime = this.highWatermark;
+            if (value.SyncTime > oldTime)
             {
-                var oldTime = this.highWatermark;
-                if (value.SyncTime > oldTime)
-                {
-                    this.highWatermark = value.SyncTime;
-    
-                    moveTo = value.SyncTime - this.reorderLatency;
-                    if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
-                    if (moveTo < moveFrom) moveTo = moveFrom;
-                }
+                this.highWatermark = value.SyncTime;
+
+                moveTo = value.SyncTime - this.reorderLatency;
+                if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
+                if (moveTo < moveFrom) moveTo = moveFrom;
             }
 
             if (moveTo > moveFrom)
@@ -1025,17 +1019,14 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            if (value.IsData)
+            var oldTime = this.highWatermark;
+            if (value.SyncTime > oldTime)
             {
-                var oldTime = this.highWatermark;
-                if (value.SyncTime > oldTime)
-                {
-                    this.highWatermark = value.SyncTime;
-    
-                    moveTo = value.SyncTime - this.reorderLatency;
-                    if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
-                    if (moveTo < moveFrom) moveTo = moveFrom;
-                }
+                this.highWatermark = value.SyncTime;
+
+                moveTo = value.SyncTime - this.reorderLatency;
+                if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
+                if (moveTo < moveFrom) moveTo = moveFrom;
             }
 
             if (moveTo > moveFrom)
@@ -3545,24 +3536,30 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            if (value.IsData)
+            var oldTime = this.partitionHighWatermarks[value.PartitionKey];
+            if (value.SyncTime > oldTime)
             {
-                var oldTime = this.partitionHighWatermarks[value.PartitionKey];
-                if (value.SyncTime > oldTime)
+                this.partitionHighWatermarks[value.PartitionKey] = value.SyncTime;
+
+                var oldSet = this.highWatermarkToPartitionsMap[oldTime];
+                if (oldSet.Count <= 1) this.highWatermarkToPartitionsMap.Remove(oldTime);
+                else oldSet.Remove(value.PartitionKey);
+
+                if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
+                else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
+
+                if (value.IsData)
                 {
-                    this.partitionHighWatermarks[value.PartitionKey] = value.SyncTime;
-    
-                    var oldSet = this.highWatermarkToPartitionsMap[oldTime];
-                    if (oldSet.Count <= 1) this.highWatermarkToPartitionsMap.Remove(oldTime);
-                    else oldSet.Remove(value.PartitionKey);
-    
-                    if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
-                    else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
-    
+                    // moveTo for punctuations is updated below
                     moveTo = value.SyncTime - this.reorderLatency;
                     if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
                     if (moveTo < moveFrom) moveTo = moveFrom;
                 }
+            }
+
+            if (value.IsPunctuation)
+            {
+                moveTo = value.SyncTime;
             }
 
             if (moveTo > moveFrom)
@@ -4020,24 +4017,30 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            if (value.IsData)
+            var oldTime = this.partitionHighWatermarks[value.PartitionKey];
+            if (value.SyncTime > oldTime)
             {
-                var oldTime = this.partitionHighWatermarks[value.PartitionKey];
-                if (value.SyncTime > oldTime)
+                this.partitionHighWatermarks[value.PartitionKey] = value.SyncTime;
+
+                var oldSet = this.highWatermarkToPartitionsMap[oldTime];
+                if (oldSet.Count <= 1) this.highWatermarkToPartitionsMap.Remove(oldTime);
+                else oldSet.Remove(value.PartitionKey);
+
+                if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
+                else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
+
+                if (value.IsData)
                 {
-                    this.partitionHighWatermarks[value.PartitionKey] = value.SyncTime;
-    
-                    var oldSet = this.highWatermarkToPartitionsMap[oldTime];
-                    if (oldSet.Count <= 1) this.highWatermarkToPartitionsMap.Remove(oldTime);
-                    else oldSet.Remove(value.PartitionKey);
-    
-                    if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
-                    else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
-    
+                    // moveTo for punctuations is updated below
                     moveTo = value.SyncTime - this.reorderLatency;
                     if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
                     if (moveTo < moveFrom) moveTo = moveFrom;
                 }
+            }
+
+            if (value.IsPunctuation)
+            {
+                moveTo = value.SyncTime;
             }
 
             if (moveTo > moveFrom)
@@ -4493,24 +4496,30 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            if (value.IsData)
+            var oldTime = this.partitionHighWatermarks[value.PartitionKey];
+            if (value.SyncTime > oldTime)
             {
-                var oldTime = this.partitionHighWatermarks[value.PartitionKey];
-                if (value.SyncTime > oldTime)
+                this.partitionHighWatermarks[value.PartitionKey] = value.SyncTime;
+
+                var oldSet = this.highWatermarkToPartitionsMap[oldTime];
+                if (oldSet.Count <= 1) this.highWatermarkToPartitionsMap.Remove(oldTime);
+                else oldSet.Remove(value.PartitionKey);
+
+                if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
+                else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
+
+                if (value.IsData)
                 {
-                    this.partitionHighWatermarks[value.PartitionKey] = value.SyncTime;
-    
-                    var oldSet = this.highWatermarkToPartitionsMap[oldTime];
-                    if (oldSet.Count <= 1) this.highWatermarkToPartitionsMap.Remove(oldTime);
-                    else oldSet.Remove(value.PartitionKey);
-    
-                    if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
-                    else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
-    
+                    // moveTo for punctuations is updated below
                     moveTo = value.SyncTime - this.reorderLatency;
                     if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
                     if (moveTo < moveFrom) moveTo = moveFrom;
                 }
+            }
+
+            if (value.IsPunctuation)
+            {
+                moveTo = value.SyncTime;
             }
 
             if (moveTo > moveFrom)

@@ -282,6 +282,7 @@ foreach (bool disordered in new[] { true, false })
         protected long lowWatermark = 0;
 
         /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// Baseline low watermark value used for low watermark and punctuation generation policies. This value will be
         /// quantized to lowWatermarkGenerationPeriod boundaries.
         /// </summary>

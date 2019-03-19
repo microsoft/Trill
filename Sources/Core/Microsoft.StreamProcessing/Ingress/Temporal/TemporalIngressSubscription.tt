@@ -344,12 +344,6 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-<#          if (ingressType == "StreamEvent")
-            { #>
-            if (value.IsData)
-            {
-<#              PushIndent("    ");
-            } #>
             var oldTime = <#= highWatermark #>;
             if (value.SyncTime > oldTime)
             {
@@ -364,14 +358,26 @@ namespace Microsoft.StreamProcessing
                 if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
                 else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
 
+<#          }
+            if (ingressType == "StreamEvent" && partitioned)
+            {
+                PushIndent("    "); #>
+            if (value.IsData)
+            {
+                // moveTo for punctuations is updated below
 <#          } #>
                 moveTo = value.SyncTime - this.reorderLatency;
                 if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
                 if (moveTo < moveFrom) moveTo = moveFrom;
             }
-<#          if (ingressType == "StreamEvent")
+<#          if (ingressType == "StreamEvent" && partitioned)
             {
                 PopIndent(); #>
+            }
+
+            if (value.IsPunctuation)
+            {
+                moveTo = value.SyncTime;
             }
 <#          } #>
 

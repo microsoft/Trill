@@ -1212,6 +1212,7 @@ namespace Microsoft.StreamProcessing.Internal
         protected long lowWatermark = 0;
 
         /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// Baseline low watermark value used for low watermark and punctuation generation policies. This value will be
         /// quantized to lowWatermarkGenerationPeriod boundaries.
         /// </summary>
@@ -1761,6 +1762,7 @@ namespace Microsoft.StreamProcessing.Internal
         protected long lowWatermark = 0;
 
         /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// Baseline low watermark value used for low watermark and punctuation generation policies. This value will be
         /// quantized to lowWatermarkGenerationPeriod boundaries.
         /// </summary>
