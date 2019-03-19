@@ -26,7 +26,7 @@ namespace Microsoft.StreamProcessing
         public override string TransformText()
         {
             this.Write("// *********************************************************************\r\n// Copy" +
-                    "right (C) Microsoft Corporation.  All rights reserved.\r\n// Licensed under the MI" +
+                    "right (c) Microsoft Corporation.  All rights reserved.\r\n// Licensed under the MI" +
                     "T License\r\n// ******************************************************************" +
                     "***\r\n/*\\\r\n    * Spec:\r\n    *\r\n    * Apply punctuation policy first. This means t" +
                     "hat even dropped events\r\n    * count towards the number of events seen since the" +
@@ -201,7 +201,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - lowWatermark) >= lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - baselineLowWatermarkForPolicy) >= lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)lowWatermarkGenerationPeriod);
@@ -404,7 +404,7 @@ if (latencyOption == "WithLatency") {
     { 
             this.Write(@"            // We use lowWatermark as the baseline in the delta computation because a low watermark implies
             // punctuations for all partitions
-            ulong delta = (ulong)(value.SyncTime - Math.Max(lastPunctuationTime[value.PartitionKey], lowWatermark));
+            ulong delta = (ulong)(value.SyncTime - Math.Max(lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
             if (!outOfOrder && punctuationGenerationPeriod > 0 && delta >= punctuationGenerationPeriod)
             {
                 // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -623,6 +623,21 @@ if (latencyOption == "WithLatency") {
             this.Write("(long syncTime)\r\n    {\r\n        if (syncTime <= ");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitioned ? "lowWatermark" : "lastPunctuationTime"));
             this.Write(") return;\r\n\r\n");
+      if (!partitioned)
+        { 
+            this.Write("            // Update the ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
+            this.Write(" to be at least the currentTime, so the ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
+            this.Write("\r\n            // is not before the preceding data event.\r\n");
+          if (latencyOption == "WithLatency")
+            { 
+            this.Write("            // Note that currentTime only reflects events already processed, and " +
+                    "excludes events in the reorder buffer.\r\n");
+          } 
+            this.Write("            syncTime = Math.Max(syncTime, this.currentTime);\r\n");
+      } 
+            this.Write("\r\n");
       if (latencyOption == "WithLatency")
         { 
             this.Write("        // Process events queued for reorderLatency up to the ");
@@ -681,6 +696,7 @@ if (partitioned) {
             this.Write(@"        if (lowWatermark < syncTime)
         {
             lowWatermark = syncTime;
+            this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
 
             // Gather keys whose high watermarks are before the new low watermark
             var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
@@ -711,8 +727,9 @@ if (partitioned) {
       }
         else
         { 
-            this.Write("        currentTime = Math.Max(syncTime, currentTime);\r\n        lastPunctuationTi" +
-                    "me = Math.Max(syncTime, lastPunctuationTime);\r\n");
+            this.Write("        currentTime = Math.Max(syncTime, currentTime);\r\n        this.lastPunctuat" +
+                    "ionTime = Math.Max(\r\n            syncTime.SnapToLeftBoundary((long)this.punctuat" +
+                    "ionGenerationPeriod),\r\n            this.lastPunctuationTime);\r\n");
       } 
             this.Write("\r\n        // Add ");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));

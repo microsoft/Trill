@@ -286,7 +286,9 @@ namespace Microsoft.StreamProcessing.Internal
         {
             Contract.Requires(value.IsPunctuation);
 
-            this.lastPunctuationTime = Math.Max(value.SyncTime, this.lastPunctuationTime);
+            this.lastPunctuationTime = Math.Max(
+                value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                this.lastPunctuationTime);
 
             var count = this.currentBatch.Count;
             this.currentBatch.vsync.col[count] = value.SyncTime;
@@ -774,7 +776,9 @@ namespace Microsoft.StreamProcessing.Internal
         {
             Contract.Requires(value.IsPunctuation);
 
-            this.lastPunctuationTime = Math.Max(value.SyncTime, this.lastPunctuationTime);
+            this.lastPunctuationTime = Math.Max(
+                value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                this.lastPunctuationTime);
 
             var count = this.currentBatch.Count;
             this.currentBatch.vsync.col[count] = value.SyncTime;
@@ -1209,6 +1213,15 @@ namespace Microsoft.StreamProcessing.Internal
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Baseline low watermark value used for low watermark and punctuation generation policies. This value will be
+        /// quantized to lowWatermarkGenerationPeriod boundaries.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long baselineLowWatermarkForPolicy = 0;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -1321,7 +1334,9 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                this.lastPunctuationTime[value.PartitionKey] = Math.Max(value.SyncTime, this.lastPunctuationTime[value.PartitionKey]);
+                this.lastPunctuationTime[value.PartitionKey] = Math.Max(
+                    value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                    this.lastPunctuationTime[value.PartitionKey]);
             }
 
             var count = this.currentBatch.Count;
@@ -1748,6 +1763,15 @@ namespace Microsoft.StreamProcessing.Internal
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Baseline low watermark value used for low watermark and punctuation generation policies. This value will be
+        /// quantized to lowWatermarkGenerationPeriod boundaries.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long baselineLowWatermarkForPolicy = 0;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -1860,7 +1884,9 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                this.lastPunctuationTime[value.PartitionKey] = Math.Max(value.SyncTime, this.lastPunctuationTime[value.PartitionKey]);
+                this.lastPunctuationTime[value.PartitionKey] = Math.Max(
+                    value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                    this.lastPunctuationTime[value.PartitionKey]);
             }
 
             var count = this.currentBatch.Count;
