@@ -703,6 +703,62 @@ namespace SimpleTesting
 
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void LASJ_OutOfOrderLWM()
+        {
+            const int key = 0; // Just use one key as the key and payload
+            const long duration = 5;
+            PartitionedStreamEvent<int, int> CreateInterval(long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+            PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+
+            var leftData = new PartitionedStreamEvent<int, int>[]
+            {
+                CreateInterval(10),
+                CreateInterval(15),     // This will not be processed until right side's LWM at 20
+                CreateInterval(30),
+                CreateInterval(40),
+                CreateInterval(50),
+            };
+
+            var rightData = new PartitionedStreamEvent<int, int>[]
+            {
+                CreateInterval(5),
+                CreateInterval(6),
+                CreateInterval(7),
+                CreateInterval(10),     // Matches all of 10-15
+                CreateLowWatermark(20), // This should process left's 15, then output the low watermark at 10 (not vice versa)
+
+                CreateInterval(20),     // No match
+            };
+
+            var expected = new PartitionedStreamEvent<int, int>[]
+            {
+                CreateInterval(15),
+                CreateLowWatermark(20),
+                CreateInterval(30),
+                CreateInterval(40),
+                CreateInterval(50),
+                CreateLowWatermark(StreamEvent.InfinitySyncTime),
+            };
+
+            var qc = new QueryContainer();
+            var leftInput = qc.RegisterInput(leftData.ToObservable(), flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+            var rightInput = qc.RegisterInput(rightData.ToObservable(), flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+
+            var query = leftInput.WhereNotExists(
+                rightInput,
+                e => e,
+                e => e);
+
+            var output = new List<PartitionedStreamEvent<int, int>>();
+            var egress = qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+            process.Flush();
+            egress.Wait();
+
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
     }
 
     [TestClass]
