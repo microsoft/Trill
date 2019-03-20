@@ -272,7 +272,14 @@ namespace Microsoft.StreamProcessing
                         leftEntry = leftWorking.Peek();
                         partition.nextLeftTime = leftEntry.Sync;
                         partition.nextRightTime = Math.Max(partition.nextRightTime, this.lastRightCTI);
-                        if (partition.nextLeftTime > partition.nextRightTime) break;
+                        if (partition.nextLeftTime > partition.nextRightTime)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, right), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextRightTime)
+                                UpdateTime(partition, partition.nextRightTime);
+                            break;
+                        }
 
                         UpdateTime(partition, partition.nextLeftTime);
 
@@ -303,7 +310,14 @@ namespace Microsoft.StreamProcessing
                         rightEntry = rightWorking.Peek();
                         partition.nextRightTime = rightEntry.Sync;
                         partition.nextLeftTime = Math.Max(partition.nextLeftTime, this.lastLeftCTI);
-                        if (partition.nextLeftTime < partition.nextRightTime) break;
+                        if (partition.nextLeftTime < partition.nextRightTime)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, left), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextLeftTime)
+                                UpdateTime(partition, partition.nextLeftTime);
+                            break;
+                        }
 
                         UpdateTime(partition, partition.nextRightTime);
 
