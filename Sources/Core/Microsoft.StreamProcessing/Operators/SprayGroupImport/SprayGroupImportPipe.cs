@@ -114,7 +114,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         this.pool.Get(out StreamMessage<TKey, TSpray> broadcastClone);
-                        broadcastClone.CloneFromNoPayload(broadcastMaster);
+                        broadcastClone.CloneFrom(broadcastMaster);
                         this.Observers[i].OnNext(broadcastClone);
                     }
                 }

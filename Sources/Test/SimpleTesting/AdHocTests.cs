@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Serializer;
+using Microsoft.StreamProcessing.Sharding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting
@@ -758,6 +759,29 @@ namespace SimpleTesting
             egress.Wait();
 
             Assert.IsTrue(expected.SequenceEqual(output));
+        }
+
+        internal struct SimpleStruct
+        {
+            public long One { get; set; }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FailureTest()
+        {
+            const int BatchCount = 1000;
+            const int SourceCount = 6;
+
+            var generatorShard =
+                Enumerable.Range(0, BatchCount * SourceCount)
+                .Select(i => StreamEvent.CreateInterval(DateTime.Now.Ticks, 1, new SimpleStruct() { One = 1 }))
+                .ToObservable()
+                .ToStreamable()
+                .Shard(SourceCount);
+
+            var result = generatorShard.Query(e => e.Select(x => x)).Cache();
+
+            Console.WriteLine("done " + SourceCount);
         }
     }
 
