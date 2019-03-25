@@ -767,21 +767,30 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
-        public void FailureTest()
+        public void SimpleShardTest()
         {
             const int BatchCount = 1000;
             const int SourceCount = 6;
 
-            var generatorShard =
+            var input =
                 Enumerable.Range(0, BatchCount * SourceCount)
                 .Select(i => StreamEvent.CreateInterval(DateTime.Now.Ticks, 1, new SimpleStruct() { One = 1 }))
+                .ToList();
+
+            var generatorShard = input
                 .ToObservable()
                 .ToStreamable()
                 .Shard(SourceCount);
 
-            var result = generatorShard.Query(e => e.Select(x => x)).Cache();
+            var output = new List<StreamEvent<SimpleStruct>>();
+            var passthrough = generatorShard
+                .Query(e => e.Select(x => x))
+                .Unshard()
+                .ToStreamEventObservable()
+                .Where(e => e.IsData)
+                .ForEachAsync(e => output.Add(e));
 
-            Console.WriteLine("done " + SourceCount);
+            Assert.IsTrue(output.SequenceEqual(input));
         }
     }
 
