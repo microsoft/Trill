@@ -370,7 +370,7 @@ namespace Microsoft.StreamProcessing
                 this.output.key.col[index] = default;
                 this.output[index] = default;
                 this.output.hash.col[index] = 0;
-                this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+                this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
 
                 if (this.output.Count == Config.DataBatchSize) FlushContents();
             }
@@ -426,9 +426,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "', HeapIndex=" + this.HeapIndex + "]";
-            }
+                => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "', HeapIndex=" + this.HeapIndex + "]";
         }
 
         [DataContract]
@@ -450,9 +448,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "]";
-            }
+                => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "]";
         }
     }
 }

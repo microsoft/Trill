@@ -253,6 +253,7 @@ namespace Microsoft.StreamProcessing
                             this.batch[this.outputCount] = default;
                             this.batch.key.col[this.outputCount] = default;
                             this.batch.hash.col[this.outputCount] = 0;
+                            this.batch.bitvector.col[this.outputCount >> 6] |= 1L << (this.outputCount & 0x3f);
                             this.outputCount++;
 
                             if (this.outputCount == Config.DataBatchSize) FlushContents();

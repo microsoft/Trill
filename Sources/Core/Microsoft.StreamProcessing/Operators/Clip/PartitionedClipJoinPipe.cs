@@ -49,9 +49,7 @@ namespace Microsoft.StreamProcessing
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public PartitionedClipJoinPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         public PartitionedClipJoinPipe(ClipJoinStreamable<TKey, TLeft, TRight> stream, IStreamObserver<TKey, TLeft> observer)
             : base(stream, observer)
@@ -541,7 +539,7 @@ namespace Microsoft.StreamProcessing
                 this.output.key.col[index] = default;
                 this.output[index] = default;
                 this.output.hash.col[index] = 0;
-                this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+                this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
 
                 if (this.output.Count == Config.DataBatchSize) FlushContents();
             }
@@ -658,9 +656,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "', HeapIndex=" + this.HeapIndex + "]";
-            }
+                => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "', HeapIndex=" + this.HeapIndex + "]";
         }
 
         [DataContract]
@@ -682,9 +678,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "]";
-            }
+                => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "]";
         }
 
         public override bool LeftInputHasState
