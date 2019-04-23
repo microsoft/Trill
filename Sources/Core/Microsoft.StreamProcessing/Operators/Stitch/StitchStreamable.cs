@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create(this.Properties.KeyEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Properties.PayloadEqualityComparer.GetEqualsExpr().ExpressionToCSharp());
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => StitchTemplate.Generate(this));
-            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new StitchPlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2, false));
+            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new StitchPlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode);
             var returnValue = (UnaryPipe<TKey, TPayload, TPayload>)instance;

@@ -25,7 +25,7 @@ namespace Microsoft.StreamProcessing
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "_totalBranchesL2-1", Justification = "Enforced with code contract.")]
         public ShuffleNestedStreamable(
-            IEqualityComparerExpression<TInnerKey> comparer,            IStreamable<TOuterKey, TSource> source,
+            IStreamable<TOuterKey, TSource> source,
             Expression<Func<TSource, TInnerKey>> keySelector,            int totalBranchesL2,
             int shuffleId)
             : base(source.Properties.GroupNested(keySelector))
@@ -42,7 +42,7 @@ namespace Microsoft.StreamProcessing
 
             if (totalBranchesL2 <= 1)
             {
-                singleThreadedShuffler = new GroupNestedStreamable<TOuterKey, TSource, TInnerKey>(comparer, source, keySelector);
+                singleThreadedShuffler = new GroupNestedStreamable<TOuterKey, TSource, TInnerKey>(source, keySelector);
                 this.properties = singleThreadedShuffler.Properties;
             }
         }
@@ -78,10 +78,9 @@ namespace Microsoft.StreamProcessing
                 pipe = null;
                 numBranches = 0;
 
-                if (d == null)
-                    return Source.Subscribe(oldpipe);
-                else
-                    return Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
+                return d == null
+                    ? Source.Subscribe(oldpipe)
+                    : Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
             }
         }
 
@@ -174,7 +173,7 @@ namespace Microsoft.StreamProcessing
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "_totalBranchesL2-1", Justification = "Enforced with code contract.")]
         public ShuffleStreamable(
-            IEqualityComparerExpression<TInnerKey> comparer,            IStreamable<TOuterKey, TSource> source,
+            IStreamable<TOuterKey, TSource> source,
             Expression<Func<TSource, TInnerKey>> keySelector,            int totalBranchesL2,
             int shuffleId)
             : base(source.Properties.Group(keySelector))
@@ -191,7 +190,7 @@ namespace Microsoft.StreamProcessing
 
             if (totalBranchesL2 <= 1)
             {
-                singleThreadedShuffler = new GroupStreamable<TOuterKey, TSource, TInnerKey>(comparer, source, keySelector);
+                singleThreadedShuffler = new GroupStreamable<TOuterKey, TSource, TInnerKey>(source, keySelector);
                 this.properties = singleThreadedShuffler.Properties;
             }
         }
@@ -227,10 +226,9 @@ namespace Microsoft.StreamProcessing
                 pipe = null;
                 numBranches = 0;
 
-                if (d == null)
-                    return Source.Subscribe(oldpipe);
-                else
-                    return Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
+                return d == null
+                    ? Source.Subscribe(oldpipe)
+                    : Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
             }
         }
 
@@ -318,7 +316,7 @@ namespace Microsoft.StreamProcessing
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "_totalBranchesL2-1", Justification = "Enforced with code contract.")]
         public ShuffleSameKeyStreamable(
-                        IStreamable<TOuterKey, TSource> source,
+            IStreamable<TOuterKey, TSource> source,
                         int totalBranchesL2,
             int shuffleId)
             : base(source.Properties)
@@ -364,10 +362,9 @@ namespace Microsoft.StreamProcessing
                 pipe = null;
                 numBranches = 0;
 
-                if (d == null)
-                    return Source.Subscribe(oldpipe);
-                else
-                    return Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
+                return d == null
+                    ? Source.Subscribe(oldpipe)
+                    : Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
             }
         }
 

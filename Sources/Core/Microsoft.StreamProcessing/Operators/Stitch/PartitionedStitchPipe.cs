@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class PartitionedStitchPipe<TKey, TPayload, TPartitionKey> : UnaryPipe<TKey, TPayload, TPayload>
     {
         private readonly string errorMessages;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         // transient; don't need to contract it
         private readonly DataStructurePool<FastDictionary2<KHP, List<ActiveEvent>>> dictPool;
@@ -67,13 +67,11 @@ namespace Microsoft.StreamProcessing
         private int ClosedEventsIndex;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedStitchPipe()
-            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public PartitionedStitchPipe() { }
 
-        public PartitionedStitchPipe(StitchStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
+        public PartitionedStitchPipe(IStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.errorMessages = stream.ErrorMessages;
             this.outputCount = 0;
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
@@ -151,7 +149,7 @@ namespace Microsoft.StreamProcessing
         public override void ProduceQueryPlan(PlanNode previous)
             => this.Observer.ProduceQueryPlan(new StitchPlanNode(
                 previous, this,
-                typeof(TKey), typeof(TPayload), false, this.errorMessages, false));
+                typeof(TKey), typeof(TPayload), false, this.errorMessages));
 
         private struct ActiveEvent
         {
@@ -292,7 +290,7 @@ namespace Microsoft.StreamProcessing
             };
 
             // We should match ONLY on
-            bool foundInClosedEvents = this.ClosedEvents.entries[this.ClosedEventsIndex].value.ContainsKey(eventstart) && this.ClosedEvents.entries[this.ClosedEventsIndex].value[eventstart].Lookup(lookupStart, out int indx);
+            bool foundInClosedEvents = this.ClosedEvents.entries[this.ClosedEventsIndex].value.ContainsKey(eventstart) && this.ClosedEvents.entries[this.ClosedEventsIndex].value[eventstart].Lookup(lookupStart, out _);
 
             if (foundInClosedEvents)
             {
@@ -309,7 +307,6 @@ namespace Microsoft.StreamProcessing
                 };
 
                 InsertOrAppend(this.OpenEvents.entries[this.OpenEventsIndex].value, lookupStart, originalExt);
-
             }
             else
             {
@@ -321,7 +318,7 @@ namespace Microsoft.StreamProcessing
                 // END  ( Payload = P, End = 1, Start = 0)
                 // In this case, we don't want to issue a new Start on the second Begin--instead, we
                 // want to wait for the Begin and get rid of it.
-                bool candidatesInOpenEvents = this.OpenEvents.entries[this.OpenEventsIndex].value.Lookup(lookupStart, out indx);
+                bool candidatesInOpenEvents = this.OpenEvents.entries[this.OpenEventsIndex].value.Lookup(lookupStart, out var indx);
 
                 if (candidatesInOpenEvents && !skipBuffering && this.OpenEvents.entries[this.OpenEventsIndex].value.entries[indx].value.Count > 0)
                 {

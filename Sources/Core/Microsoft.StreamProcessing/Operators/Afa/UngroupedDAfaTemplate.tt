@@ -47,7 +47,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             IStreamObserver<Microsoft.StreamProcessing.Empty, <#= TRegister #>> observer,
             object afa,
             long MaxDuration)
-            : base(stream, observer, afa, MaxDuration, true)
+            : base(stream, observer, afa, MaxDuration)
         {
             activeState_state = -1;
 

@@ -55,7 +55,7 @@ namespace Microsoft.StreamProcessing
             => this.Observer.ProduceQueryPlan(new QuantizeLifetimePlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), this.width, this.skip, this.progress, this.offset,
-                false, this.errorMessages, false));
+                false, this.errorMessages));
 
         private void ReachTime(long timestamp)
         {

@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing
     {
         private readonly MemoryPool<TKey, TPayload> pool;
         private readonly string errorMessages;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [SchemaSerialization]
         private readonly long duration;
@@ -34,12 +34,9 @@ namespace Microsoft.StreamProcessing
         private FastDictionary<TPartitionKey, Dictionary<long, List<ActiveEvent>>> contractedToZeroDictionary = new FastDictionary<TPartitionKey, Dictionary<long, List<ActiveEvent>>>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedExtendLifetimeNegativePipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedExtendLifetimeNegativePipe() { }
 
-        public PartitionedExtendLifetimeNegativePipe(ExtendLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long duration)
+        public PartitionedExtendLifetimeNegativePipe(Streamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long duration)
             : base(stream, observer)
         {
             this.duration = duration;
@@ -47,16 +44,13 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = stream.ErrorMessages;
             this.pool.Get(out this.output);
             this.output.Allocate();
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new ExtendLifetimePlanNode(
+            => this.Observer.ProduceQueryPlan(new ExtendLifetimePlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload),
                 false, this.errorMessages, true));
-        }
 
         private void ReachTime(long timestamp)
         {
@@ -297,10 +291,7 @@ namespace Microsoft.StreamProcessing
                 this.Hash = hash;
             }
 
-            public override string ToString()
-            {
-                return "Key='" + this.Key + "', Payload='" + this.Payload;
-            }
+            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
     }
 }

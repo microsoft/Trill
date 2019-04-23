@@ -60,7 +60,7 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create();
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => SessionWindowTemplate.Generate(this));
-            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SessionWindowPlanNode(p, o, typeof(TKey), typeof(TPayload), this.sessionTimeout, this.maximumDuration, true, generatedPipeType.Item2, false));
+            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SessionWindowPlanNode(p, o, typeof(TKey), typeof(TPayload), this.sessionTimeout, this.maximumDuration, true, generatedPipeType.Item2));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode, this.sessionTimeout, this.maximumDuration);
             var returnValue = (UnaryPipe<TKey, TPayload, TPayload>)instance;

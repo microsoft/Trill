@@ -496,10 +496,7 @@ namespace Microsoft.StreamProcessing.Internal
                 this.disposed = true;
             }
 
-            private void DisposeInternal()
-            {
-                this.inner.Dispose();
-            }
+            private void DisposeInternal() => this.inner.Dispose();
         }
     }
 
@@ -986,10 +983,7 @@ namespace Microsoft.StreamProcessing.Internal
                 this.disposed = true;
             }
 
-            private void DisposeInternal()
-            {
-                this.inner.Dispose();
-            }
+            private void DisposeInternal() => this.inner.Dispose();
         }
     }
 
@@ -1536,10 +1530,7 @@ namespace Microsoft.StreamProcessing.Internal
                 this.disposed = true;
             }
 
-            private void DisposeInternal()
-            {
-                this.inner.Dispose();
-            }
+            private void DisposeInternal() => this.inner.Dispose();
         }
     }
 
@@ -2086,10 +2077,7 @@ namespace Microsoft.StreamProcessing.Internal
                 this.disposed = true;
             }
 
-            private void DisposeInternal()
-            {
-                this.inner.Dispose();
-            }
+            private void DisposeInternal() => this.inner.Dispose();
         }
     }
 

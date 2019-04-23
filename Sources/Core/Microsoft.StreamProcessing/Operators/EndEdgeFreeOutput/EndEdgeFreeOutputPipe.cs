@@ -220,10 +220,8 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new EndEdgeFreeOutputPlanNode(
+            => this.Observer.ProduceQueryPlan(new EndEdgeFreeOutputPlanNode(
                 previous, this, typeof(TKey), typeof(TPayload), false, this.errorMessages));
-        }
 
         protected override void FlushContents()
         {
@@ -262,10 +260,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public int Hash;
 
-            public override string ToString()
-            {
-                return "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+            public override string ToString() => "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
     }
 }

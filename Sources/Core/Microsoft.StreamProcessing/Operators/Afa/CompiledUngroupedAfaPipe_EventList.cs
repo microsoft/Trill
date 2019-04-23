@@ -31,7 +31,7 @@ namespace Microsoft.StreamProcessing
         public CompiledUngroupedAfaPipe_EventList() { }
 
         public CompiledUngroupedAfaPipe_EventList(Streamable<Empty, TRegister> stream, IStreamObserver<Empty, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastLinkedList<GroupedActiveState<Empty, TRegister>>();
             this.activeStatesTraverser = new FastLinkedList<GroupedActiveState<Empty, TRegister>>.ListTraverser(this.activeStates);
@@ -178,6 +178,7 @@ namespace Microsoft.StreamProcessing
                         }
                         #endregion
                     }
+
                     if (index == orig_index) this.activeStatesTraverser.Remove();
                     if (this.IsDeterministic) break; // We are guaranteed to have only one active state
                 }
@@ -300,7 +301,6 @@ namespace Microsoft.StreamProcessing
                     if (this.IsDeterministic) break; // We are guaranteed to have only one start state
                 }
             }
-
 
             this.currentList.Clear();
         }

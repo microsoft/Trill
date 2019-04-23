@@ -154,7 +154,6 @@ namespace Microsoft.StreamProcessing
         private const int CheckpointVersionRevision = 0;
 
         private readonly object sentinel = new object();
-        private readonly HashSet<string> seen = new HashSet<string>();
         private readonly Dictionary<string, IIngressStreamObserver> IngressPipes;
         private Dictionary<string, PlanNode> queryPlans;
 

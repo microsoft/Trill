@@ -23,59 +23,45 @@ namespace Microsoft.StreamProcessing
         /// Enter into a mode where you can set a property for the stream.
         /// </summary>
         internal static IStreamable<TKey, TPayload> GetStreamable<TKey, TPayload>(this IPropertySetter<TKey, TPayload> source)
-        {
-            return ((PropertySetter<TKey, TPayload>)source).GetStreamable();
-        }
+            => ((PropertySetter<TKey, TPayload>)source).GetStreamable();
 
 
         /// <summary>
         /// Enter into a mode where you can set a property for the stream.
         /// </summary>
         public static IPropertySetter<TKey, TPayload> SetProperty<TKey, TPayload>(this IStreamable<TKey, TPayload> source)
-        {
-            return new PropertySetter<TKey, TPayload>(source);
-        }
+            => new PropertySetter<TKey, TPayload>(source);
 
 
         /// <summary>
         /// Set a property of whether or not the stream is devoid of intervals.
         /// </summary>
         public static IStreamable<TKey, TPayload> IsIntervalFree<TKey, TPayload>(this IPropertySetter<TKey, TPayload> source, bool isIntervalFree)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToIntervalFree(isIntervalFree));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToIntervalFree(isIntervalFree));
 
         /// <summary>
         /// Set a property of whether or not the stream is devoid of simultaneity w.r.t. sync-times.
         /// </summary>
         public static IStreamable<TKey, TPayload> IsSyncTimeSimultaneityFree<TKey, TPayload>(this IPropertySetter<TKey, TPayload> source, bool isSyncTimeSimultaneityFree)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToSyncTimeSimultaneityFree(isSyncTimeSimultaneityFree));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToSyncTimeSimultaneityFree(isSyncTimeSimultaneityFree));
 
         /// <summary>
         /// Set a property of whether or not the stream is devoid of simultaneity w.r.t. sync-times.
         /// </summary>
         public static IStreamable<TKey, TPayload> IsEventOverlappingFree<TKey, TPayload>(this IPropertySetter<TKey, TPayload> source, bool isEventOverlappingFree)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToEventOverlappingFree(isEventOverlappingFree));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToEventOverlappingFree(isEventOverlappingFree));
 
         /// <summary>
         /// Set a property of whether events in the stream all have constant duration, and optionally, the width of the constant duration (null if not known).
         /// </summary>
         public static IStreamable<TKey, TPayload> IsConstantDuration<TKey, TPayload>(this IPropertySetter<TKey, TPayload> source, bool isConstantDuration, long? constantDuration = null)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToConstantDuration(isConstantDuration, constantDuration));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToConstantDuration(isConstantDuration, constantDuration));
 
         /// <summary>
         /// Set a property of whether events in the stream all have constant hop, and optionally, the period and offset of the constant hop (null if not known).
         /// </summary>
         public static IStreamable<TKey, TPayload> IsConstantHop<TKey, TPayload>(this IPropertySetter<TKey, TPayload> source, bool isConstantHop, long? constantHopPeriod = null, long? constantHopOffset = null)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToConstantHop(isConstantHop, constantHopPeriod, constantHopOffset));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToConstantHop(isConstantHop, constantHopPeriod, constantHopOffset));
 
         /// <summary>
         /// Sets the PayloadEqualityComparer property associated with the stream.
@@ -85,9 +71,7 @@ namespace Microsoft.StreamProcessing
         public static IStreamable<TKey, TPayload> PayloadEqualityComparer<TKey, TPayload>(
             this IPropertySetter<TKey, TPayload> source,
             IEqualityComparerExpression<TPayload> payloadEqualityComparer)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToPayloadEqualityComparer(payloadEqualityComparer));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToPayloadEqualityComparer(payloadEqualityComparer));
 
         /// <summary>
         /// Sets the PayloadEqualityComparer property associated with the stream.
@@ -98,10 +82,9 @@ namespace Microsoft.StreamProcessing
             this IPropertySetter<TKey, TPayload> source,
             Expression<Func<TPayload, TPayload, bool>> equalsExpr,
             Expression<Func<TPayload, int>> getHashCodeExpr)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToPayloadEqualityComparer(
-                new EqualityComparerExpression<TPayload>(equalsExpr, getHashCodeExpr)));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(
+                source.GetStreamable(), e => e.ToPayloadEqualityComparer(
+                    new EqualityComparerExpression<TPayload>(equalsExpr, getHashCodeExpr)));
 
         /// <summary>
         /// Sets the PayloadComparer property associated with the stream.
@@ -111,9 +94,7 @@ namespace Microsoft.StreamProcessing
         public static IStreamable<TKey, TPayload> PayloadComparer<TKey, TPayload>(
             this IPropertySetter<TKey, TPayload> source,
             IComparerExpression<TPayload> payloadComparer)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToPayloadComparer(payloadComparer));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToPayloadComparer(payloadComparer));
 
         /// <summary>
         /// Sets the PayloadComparer property associated with the stream.
@@ -123,10 +104,9 @@ namespace Microsoft.StreamProcessing
         public static IStreamable<TKey, TPayload> PayloadComparer<TKey, TPayload>(
             this IPropertySetter<TKey, TPayload> source,
             Expression<Comparison<TPayload>> compareExpr)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToPayloadComparer(
-                new ComparerExpression<TPayload>(compareExpr)));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(
+                source.GetStreamable(), e => e.ToPayloadComparer(
+                    new ComparerExpression<TPayload>(compareExpr)));
 
         /// <summary>
         /// Sets the KeyEqualityComparer property associated with the stream.
@@ -136,9 +116,7 @@ namespace Microsoft.StreamProcessing
         public static IStreamable<TKey, TPayload> KeyEqualityComparer<TKey, TPayload>(
             this IPropertySetter<TKey, TPayload> source,
             IEqualityComparerExpression<TKey> keyEqualityComparer)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToKeyEqualityComparer(keyEqualityComparer));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToKeyEqualityComparer(keyEqualityComparer));
 
         /// <summary>
         /// Sets a selected-substream equality comparer for the stream. Multiple of these can be set for various selectors.
@@ -149,11 +127,9 @@ namespace Microsoft.StreamProcessing
             this IPropertySetter<TKey, TPayload> source,
             Expression<Func<TPayload, T>> selectorExpr,
             IEqualityComparerExpression<T> equalityComparerExpr)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(
+            => new SetPropertyStreamable<TKey, TPayload>(
                 source.GetStreamable(),
                 e => e.ToEqualityComparer(selectorExpr, equalityComparerExpr));
-        }
 
         /// <summary>
         /// Sets a selected-substream equality comparer for the stream. Multiple of these can be set for various selectors.
@@ -165,36 +141,28 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TPayload, T>> selectorExpr,
             Expression<Func<T, T, bool>> equalsExpr,
             Expression<Func<T, int>> getHashCodeExpr)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(
+            => new SetPropertyStreamable<TKey, TPayload>(
                 source.GetStreamable(),
                 e => e.ToEqualityComparer(selectorExpr, new EqualityComparerExpression<T>(equalsExpr, getHashCodeExpr)));
-        }
 
         /// <summary>
         /// Sets a property whether or nor the stream is sorted (by entire payload) per snapshot
         /// </summary>
         public static IStreamable<TKey, TPayload> IsSnapshotSorted<TKey, TPayload>(this IPropertySetter<TKey, TPayload> source, bool isSnapshotSorted, Guid? packingScheme = null)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToSnapshotSorted(isSnapshotSorted, packingScheme));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToSnapshotSorted(isSnapshotSorted, packingScheme));
 
         /// <summary>
         /// Sets a property whether or nor the stream is sorted per snapshot. If sorted, specifies the sort fields associated with the stream (entire payload by default)
         /// </summary>
         public static IStreamable<TKey, TPayload> IsSnapshotSorted<TKey, TPayload, T>
             (this IPropertySetter<TKey, TPayload> source, bool isSnapshotSorted, Expression<Func<TPayload, T>> sortFieldsSelector, Guid? packingScheme = null)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToSnapshotSorted(isSnapshotSorted, sortFieldsSelector, packingScheme));
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source.GetStreamable(), e => e.ToSnapshotSorted(isSnapshotSorted, sortFieldsSelector, packingScheme));
 
         /// <summary>
         /// Sets the current stream properties to the provided argument (newProperties)
         /// </summary>
         public static IStreamable<TKey, TPayload> SetProperties<TKey, TPayload>(this IStreamable<TKey, TPayload> source, StreamProperties<TKey, TPayload> newProperties)
-        {
-            return new SetPropertyStreamable<TKey, TPayload>(source, e => newProperties);
-        }
+            => new SetPropertyStreamable<TKey, TPayload>(source, e => newProperties);
 
         /// <summary>
         /// Sets the out parameter (properties) to the current properties of the stream
@@ -313,7 +281,9 @@ namespace Microsoft.StreamProcessing
         {
             Invariant.IsNotNull(source, nameof(source));
 
-            return !source.Properties.IsColumnar ? source : new ColumnToRowStreamable<TKey, TPayload>(source);
+            return !source.Properties.IsColumnar
+                ? source
+                : new ColumnToRowStreamable<TKey, TPayload>(source);
         }
 
         /// <summary>
@@ -323,7 +293,9 @@ namespace Microsoft.StreamProcessing
         {
             Invariant.IsNotNull(source, nameof(source));
 
-            return source.Properties.IsColumnar ? source : new RowToColumnStreamable<TKey, TPayload>(source);
+            return source.Properties.IsColumnar
+                ? source
+                : new RowToColumnStreamable<TKey, TPayload>(source);
         }
 
         /// <summary>
@@ -336,8 +308,9 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(predicate, nameof(predicate));
 
-            if (source is IFusibleStreamable<TKey, TPayload> s) return s.FuseWhere(predicate);
-            return new WhereStreamable<TKey, TPayload>(source, predicate);
+            return source is IFusibleStreamable<TKey, TPayload> s
+                ? s.FuseWhere(predicate)
+                : (IStreamable<TKey, TPayload>)new WhereStreamable<TKey, TPayload>(source, predicate);
         }
 
         /// <summary>
@@ -363,9 +336,9 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(selector, nameof(selector));
 
-            if (source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, false, false))
-                return s.FuseSelectMany(selector);
-            return new SelectManyStreamable<TKey, TPayload, TResult>(source, selector);
+            return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, false, false)
+                ? s.FuseSelectMany(selector)
+                : (IStreamable<TKey, TResult>)new SelectManyStreamable<TKey, TPayload, TResult>(source, selector);
         }
 
         /// <summary>
@@ -378,9 +351,9 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(selector, nameof(selector));
 
-            if (source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, true, false))
-                return s.FuseSelectMany(selector);
-            return new SelectManyStreamable<TKey, TPayload, TResult>(source, selector, hasStartEdge: true);
+            return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, true, false)
+                ? s.FuseSelectMany(selector)
+                : (IStreamable<TKey, TResult>)new SelectManyStreamable<TKey, TPayload, TResult>(source, selector, hasStartEdge: true);
         }
 
         /// <summary>
@@ -393,9 +366,9 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(selector, nameof(selector));
 
-            if (source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, false, true))
-                return s.FuseSelectManyWithKey(selector);
-            return new SelectManyStreamable<TKey, TPayload, TResult>(source, selector, hasKey: true);
+            return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, false, true)
+                ? s.FuseSelectManyWithKey(selector)
+                : (IStreamable<TKey, TResult>)new SelectManyStreamable<TKey, TPayload, TResult>(source, selector, hasKey: true);
         }
 
         /// <summary>
@@ -408,9 +381,9 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(selector, nameof(selector));
 
-            if (source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, true, true))
-                return s.FuseSelectManyWithKey(selector);
-            return new SelectManyStreamable<TKey, TPayload, TResult>(source, selector, hasStartEdge: true, hasKey: true);
+            return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, true, true)
+                ? s.FuseSelectManyWithKey(selector)
+                : (IStreamable<TKey, TResult>)new SelectManyStreamable<TKey, TPayload, TResult>(source, selector, hasStartEdge: true, hasKey: true);
         }
 
         /// <summary>
@@ -632,9 +605,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TOuterKey, TPayload> source,
             Expression<Func<TPayload, TInnerKey>> keySelector,
             Func<IStreamable<CompoundGroupKey<TOuterKey, TInnerKey>, TPayload>, IStreamable<CompoundGroupKey<TOuterKey, TInnerKey>, TResult>> applyFunc)
-        {
-            return source.GroupApply(keySelector, applyFunc, (e1, e2) => e2);
-        }
+            => source.GroupApply(keySelector, applyFunc, (e1, e2) => e2);
 
         /// <summary>
         /// Needed to make the comprehension syntax happy. Consider using GroupApply instead.
@@ -646,7 +617,7 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(source, nameof(source));
             Invariant.IsNotNull(keySelector, nameof(keySelector));
 
-            return new MapDefinition<TOuterKey, TPayload, TPayload, TInnerKey, TPayload>(source, null, (a, b) => a, keySelector, null);
+            return new MapDefinition<TOuterKey, TPayload, TPayload, TInnerKey, TPayload>(source, null, (a, b) => a, keySelector);
         }
 
         /// <summary>
@@ -671,9 +642,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<Empty, TPayload> stream,
             Expression<Func<TPayload, TPartitionKey>> constructor,
             long partitionLag = long.MinValue)
-        {
-            return new PartitionStreamable<TPartitionKey, TPayload>(stream, constructor, partitionLag);
-        }
+            => new PartitionStreamable<TPartitionKey, TPayload>(stream, constructor, partitionLag);
         #endregion
 
         #region MapReduce
@@ -703,7 +672,7 @@ namespace Microsoft.StreamProcessing
             Func<IStreamable<TOuterKey, TMapInput>, IStreamable<TOuterKey, TReduceInput>> mapper,
             Expression<Func<TReduceInput, TInnerKey>> keySelector)
             => new MapDefinition<TOuterKey, TMapInput, TMapInput, TInnerKey, TReduceInput>
-                (source, null, (a, b) => mapper(a), keySelector, null);
+                (source, null, (a, b) => mapper(a), keySelector);
 
         /// <summary>
         /// Empty reducer. Follows a map operator in situations where the mapper is being used to parallelize a stateless query. It simply unmaps the input

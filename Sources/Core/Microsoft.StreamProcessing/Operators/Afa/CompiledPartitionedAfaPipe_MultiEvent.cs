@@ -13,7 +13,7 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class CompiledPartitionedAfaPipe_MultiEvent<TKey, TPayload, TRegister, TAccumulator, TPartitionKey> : CompiledAfaPipeBase<TKey, TPayload, TRegister, TAccumulator>
     {
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [DataMember]
         private FastMap<GroupedActiveStateAccumulator<TKey, TPayload, TRegister, TAccumulator>> activeStates;
@@ -25,25 +25,19 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary2<TPartitionKey, long> lastSyncTime = new FastDictionary2<TPartitionKey, long>();
 
-        // Field instead of local variable to avoid re-initializing it
-        private readonly Stack<int> stack = new Stack<int>();
-
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public CompiledPartitionedAfaPipe_MultiEvent()
-            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public CompiledPartitionedAfaPipe_MultiEvent() { }
 
         public CompiledPartitionedAfaPipe_MultiEvent(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-
             this.activeStates = new FastMap<GroupedActiveStateAccumulator<TKey, TPayload, TRegister, TAccumulator>>(1);
             this.activeFindTraverser = new FastMap<GroupedActiveStateAccumulator<TKey, TPayload, TRegister, TAccumulator>>.FindTraverser(this.activeStates);
         }
 
         public override int CurrentlyBufferedInputCount => this.activeStates.Count;
 
-        private void ProcessCurrentTimestamp(TPartitionKey partitionKey, int partitionIndex)
+        private void ProcessCurrentTimestamp(int partitionIndex)
         {
             bool ended = true;
 
@@ -123,7 +117,7 @@ namespace Microsoft.StreamProcessing
 
                             if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                             {
-                                ProcessCurrentTimestamp(partitionKey, partitionIndex);
+                                ProcessCurrentTimestamp(partitionIndex);
                                 this.lastSyncTime.entries[partitionIndex].value = synctime;
                             }
 
@@ -236,7 +230,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                                 {
-                                    ProcessCurrentTimestamp(this.lastSyncTime.entries[partitionIndex].key, partitionIndex);
+                                    ProcessCurrentTimestamp(partitionIndex);
                                     this.lastSyncTime.entries[partitionIndex].value = synctime;
                                 }
                             }
@@ -252,7 +246,7 @@ namespace Microsoft.StreamProcessing
 
                             if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                             {
-                                ProcessCurrentTimestamp(partitionKey, partitionIndex);
+                                ProcessCurrentTimestamp(partitionIndex);
                                 this.lastSyncTime.entries[partitionIndex].value = synctime;
                             }
                         }

@@ -60,7 +60,7 @@ namespace Microsoft.StreamProcessing
         {
             var node = new JoinPlanNode(
                 left, right, this,
-                typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), JoinKind.Clip, false, null, false);
+                typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), JoinKind.Clip, false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             this.Observer.ProduceQueryPlan(node);

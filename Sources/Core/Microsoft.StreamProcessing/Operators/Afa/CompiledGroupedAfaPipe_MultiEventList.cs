@@ -34,7 +34,7 @@ namespace Microsoft.StreamProcessing
         public CompiledGroupedAfaPipe_MultiEventList() { }
 
         public CompiledGroupedAfaPipe_MultiEventList(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastMap<GroupedActiveState<TKey, TRegister>>();
             this.activeFindTraverser = new FastMap<GroupedActiveState<TKey, TRegister>>.FindTraverser(this.activeStates);

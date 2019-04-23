@@ -23,7 +23,7 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     /// <typeparam name="TInput">The type of the input data.</typeparam>
     /// <typeparam name="TRegister">The type of the state register.</typeparam>
-    internal class SingleElementArc<TInput, TRegister> : Arc<TInput, TRegister>
+    internal sealed class SingleElementArc<TInput, TRegister> : Arc<TInput, TRegister>
     {
         /// <summary>
         /// Indicates that the current arc is triggered by a single event.
@@ -59,7 +59,7 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TInput">The type of the input data.</typeparam>
     /// <typeparam name="TRegister">The type of the state register.</typeparam>
     /// <typeparam name="TAccumulator"></typeparam>
-    internal class MultiElementArc<TInput, TRegister, TAccumulator> : Arc<TInput, TRegister>
+    internal sealed class MultiElementArc<TInput, TRegister, TAccumulator> : Arc<TInput, TRegister>
     {
         /// <summary>
         /// Indicates that the current arc is triggered by multiple elements at a given timestamp.
@@ -98,7 +98,7 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     /// <typeparam name="TInput">The type of the input data.</typeparam>
     /// <typeparam name="TRegister">The type of the state register.</typeparam>
-    internal class ListElementArc<TInput, TRegister> : Arc<TInput, TRegister>
+    internal sealed class ListElementArc<TInput, TRegister> : Arc<TInput, TRegister>
     {
         /// <summary>
         /// Indicates that the current arc is a transformation triggered by a collection of elements.
@@ -117,13 +117,12 @@ namespace Microsoft.StreamProcessing
         }
     }
 
-
     /// <summary>
     /// Epsilon arc - an arc that is a free transformation in an AFA.
     /// </summary>
     /// <typeparam name="TInput">The type of the input data.</typeparam>
     /// <typeparam name="TRegister">The type of the state register.</typeparam>
-    internal class EpsilonArc<TInput, TRegister> : Arc<TInput, TRegister>
+    internal sealed class EpsilonArc<TInput, TRegister> : Arc<TInput, TRegister>
     {
         /// <summary>
         /// Indicates that the current arc is an epsilon transformation.

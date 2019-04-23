@@ -14,7 +14,7 @@ namespace Microsoft.StreamProcessing
     {
         private readonly MemoryPool<TKey, TPayload> pool;
         private readonly string errorMessages;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [SchemaSerialization]
         private readonly long width;
@@ -32,17 +32,15 @@ namespace Microsoft.StreamProcessing
         private FastDictionary<TPartitionKey, PartitionEntry> partitionData = new FastDictionary<TPartitionKey, PartitionEntry>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedQuantizeLifetimePipe()
-            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public PartitionedQuantizeLifetimePipe() { }
 
-        public PartitionedQuantizeLifetimePipe(QuantizeLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long width, long skip, long progress, long offset)
+        public PartitionedQuantizeLifetimePipe(Streamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long width, long skip, long progress, long offset)
             : base(stream, observer)
         {
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
             this.errorMessages = stream.ErrorMessages;
             this.pool.Get(out this.output);
             this.output.Allocate();
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
             this.width = width;
             this.skip = skip;
@@ -54,9 +52,9 @@ namespace Microsoft.StreamProcessing
             => this.Observer.ProduceQueryPlan(new QuantizeLifetimePlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), this.width, this.skip, this.progress, this.offset,
-                false, this.errorMessages, false));
+                false, this.errorMessages));
 
-        private int AllocatePartition(TPartitionKey pKey, long timestamp)
+        private int AllocatePartition(TPartitionKey pKey)
         {
             this.partitionData.Lookup(pKey, out int index);
             this.partitionData.Insert(ref index, pKey, new PartitionEntry());
@@ -103,7 +101,7 @@ namespace Microsoft.StreamProcessing
                     if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
                     {
                         var partition = this.getPartitionKey(batch.key.col[i]);
-                        if (!this.partitionData.Lookup(partition, out int timeIndex)) timeIndex = AllocatePartition(partition, batch.vsync.col[i]);
+                        if (!this.partitionData.Lookup(partition, out int timeIndex)) timeIndex = AllocatePartition(partition);
                         else if (batch.vsync.col[i] > this.partitionData.entries[timeIndex].value.lastSyncTime) ReachTime(batch.vsync.col[i]);
 
                         if (batch.vother.col[i] == StreamEvent.InfinitySyncTime) // Start edge
@@ -157,7 +155,7 @@ namespace Microsoft.StreamProcessing
                     else if (batch.vother.col[i] == PartitionedStreamEvent.PunctuationOtherTime)
                     {
                         var partition = this.getPartitionKey(batch.key.col[i]);
-                        if (!this.partitionData.Lookup(partition, out int timeIndex)) timeIndex = AllocatePartition(partition, batch.vsync.col[i]);
+                        if (!this.partitionData.Lookup(partition, out int timeIndex)) timeIndex = AllocatePartition(partition);
                         ReachTime(timeIndex, batch.vsync.col[i]);
 
                         int ind = this.output.Count++;

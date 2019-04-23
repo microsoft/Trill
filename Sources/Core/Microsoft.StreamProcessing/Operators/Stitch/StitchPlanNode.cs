@@ -17,8 +17,7 @@ namespace Microsoft.StreamProcessing
             Type keyType,
             Type payloadType,
             bool isGenerated,
-            string errorMessages,
-            bool withStateManager)
+            string errorMessages)
             : base(previous, pipe, keyType, payloadType, payloadType, isGenerated, errorMessages)
         { }
 

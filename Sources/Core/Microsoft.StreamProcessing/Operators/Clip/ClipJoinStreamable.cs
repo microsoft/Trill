@@ -77,8 +77,8 @@ namespace Microsoft.StreamProcessing
             {
                 var node = new JoinPlanNode(
                         left, right, o,
-                        typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
-                        JoinKind.Clip, true, generatedPipeType.Item2, false);
+                    typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
+                    JoinKind.Clip, true, generatedPipeType.Item2);
                 node.AddJoinExpression("left comparer", this.LeftComparer.GetEqualsExpr());
                 node.AddJoinExpression("key comparer", this.Properties.KeyComparer.GetCompareExpr());
                 return node;

@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
     {
         private readonly Func<TLeft, TRight, TResult> selector;
         private readonly MemoryPool<TKey, TResult> pool;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [SchemaSerialization]
         private readonly Expression<Func<TKey, TKey, bool>> keyComparer;
@@ -51,16 +51,14 @@ namespace Microsoft.StreamProcessing
         private bool emitCTI = false;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedFixedIntervalEquiJoinPipe()
-            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public PartitionedFixedIntervalEquiJoinPipe() { }
 
         public PartitionedFixedIntervalEquiJoinPipe(
-            EquiJoinStreamable<TKey, TLeft, TRight, TResult> stream,
+            BinaryStreamable<TKey, TLeft, TRight, TResult> stream,
             Expression<Func<TLeft, TRight, TResult>> selector,
             IStreamObserver<TKey, TResult> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.selector = selector.Compile();
             this.leftDuration = stream.Left.Properties.ConstantDurationLength.Value;
             this.rightDuration = stream.Right.Properties.ConstantDurationLength.Value;
@@ -79,7 +77,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
                 JoinKind.FixedIntervalEquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             this.Observer.ProduceQueryPlan(node);
         }

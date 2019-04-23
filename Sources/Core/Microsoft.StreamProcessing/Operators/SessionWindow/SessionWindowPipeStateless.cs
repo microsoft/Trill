@@ -48,12 +48,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SessionWindowPlanNode(
+            => this.Observer.ProduceQueryPlan(new SessionWindowPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), this.sessionTimeout, this.maximumDuration,
-                false, this.errorMessages, false));
-        }
+                false, this.errorMessages));
 
         public override int CurrentlyBufferedInputCount => this.batches.Select(o => o.Count).Sum();
 

@@ -28,13 +28,10 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary<TPartitionKey, long> lastSync = new FastDictionary<TPartitionKey, long>();
 
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedAlterLifetimeStartDependentDurationPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedAlterLifetimeStartDependentDurationPipe() { }
 
         public PartitionedAlterLifetimeStartDependentDurationPipe(AlterLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
@@ -45,17 +42,14 @@ namespace Microsoft.StreamProcessing
             this.startTimeDurationSelectorCompiled = this.startTimeDurationSelector.Compile();
             this.startTimeSelector = (Expression<Func<long, long>>)stream.StartTimeSelector;
             this.startTimeSelectorCompiled = this.startTimeSelector.Compile();
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new AlterLifetimePlanNode(
+            => this.Observer.ProduceQueryPlan(new AlterLifetimePlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), this.startTimeSelector, this.startTimeDurationSelector,
                 true));
-        }
 
         public unsafe override void OnNext(StreamMessage<TKey, TPayload> batch)
         {

@@ -23,9 +23,9 @@ namespace Microsoft.StreamProcessing
 #>
     internal sealed class Map2ReduceStreamable<<#= declarationKey #>TMapInputLeft1, TMapInputRight1, TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput1, TReduceInput2, TBind, TOutput> : Streamable<<#= memberKey #>, TOutput>
     {
-        private IStreamable<<#= memberKey #>, TMapInputLeft1> sourceLeft1;
+        private readonly IStreamable<<#= memberKey #>, TMapInputLeft1> sourceLeft1;
         private readonly IStreamable<<#= memberKey #>, TMapInputRight1> sourceRight1;
-        private IStreamable<<#= memberKey #>, TMapInputLeft2> sourceLeft2;
+        private readonly IStreamable<<#= memberKey #>, TMapInputLeft2> sourceLeft2;
         private readonly IStreamable<<#= memberKey #>, TMapInputRight2> sourceRight2;
 
         private readonly Func<IStreamable<<#= memberKey #>, TMapInputLeft1>, IStreamable<<#= memberKey #>, TMapInputRight1>, IStreamable<<#= memberKey #>, TReduceInput1>> mapper1;
@@ -33,8 +33,6 @@ namespace Microsoft.StreamProcessing
 
         private readonly Expression<Func<TReduceInput1, TReduceKey>> keySelector1;
         private readonly Expression<Func<TReduceInput2, TReduceKey>> keySelector2;
-
-        private readonly IEqualityComparerExpression<TReduceKey> keyComparer;
 
         private readonly Func<IStreamable<<#= groupingKey #>, TReduceInput1>, IStreamable<<#= groupingKey #>, TReduceInput2>, IStreamable<<#= groupingKey #>, TBind>> reducer;
 
@@ -55,8 +53,6 @@ namespace Microsoft.StreamProcessing
             IStreamable<<#= memberKey #>, TMapInputRight2> sourceRight2,
             Func<IStreamable<<#= memberKey #>, TMapInputLeft2>, IStreamable<<#= memberKey #>, TMapInputRight2>, IStreamable<<#= memberKey #>, TReduceInput2>> mapper2,
             Expression<Func<TReduceInput2, TReduceKey>> keySelector2,
-
-            IEqualityComparerExpression<TReduceKey> keyComparer,
 
             Func<IStreamable<<#= groupingKey #>, TReduceInput1>, IStreamable<<#= groupingKey #>, TReduceInput2>, IStreamable<<#= groupingKey #>, TBind>> reducer,
 
@@ -91,7 +87,6 @@ namespace Microsoft.StreamProcessing
             this.mapper2 = mapper2;
             this.keySelector1 = keySelector1;
             this.keySelector2 = keySelector2;
-            this.keyComparer = keyComparer;
             this.reducer = reducer;
             this.resultSelector = resultSelector;
             this.leftAsymmetric1 = leftAsymmetric1;
@@ -103,17 +98,16 @@ namespace Microsoft.StreamProcessing
 
         private bool reduceInMap;
         private IComparerExpression<TMapInputLeft1> sprayComparer1 = null;
-        private IComparerExpression<TMapInputLeft2> sprayComparer2 = null;
 
         internal void ProcessProperties()
         {
             if (sourceLeft1.Properties.CanSpray(sourceLeft2.Properties, keySelector1, keySelector2) &&
-                sourceLeft1.Properties.Derive(a => mapper1(a, null)).CanSpray(sourceLeft2.Properties.Derive(a => mapper2(a, null)),
-                keySelector1, keySelector2))
+                sourceLeft1.Properties.Derive(a => mapper1(a, null)).CanSpray(
+                    sourceLeft2.Properties.Derive(a => mapper2(a, null)),
+                    keySelector1, keySelector2))
             {
                 reduceInMap = true;
                 sprayComparer1 = sourceLeft1.Properties.GetSprayComparerExpression(keySelector1);
-                sprayComparer2 = sourceLeft2.Properties.GetSprayComparerExpression(keySelector2);
             }
         }
 
@@ -147,7 +141,7 @@ namespace Microsoft.StreamProcessing
                 // [3] apply shuffle on the result of each spray
                 Streamable<<#= groupingKey #>, TReduceInput1>[] shuffleL1Results1 = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput1, TReduceKey>[mapArity];
                 for (int i = 0; i < mapArity; i++)
-                    shuffleL1Results1[i] = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput1, TReduceKey>(keyComparer, sprayResults1[i], keySelector1, reduceArity, i);
+                    shuffleL1Results1[i] = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput1, TReduceKey>(sprayResults1[i], keySelector1, reduceArity, i);
 
                 // [4] Union the shuffled data by group key
                 MultiUnionStreamable<<#= groupingKey #>, TReduceInput1>.l2index = 0;
@@ -171,7 +165,7 @@ namespace Microsoft.StreamProcessing
                 {
                     shuffleL2Results1 = new Streamable<<#= groupingKey #>, TReduceInput1>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        shuffleL2Results1[i] = new Group<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput1, TReduceKey>(keyComparer, sprayResults1[i], keySelector1);
+                        shuffleL2Results1[i] = new Group<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput1, TReduceKey>(sprayResults1[i], keySelector1);
                 }
                 else
                 {
@@ -180,7 +174,7 @@ namespace Microsoft.StreamProcessing
                     // [3] apply shuffle on the result of each spray
                     Streamable<<#= groupingKey #>, TReduceInput1>[] shuffleL1Results1 = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput1, TReduceKey>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        shuffleL1Results1[i] = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput1, TReduceKey>(keyComparer, sprayResults1[i], keySelector1, reduceArity, i);
+                        shuffleL1Results1[i] = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput1, TReduceKey>(sprayResults1[i], keySelector1, reduceArity, i);
 
                     // [4] Union the shuffled data by group key
                     MultiUnionStreamable<<#= groupingKey #>, TReduceInput1>.l2index = 0;
@@ -208,7 +202,7 @@ namespace Microsoft.StreamProcessing
                 // [3] apply shuffle on the result of each spray
                 Streamable<<#= groupingKey #>, TReduceInput2>[] shuffleL1Results2 = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput2, TReduceKey>[mapArity];
                 for (int i = 0; i < mapArity; i++)
-                    shuffleL1Results2[i] = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput2, TReduceKey>(keyComparer, sprayResults2[i], keySelector2, reduceArity, i);
+                    shuffleL1Results2[i] = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput2, TReduceKey>(sprayResults2[i], keySelector2, reduceArity, i);
 
                 // [4] Union the shuffled data by group key
                 MultiUnionStreamable<<#= groupingKey #>, TReduceInput2>.l2index = 0;
@@ -229,7 +223,7 @@ namespace Microsoft.StreamProcessing
                 {
                     shuffleL2Results2 = new Streamable<<#= groupingKey #>, TReduceInput2>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        shuffleL2Results2[i] = new Group<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput2, TReduceKey>(keyComparer, sprayResults2[i], keySelector2);
+                        shuffleL2Results2[i] = new Group<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput2, TReduceKey>(sprayResults2[i], keySelector2);
                 }
                 else
                 {
@@ -238,7 +232,7 @@ namespace Microsoft.StreamProcessing
                     // [3] apply shuffle on the result of each spray
                     var shuffleL1Results2 = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput2, TReduceKey>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        shuffleL1Results2[i] = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput2, TReduceKey>(keyComparer, sprayResults2[i], keySelector2, reduceArity, i);
+                        shuffleL1Results2[i] = new Shuffle<#= inlineNested #>Streamable<<#= memberKey #>, TReduceInput2, TReduceKey>(sprayResults2[i], keySelector2, reduceArity, i);
 
                     // [4] Union the shuffled data by group key
                     MultiUnionStreamable<<#= groupingKey #>, TReduceInput2>.l2index = 0;

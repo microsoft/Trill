@@ -75,7 +75,7 @@ namespace Microsoft.StreamProcessing
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
         {
             var part = typeof(TKey).GetPartitionType();
-            if (this.DurationSelector.Body is ConstantExpression constant)
+            if (this.DurationSelector.Body is ConstantExpression)
             {
                 if (this.StartTimeSelector == null)
                 {
@@ -107,14 +107,9 @@ namespace Microsoft.StreamProcessing
             }
             else if (this.DurationSelector is Expression<Func<long, long, long>>)
             {
-                if (part != null)
-                {
-                    return CreatePartitionedVariable(part, this, observer);
-                }
-                else
-                {
-                    return new AlterLifetimeVariableDurationPipe<TKey, TPayload>(this, observer);
-                }
+                return part != null
+                    ? CreatePartitionedVariable(part, this, observer)
+                    : new AlterLifetimeVariableDurationPipe<TKey, TPayload>(this, observer);
             }
             else if (part != null && typeof(TKey).GetGenericTypeDefinition().Equals(typeof(PartitionKey<>)))
             {

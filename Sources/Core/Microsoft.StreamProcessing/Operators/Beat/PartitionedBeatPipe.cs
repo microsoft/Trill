@@ -15,7 +15,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class PartitionedBeatPipe<TKey, TPayload, TPartitionKey> : UnaryPipe<TKey, TPayload, TPayload>
     {
         private readonly MemoryPool<TKey, TPayload> pool;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         private readonly string errorMessages;
 
         [SchemaSerialization]
@@ -52,15 +52,11 @@ namespace Microsoft.StreamProcessing
         private int batchIter;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedBeatPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedBeatPipe() { }
 
         public PartitionedBeatPipe(BeatStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.offset = stream.Offset;
             this.period = stream.Period;
             this.errorMessages = stream.ErrorMessages;
@@ -197,10 +193,8 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new BeatPlanNode(
+            => this.Observer.ProduceQueryPlan(new BeatPlanNode(
                 previous, this, typeof(TKey), typeof(TPayload), this.offset, this.period, false, this.errorMessages));
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AdvanceGlobalTime(long time)
@@ -444,9 +438,7 @@ namespace Microsoft.StreamProcessing
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool AreSame(long start, ref TKey key, ref TPayload payload, ref ActiveEdge active)
-        {
-            return start == active.Start && this.keyComparer(key, active.Key) && this.payloadComparer(payload, active.Payload);
-        }
+            => start == active.Start && this.keyComparer(key, active.Key) && this.payloadComparer(payload, active.Payload);
 
         protected override void FlushContents()
         {
@@ -493,9 +485,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         [DataContract]
@@ -517,9 +507,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
     }
 }

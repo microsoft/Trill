@@ -21,13 +21,13 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
     internal sealed class EnumerableSerializer<TCollection, TItem> : ObjectSerializerBase where TCollection : IEnumerable<TItem>, new()
     {
-        private static Expression<Func<IEnumerable<TItem>, IEnumerator<TItem>>> GetEnumeratorExpression = c => c.GetEnumerator();
-        private static Expression<Func<IEnumerator<TItem>, bool>> MoveNextExpression = c => c.MoveNext();
-        private static Expression<Action<List<TItem>>> ListClearExpression = c => c.Clear();
-        private static Expression<Func<int, List<TItem>>> ListConstructorExpression = i => new List<TItem>(i);
-        private static Expression<Func<TCollection>> CollectionConstructorExpression = () => new TCollection();
-        private static Expression<Action<List<TItem>, TItem>> ListAddExpression = (c, i) => c.Add(i);
-        private static Expression<Action<ICollection<TItem>, TItem>> CollectionAddExpression = (c, i) => c.Add(i);
+        private static readonly Expression<Func<IEnumerable<TItem>, IEnumerator<TItem>>> GetEnumeratorExpression = c => c.GetEnumerator();
+        private static readonly Expression<Func<IEnumerator<TItem>, bool>> MoveNextExpression = c => c.MoveNext();
+        private static readonly Expression<Action<List<TItem>>> ListClearExpression = c => c.Clear();
+        private static readonly Expression<Func<int, List<TItem>>> ListConstructorExpression = i => new List<TItem>(i);
+        private static readonly Expression<Func<TCollection>> CollectionConstructorExpression = () => new TCollection();
+        private static readonly Expression<Action<List<TItem>, TItem>> ListAddExpression = (c, i) => c.Add(i);
+        private static readonly Expression<Action<ICollection<TItem>, TItem>> CollectionAddExpression = (c, i) => c.Add(i);
 
         private readonly ObjectSerializerBase itemSchema;
 

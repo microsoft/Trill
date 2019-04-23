@@ -185,7 +185,7 @@ namespace Microsoft.StreamProcessing
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            if (!(node.Expression is MemberExpression me)) // if it is a member expression, then let visitor recurse down to the left-most branch
+            if (!(node.Expression is MemberExpression)) // if it is a member expression, then let visitor recurse down to the left-most branch
             {
                 if (!(node.Expression is ParameterExpression p) || !this.parameters.Contains(p)) this.isConstant = false;
             }
@@ -227,11 +227,11 @@ namespace Microsoft.StreamProcessing
         private readonly Dictionary<ParameterExpression, int> parameterMap = new Dictionary<ParameterExpression, int>();
         private int uniqueParameterNumber;
 
-        private EqualityComparer(Expression e1, Expression e2) => this.uniqueParameterNumber = 0;
+        private EqualityComparer() => this.uniqueParameterNumber = 0;
 
         public static bool IsEqual(Expression e1, Expression e2)
         {
-            var me = new EqualityComparer(e1, e2);
+            var me = new EqualityComparer();
             return me.Equals(e1, e2);
         }
 
@@ -389,7 +389,7 @@ namespace Microsoft.StreamProcessing
 
     internal sealed class VariableFinder : ExpressionVisitor
     {
-        private List<object> foundVariables = new List<object>();
+        private readonly List<object> foundVariables = new List<object>();
 
         public static List<object> Find(Expression exp)
         {
@@ -1472,7 +1472,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.parameterTableForDecomposableTypes.TryGetValue(Tuple.Create(parameter, m.Name), out var parameterInfo))
                     return MakeIndexedAccessExpression(parameterInfo);
-                if (this.parameterTableForAtomicTypes.TryGetValue(parameter, out parameterInfo))
+                if (this.parameterTableForAtomicTypes.TryGetValue(parameter, out _))
                     throw new InvalidOperationException();
             }
 

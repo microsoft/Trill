@@ -48,17 +48,16 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary2<TPartitionKey, PartitionEntry> partitionData = new FastDictionary2<TPartitionKey, PartitionEntry>();
 
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedSnapshotWindowStartEdgePipe() => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public PartitionedSnapshotWindowStartEdgePipe() { }
 
         public PartitionedSnapshotWindowStartEdgePipe(
             SnapshotWindowStreamable<TKey, TInput, TState, TOutput> stream,
             IStreamObserver<TKey, TOutput> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.aggregate = stream.Aggregate;
             this.initialStateExpr = this.aggregate.InitialState();
             this.initialState = this.initialStateExpr.Compile();
@@ -85,7 +84,7 @@ namespace Microsoft.StreamProcessing
         public override void ProduceQueryPlan(PlanNode previous)
             => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(TKey), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages, false));
+                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {
@@ -99,112 +98,114 @@ namespace Microsoft.StreamProcessing
             fixed (long* col_vother = batch.vother.col)
             fixed (int* col_hash = batch.hash.col)
             fixed (long* col_bv = batch.bitvector.col)
-            for (int i = 0; i < count; i++)
             {
-                if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                for (int i = 0; i < count; i++)
                 {
-                    if (col_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
+                    if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
                     {
-                        OnLowWatermark(col_vsync[i]);
-
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = col_vsync[i];
-                        this.batch.vother.col[c] = PartitionedStreamEvent.LowWatermarkOtherTime;
-                        this.batch.key.col[c] = default;
-                        this.batch.hash.col[c] = 0;
-                        this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                    }
-                    else if (col_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
-                    {
-                        // We have found a row that corresponds to punctuation
-                        var p = this.getPartitionKey(colkey[i]);
-                        PartitionEntry partitionEntry;
-                        if (!this.partitionData.Lookup(p, out int partitionIndex))
-                            this.partitionData.Insert(p, partitionEntry = new PartitionEntry { lastSyncTime = col_vsync[i] });
-                        else partitionEntry = this.partitionData.entries[partitionIndex].value;
-                        OnPunctuation(partitionEntry, col_vsync[i]);
-
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = col_vsync[i];
-                        this.batch.vother.col[c] = long.MinValue;
-                        this.batch.key.col[c] = colkey[i];
-                        this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
-                        this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                    }
-                    continue;
-                }
-
-                var syncTime = col_vsync[i];
-                var partition = this.getPartitionKey(colkey[i]);
-                HeldState<TState> heldState;
-                PartitionEntry entry;
-
-                // Handle time moving forward
-                if (!this.partitionData.Lookup(partition, out int pIndex))
-                    this.partitionData.Insert(partition, entry = new PartitionEntry { lastSyncTime = syncTime });
-                else if (syncTime > (entry = this.partitionData.entries[pIndex].value).lastSyncTime)
-                {
-                    /* Issue start edges for held aggregates */
-                    foreach (int iter1 in entry.heldAggregates)
-                    {
-                        var iter1entry = this.aggregateByKey.entries[iter1];
-                        if (partition.Equals(this.getPartitionKey(iter1entry.key)))
+                        if (col_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
                         {
+                            OnLowWatermark(col_vsync[i]);
+
                             int c = this.batch.Count;
-                            this.batch.vsync.col[c] = iter1entry.value.timestamp;
-                            this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
-                            this.batch.payload.col[c] = this.computeResult(iter1entry.value.state);
-                            this.batch.key.col[c] = iter1entry.key;
-                            this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
+                            this.batch.vsync.col[c] = col_vsync[i];
+                            this.batch.vother.col[c] = PartitionedStreamEvent.LowWatermarkOtherTime;
+                            this.batch.key.col[c] = default;
+                            this.batch.hash.col[c] = 0;
+                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
+                        else if (col_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
+                        {
+                            // We have found a row that corresponds to punctuation
+                            var p = this.getPartitionKey(colkey[i]);
+                            PartitionEntry partitionEntry;
+                            if (!this.partitionData.Lookup(p, out int partitionIndex))
+                                this.partitionData.Insert(p, partitionEntry = new PartitionEntry { lastSyncTime = col_vsync[i] });
+                            else partitionEntry = this.partitionData.entries[partitionIndex].value;
+                            OnPunctuation(partitionEntry, col_vsync[i]);
+
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = col_vsync[i];
+                            this.batch.vother.col[c] = long.MinValue;
+                            this.batch.key.col[c] = colkey[i];
+                            this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
+                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        }
+                        continue;
                     }
 
-                    // Time has moved forward, clear the held aggregates
-                    entry.heldAggregates.Clear();
+                    var syncTime = col_vsync[i];
+                    var partition = this.getPartitionKey(colkey[i]);
+                    HeldState<TState> heldState;
+                    PartitionEntry entry;
 
-                    // Since sync time changed, set lastSyncTime
-                    entry.lastSyncTime = syncTime;
-                }
-
-                // Need to retrieve the key from the dictionary
-                if (!this.aggregateByKey.Lookup(colkey[i], col_hash[i], out int aggindex))
-                {
-                    // New group. Create new state
-                    heldState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
-                    entry.heldAggregates.Add(this.aggregateByKey.Insert(colkey[i], heldState, col_hash[i]));
-                    // No output because initial state is empty
-                }
-                else if (entry.heldAggregates.Add(aggindex))
-                {
-                    // First time group is active for this time
-                    heldState = this.aggregateByKey.entries[aggindex].value;
-                    if (syncTime > heldState.timestamp)
+                    // Handle time moving forward
+                    if (!this.partitionData.Lookup(partition, out int pIndex))
+                        this.partitionData.Insert(partition, entry = new PartitionEntry { lastSyncTime = syncTime });
+                    else if (syncTime > (entry = this.partitionData.entries[pIndex].value).lastSyncTime)
                     {
-                        // Output end edge
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = syncTime;
-                        this.batch.vother.col[c] = heldState.timestamp;
-                        this.batch.payload.col[c] = this.computeResult(heldState.state);
-                        this.batch.key.col[c] = colkey[i];
-                        this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                        heldState.timestamp = syncTime;
-                    }
-                }
-                else
-                {
-                    // read new currentState from _heldAgg index
-                    heldState = this.aggregateByKey.entries[aggindex].value;
-                }
+                        /* Issue start edges for held aggregates */
+                        foreach (int iter1 in entry.heldAggregates)
+                        {
+                            var iter1entry = this.aggregateByKey.entries[iter1];
+                            if (partition.Equals(this.getPartitionKey(iter1entry.key)))
+                            {
+                                int c = this.batch.Count;
+                                this.batch.vsync.col[c] = iter1entry.value.timestamp;
+                                this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
+                                this.batch.payload.col[c] = this.computeResult(iter1entry.value.state);
+                                this.batch.key.col[c] = iter1entry.key;
+                                this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
+                                this.batch.Count++;
+                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            }
+                        }
 
-                heldState.state = this.accumulate(heldState.state, col_vsync[i], colpayload[i]);
+                        // Time has moved forward, clear the held aggregates
+                        entry.heldAggregates.Clear();
+
+                        // Since sync time changed, set lastSyncTime
+                        entry.lastSyncTime = syncTime;
+                    }
+
+                    // Need to retrieve the key from the dictionary
+                    if (!this.aggregateByKey.Lookup(colkey[i], col_hash[i], out int aggindex))
+                    {
+                        // New group. Create new state
+                        heldState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
+                        entry.heldAggregates.Add(this.aggregateByKey.Insert(colkey[i], heldState, col_hash[i]));
+                        // No output because initial state is empty
+                    }
+                    else if (entry.heldAggregates.Add(aggindex))
+                    {
+                        // First time group is active for this time
+                        heldState = this.aggregateByKey.entries[aggindex].value;
+                        if (syncTime > heldState.timestamp)
+                        {
+                            // Output end edge
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = syncTime;
+                            this.batch.vother.col[c] = heldState.timestamp;
+                            this.batch.payload.col[c] = this.computeResult(heldState.state);
+                            this.batch.key.col[c] = colkey[i];
+                            this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            heldState.timestamp = syncTime;
+                        }
+                    }
+                    else
+                    {
+                        // read new currentState from _heldAgg index
+                        heldState = this.aggregateByKey.entries[aggindex].value;
+                    }
+
+                    heldState.state = this.accumulate(heldState.state, col_vsync[i], colpayload[i]);
+                }
             }
 
             batch.Release();

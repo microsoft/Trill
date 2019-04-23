@@ -15,7 +15,7 @@ namespace Microsoft.StreamProcessing
     {
         private readonly MemoryPool<TKey, TPayload> pool;
         private readonly string errorMessages;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [DataMember]
         private FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<Entry>> leftQueue = new FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<Entry>>();
@@ -43,15 +43,11 @@ namespace Microsoft.StreamProcessing
         private bool emitCTI = false;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedUnionPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedUnionPipe() { }
 
-        public PartitionedUnionPipe(Streamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
+        public PartitionedUnionPipe(IStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.errorMessages = stream.ErrorMessages;
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
             this.pool.Get(out this.output);
@@ -262,7 +258,7 @@ namespace Microsoft.StreamProcessing
                         {
                             // Output the right tuple
                             OutputCurrentTuple(rightEntry);
-                            rightWorking.TryDequeue(out rightEntry);
+                            _ = rightWorking.TryDequeue(out _);
                         }
                         else
                         {
@@ -340,7 +336,7 @@ namespace Microsoft.StreamProcessing
         protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)
         {
             var node = new UnionPlanNode(
-                left, right, this, typeof(TKey), typeof(TPayload), false, false, this.errorMessages, false);
+                left, right, this, typeof(TKey), typeof(TPayload), false, false, this.errorMessages);
             this.Observer.ProduceQueryPlan(node);
         }
 

@@ -33,15 +33,14 @@ namespace Microsoft.StreamProcessing
     internal sealed class SelectTransformer : ExpressionVisitor
     {
         private bool error;
-        private List<Tuple<MyFieldInfo, MyFieldInfo>> swingingFields;
-        private Dictionary<MyFieldInfo, Expression> computedFields;
-        private bool noTransformation;
+        private readonly List<Tuple<MyFieldInfo, MyFieldInfo>> swingingFields;
+        private readonly Dictionary<MyFieldInfo, Expression> computedFields;
         private readonly ColumnarRepresentation resultTypeInformation;
         private readonly bool noSwingingFields;
         private readonly Dictionary<ParameterExpression, SelectParameterInformation> parameterInformation;
-        private string ProjectionReturningResultInstance;
-        private List<string> multiStringOperations;
-        private List<MyFieldInfo> multiStringResultFields;
+        private readonly string ProjectionReturningResultInstance;
+        private readonly List<string> multiStringOperations;
+        private readonly List<MyFieldInfo> multiStringResultFields;
         private readonly bool doMultiStringTransform;
         private bool needsSourceInstance;
 
@@ -172,7 +171,6 @@ namespace Microsoft.StreamProcessing
             // That expression will be passed to the setter for the indexer on the generated batch.
             // REVIEW: this is where something should be signalled so the user knows it isn't as fast as it could be.
             var transformedBody2 = Visit(body);
-            this.noTransformation = this.error;
             this.ProjectionReturningResultInstance = transformedBody2.ExpressionToCSharp();
             return;
         }
@@ -340,8 +338,6 @@ namespace Microsoft.StreamProcessing
                 var e = Visit(argument);
                 this.computedFields.Add(resultField, e);
             }
-
-            this.noTransformation = false;
         }
 
         protected override Expression VisitLambda<T>(Expression<T> node)

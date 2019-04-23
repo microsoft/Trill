@@ -147,7 +147,7 @@ namespace Microsoft.StreamProcessing
         public override void ProduceQueryPlan(PlanNode previous)
         {
             var node = new SprayPlanNode(
-                previous, this, typeof(TKey), typeof(TSpray), this.totalBranches, this.multicast, this.spraySortOrderComparer, false, false);
+                previous, this, typeof(TKey), typeof(TSpray), this.totalBranches, this.multicast, this.spraySortOrderComparer, false);
             this.Observers.ForEach(o => o.ProduceQueryPlan(node));
         }
 

@@ -83,7 +83,7 @@ namespace Microsoft.StreamProcessing
         public override void ProduceQueryPlan(PlanNode previous)
             => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(TKey), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages, false));
+                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {
@@ -95,57 +95,59 @@ namespace Microsoft.StreamProcessing
             fixed (long* col_vother = batch.vother.col)
             fixed (int* col_hash = batch.hash.col)
             fixed (long* col_bv = batch.bitvector.col)
-            for (int i = 0; i < count; i++)
             {
-                if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                for (int i = 0; i < count; i++)
                 {
-                    if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                    if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
                     {
-                        // We have found a row that corresponds to punctuation
-                        OnPunctuation(col_vsync[i]);
+                        if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                        {
+                            // We have found a row that corresponds to punctuation
+                            OnPunctuation(col_vsync[i]);
 
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = col_vsync[i];
-                        this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
-                        this.batch.key.col[c] = default;
-                        this.batch.hash.col[c] = 0;
-                        this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = col_vsync[i];
+                            this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
+                            this.batch.key.col[c] = default;
+                            this.batch.hash.col[c] = 0;
+                            this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        }
+                        continue;
                     }
-                    continue;
-                }
-                var syncTime = col_vsync[i];
+                    var syncTime = col_vsync[i];
 
-                // Handle time moving forward
-                if (syncTime > this.lastSyncTime)
-                {
-                    int iter1 = FastDictionary<TKey, TState>.IteratorStart;
-                    while (this.heldAggregates.Iterate(ref iter1))
+                    // Handle time moving forward
+                    if (syncTime > this.lastSyncTime)
                     {
-                        var iter1entry = this.heldAggregates.entries[iter1];
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = this.lastSyncTime;
-                        this.batch.vother.col[c] = this.lastSyncTime + this.hop;
-                        this.batch.payload.col[c] = this.computeResult(iter1entry.value);
-                        this.batch.key.col[c] = iter1entry.key;
-                        this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        int iter1 = FastDictionary<TKey, TState>.IteratorStart;
+                        while (this.heldAggregates.Iterate(ref iter1))
+                        {
+                            var iter1entry = this.heldAggregates.entries[iter1];
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = this.lastSyncTime;
+                            this.batch.vother.col[c] = this.lastSyncTime + this.hop;
+                            this.batch.payload.col[c] = this.computeResult(iter1entry.value);
+                            this.batch.key.col[c] = iter1entry.key;
+                            this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        }
+
+                        if (hasDisposableState) DisposeStateLocal();
+                        this.heldAggregates.Clear();
+
+                        // Since sync time changed, set lastSyncTime
+                        this.lastSyncTime = syncTime;
                     }
 
-                    if (hasDisposableState) DisposeStateLocal();
-                    this.heldAggregates.Clear();
+                    // Need to retrieve the key from the dictionary
+                    if (!this.heldAggregates.Lookup(colkey[i], col_hash[i], out int index)) this.heldAggregates.Insert(ref index, colkey[i], this.initialState());
 
-                    // Since sync time changed, set lastSyncTime
-                    this.lastSyncTime = syncTime;
+                    var entries = this.heldAggregates.entries;
+                    entries[index].value = this.accumulate(entries[index].value, col_vsync[i], colpayload[i]);
                 }
-
-                // Need to retrieve the key from the dictionary
-                if (!this.heldAggregates.Lookup(colkey[i], col_hash[i], out int index)) this.heldAggregates.Insert(ref index, colkey[i], this.initialState());
-
-                var entries = this.heldAggregates.entries;
-                entries[index].value = this.accumulate(entries[index].value, col_vsync[i], colpayload[i]);
             }
 
             batch.Release();

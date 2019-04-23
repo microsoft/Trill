@@ -15,14 +15,12 @@ namespace Microsoft.StreamProcessing
         private string genericParameters = string.Empty;
         private string BatchGeneratedFrom_TKey_TLeft;
         private string TKeyTLeftGenericParameters;
-        private string BatchGeneratedFrom_TKey_TRight;
         private string TKeyTRightGenericParameters;
         private IEnumerable<MyFieldInfo> leftFields;
         private Func<string, string, string> keyComparer;
         private Func<string, string, string> leftComparer;
         private string ActiveEventType;
         private bool noLeftFields;
-        private bool leftIsConstantDuration;
 
         private LeftAntiSemiJoinTemplate(string className, Type keyType, Type leftType, Type rightType)
             : base(className, keyType, leftType, rightType, leftType) { }
@@ -38,7 +36,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>
         /// A type that is defined to be a subtype of BinaryPipe&lt;<typeparamref name="TKey"/>,<typeparamref name="TLeft"/>, <typeparamref name="TKey"/>, <typeparamref name="TRight"/>&gt;.
         /// </returns>
-        internal static Tuple<Type, string> Generate<TKey, TLeft, TRight>(LeftAntiSemiJoinStreamable<TKey, TLeft, TRight> stream, bool leftIsConstantDuration)
+        internal static Tuple<Type, string> Generate<TKey, TLeft, TRight>(LeftAntiSemiJoinStreamable<TKey, TLeft, TRight> stream)
         {
             Contract.Requires(stream != null);
             Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(BinaryPipe<TKey, TLeft, TRight, TLeft>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
@@ -61,7 +59,6 @@ namespace Microsoft.StreamProcessing
             #region Left Comparer
             template.ActiveEventType = template.leftType.GetTypeInfo().IsValueType ? template.TLeft : "Active_Event";
             template.noLeftFields = leftMessageRepresentation.noFields;
-            template.leftIsConstantDuration = leftIsConstantDuration;
 
             var leftComparer = stream.LeftComparer.GetEqualsExpr();
             var newLambda = Extensions.TransformFunction<TKey, TLeft>(leftComparer, "index");
@@ -71,7 +68,6 @@ namespace Microsoft.StreamProcessing
             template.BatchGeneratedFrom_TKey_TLeft = Transformer.GetBatchClassName(template.keyType, template.leftType);
             template.TKeyTLeftGenericParameters = template.tm.GenericTypeVariables(template.keyType, template.leftType).BracketedCommaSeparatedString();
 
-            template.BatchGeneratedFrom_TKey_TRight = Transformer.GetBatchClassName(template.keyType, template.rightType);
             template.TKeyTRightGenericParameters = template.tm.GenericTypeVariables(template.keyType, template.rightType).BracketedCommaSeparatedString();
 
             template.leftFields = resultRepresentation.AllFields;

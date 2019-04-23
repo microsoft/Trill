@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => GroupedWindowTemplate.Generate(this));
             Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new GroupedWindowPlanNode<TInput, TState, TOutput>(
                 p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.Aggregate, this.KeySelector, this.ResultSelector,
-                true, generatedPipeType.Item2, false));
+                true, generatedPipeType.Item2));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, this.Aggregate, planNode);
             var returnValue = (IStreamObserver<Empty, TInput>)instance;

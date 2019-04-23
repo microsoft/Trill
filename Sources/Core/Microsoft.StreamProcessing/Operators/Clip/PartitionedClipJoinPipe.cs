@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class PartitionedClipJoinPipe<TKey, TLeft, TRight, TPartitionKey> : BinaryPipe<TKey, TLeft, TRight, TLeft>
     {
         private readonly MemoryPool<TKey, TLeft> pool;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [SchemaSerialization]
         private readonly Expression<Func<TKey, TKey, bool>> keyComparer;
@@ -48,13 +48,11 @@ namespace Microsoft.StreamProcessing
         private bool emitCTI = false;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedClipJoinPipe()
-            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public PartitionedClipJoinPipe() { }
 
         public PartitionedClipJoinPipe(ClipJoinStreamable<TKey, TLeft, TRight> stream, IStreamObserver<TKey, TLeft> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparer.Compile();
 
@@ -70,7 +68,7 @@ namespace Microsoft.StreamProcessing
         {
             var node = new JoinPlanNode(
                 left, right, this,
-                typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), JoinKind.Clip, false, null, false);
+                typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), JoinKind.Clip, false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             this.Observer.ProduceQueryPlan(node);

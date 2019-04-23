@@ -30,9 +30,7 @@ namespace Microsoft.StreamProcessing
 
         public static IStreamable<TKey, TSource>[] GenerateStreamableArray(
             IStreamable<TKey, TSource> source, int outputCount)
-        {
-            return new NWayMulticast<TKey, TSource>(source, outputCount).GenerateStreamableArray();
-        }
+            => new NWayMulticast<TKey, TSource>(source, outputCount).GenerateStreamableArray();
 
         private IStreamable<TKey, TSource>[] GenerateStreamableArray()
         {
@@ -96,16 +94,14 @@ namespace Microsoft.StreamProcessing
             }
 
             public override IDisposable Subscribe(IStreamObserver<TKeyInner, TSourceInner> observer)
-            {
-                return this.leader.Subscribe(observer, this.index);
-            }
+                => this.leader.Subscribe(observer, this.index);
         }
 
         private sealed class DisposableManager
         {
             private readonly object disposeLock = new object();
             private IDisposable last;
-            private HashSet<int> toDispose;
+            private readonly HashSet<int> toDispose;
 
             public DisposableManager(int count)
             {
@@ -116,10 +112,7 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            public void SetListDisposable(IDisposable last)
-            {
-                this.last = last;
-            }
+            public void SetListDisposable(IDisposable last) => this.last = last;
 
             public void MarkAsDisposed(int index)
             {
@@ -136,8 +129,8 @@ namespace Microsoft.StreamProcessing
 
         private sealed class ChildDisposable : IDisposable
         {
-            private IDisposable inner;
-            private DisposableManager crew;
+            private readonly IDisposable inner;
+            private readonly DisposableManager crew;
             private readonly int index;
 
             public ChildDisposable(IDisposable inner, DisposableManager crew, int index)

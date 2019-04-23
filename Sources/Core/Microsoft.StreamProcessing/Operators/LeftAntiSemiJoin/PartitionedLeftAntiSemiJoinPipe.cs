@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
     {
         private const long NotActive = long.MaxValue;
         private readonly MemoryPool<TKey, TLeft> pool;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         private readonly Func<IEndPointOrderer> leftEndPointGenerator;
         private readonly Func<IEndPointOrderer> rightEndPointGenerator;
 
@@ -53,15 +53,11 @@ namespace Microsoft.StreamProcessing
         private bool emitCTI = false;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedLeftAntiSemiJoinPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedLeftAntiSemiJoinPipe() { }
 
         public PartitionedLeftAntiSemiJoinPipe(LeftAntiSemiJoinStreamable<TKey, TLeft, TRight> stream, IStreamObserver<TKey, TLeft> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparer.Compile();
 
@@ -88,7 +84,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
                 JoinKind.LeftAntiSemiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             this.Observer.ProduceQueryPlan(node);
@@ -430,7 +426,7 @@ namespace Microsoft.StreamProcessing
                 var leph = partition.leftEndPointHeap;
                 if (isProcessable)
                 {
-                    if (FindOnRight(partition, ref key, hash, out int matchingRight))
+                    if (FindOnRight(partition, ref key, hash, out _))
                     {
                         // Row joins with something on right, so not currently visible.
                         int index = map.Insert(hash);
@@ -561,7 +557,7 @@ namespace Microsoft.StreamProcessing
             while (leftEvents.Next(out int index, out hash))
             {
                 long end = lim.Values[index].End;
-                if (FindOnRight(partition, ref lim.Values[index].Key, hash, out int matchingRight))
+                if (FindOnRight(partition, ref lim.Values[index].Key, hash, out _))
                 {
                     leftEvents.MakeVisible();
                     leph.Insert(end, index);
@@ -600,7 +596,7 @@ namespace Microsoft.StreamProcessing
             leftEvents = lem.TraverseInvisible();
             while (leftEvents.Next(out int index, out hash))
             {
-                if (!FindOnRight(partition, ref lem.Values[index].Key, hash, out int matchingRight))
+                if (!FindOnRight(partition, ref lem.Values[index].Key, hash, out _))
                 {
                     // Row does not join, so output start edge.
                     lem.Values[index].CurrentStart = partition.currTime;

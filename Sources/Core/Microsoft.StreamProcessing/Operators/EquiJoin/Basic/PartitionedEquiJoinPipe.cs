@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
     {
         private readonly Func<TLeft, TRight, TResult> selector;
         private readonly MemoryPool<TKey, TResult> pool;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         private readonly Func<IEndPointOrderer> endpointGenerator;
 
         [SchemaSerialization]
@@ -56,18 +56,14 @@ namespace Microsoft.StreamProcessing
         private bool emitCTI = false;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedEquiJoinPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedEquiJoinPipe() { }
 
         public PartitionedEquiJoinPipe(
-            EquiJoinStreamable<TKey, TLeft, TRight, TResult> stream,
+            BinaryStreamable<TKey, TLeft, TRight, TResult> stream,
             Expression<Func<TLeft, TRight, TResult>> selector,
             IStreamObserver<TKey, TResult> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.selector = selector.Compile();
 
             this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
@@ -126,7 +122,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
                 JoinKind.EquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             node.AddJoinExpression("right key comparer", this.rightComparer);

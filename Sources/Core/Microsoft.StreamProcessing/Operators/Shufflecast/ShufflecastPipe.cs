@@ -95,7 +95,7 @@ namespace Microsoft.StreamProcessing
                                 {
                                     AddPunctuationOrLowWatermarkToAllBatches(
                                         batches,
-                                        batch.vsync.col[i], batch.vother.col[i], batch.key.col[i], batch.hash.col[i]);
+                                        batch.vsync.col[i], batch.key.col[i], batch.hash.col[i]);
                                 }
                                 continue;
                             }
@@ -116,7 +116,7 @@ namespace Microsoft.StreamProcessing
                                 {
                                     AddPunctuationOrLowWatermarkToAllBatches(
                                         batches,
-                                        batch.vsync.col[i], batch.vother.col[i], batch.key.col[i], batch.hash.col[i]);
+                                        batch.vsync.col[i], batch.key.col[i], batch.hash.col[i]);
                                 }
                                 continue;
                             }
@@ -138,7 +138,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 AddPunctuationOrLowWatermarkToAllBatches(
                                     batches,
-                                    batch.vsync.col[i], batch.vother.col[i], batch.key.col[i], batch.hash.col[i]);
+                                    batch.vsync.col[i], batch.key.col[i], batch.hash.col[i]);
                             }
                             continue;
                         }
@@ -165,7 +165,7 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        private void AddPunctuationOrLowWatermarkToAllBatches(StreamMessage<TInnerKey, TSource>[] batches, long syncTime, long otherTime, TInnerKey innerKey, int hash)
+        private void AddPunctuationOrLowWatermarkToAllBatches(StreamMessage<TInnerKey, TSource>[] batches, long syncTime, TInnerKey innerKey, int hash)
         {
             for (int batchIndex = 0; batchIndex < this.totalBranchesL2; batchIndex++)
             {

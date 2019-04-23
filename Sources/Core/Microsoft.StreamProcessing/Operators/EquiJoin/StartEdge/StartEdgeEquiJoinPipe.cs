@@ -69,7 +69,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TResult), typeof(TKey),
                 JoinKind.StartEdgeEquijoin,
-                false, this.errorMessages, false);
+                false, this.errorMessages);
             node.AddJoinExpression("selector", this.selectorExpr);
             node.AddJoinExpression("key comparer", this.keyComparerExpr);
             this.Observer.ProduceQueryPlan(node);

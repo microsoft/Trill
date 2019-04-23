@@ -15,10 +15,9 @@ namespace Microsoft.StreamProcessing
         internal PointAtEndPlanNode(
             PlanNode previous, IQueryObject pipe,
             Type keyType, Type payloadType,
-            bool isGenerated, string errorMessages, bool withStateManager)
+            bool isGenerated, string errorMessages)
             : base(previous, pipe, keyType, payloadType, payloadType, isGenerated, errorMessages)
-        {
-        }
+        { }
 
         /// <summary>
         /// Indicates that the current node is an operation that adjusts every event to be an interval of length 1 beginning at the end of its original interval.

@@ -57,7 +57,7 @@ namespace Microsoft.StreamProcessing
                     var edge = outgoingEdgesDictionary[targetNodeNumber];
                     if (edge is SingleElementArc<TPayload, TRegister> searc)
                     {
-                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNodeNumber, searc, "i");
+                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNodeNumber, searc);
                         edgeList1.Add(edgeInfo);
                     }
 
@@ -75,7 +75,7 @@ namespace Microsoft.StreamProcessing
                     var arc = edge.Value;
                     if (arc is SingleElementArc<TPayload, TRegister> searc)
                     {
-                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNode, searc, "i");
+                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNode, searc);
                         edgeList2.Add(edgeInfo);
                     }
                 }

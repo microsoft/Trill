@@ -120,7 +120,7 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
         IStreamObserver<<#= TKey #>, <#= TRegister #>> observer,
         object afa,
         long MaxDuration)
-        : base(stream, observer, afa, MaxDuration, true)
+        : base(stream, observer, afa, MaxDuration)
     {
 <# if (grouped) { #>
 

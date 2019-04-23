@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing
     {
         private readonly MemoryPool<TKey, TPayload> pool;
         private readonly string errorMessages;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [SchemaSerialization]
         private readonly long limit;
@@ -30,10 +30,7 @@ namespace Microsoft.StreamProcessing
         private FastDictionary<TPartitionKey, SortedDictionary<long, MultiSet<ActiveEvent>>> syncTimeMapDictionary = new FastDictionary<TPartitionKey, SortedDictionary<long, MultiSet<ActiveEvent>>>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedClipByConstantPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedClipByConstantPipe() { }
 
         public PartitionedClipByConstantPipe(ClipByConstantStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long limit)
             : base(stream, observer)
@@ -43,16 +40,13 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = stream.ErrorMessages;
             this.pool.Get(out this.output);
             this.output.Allocate();
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new ClipByConstantPlanNode(
+            => this.Observer.ProduceQueryPlan(new ClipByConstantPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload),
                 false, this.errorMessages));
-        }
 
         private void ReachTime(long timestamp)
         {
@@ -245,10 +239,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public int Hash;
 
-            public override string ToString()
-            {
-                return "Key='" + this.Key + "', Payload='" + this.Payload;
-            }
+            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
     }
 }

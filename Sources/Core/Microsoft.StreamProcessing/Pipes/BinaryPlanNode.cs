@@ -118,19 +118,12 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     public sealed class JoinPlanNode : BinaryPlanNode
     {
-        private readonly Type leftPayloadType;
-        private readonly Type rightPayloadType;
-
         internal JoinPlanNode(
             PlanNode left, PlanNode right, IBinaryObserver pipe,
             Type leftPayloadType, Type rightPayloadType, Type payloadType, Type keyType,
-            JoinKind joinKind, bool isGenerated, string errorMessages, bool withStateManager)
+            JoinKind joinKind, bool isGenerated, string errorMessages)
             : base(left, right, pipe, keyType, leftPayloadType, rightPayloadType, payloadType, isGenerated, errorMessages)
-        {
-            this.leftPayloadType = leftPayloadType;
-            this.rightPayloadType = rightPayloadType;
-            this.JoinKind = joinKind;
-        }
+            => this.JoinKind = joinKind;
 
         internal void AddJoinExpression(string name, Expression expression) => this.JoinExpressions.Add(name, expression);
 

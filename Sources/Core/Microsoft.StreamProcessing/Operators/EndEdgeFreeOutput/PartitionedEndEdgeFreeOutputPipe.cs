@@ -14,7 +14,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class PartitionedEndEdgeFreeOutputPipe<TKey, TPayload, TPartitionKey> : UnaryPipe<TKey, TPayload, TPayload>
     {
         private readonly MemoryPool<TKey, TPayload> pool;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         private readonly string errorMessages;
 
         [DataMember]
@@ -23,18 +23,14 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary<TPartitionKey, PartitionEntry> partitionData = new FastDictionary<TPartitionKey, PartitionEntry>();
 
-        private DataStructurePool<FastDictionary2<ActiveEvent, int>> dictPool;
+        private readonly DataStructurePool<FastDictionary2<ActiveEvent, int>> dictPool;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedEndEdgeFreeOutputPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedEndEdgeFreeOutputPipe() { }
 
         public PartitionedEndEdgeFreeOutputPipe(IStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
             this.errorMessages = stream.ErrorMessages;
 
@@ -243,10 +239,8 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new EndEdgeFreeOutputPlanNode(
+            => this.Observer.ProduceQueryPlan(new EndEdgeFreeOutputPlanNode(
                 previous, this, typeof(TKey), typeof(TPayload), false, this.errorMessages));
-        }
 
         protected override void FlushContents()
         {
@@ -290,9 +284,7 @@ namespace Microsoft.StreamProcessing
             public int Hash;
 
             public override string ToString()
-            {
-                return "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         [DataContract]
