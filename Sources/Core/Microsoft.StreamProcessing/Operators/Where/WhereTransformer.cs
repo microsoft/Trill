@@ -18,8 +18,8 @@ namespace Microsoft.StreamProcessing
         public readonly string PREDICATE;
 
         private static int sequenceNumber = 0;
-        private string multiStringInit;
-        private string multiStringReturns;
+        private readonly string multiStringInit;
+        private readonly string multiStringReturns;
         private string multiStringWrapperInit;
         private string vectorOperations;
 

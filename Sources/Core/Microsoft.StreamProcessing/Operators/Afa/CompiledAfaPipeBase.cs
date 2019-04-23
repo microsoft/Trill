@@ -144,9 +144,8 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="observer"></param>
         /// <param name="afa"></param>
         /// <param name="maxDuration"></param>
-        /// <param name="isGenerated"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected CompiledAfaPipeBase(IStreamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration, bool isGenerated)
+        protected CompiledAfaPipeBase(IStreamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
             : base(stream, observer)
         {
             var compiledAfa = (CompiledAfa<TPayload, TRegister, TAccumulator>)afa;

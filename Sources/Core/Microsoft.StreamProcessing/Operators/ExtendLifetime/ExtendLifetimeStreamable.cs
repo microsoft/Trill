@@ -11,13 +11,11 @@ namespace Microsoft.StreamProcessing
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
                           = new SafeConcurrentDictionary<Tuple<Type, string>>();
-        private readonly IStreamable<TKey, TPayload> source;
         private readonly long duration;
 
         public ExtendLifetimeStreamable(IStreamable<TKey, TPayload> source, long duration)
             : base(source, source.Properties)
         {
-            this.source = source;
             this.duration = duration;
 
             // This operator uses the equality method on payloads

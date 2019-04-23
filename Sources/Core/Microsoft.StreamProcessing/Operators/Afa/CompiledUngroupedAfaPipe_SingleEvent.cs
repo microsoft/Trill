@@ -25,8 +25,8 @@ namespace Microsoft.StreamProcessing
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledUngroupedAfaPipe() { }
 
-        public CompiledUngroupedAfaPipe(AfaStreamable<Empty, TPayload, TRegister, TAccumulator> stream, IStreamObserver<Empty, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+        public CompiledUngroupedAfaPipe(Streamable<Empty, TRegister> stream, IStreamObserver<Empty, TRegister> observer, object afa, long maxDuration)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastLinkedList<GroupedActiveState<Empty, TRegister>>();
 

@@ -1320,5 +1320,9 @@
       <DependentUpon>FlushPolicy.tt</DependentUpon>
     </None>
   </ItemGroup>
+
+<!--  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.StreamProcessing.Provider\Microsoft.StreamProcessing.Provider.csproj" />
+  </ItemGroup> -->
   
 </Project>

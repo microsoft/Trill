@@ -16,17 +16,17 @@ namespace Microsoft.StreamProcessing
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static class MemoryManager
     {
-        private static SafeConcurrentDictionary<ColumnPoolBase> doublingArrayPools = new SafeConcurrentDictionary<ColumnPoolBase>();
-        private static SafeConcurrentDictionary<ColumnPoolBase> columnPools = new SafeConcurrentDictionary<ColumnPoolBase>();
-        private static SafeConcurrentDictionary<CharArrayPool> charArrayPools = new SafeConcurrentDictionary<CharArrayPool>();
-        private static SafeConcurrentDictionary<ColumnPool<long>> bitvectorPools = new SafeConcurrentDictionary<ColumnPool<long>>();
-        private static SafeConcurrentDictionary<ColumnPoolBase> eventBatchPools = new SafeConcurrentDictionary<ColumnPoolBase>();
-        private static SafeConcurrentDictionary<object> memoryPools = new SafeConcurrentDictionary<object>();
+        private static readonly SafeConcurrentDictionary<ColumnPoolBase> doublingArrayPools = new SafeConcurrentDictionary<ColumnPoolBase>();
+        private static readonly SafeConcurrentDictionary<ColumnPoolBase> columnPools = new SafeConcurrentDictionary<ColumnPoolBase>();
+        private static readonly SafeConcurrentDictionary<CharArrayPool> charArrayPools = new SafeConcurrentDictionary<CharArrayPool>();
+        private static readonly SafeConcurrentDictionary<ColumnPool<long>> bitvectorPools = new SafeConcurrentDictionary<ColumnPool<long>>();
+        private static readonly SafeConcurrentDictionary<ColumnPoolBase> eventBatchPools = new SafeConcurrentDictionary<ColumnPoolBase>();
+        private static readonly SafeConcurrentDictionary<object> memoryPools = new SafeConcurrentDictionary<object>();
 
         /// <summary>
         /// Maps pairs TKey, TPayload to the generated memory pool type
         /// </summary>
-        private static SafeConcurrentDictionary<Type> cachedMemoryPools = new SafeConcurrentDictionary<Type>();
+        private static readonly SafeConcurrentDictionary<Type> cachedMemoryPools = new SafeConcurrentDictionary<Type>();
 
         internal static DoublingArrayPool<T> GetDoublingArrayPool<T>()
             => (DoublingArrayPool<T>)doublingArrayPools.GetOrAdd(CacheKey.Create(typeof(T)), key => new DoublingArrayPool<T>());

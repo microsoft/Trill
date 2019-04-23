@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.Linq.Expressions;
 using Microsoft.StreamProcessing.Internal.Collections;
 
@@ -170,7 +169,7 @@ namespace Microsoft.StreamProcessing
             {
                 var node = new JoinPlanNode(
                     left, right, o,
-                    typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), this.joinKind, true, generatedPipeType.Item2, false);
+                    typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), this.joinKind, true, generatedPipeType.Item2);
                 node.AddJoinExpression("key comparer", this.Properties.KeyEqualityComparer.GetEqualsExpr());
                 node.AddJoinExpression("left payload comparer", this.Left.Properties.PayloadEqualityComparer.GetEqualsExpr());
                 node.AddJoinExpression("right payload comparer", this.Right.Properties.PayloadEqualityComparer.GetEqualsExpr());

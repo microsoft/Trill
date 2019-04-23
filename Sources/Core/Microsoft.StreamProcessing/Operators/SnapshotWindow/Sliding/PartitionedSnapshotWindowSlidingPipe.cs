@@ -56,17 +56,16 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary2<TPartitionKey, PartitionEntry> partitionData = new FastDictionary2<TPartitionKey, PartitionEntry>();
 
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedSnapshotWindowSlidingPipe() => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public PartitionedSnapshotWindowSlidingPipe() { }
 
         public PartitionedSnapshotWindowSlidingPipe(
             SnapshotWindowStreamable<TKey, TInput, TState, TOutput> stream,
             IStreamObserver<TKey, TOutput> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.aggregate = stream.Aggregate;
             this.initialStateExpr = this.aggregate.InitialState();
             this.initialState = this.initialStateExpr.Compile();
@@ -98,7 +97,7 @@ namespace Microsoft.StreamProcessing
         public override void ProduceQueryPlan(PlanNode previous)
             => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(TKey), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.Sliding, this.aggregate, false, this.errorMessages, false));
+                AggregatePipeType.Sliding, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {

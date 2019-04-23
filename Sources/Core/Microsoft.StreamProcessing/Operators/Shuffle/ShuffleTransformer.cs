@@ -14,23 +14,20 @@ namespace Microsoft.StreamProcessing
 {
     internal partial class ShuffleTemplate
     {
-        private readonly Type outerKeyType;
-        private readonly Type sourceType;
-        private readonly Type innerKeyType;
         public IEnumerable<MyFieldInfo> fields;
         public string inlinedHashCodeComputation;
         public string transformedKeySelectorAsString = string.Empty;
-        private string TOuterKeyTSourceGenericParameters;
-        private string TOuterKey;
-        private string TSource;
+        private readonly string TOuterKeyTSourceGenericParameters;
+        private readonly string TOuterKey;
+        private readonly string TSource;
         public string TInnerKey;
-        private string genericParameters;
+        private readonly string genericParameters;
         public bool innerKeyIsAnonymous;
-        private string resultBatchClassType;
-        private string sourceBatchClassType;
-        private string resultBatchGenericParameters;
-        private bool isFirstLevelGroup;
-        private bool powerOf2;
+        private readonly string resultBatchClassType;
+        private readonly string sourceBatchClassType;
+        private readonly string resultBatchGenericParameters;
+        private readonly bool isFirstLevelGroup;
+        private readonly bool powerOf2;
         public string vectorHashCodeInitialization = string.Empty;
 
         private static int shuffleCounter = 0;
@@ -48,9 +45,6 @@ namespace Microsoft.StreamProcessing
             Contract.Requires(sourceType != null);
             Contract.Requires(innerKeyType != null);
 
-            this.outerKeyType = outerKeyType;
-            this.sourceType = sourceType;
-            this.innerKeyType = innerKeyType;
             this.inlinedHashCodeComputation = inlinedHashCodeComputation;
             this.isFirstLevelGroup = !nested;
             this.powerOf2 = powerOf2;
@@ -103,8 +97,7 @@ namespace Microsoft.StreamProcessing
                 if (keySelector != null)
                 {
                     var transformedKeySelector = Extensions.TransformUnaryFunction<TOuterKey, TSource>(keySelector);
-                    var keySelectorAsNewExpression = keySelector.Body as NewExpression;
-                    if (innerKeyIsAnonymous && keySelectorAsNewExpression != null)
+                    if (innerKeyIsAnonymous && keySelector.Body is NewExpression keySelectorAsNewExpression)
                     {
                         var newPrime = (NewExpression)transformedKeySelector.Body;
                         template.transformedKeySelectorAsString = string.Format(CultureInfo.InvariantCulture, "({0})Activator.CreateInstance(typeof({0}), {1})",

@@ -25,8 +25,7 @@ foreach (var t in new[] {string.Empty, "2", "3"})
         private const string Prefix = "GeneratedFastDictionary<#= t #>_";
         private static readonly object sentinel = new object();
         private static int classCounter = 0;
-        private static Dictionary<Tuple<string, Type, Type>, Type> generatorCache =
-            new Dictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly Dictionary<Tuple<string, Type, Type>, Type> generatorCache = new Dictionary<Tuple<string, Type, Type>, Type>();
 
         public static Func<FastDictionary<#= t #><TKey, TValue>> CreateFastDictionary<#= t #>Generator<TKey, TValue>(
             this IEqualityComparerExpression<TKey> comparerExp, int capacity, Func<TKey, TKey, bool> equalsFunc, Func<TKey, int> getHashCodeFunc, QueryContainer container)

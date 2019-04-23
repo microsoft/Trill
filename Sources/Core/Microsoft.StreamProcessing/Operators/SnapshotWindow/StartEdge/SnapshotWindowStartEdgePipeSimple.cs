@@ -68,7 +68,7 @@ namespace Microsoft.StreamProcessing
         public override void ProduceQueryPlan(PlanNode previous)
             => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(Empty), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages, false));
+                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<Empty, TInput> batch)
         {
@@ -78,75 +78,77 @@ namespace Microsoft.StreamProcessing
             fixed (long* col_vsync = batch.vsync.col)
             fixed (long* col_vother = batch.vother.col)
             fixed (long* col_bv = batch.bitvector.col)
-            for (int i = 0; i < count; i++)
             {
-                if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                for (int i = 0; i < count; i++)
                 {
-                    if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                    if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
                     {
-                        // We have found a row that corresponds to punctuation
-                        OnPunctuation(col_vsync[i]);
+                        if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                        {
+                            // We have found a row that corresponds to punctuation
+                            OnPunctuation(col_vsync[i]);
 
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = col_vsync[i];
-                        this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
-                        this.batch.key.col[c] = Empty.Default;
-                        this.batch.hash.col[c] = 0;
-                        this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                    }
-                    continue;
-                }
-
-                var syncTime = col_vsync[i];
-
-                // Handle time moving forward
-                if (syncTime > this.lastSyncTime)
-                {
-                    if (this.currentState != null && this.held)
-                    {
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = this.currentState.timestamp;
-                        this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
-                        this.batch.payload.col[c] = this.computeResult(this.currentState.state);
-                        this.batch.key.col[c] = Empty.Default;
-                        this.batch.hash.col[c] = 0;
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                        this.held = false;
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = col_vsync[i];
+                            this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
+                            this.batch.key.col[c] = Empty.Default;
+                            this.batch.hash.col[c] = 0;
+                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        }
+                        continue;
                     }
 
-                    // Since sync time changed, set lastSyncTime
-                    this.lastSyncTime = syncTime;
-                }
+                    var syncTime = col_vsync[i];
 
-                if (this.currentState == null)
-                {
-                    this.currentState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
-                    this.held = true;
-                }
-                else
-                {
-                    if (syncTime > this.currentState.timestamp)
+                    // Handle time moving forward
+                    if (syncTime > this.lastSyncTime)
                     {
-                        // Output end edge
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = syncTime;
-                        this.batch.vother.col[c] = this.currentState.timestamp;
-                        this.batch.payload.col[c] = this.computeResult(this.currentState.state);
-                        this.batch.key.col[c] = Empty.Default;
-                        this.batch.hash.col[c] = 0;
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        if (this.currentState != null && this.held)
+                        {
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = this.currentState.timestamp;
+                            this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
+                            this.batch.payload.col[c] = this.computeResult(this.currentState.state);
+                            this.batch.key.col[c] = Empty.Default;
+                            this.batch.hash.col[c] = 0;
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            this.held = false;
+                        }
 
-                        this.currentState.timestamp = syncTime;
+                        // Since sync time changed, set lastSyncTime
+                        this.lastSyncTime = syncTime;
+                    }
+
+                    if (this.currentState == null)
+                    {
+                        this.currentState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
                         this.held = true;
                     }
-                }
+                    else
+                    {
+                        if (syncTime > this.currentState.timestamp)
+                        {
+                            // Output end edge
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = syncTime;
+                            this.batch.vother.col[c] = this.currentState.timestamp;
+                            this.batch.payload.col[c] = this.computeResult(this.currentState.state);
+                            this.batch.key.col[c] = Empty.Default;
+                            this.batch.hash.col[c] = 0;
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
 
-                // It's always a start edge
-                this.currentState.state = this.accumulate(this.currentState.state, col_vsync[i], colpayload[i]);
+                            this.currentState.timestamp = syncTime;
+                            this.held = true;
+                        }
+                    }
+
+                    // It's always a start edge
+                    this.currentState.state = this.accumulate(this.currentState.state, col_vsync[i], colpayload[i]);
+                }
             }
 
             batch.Release();

@@ -24,10 +24,7 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<TKey, TPayload> output;
 
         [DataMember]
-        private long lastSyncTime = long.MinValue;
-        [DataMember]
         private SortedDictionary<long, MultiSet<ActiveEvent>> syncTimeMap = new SortedDictionary<long, MultiSet<ActiveEvent>>();
-
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public ClipByConstantPipe() { }
@@ -44,12 +41,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new ClipByConstantPlanNode(
+            => this.Observer.ProduceQueryPlan(new ClipByConstantPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload),
                 false, this.errorMessages));
-        }
 
         private void ReachTime(long timestamp)
         {
@@ -74,8 +69,6 @@ namespace Microsoft.StreamProcessing
             }
 
             foreach (var l in toDelete) this.syncTimeMap.Remove(l);
-
-            this.lastSyncTime = timestamp;
         }
 
         public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)

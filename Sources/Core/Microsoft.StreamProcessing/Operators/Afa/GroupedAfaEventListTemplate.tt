@@ -47,7 +47,7 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
         IStreamObserver<<#= TKey #>, <#= TRegister #>> observer,
         object afa,
         long MaxDuration)
-        : base(stream, observer, afa, MaxDuration, true)
+        : base(stream, observer, afa, MaxDuration)
     {
         activeStates = new FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>();
         activeFindTraverser = new FastMap<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>.FindTraverser(activeStates);

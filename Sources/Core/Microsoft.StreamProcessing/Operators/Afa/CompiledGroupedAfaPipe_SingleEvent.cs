@@ -25,8 +25,8 @@ namespace Microsoft.StreamProcessing
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledGroupedAfaPipe_SingleEvent() { }
 
-        public CompiledGroupedAfaPipe_SingleEvent(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+        public CompiledGroupedAfaPipe_SingleEvent(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastMap<GroupedActiveState<TKey, TRegister>>();
 
@@ -314,9 +314,9 @@ namespace Microsoft.StreamProcessing
                                         }
                                     }
                                 }
+
                                 if (this.IsDeterministic) break; // We are guaranteed to have only one start state
                             }
-
                         }
                         else if (batch.vother.col[i] < 0 && !this.IsSyncTimeSimultaneityFree)
                         {

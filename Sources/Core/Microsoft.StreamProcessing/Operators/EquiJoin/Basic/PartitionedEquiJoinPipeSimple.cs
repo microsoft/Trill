@@ -57,7 +57,7 @@ namespace Microsoft.StreamProcessing
         public PartitionedEquiJoinPipeSimple() { }
 
         public PartitionedEquiJoinPipeSimple(
-            EquiJoinStreamable<PartitionKey<TPartitionKey>, TLeft, TRight, TResult> stream,
+            BinaryStreamable<PartitionKey<TPartitionKey>, TLeft, TRight, TResult> stream,
             Expression<Func<TLeft, TRight, TResult>> selector,
             IStreamObserver<PartitionKey<TPartitionKey>, TResult> observer)
             : base(stream, observer)
@@ -119,7 +119,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(PartitionKey<TPartitionKey>),
                 JoinKind.EquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             node.AddJoinExpression("right key comparer", this.rightComparer);
@@ -574,7 +574,7 @@ namespace Microsoft.StreamProcessing
         private void LeaveTime(PartitionEntry partition)
         {
             var leftEdges = partition.leftEdgeMap.TraverseInvisible();
-            while (leftEdges.Next(out int index, out int hash))
+            while (leftEdges.Next(out int index, out _))
             {
                 CreateOutputForStartEdge(
                     partition,
@@ -584,7 +584,7 @@ namespace Microsoft.StreamProcessing
             }
 
             var leftIntervals = partition.leftIntervalMap.TraverseInvisible();
-            while (leftIntervals.Next(out int index, out int hash))
+            while (leftIntervals.Next(out int index, out _))
             {
                 long end = partition.leftIntervalMap.Values[index].End;
                 CreateOutputForStartInterval(
@@ -597,7 +597,7 @@ namespace Microsoft.StreamProcessing
             }
 
             var rightEdges = partition.rightEdgeMap.TraverseInvisible();
-            while (rightEdges.Next(out int index, out int hash))
+            while (rightEdges.Next(out int index, out _))
             {
                 CreateOutputForStartEdge(
                     partition,
@@ -607,7 +607,7 @@ namespace Microsoft.StreamProcessing
             }
 
             var rightIntervals = partition.rightIntervalMap.TraverseInvisible();
-            while (rightIntervals.Next(out int index, out int hash))
+            while (rightIntervals.Next(out int index, out _))
             {
                 long end = partition.rightIntervalMap.Values[index].End;
                 CreateOutputForStartInterval(

@@ -39,8 +39,7 @@ namespace Microsoft.StreamProcessing
             Expression keySelector,
             Expression finalResultSelector,
             bool isGenerated,
-            string errorMessages,
-            bool withStateManager)
+            string errorMessages)
             : base(previous, pipe, keyType, outputType, inputType, isGenerated, errorMessages)
         {
             this.Aggregate = aggregate;

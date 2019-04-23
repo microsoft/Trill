@@ -279,11 +279,8 @@ namespace Microsoft.StreamProcessing
                 {
                     foreach (var kvp2 in kvp1.Value)
                     {
-                        int from = kvp1.Key;
-                        int to = kvp2.Key;
-
-                        from = from + oldMax;
-                        to = to + oldMax;
+                        int from = kvp1.Key + oldMax;
+                        int to = kvp2.Key + oldMax;
 
                         result.AddArc(from, to, kvp2.Value);
 

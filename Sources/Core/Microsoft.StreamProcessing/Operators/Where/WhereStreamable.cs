@@ -27,10 +27,9 @@ namespace Microsoft.StreamProcessing
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
-        {
-            if (this.Properties.IsColumnar) return GetPipe(observer);
-            else return new WherePipe<TKey, TPayload>(this, observer);
-        }
+            => this.Properties.IsColumnar
+            ? GetPipe(observer)
+            : new WherePipe<TKey, TPayload>(this, observer);
 
         protected override bool CanGenerateColumnar()
         {
@@ -60,9 +59,6 @@ namespace Microsoft.StreamProcessing
             return returnValue;
         }
 
-        public override string ToString()
-        {
-            return "Where(" + this.Predicate.ExpressionToCSharp() + ")";
-        }
+        public override string ToString() => "Where(" + this.Predicate.ExpressionToCSharp() + ")";
     }
 }

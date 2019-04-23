@@ -31,7 +31,7 @@ namespace Microsoft.StreamProcessing
         public CompiledUngroupedAfaPipe_MultiEventList() { }
 
         public CompiledUngroupedAfaPipe_MultiEventList(Streamable<Empty, TRegister> stream, IStreamObserver<Empty, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastLinkedList<GroupedActiveState<Empty, TRegister>>();
 

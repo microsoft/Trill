@@ -363,7 +363,7 @@ namespace Microsoft.StreamProcessing
             => this.Observer.ProduceQueryPlan(new GroupedWindowPlanNode<TInput, TState, TOutput>(
                 previous, this,
                 typeof(TKey), typeof(TInput), typeof(TOutput), this.aggregate, this.keySelectorExpr, this.finalResultSelectorExpr,
-                false, this.errorMessages, false));
+                false, this.errorMessages));
 
         protected override void UpdatePointers()
         {

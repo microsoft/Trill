@@ -48,12 +48,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SessionWindowPlanNode(
+            => this.Observer.ProduceQueryPlan(new SessionWindowPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), this.sessionTimeout, this.maximumDuration,
-                false, this.errorMessages, false));
-        }
+                false, this.errorMessages));
 
         private void ReachTime(int pIndex, long timestamp)
         {
@@ -252,10 +250,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public long Sync;
 
-            public override string ToString()
-            {
-                return "Key='" + this.Key + "', Payload='" + this.Payload;
-            }
+            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
     }
 }

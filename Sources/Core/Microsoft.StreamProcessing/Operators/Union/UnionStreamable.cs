@@ -14,9 +14,7 @@ namespace Microsoft.StreamProcessing
 
         public UnionStreamable(IStreamable<TKey, TPayload> left, IStreamable<TKey, TPayload> right, bool registerInputs = false)
             : base(left.Properties.Union(right.Properties), left, right, registerInputs)
-        {
-            Initialize();
-        }
+            => Initialize();
 
         protected override IBinaryObserver<TKey, TPayload, TPayload, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
         {
@@ -44,7 +42,7 @@ namespace Microsoft.StreamProcessing
             Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> planNode = ((PlanNode left, PlanNode right, IBinaryObserver o) =>
             {
                 var node = new UnionPlanNode(
-                        left, right, o, typeof(TKey), typeof(TPayload), false, true, this.ErrorMessages, false);
+                        left, right, o, typeof(TKey), typeof(TPayload), false, true, this.ErrorMessages);
                 return node;
             });
 

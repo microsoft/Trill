@@ -75,7 +75,7 @@ namespace Microsoft.StreamProcessing
         public override void ProduceQueryPlan(PlanNode previous)
             => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(PartitionKey<TPartitionKey>), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.Sliding, this.aggregate, false, this.errorMessages, false));
+                AggregatePipeType.Sliding, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<PartitionKey<TPartitionKey>, TInput> batch)
         {

@@ -170,7 +170,7 @@ namespace Microsoft.StreamProcessing.Sharding
             var result = new IStreamable<TNewKey, TPayload>[this.streamables.Length];
 
             for (int i = 0; i < this.streamables.Length; i++)
-                result[i] = new GroupStreamable<TKey, TPayload, TNewKey>(null, this.streamables[i], keySelector);
+                result[i] = new GroupStreamable<TKey, TPayload, TNewKey>(this.streamables[i], keySelector);
 
             return new ShardedStreamable<TNewKey, TPayload>(result);
         }
@@ -208,7 +208,7 @@ namespace Microsoft.StreamProcessing.Sharding
 
             var shufflecastL1Results = new ShufflecastStreamable<TPayload, TKey>[this.Streamables.Length];
             for (int i = 0; i < this.Streamables.Length; i++)
-                shufflecastL1Results[i] = new ShufflecastStreamable<TPayload, TKey>(null, this.Streamables[i], newShardArity, destinationSelector);
+                shufflecastL1Results[i] = new ShufflecastStreamable<TPayload, TKey>(this.Streamables[i], newShardArity, destinationSelector);
 
             var shuffleResults = new IStreamable<TKey, TPayload>[newShardArity];
             for (int i = 0; i < newShardArity; i++)

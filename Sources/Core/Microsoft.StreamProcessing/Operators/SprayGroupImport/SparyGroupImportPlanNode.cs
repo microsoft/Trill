@@ -29,8 +29,7 @@ namespace Microsoft.StreamProcessing
             Type keyType, Type payloadType,
             int totalBranches, bool multicast,
             Expression spraySortOrderComparer,
-            bool isGenerated,
-            bool withStateManager)
+            bool isGenerated)
             : base(previous, pipe, keyType, payloadType, payloadType, isGenerated, null)
         {
             this.TotalBranches = totalBranches;

@@ -20,8 +20,7 @@ namespace Microsoft.StreamProcessing
         public IEnumerable<MyFieldInfo> fields;
         private string transformedKeySelectorAsString;
         private string inlinedHashCodeComputation;
-        private ColumnarRepresentation innerKeyFieldRepresentation;
-        private bool isFirstLevelGroup;
+        private readonly bool isFirstLevelGroup;
         private MyFieldInfo swingingField;
         public string vectorHashCodeInitialization = string.Empty;
         private bool swingingHashColumn;
@@ -76,9 +75,8 @@ namespace Microsoft.StreamProcessing
                 else
                 {
                     var body = keySelector.Body;
-                    var singleFieldProjection = body as MemberExpression;
 
-                    if (!nested && singleFieldProjection != null)
+                    if (!nested && body is MemberExpression singleFieldProjection)
                     {
                         if (singleFieldProjection.Expression is ParameterExpression dereferencedObject)
                         {
@@ -135,7 +133,6 @@ namespace Microsoft.StreamProcessing
                 }
 
                 template.fields = new ColumnarRepresentation(typeOfTSource).AllFields;
-                template.innerKeyFieldRepresentation = new ColumnarRepresentation(typeOfTInnerKey);
 
                 expandedCode = template.TransformText();
 

@@ -125,7 +125,7 @@ namespace Microsoft.StreamProcessing
         public override void ProduceQueryPlan(PlanNode previous)
             => this.Observer.ProduceQueryPlan(new StitchPlanNode(
                 previous, this,
-                typeof(TKey), typeof(TPayload), false, this.errorMessages, false));
+                typeof(TKey), typeof(TPayload), false, this.errorMessages));
 
         private struct ActiveEvent
         {
@@ -218,6 +218,7 @@ namespace Microsoft.StreamProcessing
                             this.batch[this.outputCount] = default;
                             this.batch.key.col[this.outputCount] = default;
                             this.batch.hash.col[this.outputCount] = 0;
+                            this.batch.bitvector.col[this.outputCount >> 6] |= 1L << (this.outputCount & 0x3f);
                             this.outputCount++;
 
                             if (this.outputCount == Config.DataBatchSize) FlushContents();
@@ -252,7 +253,7 @@ namespace Microsoft.StreamProcessing
             };
 
             // We should match ONLY on
-            bool foundInClosedEvents = this.ClosedEvents.ContainsKey(eventstart) && this.ClosedEvents[eventstart].Lookup(lookupStart, out int indx);
+            bool foundInClosedEvents = this.ClosedEvents.ContainsKey(eventstart) && this.ClosedEvents[eventstart].Lookup(lookupStart, out _);
 
             if (foundInClosedEvents)
             {
@@ -268,8 +269,6 @@ namespace Microsoft.StreamProcessing
                     Payload = payload
                 };
                 InsertOrAppend(this.OpenEvents, lookupStart, originalExt);
-
-
             }
             else
             {
@@ -281,7 +280,7 @@ namespace Microsoft.StreamProcessing
                 // END  ( Payload = P, End = 1, Start = 0)
                 // In this case, we don't want to issue a new Start on the second Begin--instead, we
                 // want to wait for the Begin and get rid of it.
-                bool candidatesInOpenEvents = this.OpenEvents.Lookup(lookupStart, out indx);
+                bool candidatesInOpenEvents = this.OpenEvents.Lookup(lookupStart, out var indx);
                 if (candidatesInOpenEvents && !skipBuffering && this.OpenEvents.entries[indx].value.Count > 0)
                 {
                     // We found a matching event. What we need to do is squirrel this away until the
@@ -313,7 +312,6 @@ namespace Microsoft.StreamProcessing
                     Emit(ActiveEvent.FromExt(activeEventExt));
 
                     InsertOrAppend(this.OpenEvents, lookupStart, activeEventExt);
-
                 }
             }
         }

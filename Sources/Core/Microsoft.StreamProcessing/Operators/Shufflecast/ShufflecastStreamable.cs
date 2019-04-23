@@ -19,7 +19,6 @@ namespace Microsoft.StreamProcessing
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "_totalBranchesL2-1", Justification = "Enforced with code contract.")]
         public ShufflecastStreamable(
-            IEqualityComparerExpression<TInnerKey> comparer,
             IStreamable<TInnerKey, TSource> source,
             int totalBranchesL2,
             Expression<Func<TInnerKey, int, TSource, int[]>> destinationSelector = null)
@@ -65,18 +64,15 @@ namespace Microsoft.StreamProcessing
                 this.pipe = null;
                 this.numBranches = 0;
 
-                if (d == null)
-                    return this.Source.Subscribe(oldpipe);
-                else
-                    return Utility.CreateDisposable(this.Source.Subscribe(oldpipe), d);
+                return d == null
+                    ? this.Source.Subscribe(oldpipe)
+                    : Utility.CreateDisposable(this.Source.Subscribe(oldpipe), d);
             }
         }
 
         private IStreamObserverAndGroupedStreamObservable<TInnerKey, TSource, TInnerKey> CreatePipe(
             IStreamObserver<TInnerKey, TSource> observer)
-        {
-            return new ShufflecastPipe<TSource, TInnerKey>(this, observer, this.totalBranchesL2, this.destinationSelectorCompiled);
-        }
+            => new ShufflecastPipe<TSource, TInnerKey>(this, observer, this.totalBranchesL2, this.destinationSelectorCompiled);
     }
 
 }

@@ -14,10 +14,6 @@ namespace Microsoft.StreamProcessing
 {
     internal sealed class MultiStringTransformer
     {
-        private MultiStringTransformer(Type t) => this.batchType = t;
-
-        private readonly Type batchType;
-
         public struct MultiStringTransformationResult
         {
             public Expression transformedExpression;

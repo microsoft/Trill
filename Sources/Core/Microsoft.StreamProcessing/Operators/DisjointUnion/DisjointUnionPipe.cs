@@ -42,7 +42,7 @@ namespace Microsoft.StreamProcessing
         protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)
         {
             var node = new UnionPlanNode(
-                left, right, this, typeof(TKey), typeof(TPayload), true, false, null, false);
+                left, right, this, typeof(TKey), typeof(TPayload), true, false, null);
             this.Observer.ProduceQueryPlan(node);
         }
 

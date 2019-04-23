@@ -102,13 +102,13 @@ namespace Microsoft.StreamProcessing
                     }
                     if (edge is SingleElementArc<TPayload, TRegister> singleArc)
                     {
-                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNodeNumber, singleArc, "payloadoffset");
+                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNodeNumber, singleArc);
                         edgeList.Add(edgeInfo);
                         continue;
                     }
                     if (edge is ListElementArc<TPayload, TRegister> listArc)
                     {
-                        var edgeInfo = CreateListEdgeInfo(stream, payloadRepresentation, targetNodeNumber, listArc, "payloadoffset");
+                        var edgeInfo = CreateListEdgeInfo(stream, targetNodeNumber, listArc);
                         edgeList.Add(edgeInfo);
                         continue;
                     }
@@ -162,13 +162,13 @@ namespace Microsoft.StreamProcessing
                     }
                     if (arc is SingleElementArc<TPayload, TRegister> singleArc)
                     {
-                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNode, singleArc, "payloadoffset");
+                        var edgeInfo = CreateSingleEdgeInfo(stream, targetNode, singleArc);
                         edgeList2.Add(edgeInfo);
                         continue;
                     }
                     if (arc is ListElementArc<TPayload, TRegister> listArc)
                     {
-                        var edgeInfo = CreateListEdgeInfo(stream, payloadRepresentation, targetNode, listArc, "payloadoffset");
+                        var edgeInfo = CreateListEdgeInfo(stream, targetNode, listArc);
                         edgeList2.Add(edgeInfo);
                         continue;
                     }

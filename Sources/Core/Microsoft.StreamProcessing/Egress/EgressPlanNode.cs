@@ -16,9 +16,7 @@ namespace Microsoft.StreamProcessing
     {
         internal EgressPlanNode(PlanNode previous, IEgressStreamObserver observer, Type keyType, Type payloadType, bool isGenerated, string errorMessages)
             : base(observer, keyType, payloadType, isGenerated, errorMessages)
-        {
-            this.PreviousPlanNode = previous;
-        }
+            => this.PreviousPlanNode = previous;
 
         /// <summary>
         /// Returns the kind of plan node, which can then be used for type casting.
@@ -31,9 +29,7 @@ namespace Microsoft.StreamProcessing
         public PlanNode PreviousPlanNode { get; }
 
         internal override void CollectDormantIngressSites(Dictionary<string, IngressPlanNode> working)
-        {
-            this.PreviousPlanNode.CollectDormantIngressSites(working);
-        }
+            => this.PreviousPlanNode.CollectDormantIngressSites(working);
 
         internal override void PrintConciseSummary(StringBuilder builder, int indentLevel)
         {

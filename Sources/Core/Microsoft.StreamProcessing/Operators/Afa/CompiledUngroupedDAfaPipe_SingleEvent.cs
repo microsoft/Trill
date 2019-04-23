@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing
         public CompiledUngroupedDAfaPipe() { }
 
         public CompiledUngroupedDAfaPipe(Streamable<Empty, TRegister> stream, IStreamObserver<Empty, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeState_state = -1;
             this.startState = this.startStates[0];

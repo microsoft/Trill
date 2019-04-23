@@ -26,7 +26,6 @@ namespace Microsoft.StreamProcessing
 
         private string transformedSelectorAsSource;
 
-        private string PARAMETER;
         private string StartEdgeParameterName;
         private bool hasKey;
 
@@ -77,8 +76,6 @@ namespace Microsoft.StreamProcessing
 
                 var selector = stream.Selector;
                 var payloadParameter = selector.Parameters.ElementAt(payloadParameterIndex);
-
-                template.PARAMETER = payloadParameter.Name;
 
                 template.resultPayloadRepresentation = new ColumnarRepresentation(resultType);
                 template.resultFields = template.resultPayloadRepresentation.AllFields;

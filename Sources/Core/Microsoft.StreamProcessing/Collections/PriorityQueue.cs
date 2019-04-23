@@ -20,7 +20,7 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private List<T> data = new List<T>();
 
-        private IComparer<T> comp;
+        private readonly IComparer<T> comp;
 
         /// <summary>
         /// Create an instance of a priority queue with the default comparer for the underlying item type.
@@ -92,7 +92,7 @@ namespace Microsoft.StreamProcessing
             }
 
             // shrink list if needed
-            if ((this.data.Count << 3) < this.data.Capacity) this.data.Capacity = this.data.Capacity >> 1;
+            if ((this.data.Count << 3) < this.data.Capacity) this.data.Capacity >>= 1;
 
             return frontItem;
         }

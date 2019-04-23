@@ -126,7 +126,7 @@ namespace Microsoft.StreamProcessing
             return result;
         }
 
-        protected static EdgeInfo CreateSingleEdgeInfo<TKey, TPayload, TRegister, TAccumulator>(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, int targetNodeNumber, SingleElementArc<TPayload, TRegister> searc, string indexVariableName)
+        protected static EdgeInfo CreateSingleEdgeInfo<TKey, TPayload, TRegister, TAccumulator>(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, int targetNodeNumber, SingleElementArc<TPayload, TRegister> searc)
         {
             var edgeInfo = new EdgeInfo()
             {
@@ -141,7 +141,7 @@ namespace Microsoft.StreamProcessing
             return edgeInfo;
         }
 
-        protected static EdgeInfo CreateListEdgeInfo<TKey, TPayload, TRegister, TAccumulator>(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, ColumnarRepresentation payloadRepresentation, int targetNodeNumber, ListElementArc<TPayload, TRegister> edge, string indexVariableName)
+        protected static EdgeInfo CreateListEdgeInfo<TKey, TPayload, TRegister, TAccumulator>(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, int targetNodeNumber, ListElementArc<TPayload, TRegister> edge)
         {
             var edgeInfo = new EdgeInfo()
             {

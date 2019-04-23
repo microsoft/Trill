@@ -36,10 +36,7 @@ namespace Microsoft.StreamProcessing
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override void DisposeState()
-        {
-            this.output.Free();
-        }
+        protected override void DisposeState() => this.output.Free();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void ProcessBothBatches(StreamMessage<TKey, TPayload> leftBatch, StreamMessage<TKey, TPayload> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
@@ -260,7 +257,7 @@ namespace Microsoft.StreamProcessing
         protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)
         {
             var node = new UnionPlanNode(
-                left, right, this, typeof(TKey), typeof(TPayload), false, false, this.errorMessages, false);
+                left, right, this, typeof(TKey), typeof(TPayload), false, false, this.errorMessages);
             this.Observer.ProduceQueryPlan(node);
         }
 

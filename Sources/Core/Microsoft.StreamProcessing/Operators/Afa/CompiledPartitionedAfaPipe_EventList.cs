@@ -13,7 +13,7 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class CompiledPartitionedAfaPipe_EventList<TKey, TPayload, TRegister, TAccumulator, TPartitionKey> : CompiledAfaPipeBase<TKey, TPayload, TRegister, TAccumulator>
     {
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [DataMember]
         private FastMap<GroupedActiveState<TKey, TRegister>> activeStates;
@@ -30,21 +30,18 @@ namespace Microsoft.StreamProcessing
         private readonly Stack<int> stack = new Stack<int>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public CompiledPartitionedAfaPipe_EventList()
-            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public CompiledPartitionedAfaPipe_EventList() { }
 
         public CompiledPartitionedAfaPipe_EventList(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-
             this.activeStates = new FastMap<GroupedActiveState<TKey, TRegister>>();
             this.activeFindTraverser = new FastMap<GroupedActiveState<TKey, TRegister>>.FindTraverser(this.activeStates);
         }
 
         public override int CurrentlyBufferedInputCount => this.activeStates.Count;
 
-        private void ProcessCurrentTimestamp(TPartitionKey partitionKey, int partitionIndex)
+        private void ProcessCurrentTimestamp(int partitionIndex)
         {
             if (this.currentTimestampEventList.Count == 0) return;
 
@@ -77,60 +74,60 @@ namespace Microsoft.StreamProcessing
                             #region eventListStateMap
                             if (this.eventListStateMap != null)
                             {
-                            var currentStateMap = this.eventListStateMap[state.state];
-                            if (currentStateMap != null)
-                            {
-                                var m = currentStateMap.Length;
-                                for (int cnt = 0; cnt < m; cnt++)
+                                var currentStateMap = this.eventListStateMap[state.state];
+                                if (currentStateMap != null)
                                 {
-                                    var arcinfo = currentStateMap[cnt];
-
-                                    if (arcinfo.Fence(synctime, currentList.payloads, state.register))
+                                    var m = currentStateMap.Length;
+                                    for (int cnt = 0; cnt < m; cnt++)
                                     {
+                                        var arcinfo = currentStateMap[cnt];
+
+                                        if (arcinfo.Fence(synctime, currentList.payloads, state.register))
+                                        {
                                             var newReg = arcinfo.Transfer == null
                                                 ? state.register
                                                 : arcinfo.Transfer(synctime, currentList.payloads, state.register);
                                             int ns = arcinfo.toState;
-                                        while (true)
-                                        {
-                                            if (this.isFinal[ns])
+                                            while (true)
                                             {
-                                                this.batch.vsync.col[this.iter] = synctime;
-                                                this.batch.vother.col[this.iter] = state.PatternStartTimestamp + this.MaxDuration;
-                                                this.batch[this.iter] = newReg;
-                                                this.batch.key.col[this.iter] = currentList.key;
-                                                this.batch.hash.col[this.iter] = el_hash;
-                                                this.iter++;
-
-                                                if (this.iter == Config.DataBatchSize) FlushContents();
-                                            }
-
-                                            if (this.hasOutgoingArcs[ns])
-                                            {
-                                                if (index == -1) index = this.activeStates.Insert(el_hash);
-                                                this.activeStates.Values[index].key = currentList.key;
-                                                this.activeStates.Values[index].state = ns;
-                                                this.activeStates.Values[index].register = newReg;
-                                                this.activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
-
-                                                index = -1;
-
-                                                ended = false;
-
-                                                // Add epsilon arc destinations to stack
-                                                if (this.epsilonStateMap == null) break;
-                                                if (this.epsilonStateMap[ns] != null)
+                                                if (this.isFinal[ns])
                                                 {
-                                                    for (int cnt2 = 0; cnt2 < this.epsilonStateMap[ns].Length; cnt2++) this.stack.Push(this.epsilonStateMap[ns][cnt2]);
+                                                    this.batch.vsync.col[this.iter] = synctime;
+                                                    this.batch.vother.col[this.iter] = state.PatternStartTimestamp + this.MaxDuration;
+                                                    this.batch[this.iter] = newReg;
+                                                    this.batch.key.col[this.iter] = currentList.key;
+                                                    this.batch.hash.col[this.iter] = el_hash;
+                                                    this.iter++;
+
+                                                    if (this.iter == Config.DataBatchSize) FlushContents();
                                                 }
+
+                                                if (this.hasOutgoingArcs[ns])
+                                                {
+                                                    if (index == -1) index = this.activeStates.Insert(el_hash);
+                                                    this.activeStates.Values[index].key = currentList.key;
+                                                    this.activeStates.Values[index].state = ns;
+                                                    this.activeStates.Values[index].register = newReg;
+                                                    this.activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+
+                                                    index = -1;
+
+                                                    ended = false;
+
+                                                    // Add epsilon arc destinations to stack
+                                                    if (this.epsilonStateMap == null) break;
+                                                    if (this.epsilonStateMap[ns] != null)
+                                                    {
+                                                        for (int cnt2 = 0; cnt2 < this.epsilonStateMap[ns].Length; cnt2++) this.stack.Push(this.epsilonStateMap[ns][cnt2]);
+                                                    }
+                                                }
+                                                if (this.stack.Count == 0) break;
+                                                ns = this.stack.Pop();
                                             }
-                                            if (this.stack.Count == 0) break;
-                                            ns = this.stack.Pop();
+                                            if (this.IsDeterministic) break; // We are guaranteed to have only one successful transition
                                         }
-                                        if (this.IsDeterministic) break; // We are guaranteed to have only one successful transition
                                     }
                                 }
-                            }
                             }
                             #endregion
 
@@ -346,7 +343,7 @@ namespace Microsoft.StreamProcessing
 
                             if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                             {
-                                ProcessCurrentTimestamp(partitionKey, partitionIndex);
+                                ProcessCurrentTimestamp(partitionIndex);
                                 this.lastSyncTime.entries[partitionIndex].value = synctime;
                             }
 
@@ -386,7 +383,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                                 {
-                                    ProcessCurrentTimestamp(this.lastSyncTime.entries[partitionIndex].key, partitionIndex);
+                                    ProcessCurrentTimestamp(partitionIndex);
                                     this.lastSyncTime.entries[partitionIndex].value = synctime;
                                 }
                             }
@@ -402,7 +399,7 @@ namespace Microsoft.StreamProcessing
 
                             if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                             {
-                                ProcessCurrentTimestamp(partitionKey, partitionIndex);
+                                ProcessCurrentTimestamp(partitionIndex);
                                 this.lastSyncTime.entries[partitionIndex].value = synctime;
                             }
                         }

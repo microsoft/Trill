@@ -58,7 +58,7 @@ namespace Microsoft.StreamProcessing
         public PartitionedEquiJoinPipeCompound() { }
 
         public PartitionedEquiJoinPipeCompound(
-            EquiJoinStreamable<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TLeft, TRight, TResult> stream,
+            BinaryStreamable<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TLeft, TRight, TResult> stream,
             Expression<Func<TLeft, TRight, TResult>> selector,
             IStreamObserver<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TResult> observer)
             : base(stream, observer)
@@ -121,7 +121,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(CompoundGroupKey<TPartitionKey, TGroupKey>),
                 JoinKind.EquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             node.AddJoinExpression("right key comparer", this.rightComparer);

@@ -653,10 +653,7 @@ foreach (bool disordered in new[] { true, false })
                 this.disposed = true;
             }
 
-            private void DisposeInternal()
-            {
-                this.inner.Dispose();
-            }
+            private void DisposeInternal() => this.inner.Dispose();
         }
     }
 

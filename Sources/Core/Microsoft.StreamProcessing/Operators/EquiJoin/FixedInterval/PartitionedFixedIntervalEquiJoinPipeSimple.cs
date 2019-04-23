@@ -21,12 +21,6 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<PartitionKey<TPartitionKey>, PartitionKey<TPartitionKey>, bool>> keyComparer;
         [SchemaSerialization]
-        private readonly Expression<Func<TLeft, TLeft, bool>> leftComparer;
-        private readonly Func<TLeft, TLeft, bool> leftComparerEquals;
-        [SchemaSerialization]
-        private readonly Expression<Func<TRight, TRight, bool>> rightComparer;
-        private readonly Func<TRight, TRight, bool> rightComparerEquals;
-        [SchemaSerialization]
         private readonly long leftDuration;
         [SchemaSerialization]
         private readonly long rightDuration;
@@ -69,12 +63,6 @@ namespace Microsoft.StreamProcessing
 
             this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
 
-            this.leftComparer = stream.Left.Properties.PayloadEqualityComparer.GetEqualsExpr();
-            this.leftComparerEquals = this.leftComparer.Compile();
-
-            this.rightComparer = stream.Right.Properties.PayloadEqualityComparer.GetEqualsExpr();
-            this.rightComparerEquals = this.rightComparer.Compile();
-
             this.pool = MemoryManager.GetMemoryPool<PartitionKey<TPartitionKey>, TResult>(stream.Properties.IsColumnar);
             this.pool.Get(out this.output);
             this.output.Allocate();
@@ -86,10 +74,8 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(PartitionKey<TPartitionKey>),
                 JoinKind.FixedIntervalEquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
-            node.AddJoinExpression("left key comparer", this.leftComparer);
-            node.AddJoinExpression("right key comparer", this.rightComparer);
             this.Observer.ProduceQueryPlan(node);
         }
 

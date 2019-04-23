@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing
             Type outputType,
             AggregatePipeType type,
             IAggregate<TInput, TState, TResult> aggregate,
-            bool isGenerated, string errorMessages, bool withStateManager)
+            bool isGenerated, string errorMessages)
             : base(previous, pipe, keyType, outputType, inputType, isGenerated, errorMessages)
         {
             this.InternalAggregateType = type;

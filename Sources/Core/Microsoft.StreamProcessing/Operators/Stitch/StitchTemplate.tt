@@ -272,6 +272,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                         this.batch[outputCount] = default;
                         this.batch.key.col[outputCount] = default;
                         this.batch.hash.col[outputCount] = 0;
+                        this.batch.bitvector.col[this.outputCount >> 6] |= 1L << (this.outputCount & 0x3f);
                         outputCount++;
 
                         if (outputCount == Config.DataBatchSize) FlushContents();

@@ -229,7 +229,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public static Dictionary<Assembly, MetadataReference> metadataReferenceCache = new Dictionary<Assembly, MetadataReference>();
-        private static InteractiveAssemblyLoader loader = new InteractiveAssemblyLoader();
+        private static readonly InteractiveAssemblyLoader loader = new InteractiveAssemblyLoader();
 
         internal static Assembly EmitCompilationAndLoadAssembly(CSharpCompilation compilation, bool makeAssemblyDebuggable, out string errorMessages)
         {
@@ -326,7 +326,8 @@ namespace Microsoft.StreamProcessing
 
         private sealed class AssemblyLocationFinder : ExpressionVisitor
         {
-            private HashSet<Assembly> assemblyLocations = new HashSet<Assembly>();
+            private readonly HashSet<Assembly> assemblyLocations = new HashSet<Assembly>();
+
             private AssemblyLocationFinder() { }
             public static IEnumerable<Assembly> GetAssemblyLocationsFor(Expression e)
             {
@@ -377,7 +378,7 @@ namespace System.Runtime.CompilerServices
 
             private static Assembly CreateIgnoreAccessChecksAssembly()
             {
-                var assembly = CompileSourceCode(IgnoreAccessChecksSourceCode, Array.Empty<Assembly>(), out string errorMessages, false);
+                var assembly = CompileSourceCode(IgnoreAccessChecksSourceCode, Array.Empty<Assembly>(), out _, false);
                 if (assembly == null)
                 {
                     throw new InvalidOperationException("Code Generation failed for IgnoresAccessChecksToAttribute!");
@@ -387,7 +388,7 @@ namespace System.Runtime.CompilerServices
         }
 
         private static int BatchClassSequenceNumber = 0;
-        private static SafeConcurrentDictionary<string> batchType2Name = new SafeConcurrentDictionary<string>();
+        private static readonly SafeConcurrentDictionary<string> batchType2Name = new SafeConcurrentDictionary<string>();
 
         internal static string GetBatchClassName(Type keyType, Type payloadType)
         {
@@ -529,10 +530,9 @@ namespace System.Runtime.CompilerServices
         {
             Contract.Requires(t != null);
             Contract.Requires(d != null);
+            if (d.TryGetValue(t, out _)) return;
 
-            if (d.TryGetValue(t, out string typeName)) return;
-
-            typeName = t.FullName.Replace('#', '_').Replace('+', '.');
+            var typeName = t.FullName.Replace('#', '_').Replace('+', '.');
             if (t.IsAnonymousTypeName())
             {
                 var newGenericTypeParameter = "A" + anonymousTypeCount.ToString(CultureInfo.InvariantCulture);
@@ -723,15 +723,15 @@ namespace System.Runtime.CompilerServices
         public string expandedCode;
         public List<Assembly> assemblyReferences;
 
-        private Type keyType;
-        private Type payloadType;
+        private readonly Type keyType;
+        private readonly Type payloadType;
 
         /// <summary>
         /// A set so that there is just one memory pool and Get method per type.
         /// </summary>
-        private HashSet<Type> types;
+        private readonly HashSet<Type> types;
 
-        private string className;
+        private readonly string className;
 
         internal MemoryPoolTemplate(ColumnarRepresentation keyRepresentation, ColumnarRepresentation payloadRepresentation)
         {

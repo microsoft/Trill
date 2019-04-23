@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
                 JoinKind.EquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             node.AddJoinExpression("right key comparer", this.rightComparer);

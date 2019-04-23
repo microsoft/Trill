@@ -23,7 +23,7 @@ namespace Microsoft.StreamProcessing
         internal SessionWindowPlanNode(
             PlanNode previous, IQueryObject pipe,
             Type keyType, Type payloadType, long sessionTimeout, long maximumDuration,
-            bool isGenerated, string errorMessages, bool withStateManager)
+            bool isGenerated, string errorMessages)
             : base(previous, pipe, keyType, payloadType, payloadType, isGenerated, errorMessages)
         {
             this.SessionTimeout = sessionTimeout;

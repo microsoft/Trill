@@ -206,14 +206,9 @@ namespace Microsoft.StreamProcessing
         {
             private readonly Dictionary<string, Func<TInput, string, TResult>> fields = new Dictionary<string, Func<TInput, string, TResult>>();
             private readonly Dictionary<string, Func<TInput, bool>> isNull = new Dictionary<string, Func<TInput, bool>>();
-            private readonly NewExpression newExpression;
-            private readonly Expression<Func<TInput, TPivotKey>> keySelector;
 
             public UnpivotEnumerable(Expression<Func<TInput, TPivotKey>> keySelector, NewExpression newExpression, MemberExpression attributeField, MemberExpression valueField)
             {
-                this.newExpression = newExpression;
-                this.keySelector = keySelector;
-
                 var input = Expression.Parameter(typeof(TInput), "input");
                 var attribute = Expression.Parameter(typeof(string), "attribute");
                 var keyAssignments = new List<MemberAssignment>();

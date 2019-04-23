@@ -64,7 +64,7 @@ namespace Microsoft.StreamProcessing
 
             var lookupKey = CacheKey.Create(this.Properties.KeyEqualityComparer.GetEqualsExpr().ToString(), this.LeftComparer.GetEqualsExpr().ToString());
 
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => LeftAntiSemiJoinTemplate.Generate(this, this.Left.Properties.IsConstantDuration));
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => LeftAntiSemiJoinTemplate.Generate(this));
 
             this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
@@ -75,13 +75,13 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create(
                 leftIsConstantDuration, this.Properties.KeyEqualityComparer.GetEqualsExpr().ToString(), this.LeftComparer.GetEqualsExpr().ToString());
 
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => LeftAntiSemiJoinTemplate.Generate(this, leftIsConstantDuration));
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => LeftAntiSemiJoinTemplate.Generate(this));
             Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> planNode = ((PlanNode left, PlanNode right, IBinaryObserver o) =>
             {
                 var node = new JoinPlanNode(
                         left, right, o,
-                        typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
-                        JoinKind.LeftAntiSemiJoin, true, generatedPipeType.Item2, false);
+                    typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
+                    JoinKind.LeftAntiSemiJoin, true, generatedPipeType.Item2);
                 node.AddJoinExpression("key comparer", this.Properties.KeyEqualityComparer.GetEqualsExpr());
                 node.AddJoinExpression("left key comparer", this.LeftComparer.GetEqualsExpr());
                 return node;

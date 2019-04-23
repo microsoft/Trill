@@ -48,7 +48,6 @@ namespace Microsoft.StreamProcessing.Sharding
 
     internal sealed class ShardedSerializerObserver<TKey, TPayload> : IObserver<StreamMessage<TKey, TPayload>>, IDisposable
     {
-        private readonly StreamProperties<TKey, TPayload> sourceProps;
         private Exception e = null;
 
         private readonly StateSerializer<QueuedMessage<StreamMessage<TKey, TPayload>>> serializer;
@@ -59,7 +58,6 @@ namespace Microsoft.StreamProcessing.Sharding
         // TODO: This appears to be copied code from Binary egress - can we unify?
         public ShardedSerializerObserver(Stream destination, StreamProperties<TKey, TPayload> sourceProps, bool writePropertiesToStream = false)
         {
-            this.sourceProps = sourceProps;
             this.destination = destination;
             if (writePropertiesToStream)
             {

@@ -29,12 +29,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new PointAtEndPlanNode(
+            => this.Observer.ProduceQueryPlan(new PointAtEndPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload),
-                false, this.errorMessages, false));
-        }
+                false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
         {

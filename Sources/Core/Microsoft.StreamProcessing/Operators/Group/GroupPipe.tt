@@ -125,8 +125,7 @@ else { #>
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new GroupPlanNode(
+            => this.Observer.ProduceQueryPlan(new GroupPlanNode(
                 previous,
                 this,
                 typeof(TOuterKey),
@@ -138,7 +137,6 @@ else { #>
                 false,
                 false,
                 this.errorMessages));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 

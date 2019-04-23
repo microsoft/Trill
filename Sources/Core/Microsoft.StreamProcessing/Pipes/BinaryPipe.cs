@@ -354,8 +354,6 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual int CurrentlyBufferedRightKeyCount => this.RightInputHasState ? 1 : 0;
 
-        private void ConsumeError(Exception error) => this.Observer.OnError(error);
-
         private void CheckpointLeft(Stream stream)
         {
             try
@@ -507,11 +505,9 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override void ProduceQueryPlan(PlanNode previous)
-        {
+        public override void ProduceQueryPlan(PlanNode previous) =>
             // Remove this method when moving implementation from Pipe to UnaryPipe.
             throw new InvalidOperationException();
-        }
 
         private enum SerializationState { Open, CheckpointLeft, CheckpointRight, RestoreLeft, RestoreRight }
 

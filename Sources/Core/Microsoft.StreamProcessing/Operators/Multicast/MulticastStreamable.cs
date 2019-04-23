@@ -38,9 +38,7 @@ namespace Microsoft.StreamProcessing
 
         public PassthroughStreamable(IStreamable<TKey, TSource> source)
             : base(source.Properties)
-        {
-            this.source = source;
-        }
+            => this.source = source;
 
         public override IDisposable Subscribe(IStreamObserver<TKey, TSource> observer) => this.source.Subscribe(observer);
     }

@@ -41,7 +41,6 @@ namespace Microsoft.StreamProcessing
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "_totalBranchesL2-1", Justification = "Enforced with code contract.")]
         public Shuffle<#= nestedInfix #>Streamable(
-            <# if (i < 2) { #>IEqualityComparerExpression<TInnerKey> comparer,<# } #>
             IStreamable<TOuterKey, TSource> source,
             <# if (i < 2) { #>Expression<Func<TSource, TInnerKey>> keySelector,<# } #>
             int totalBranchesL2,
@@ -73,7 +72,7 @@ else { #>
 <# if (i < 2) { #>
             if (totalBranchesL2 <= 1)
             {
-                singleThreadedShuffler = new Group<#= nestedInfix #>Streamable<TOuterKey, TSource, TInnerKey>(comparer, source, keySelector);
+                singleThreadedShuffler = new Group<#= nestedInfix #>Streamable<TOuterKey, TSource, TInnerKey>(source, keySelector);
                 this.properties = singleThreadedShuffler.Properties;
             }
 <# } #>
@@ -114,10 +113,9 @@ else { #>
                 pipe = null;
                 numBranches = 0;
 
-                if (d == null)
-                    return Source.Subscribe(oldpipe);
-                else
-                    return Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
+                return d == null
+                    ? Source.Subscribe(oldpipe)
+                    : Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
             }
         }
 

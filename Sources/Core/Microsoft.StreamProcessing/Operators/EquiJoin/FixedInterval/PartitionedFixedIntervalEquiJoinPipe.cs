@@ -17,17 +17,11 @@ namespace Microsoft.StreamProcessing
     {
         private readonly Func<TLeft, TRight, TResult> selector;
         private readonly MemoryPool<TKey, TResult> pool;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [SchemaSerialization]
         private readonly Expression<Func<TKey, TKey, bool>> keyComparer;
         private readonly Func<TKey, TKey, bool> keyComparerEquals;
-        [SchemaSerialization]
-        private readonly Expression<Func<TLeft, TLeft, bool>> leftComparer;
-        private readonly Func<TLeft, TLeft, bool> leftComparerEquals;
-        [SchemaSerialization]
-        private readonly Expression<Func<TRight, TRight, bool>> rightComparer;
-        private readonly Func<TRight, TRight, bool> rightComparerEquals;
         [SchemaSerialization]
         private readonly long leftDuration;
         [SchemaSerialization]
@@ -57,28 +51,20 @@ namespace Microsoft.StreamProcessing
         private bool emitCTI = false;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedFixedIntervalEquiJoinPipe()
-            => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public PartitionedFixedIntervalEquiJoinPipe() { }
 
         public PartitionedFixedIntervalEquiJoinPipe(
-            EquiJoinStreamable<TKey, TLeft, TRight, TResult> stream,
+            BinaryStreamable<TKey, TLeft, TRight, TResult> stream,
             Expression<Func<TLeft, TRight, TResult>> selector,
             IStreamObserver<TKey, TResult> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.selector = selector.Compile();
             this.leftDuration = stream.Left.Properties.ConstantDurationLength.Value;
             this.rightDuration = stream.Right.Properties.ConstantDurationLength.Value;
 
             this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparer.Compile();
-
-            this.leftComparer = stream.Left.Properties.PayloadEqualityComparer.GetEqualsExpr();
-            this.leftComparerEquals = this.leftComparer.Compile();
-
-            this.rightComparer = stream.Right.Properties.PayloadEqualityComparer.GetEqualsExpr();
-            this.rightComparerEquals = this.rightComparer.Compile();
 
             this.pool = MemoryManager.GetMemoryPool<TKey, TResult>(stream.Properties.IsColumnar);
             this.pool.Get(out this.output);
@@ -91,10 +77,8 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
                 JoinKind.FixedIntervalEquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
-            node.AddJoinExpression("left key comparer", this.leftComparer);
-            node.AddJoinExpression("right key comparer", this.rightComparer);
             this.Observer.ProduceQueryPlan(node);
         }
 

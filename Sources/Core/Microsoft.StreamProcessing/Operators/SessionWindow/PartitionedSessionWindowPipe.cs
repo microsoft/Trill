@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing
     {
         private readonly MemoryPool<TKey, TPayload> pool;
         private readonly string errorMessages;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [SchemaSerialization]
         private readonly long sessionTimeout;
@@ -35,10 +35,7 @@ namespace Microsoft.StreamProcessing
         private FastDictionary2<TKey, Queue<ActiveEvent>> stateDictionary = new FastDictionary2<TKey, Queue<ActiveEvent>>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedSessionWindowPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedSessionWindowPipe() { }
 
         public PartitionedSessionWindowPipe(IStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long sessionTimeout, long maximumDuration)
             : base(stream, observer)
@@ -49,16 +46,13 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = stream.ErrorMessages;
             this.pool.Get(out this.output);
             this.output.Allocate();
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SessionWindowPlanNode(
+            => this.Observer.ProduceQueryPlan(new SessionWindowPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), this.sessionTimeout, this.maximumDuration,
-                false, this.errorMessages, false));
-        }
+                false, this.errorMessages));
 
         private void ReachTime(long timestamp)
         {

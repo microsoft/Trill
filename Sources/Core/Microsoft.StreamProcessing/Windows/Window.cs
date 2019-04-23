@@ -121,9 +121,7 @@ namespace Microsoft.StreamProcessing
         /// Computes a time-sensitive minimum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(Expression<Func<TSource, TValue>> selector, Expression<Comparison<TValue>> comparer)
-        {
-            return Min(selector, new ComparerExpression<TValue>(comparer));
-        }
+            => Min(selector, new ComparerExpression<TValue>(comparer));
 
         /// <summary>
         /// Computes a time-sensitive maximum aggregate using snapshot semantics.
@@ -166,9 +164,7 @@ namespace Microsoft.StreamProcessing
         /// Computes a time-sensitive maximum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Max<TValue>(Expression<Func<TSource, TValue>> selector, Expression<Comparison<TValue>> comparer)
-        {
-            return Max(selector, new ComparerExpression<TValue>(comparer));
-        }
+            => Max(selector, new ComparerExpression<TValue>(comparer));
 
         /// <summary>
         /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector.
@@ -256,79 +252,63 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public IAggregate<TSource, List<double>, double?> StandardDeviation(
             Expression<Func<TSource, double?>> selector)
-        {
-            return new StandardDeviationDouble().MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-        }
+            => new StandardDeviationDouble().MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
 
         /// <summary>
         /// Computes the sample standard deviation of the elements in the window.
         /// </summary>
         public IAggregate<TSource, List<double>, double?> StandardDeviation(
             Expression<Func<TSource, long?>> selector)
-        {
-            return new StandardDeviationDouble().MakeInputNullableAndSkipNulls()
+            => new StandardDeviationDouble().MakeInputNullableAndSkipNulls()
                 .TransformInput<long?, double?, List<double>, double?>(e => e)
                 .TransformInput(selector).ApplyFilter(this.Filter);
-        }
 
         /// <summary>
         /// Computes the population standard deviation of the elements in the window.
         /// </summary>
         public IAggregate<TSource, List<double>, double?> PopulationStandardDeviation(
             Expression<Func<TSource, double?>> selector)
-        {
-            return new PopulationStandardDeviationDouble().MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-        }
+            => new PopulationStandardDeviationDouble().MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
 
         /// <summary>
         /// Computes the population standard deviation of the elements in the window.
         /// </summary>
         public IAggregate<TSource, List<double>, double?> PopulationStandardDeviation(
             Expression<Func<TSource, long?>> selector)
-        {
-            return new PopulationStandardDeviationDouble().MakeInputNullableAndSkipNulls()
+            => new PopulationStandardDeviationDouble().MakeInputNullableAndSkipNulls()
                 .TransformInput<long?, double?, List<double>, double?>(e => e)
                 .TransformInput(selector).ApplyFilter(this.Filter);
-        }
 
         /// <summary>
         /// Computes the sample variance of the elements in the window.
         /// </summary>
         public IAggregate<TSource, List<double>, double?> Variance(
             Expression<Func<TSource, double?>> selector)
-        {
-            return new VarianceDouble().MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-        }
+            => new VarianceDouble().MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
 
         /// <summary>
         /// Computes the sample variance of the elements in the window.
         /// </summary>
         public IAggregate<TSource, List<double>, double?> Variance(
             Expression<Func<TSource, long?>> selector)
-        {
-            return new VarianceDouble().MakeInputNullableAndSkipNulls()
+            => new VarianceDouble().MakeInputNullableAndSkipNulls()
                 .TransformInput<long?, double?, List<double>, double?>(e => e)
                 .TransformInput(selector).ApplyFilter(this.Filter);
-        }
 
         /// <summary>
         /// Computes the population variance of the elements in the window.
         /// </summary>
         public IAggregate<TSource, List<double>, double?> PopulationVariance(
             Expression<Func<TSource, double?>> selector)
-        {
-            return new PopulationVarianceDouble().MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-        }
+            => new PopulationVarianceDouble().MakeInputNullableAndSkipNulls().Wrap(selector).ApplyFilter(this.Filter);
 
         /// <summary>
         /// Computes the population variance of the elements in the window.
         /// </summary>
         public IAggregate<TSource, List<double>, double?> PopulationVariance(
             Expression<Func<TSource, long?>> selector)
-        {
-            return new PopulationVarianceDouble().MakeInputNullableAndSkipNulls()
+            => new PopulationVarianceDouble().MakeInputNullableAndSkipNulls()
                 .TransformInput<long?, double?, List<double>, double?>(e => e)
                 .TransformInput(selector).ApplyFilter(this.Filter);
-        }
     }
 }
