@@ -95,7 +95,7 @@ namespace Microsoft.StreamProcessing
                                 {
                                     AddPunctuationOrLowWatermarkToAllBatches(
                                         batches,
-                                        batch.vsync.col[i], batch.key.col[i], batch.hash.col[i]);
+                                        batch.vsync.col[i], batch.vother.col[i], batch.key.col[i], batch.hash.col[i]);
                                 }
                                 continue;
                             }
@@ -116,7 +116,7 @@ namespace Microsoft.StreamProcessing
                                 {
                                     AddPunctuationOrLowWatermarkToAllBatches(
                                         batches,
-                                        batch.vsync.col[i], batch.key.col[i], batch.hash.col[i]);
+                                        batch.vsync.col[i], batch.vother.col[i], batch.key.col[i], batch.hash.col[i]);
                                 }
                                 continue;
                             }
@@ -138,7 +138,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 AddPunctuationOrLowWatermarkToAllBatches(
                                     batches,
-                                    batch.vsync.col[i], batch.key.col[i], batch.hash.col[i]);
+                                    batch.vsync.col[i], batch.vother.col[i], batch.key.col[i], batch.hash.col[i]);
                             }
                             continue;
                         }
@@ -165,12 +165,13 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        private void AddPunctuationOrLowWatermarkToAllBatches(StreamMessage<TInnerKey, TSource>[] batches, long syncTime, TInnerKey innerKey, int hash)
+        private void AddPunctuationOrLowWatermarkToAllBatches(StreamMessage<TInnerKey, TSource>[] batches, long syncTime, long otherTime, TInnerKey innerKey, int hash)
         {
             for (int batchIndex = 0; batchIndex < this.totalBranchesL2; batchIndex++)
             {
                 var count = batches[batchIndex].Count;
                 batches[batchIndex].vsync.col[count] = syncTime;
+                batches[batchIndex].vother.col[count] = otherTime;
                 batches[batchIndex].key.col[count] = innerKey;
                 batches[batchIndex].hash.col[count] = hash;
                 batches[batchIndex].bitvector.col[count >> 6] |= (1L << (count & 0x3f));

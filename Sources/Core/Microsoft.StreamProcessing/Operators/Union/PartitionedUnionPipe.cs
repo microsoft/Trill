@@ -258,7 +258,7 @@ namespace Microsoft.StreamProcessing
                         {
                             // Output the right tuple
                             OutputCurrentTuple(rightEntry);
-                            _ = rightWorking.TryDequeue(out _);
+                            rightWorking.TryDequeue(out _);
                         }
                         else
                         {
