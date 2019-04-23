@@ -8,7 +8,7 @@ using System.Reflection;
 namespace Microsoft.StreamProcessing.Provider
 {
     /// <summary>
-    ///
+    /// An augmented expression visitor that requires implementors to provide transformations for the method API for IQStreamable
     /// </summary>
     public abstract class QStreamableVisitor : ExpressionVisitor
     {
@@ -19,10 +19,10 @@ namespace Microsoft.StreamProcessing.Provider
         private static readonly MethodInfo WhereMethod = typeof(QStreamableStatic).GetMethod("Where");
 
         /// <summary>
-        ///
+        /// Visits the children of the System.Linq.Expressions.MethodCallExpression.
         /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
         protected sealed override Expression VisitMethodCall(MethodCallExpression node)
         {
             var method = node.Method;
@@ -39,45 +39,45 @@ namespace Microsoft.StreamProcessing.Provider
         }
 
         /// <summary>
-        ///
+        /// An overrideable method for handling any method that is not part of the IQStreamable API.
         /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        protected virtual Expression VisitNonStreamingMethodCall(MethodCallExpression node) => node;
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
+        protected virtual Expression VisitNonStreamingMethodCall(MethodCallExpression node) => base.VisitMethodCall(node);
 
         /// <summary>
-        ///
+        /// Visits an IQStreamable Alter Duration call.
         /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
         protected virtual Expression VisitAlterDurationCall(MethodCallExpression node) => node;
 
         /// <summary>
-        ///
+        /// Visits an IQStreamable Quantize Lifetime call.
         /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
         protected virtual Expression VisitQuantizeLifetimeCall(MethodCallExpression node) => node;
 
         /// <summary>
-        ///
+        /// Visits an IQStreamable Select call.
         /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
         protected virtual Expression VisitSelectCall(MethodCallExpression node) => node;
 
         /// <summary>
-        ///
+        /// Visits an IQStreamable Where call.
         /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
         protected virtual Expression VisitWhereCall(MethodCallExpression node) => node;
 
         /// <summary>
         ///
         /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
         protected virtual Expression VisitGroupByCall(MethodCallExpression node) => node;
     }
 }

@@ -9,7 +9,7 @@ using System.Reflection;
 namespace Microsoft.StreamProcessing.Provider
 {
     /// <summary>
-    ///
+    /// The extension methods over interface IQStreamable
     /// </summary>
     public static class QStreamableStatic
     {
