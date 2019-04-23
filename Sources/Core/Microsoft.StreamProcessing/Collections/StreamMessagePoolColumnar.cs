@@ -37,9 +37,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
         public override void Free(bool reset = false)
         {
-            while (this.batchQueue.TryDequeue(out StreamMessage<TKey, TPayload> result))
+            while (this.batchQueue.TryDequeue(out _))
             {
-                result = null;
                 Interlocked.Decrement(ref this.createdObjects);
             }
             if (reset)

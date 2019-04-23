@@ -17,22 +17,16 @@ namespace Microsoft.StreamProcessing
         public readonly long Period;
 
         public BeatStreamable(IStreamable<TKey, TPayload> source, long offset, long period)
-            : this(source, offset, period, source.Properties.PayloadEqualityComparer)
+            : base(source, source.Properties)
         {
+            Contract.Requires(source != null);
+            Contract.Requires(period > 0);
+
             // This operator uses the equality method on payloads
             if (this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
                 throw new InvalidOperationException($"Type of payload, '{typeof(TPayload).FullName}', to Beat does not have a valid equality operator for columnar mode.");
             }
-
-        }
-
-        public BeatStreamable(IStreamable<TKey, TPayload> source, long offset, long period, IEqualityComparerExpression<TPayload> payloadComparer)
-            : base(source, source.Properties, payloadComparer)
-        {
-            Contract.Requires(source != null);
-            Contract.Requires(period > 0);
-            Contract.Requires(payloadComparer != null);
 
             this.Offset = offset;
             this.Period = period;

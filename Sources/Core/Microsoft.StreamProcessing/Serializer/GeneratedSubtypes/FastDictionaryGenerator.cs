@@ -15,8 +15,7 @@ namespace Microsoft.StreamProcessing.Internal
         private const string Prefix = "GeneratedFastDictionary_";
         private static readonly object sentinel = new object();
         private static int classCounter = 0;
-        private static Dictionary<Tuple<string, Type, Type>, Type> generatorCache =
-            new Dictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly Dictionary<Tuple<string, Type, Type>, Type> generatorCache = new Dictionary<Tuple<string, Type, Type>, Type>();
 
         public static Func<FastDictionary<TKey, TValue>> CreateFastDictionaryGenerator<TKey, TValue>(
             this IEqualityComparerExpression<TKey> comparerExp, int capacity, Func<TKey, TKey, bool> equalsFunc, Func<TKey, int> getHashCodeFunc, QueryContainer container)
@@ -62,8 +61,7 @@ namespace Microsoft.StreamProcessing.Internal
         private const string Prefix = "GeneratedFastDictionary2_";
         private static readonly object sentinel = new object();
         private static int classCounter = 0;
-        private static Dictionary<Tuple<string, Type, Type>, Type> generatorCache =
-            new Dictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly Dictionary<Tuple<string, Type, Type>, Type> generatorCache = new Dictionary<Tuple<string, Type, Type>, Type>();
 
         public static Func<FastDictionary2<TKey, TValue>> CreateFastDictionary2Generator<TKey, TValue>(
             this IEqualityComparerExpression<TKey> comparerExp, int capacity, Func<TKey, TKey, bool> equalsFunc, Func<TKey, int> getHashCodeFunc, QueryContainer container)
@@ -109,8 +107,7 @@ namespace Microsoft.StreamProcessing.Internal
         private const string Prefix = "GeneratedFastDictionary3_";
         private static readonly object sentinel = new object();
         private static int classCounter = 0;
-        private static Dictionary<Tuple<string, Type, Type>, Type> generatorCache =
-            new Dictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly Dictionary<Tuple<string, Type, Type>, Type> generatorCache = new Dictionary<Tuple<string, Type, Type>, Type>();
 
         public static Func<FastDictionary3<TKey, TValue>> CreateFastDictionary3Generator<TKey, TValue>(
             this IEqualityComparerExpression<TKey> comparerExp, int capacity, Func<TKey, TKey, bool> equalsFunc, Func<TKey, int> getHashCodeFunc, QueryContainer container)

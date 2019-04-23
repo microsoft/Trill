@@ -348,7 +348,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             var len = str.Length;
             if (len > 1 << 15) throw new InvalidOperationException("String too long");
             this.lengths.col[this.Count] = (short)len;
-            this.EndOffset = this.EndOffset + len;
+            this.EndOffset += len;
             this.Count++;
             if (len > this.MaxStringSize) this.MaxStringSize = len;
         }
@@ -400,7 +400,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
             this.starts.col[this.Count] = this.EndOffset;
             this.lengths.col[this.Count] = otherLength;
-            this.EndOffset = this.EndOffset + otherLength;
+            this.EndOffset += otherLength;
             this.Count++;
             if (otherLength > this.MaxStringSize) this.MaxStringSize = otherLength;
         }
@@ -707,11 +707,10 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             var lengthscol = this.lengths.col;
             var largestr = this.col.charArray.contentString;
 
-            fixed (char* src = this.col.charArray.content)
-                for (int i = 0; i < this.Count; i++)
-                    if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
-                        if (!(largestr.IndexOf(str, startscol[i] + 2, lengthscol[i], StringComparison.Ordinal) >= 0))
-                            rbv[i >> 6] |= (1L << (i & 0x3f));
+            for (int i = 0; i < this.Count; i++)
+                if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                    if (!(largestr.IndexOf(str, startscol[i] + 2, lengthscol[i], StringComparison.Ordinal) >= 0))
+                        rbv[i >> 6] |= (1L << (i & 0x3f));
 
             return result;
         }
@@ -1245,119 +1244,117 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             var largestr = this.col.charArray.contentString;
 
             int end_index = 0;
-            fixed (char* src = this.col.charArray.content)
+            Match m = null;
+            // start match at the next active bit
+            while (((bv[end_index >> 6] & (1L << (end_index & 0x3f))) != 0) && (end_index < startscol.Length))
             {
-                Match m = null;
-                // start match at the next active bit
-                while (((bv[end_index >> 6] & (1L << (end_index & 0x3f))) != 0) && (end_index < startscol.Length))
+                end_index++;
+            }
+            if (end_index < startscol.Length)
+            {
+                m = regex.Match(largestr, startscol[end_index] + 2, this.col.UsedLength - (startscol[end_index] + 2));
+            }
+
+            while ((m != null) && m.Success)
+            {
+                int pattern_startoffset = m.Index - 2; // position of the first character in the match
+                int pattern_endoffset = m.Index - 2 + m.Length - 1; // position of the last character in the match
+
+                while ((end_index < this.starts.UsedLength - 1) && (startscol[end_index + 1] <= pattern_startoffset))
                 {
+                    // report full string match
+                    rstartscol[current.Count] = startscol[end_index];
+                    rlengthscol[current.Count] = lengthscol[end_index];
+                    current.Count++;
+                    if (current.Count == rstartscol.Length)
+                    {
+                        resultList.Add(current);
+                        current = Clone();
+                        current.Count = 0;
+                        current.starts = current.starts.MakeWritable(this.intPool);
+                        current.lengths = current.lengths.MakeWritable(this.shortPool);
+                        rstartscol = current.starts.col;
+                        rlengthscol = current.lengths.col;
+                    }
+                    multiplicity.col[end_index] = 1;
                     end_index++;
                 }
-                if (end_index < startscol.Length)
+                int start_index = end_index;
+                while ((end_index < this.starts.UsedLength - 1) && (startscol[end_index + 1] <= pattern_endoffset))
                 {
-                    m = regex.Match(largestr, startscol[end_index] + 2, this.col.UsedLength - (startscol[end_index] + 2));
+                    // report full string match
+                    rstartscol[current.Count] = startscol[end_index];
+                    rlengthscol[current.Count] = lengthscol[end_index];
+                    current.Count++;
+                    if (current.Count == rstartscol.Length)
+                    {
+                        resultList.Add(current);
+                        current = Clone();
+                        current.Count = 0;
+                        current.starts = current.starts.MakeWritable(this.intPool);
+                        current.lengths = current.lengths.MakeWritable(this.shortPool);
+                        rstartscol = current.starts.col;
+                        rlengthscol = current.lengths.col;
+                    }
+                    multiplicity.col[end_index] = 1;
+                    end_index++;
                 }
 
-                while ((m != null) && m.Success)
+                if ((end_index == this.starts.UsedLength - 1) && (startscol[end_index] + lengthscol[end_index] <= pattern_endoffset)) // if last entry
                 {
-                    int pattern_startoffset = m.Index - 2; // position of the first character in the match
-                    int pattern_endoffset = m.Index - 2 + m.Length - 1; // position of the last character in the match
+                    break;
+                }
 
-                    while ((end_index < this.starts.UsedLength - 1) && (startscol[end_index + 1] <= pattern_startoffset))
+                if ((bv[end_index >> 6] & (1L << (end_index & 0x3f))) == 0)
+                {
+                    if (start_index == end_index)
                     {
-                        // report full string match
-                        rstartscol[current.Count] = startscol[end_index];
-                        rlengthscol[current.Count] = lengthscol[end_index];
-                        current.Count++;
-                        if (current.Count == rstartscol.Length)
+                        int prev_end = startscol[start_index];
+                        bool done = false;
+                        int localcount = 0;
+                        while (true)
                         {
-                            resultList.Add(current);
-                            current = Clone();
-                            current.Count = 0;
-                            current.starts = current.starts.MakeWritable(this.intPool);
-                            current.lengths = current.lengths.MakeWritable(this.shortPool);
-                            rstartscol = current.starts.col;
-                            rlengthscol = current.lengths.col;
-                        }
-                        multiplicity.col[end_index] = 1;
-                        end_index++;
-                    }
-                    int start_index = end_index;
-                    while ((end_index < this.starts.UsedLength - 1) && (startscol[end_index + 1] <= pattern_endoffset))
-                    {
-                        // report full string match
-                        rstartscol[current.Count] = startscol[end_index];
-                        rlengthscol[current.Count] = lengthscol[end_index];
-                        current.Count++;
-                        if (current.Count == rstartscol.Length)
-                        {
-                            resultList.Add(current);
-                            current = Clone();
-                            current.Count = 0;
-                            current.starts = current.starts.MakeWritable(this.intPool);
-                            current.lengths = current.lengths.MakeWritable(this.shortPool);
-                            rstartscol = current.starts.col;
-                            rlengthscol = current.lengths.col;
-                        }
-                        multiplicity.col[end_index] = 1;
-                        end_index++;
-                    }
-
-                    if ((end_index == this.starts.UsedLength - 1) && (startscol[end_index] + lengthscol[end_index] <= pattern_endoffset)) // if last entry
-                    {
-                        break;
-                    }
-
-                    if ((bv[end_index >> 6] & (1L << (end_index & 0x3f))) == 0)
-                    {
-                        if (start_index == end_index)
-                        {
-                            int prev_end = startscol[start_index];
-                            bool done = false;
-                            int localcount = 0;
-                            while (true)
+                            if ((!m.Success) || (startscol[end_index] + lengthscol[end_index] < m.Index - 2 + m.Length)) done = true;
+                            rstartscol[current.Count] = prev_end;
+                            rlengthscol[current.Count] = (short)Math.Min(m.Index - 2 - prev_end, startscol[end_index] + lengthscol[end_index] - prev_end);
+                            current.Count++;
+                            localcount++;
+                            if (current.Count == rstartscol.Length)
                             {
-                                if ((!m.Success) || (startscol[end_index] + lengthscol[end_index] < m.Index - 2 + m.Length)) done = true;
-                                rstartscol[current.Count] = prev_end;
-                                rlengthscol[current.Count] = (short)Math.Min(m.Index - 2 - prev_end, startscol[end_index] + lengthscol[end_index] - prev_end);
-                                current.Count++;
-                                localcount++;
-                                if (current.Count == rstartscol.Length)
-                                {
-                                    resultList.Add(current);
-                                    current = Clone();
-                                    current.Count = 0;
-                                    current.starts = current.starts.MakeWritable(this.intPool);
-                                    current.lengths = current.lengths.MakeWritable(this.shortPool);
-                                    rstartscol = current.starts.col;
-                                    rlengthscol = current.lengths.col;
-                                }
-                                if (done) break;
-                                prev_end = m.Index - 2 + m.Length;
-                                m = m.NextMatch();
+                                resultList.Add(current);
+                                current = Clone();
+                                current.Count = 0;
+                                current.starts = current.starts.MakeWritable(this.intPool);
+                                current.lengths = current.lengths.MakeWritable(this.shortPool);
+                                rstartscol = current.starts.col;
+                                rlengthscol = current.lengths.col;
                             }
-                            multiplicity.col[end_index] = localcount;
-                            end_index++;
+                            if (done) break;
+                            prev_end = m.Index - 2 + m.Length;
+                            m = m.NextMatch();
                         }
-                        else
-                        {
-                            m = regex.Match(largestr, startscol[end_index] + 2, this.col.UsedLength - (startscol[end_index] + 2));
-                        }
+                        multiplicity.col[end_index] = localcount;
+                        end_index++;
                     }
                     else
                     {
-                        // restart match at the next active bit
-                        while (((bv[end_index >> 6] & (1L << (end_index & 0x3f))) != 0) && (end_index < startscol.Length))
-                        {
-                            end_index++;
-                        }
-                        if (end_index < startscol.Length)
-                        {
-                            m = regex.Match(largestr, startscol[end_index] + 2, this.col.UsedLength - (startscol[end_index] + 2));
-                        }
+                        m = regex.Match(largestr, startscol[end_index] + 2, this.col.UsedLength - (startscol[end_index] + 2));
+                    }
+                }
+                else
+                {
+                    // restart match at the next active bit
+                    while (((bv[end_index >> 6] & (1L << (end_index & 0x3f))) != 0) && (end_index < startscol.Length))
+                    {
+                        end_index++;
+                    }
+                    if (end_index < startscol.Length)
+                    {
+                        m = regex.Match(largestr, startscol[end_index] + 2, this.col.UsedLength - (startscol[end_index] + 2));
                     }
                 }
             }
+
             if (current.Count > 0)
             {
                 resultList.Add(current);
@@ -1572,7 +1569,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             var otherlength = otherString.Length;
 
             int length;
-            fixed (char* dest = this.stage)
             fixed (char* charContent = this.col.charArray.content)
             fixed (char* otherContent = otherString)
             {

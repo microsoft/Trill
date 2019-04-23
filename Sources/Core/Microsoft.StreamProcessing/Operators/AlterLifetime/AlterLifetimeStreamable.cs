@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
             IStreamable<TKey, TPayload> source,
             LambdaExpression startTimeSelector,
             LambdaExpression durationSelector)
-            : base(source, source.Properties.AlterLifetime(durationSelector), source.Properties.PayloadEqualityComparer)
+            : base(source, source.Properties.AlterLifetime(durationSelector))
         {
             Contract.Requires(source != null);
 

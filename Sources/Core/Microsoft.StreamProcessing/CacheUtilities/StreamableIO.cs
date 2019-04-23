@@ -161,7 +161,7 @@ namespace Microsoft.StreamProcessing
 
     internal sealed class QueuedMessageObserver<TKey, TPayload> : IStreamObserver<TKey, TPayload>, IDisposable
     {
-        private IObserver<QueuedMessage<StreamMessage<TKey, TPayload>>> observer;
+        private readonly IObserver<QueuedMessage<StreamMessage<TKey, TPayload>>> observer;
 
         public QueuedMessageObserver(IObserver<QueuedMessage<StreamMessage<TKey, TPayload>>> observer)
         {

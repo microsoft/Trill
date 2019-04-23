@@ -33,7 +33,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification="Lambdas are immutable")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public readonly Func<TKey, TKey, bool> comparerEquals;
-        private readonly Func<TKey, int> comparerGetHashCode;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -86,7 +85,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             this.bitvector = new byte[1 + (this.Size >> 3)];
             this.dirtyBitvector = new byte[1 + (this.Size >> 3)];
             this.comparerEquals = equals;
-            this.comparerGetHashCode = getHashCode;
             this.resizeThreshold = this.Size >> 1;
             this.Count = 0;
         }
@@ -196,10 +194,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Clean()
-        {
-            Array.Clear(this.dirtyBitvector, 0, 1 + (this.Size >> 3));
-        }
+        public void Clean() => Array.Clear(this.dirtyBitvector, 0, 1 + (this.Size >> 3));
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -208,10 +203,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsClean(ref int index)
-        {
-            return ((this.dirtyBitvector[index >> 3] & (0x1 << (index & 0x7))) == 0);
-        }
+        public bool IsClean(ref int index) => ((this.dirtyBitvector[index >> 3] & (0x1 << (index & 0x7))) == 0);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -219,10 +211,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <param name="index"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void SetDirty(ref int index)
-        {
-            this.dirtyBitvector[index >> 3] |= (byte)((0x1 << (index & 0x7)));
-        }
+        public void SetDirty(ref int index) => this.dirtyBitvector[index >> 3] |= (byte)((0x1 << (index & 0x7)));
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

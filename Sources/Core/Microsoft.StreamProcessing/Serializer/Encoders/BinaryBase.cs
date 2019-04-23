@@ -14,8 +14,8 @@ namespace Microsoft.StreamProcessing.Serializer
     {
         protected Stream stream;
 
-        private static ConcurrentDictionary<Tuple<Type, int>, object> columnPools = new ConcurrentDictionary<Tuple<Type, int>, object>();
-        private static ConcurrentDictionary<int, object> bitVectorPools = new ConcurrentDictionary<int, object>();
+        private static readonly ConcurrentDictionary<Tuple<Type, int>, object> columnPools = new ConcurrentDictionary<Tuple<Type, int>, object>();
+        private static readonly ConcurrentDictionary<int, object> bitVectorPools = new ConcurrentDictionary<int, object>();
 
         protected BinaryBase(Stream stream) => this.stream = stream ?? throw new ArgumentNullException(nameof(stream));
 

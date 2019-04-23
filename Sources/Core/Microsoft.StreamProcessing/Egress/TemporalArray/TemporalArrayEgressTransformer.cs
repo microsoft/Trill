@@ -13,26 +13,26 @@ namespace Microsoft.StreamProcessing
     {
         private static int TemporalArrayEgressSequenceNumber = 0;
 
-        private string TKey;
-        private string TPayload;
-        private string TResult;
+        private readonly string TKey;
+        private readonly string TPayload;
+        private readonly string TResult;
 
         private Func<string, string, string> startEdgeFunction;
         private Func<string, string, string, string> intervalFunction;
 
-        private string partitionString;
-        private string ingressType;
+        private readonly string partitionString;
+        private readonly string ingressType;
 
-        private string genericArguments;
-        private string egress;
-        private string inputKey;
-        private string partitionKeyArgument;
+        private readonly string genericArguments;
+        private readonly string egress;
+        private readonly string inputKey;
+        private readonly string partitionKeyArgument;
 
-        private string BatchGeneratedFrom_TKey_TPayload;
-        private string TKeyTPayloadGenericParameters;
-        private IEnumerable<MyFieldInfo> fields;
-        private ColumnarRepresentation payloadRepresentation;
-        private bool isColumnar;
+        private readonly string BatchGeneratedFrom_TKey_TPayload;
+        private readonly string TKeyTPayloadGenericParameters;
+        private readonly IEnumerable<MyFieldInfo> fields;
+        private readonly ColumnarRepresentation payloadRepresentation;
+        private readonly bool isColumnar;
 
         private TemporalArrayEgressTemplate(Type tKey, Type tPayload, Type tResult, string partitionString, string ingressType, bool isColumnar)
             : base($"GeneratedTemporalArrayEgress_{TemporalArrayEgressSequenceNumber++}")

@@ -12,8 +12,8 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class MyStringBuilder : IDisposable
     {
-        private const string CapacityField = "Capacity";
         internal const int DefaultCapacity = 0x10;
+        internal const int MaxChunkSize = 0x1f40;
         [DataMember]
         internal char[] m_ChunkChars;
         [DataMember]
@@ -25,12 +25,7 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         internal int m_MaxCapacity;
 
-        private const string MaxCapacityField = "m_MaxCapacity";
-        internal const int MaxChunkSize = 0x1f40;
-        private const string StringValueField = "m_StringValue";
-        private const string ThreadIDField = "m_currentThread";
-
-        private CharArrayPool cap;
+        private readonly CharArrayPool cap;
 
         [DataMember]
         internal CharArrayWrapper m_ChunkCharsWrapper;

@@ -2,7 +2,6 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
-using System;
 
 namespace Microsoft.StreamProcessing.Internal.Collections
 {
@@ -37,7 +36,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
         private sealed class CacheKey1<T1> : CacheKey
         {
-            private T1 keyData1;
+            private readonly T1 keyData1;
 
             public CacheKey1(T1 keyData1) : base() => this.keyData1 = keyData1;
 
@@ -52,8 +51,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
         private sealed class CacheKey2<T1, T2> : CacheKey
         {
-            private T1 keyData1;
-            private T2 keyData2;
+            private readonly T1 keyData1;
+            private readonly T2 keyData2;
 
             public CacheKey2(T1 keyData1, T2 keyData2) : base()
             {
@@ -75,9 +74,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
         private sealed class CacheKey3<T1, T2, T3> : CacheKey
         {
-            private T1 keyData1;
-            private T2 keyData2;
-            private T3 keyData3;
+            private readonly T1 keyData1;
+            private readonly T2 keyData2;
+            private readonly T3 keyData3;
 
             public CacheKey3(T1 keyData1, T2 keyData2, T3 keyData3) : base()
             {
@@ -102,11 +101,11 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
         private sealed class CacheKey5<T1, T2, T3, T4, T5> : CacheKey
         {
-            private T1 keyData1;
-            private T2 keyData2;
-            private T3 keyData3;
-            private T4 keyData4;
-            private T5 keyData5;
+            private readonly T1 keyData1;
+            private readonly T2 keyData2;
+            private readonly T3 keyData3;
+            private readonly T4 keyData4;
+            private readonly T5 keyData5;
 
             public CacheKey5(T1 keyData1, T2 keyData2, T3 keyData3, T4 keyData4, T5 keyData5) : base()
             {

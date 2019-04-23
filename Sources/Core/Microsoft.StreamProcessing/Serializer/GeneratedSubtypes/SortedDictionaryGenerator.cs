@@ -15,7 +15,7 @@ namespace Microsoft.StreamProcessing.Internal
     {
         private const string Prefix = "GeneratedSortedDictionary";
         private static readonly object sentinel = new object();
-        private static Dictionary<Tuple<string, Type, Type>, Type> DictionaryTypes = new Dictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly Dictionary<Tuple<string, Type, Type>, Type> DictionaryTypes = new Dictionary<Tuple<string, Type, Type>, Type>();
 
         public static Expression<Func<SortedDictionary<TKey, TValue>>> CreateSortedDictionaryGenerator<TKey, TValue>(this IComparerExpression<TKey> comparerExp, QueryContainer container)
         {
