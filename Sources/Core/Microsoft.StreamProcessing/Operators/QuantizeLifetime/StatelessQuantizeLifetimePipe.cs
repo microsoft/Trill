@@ -40,7 +40,7 @@ namespace Microsoft.StreamProcessing
             => this.Observer.ProduceQueryPlan(new QuantizeLifetimePlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), this.width, this.skip, this.progress, this.offset,
-                false, null, false));
+                false, null));
 
         public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
         {

@@ -23,16 +23,17 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         protected override Expression BuildSerializerSafe(Expression encoder, Expression value)
         {
             var surrogate = Expression.Constant(this.Surrogate);
-            Expression stream = Expression.Field(encoder, "stream");
+            var stream = Expression.Field(encoder, "stream");
             return Expression.Call(surrogate, this.serialize, new[] { value, stream });
         }
 
         protected override Expression BuildDeserializerSafe(Expression decoder)
         {
             var surrogate = Expression.Constant(this.Surrogate);
-            Expression stream = Expression.Field(decoder, "stream");
+            var stream = Expression.Field(decoder, "stream");
             return Expression.Call(surrogate, this.deserialize, new[] { stream });
         }
+
         private ISurrogate Surrogate { get; }
     }
 }

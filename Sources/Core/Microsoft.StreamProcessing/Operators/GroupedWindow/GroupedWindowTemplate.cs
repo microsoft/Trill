@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class GroupedWindowTemplate : CommonBaseTemplate
+    internal partial class GroupedWindowTemplate : CommonPipeTemplate
     {
         /// <summary>
         /// Create the template output
@@ -115,12 +115,10 @@ using Microsoft.StreamProcessing.Aggregates;
                     "MIT License\r\n// ****************************************************************" +
                     "*****\r\n");
 
-  var resultMessageMemoryPoolGenericParameters = string.Format("<{0}, {1}>", TKey, TResult);
+  var resultMessageMemoryPoolGenericParameters = $"<{TKey}, {TResult}>";
   if (resultType == typeof(int) || resultType == typeof(long) || resultType == typeof(string)) resultMessageMemoryPoolGenericParameters = string.Empty;
 
-  getOutputBatch = string.Format("this.pool.Get(out genericOutputbatch); this.batch = ({0}{1})genericOutputbatch;",
-          Transformer.GetBatchClassName(typeof(Empty), resultType),
-          UnitTResultGenericParameters);
+  getOutputBatch = $"this.pool.Get(out genericOutputbatch); this.batch = ({Transformer.GetBatchClassName(typeof(Empty), resultType)}{UnitTResultGenericParameters})genericOutputbatch;";
 
 
             this.Write("\r\n// TKey: ");
@@ -367,7 +365,7 @@ using Microsoft.StreamProcessing.Aggregates;
                         this.batch.vother.col[c] = long.MinValue;
                         this.batch.key.col[c] = default;
                         this.batch[c] = default;
-                        this.batch.hash.col[c] = batch.key.col[i].GetHashCode();
+                        this.batch.hash.col[c] = 0;
                         this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();

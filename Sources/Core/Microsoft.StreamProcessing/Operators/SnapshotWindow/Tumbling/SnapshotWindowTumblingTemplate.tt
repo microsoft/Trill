@@ -40,7 +40,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
     <# if (!this.isUngrouped) { #>
 
     [DataMember]
-    private FastDictionary3<<#= TKey #>, HeldState> heldAggregates;
+    private FastDictionary<<#= TKey #>, HeldState> heldAggregates;
     <# } else { #>
 
     [DataMember]
@@ -89,7 +89,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
         this.batch.Allocate();
 
         <# if (!this.isUngrouped) { #>
-        var generator = this.keyComparer.CreateFastDictionary3Generator<<#= TKey #>, HeldState>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer);
+        var generator = this.keyComparer.CreateFastDictionaryGenerator<<#= TKey #>, HeldState>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer);
         this.heldAggregates = generator.Invoke();
         <# } #>
     }
@@ -207,7 +207,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                 }
                 <# } else { #>
 
-                    int iter1 = FastDictionary3<<#= TKey #>, HeldState>.IteratorStart;
+                    int iter1 = FastDictionary<<#= TKey #>, HeldState>.IteratorStart;
                     while (this.heldAggregates.Iterate(ref iter1))
                     {
                         var iter1entry = this.heldAggregates.entries[iter1];
@@ -217,7 +217,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                         this.batch.vother.col[c] = iter1entry.value.timestamp + this.hop;
                         <#= assignToOutput(computeResult("iter1entry.value.state.state")) #>
                         this.batch.key.col[c] = iter1entry.key;
-                        this.batch.hash.col[c] = iter1entry.hash;
+                        this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     }
@@ -260,7 +260,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                     currentState.timestamp = syncTime;
                     // No output because initial state is empty
 
-                    this.heldAggregates.Insert(ref index, currentKey, currentState, currentHash);
+                    this.heldAggregates.Insert(ref index, currentKey, currentState);
                 }
                 else
                 {
@@ -329,7 +329,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
             }
             <# } else { #>
 
-            int iter1 = FastDictionary3<<#= TKey #>, HeldState>.IteratorStart;
+            int iter1 = FastDictionary<<#= TKey #>, HeldState>.IteratorStart;
             while (this.heldAggregates.Iterate(ref iter1))
             {
                 var iter1entry = this.heldAggregates.entries[iter1];
@@ -340,7 +340,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                 <#= assignToOutput(computeResult("iter1entry.value.state.state")) #>
 
                 this.batch.key.col[c] = iter1entry.key;
-                this.batch.hash.col[c] = iter1entry.hash;
+                this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                 this.batch.Count++;
                 if (this.batch.Count == Config.DataBatchSize) FlushContents();
             }

@@ -144,7 +144,6 @@ namespace SimpleTesting
         }
     }
 
-
     [TestClass]
     public class CheckpointRestoreTestsRow : TestWithConfigSettingsWithoutMemoryLeakDetection
     {
@@ -156,12 +155,10 @@ namespace SimpleTesting
         { }
 
         private static IStreamable<Empty, int> CreateBasicQuery(IStreamable<Empty, int> input)
-        {
-            return input
+            => input
                 .Where(e => e % 2 == 1)
                 .AlterEventLifetime(e => e + 1, StreamEvent.InfinitySyncTime)
                 .Select(e => e / 2);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void BasicIngressDiagnosticRow()
@@ -1630,7 +1627,6 @@ namespace SimpleTesting
         }
     }
 
-
     [TestClass]
     public class CheckpointRestoreTestsRowSmallBatch : TestWithConfigSettingsWithoutMemoryLeakDetection
     {
@@ -1643,12 +1639,10 @@ namespace SimpleTesting
         { }
 
         private static IStreamable<Empty, int> CreateBasicQuery(IStreamable<Empty, int> input)
-        {
-            return input
+            => input
                 .Where(e => e % 2 == 1)
                 .AlterEventLifetime(e => e + 1, StreamEvent.InfinitySyncTime)
                 .Select(e => e / 2);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void BasicIngressDiagnosticRowSmallBatch()
@@ -3116,7 +3110,6 @@ namespace SimpleTesting
         }
     }
 
-
     [TestClass]
     public class CheckpointRestoreTestsColumnar : TestWithConfigSettingsWithoutMemoryLeakDetection
     {
@@ -3128,12 +3121,10 @@ namespace SimpleTesting
         { }
 
         private static IStreamable<Empty, int> CreateBasicQuery(IStreamable<Empty, int> input)
-        {
-            return input
+            => input
                 .Where(e => e % 2 == 1)
                 .AlterEventLifetime(e => e + 1, StreamEvent.InfinitySyncTime)
                 .Select(e => e / 2);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void BasicIngressDiagnosticColumnar()
@@ -4602,7 +4593,6 @@ namespace SimpleTesting
         }
     }
 
-
     [TestClass]
     public class CheckpointRestoreTestsColumnarSmallBatch : TestWithConfigSettingsWithoutMemoryLeakDetection
     {
@@ -4615,12 +4605,10 @@ namespace SimpleTesting
         { }
 
         private static IStreamable<Empty, int> CreateBasicQuery(IStreamable<Empty, int> input)
-        {
-            return input
+            => input
                 .Where(e => e % 2 == 1)
                 .AlterEventLifetime(e => e + 1, StreamEvent.InfinitySyncTime)
                 .Select(e => e / 2);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void BasicIngressDiagnosticColumnarSmallBatch()

@@ -18,16 +18,9 @@ namespace Microsoft.StreamProcessing
             this.Source = source;
         }
 
-        protected UnaryStreamable(IStreamable<TKey, TSource> source, StreamProperties<TKey, TResult> properties, IEqualityComparerExpression<TResult> pcomparer)
-            : base(properties)
-        {
-            Contract.Requires(source != null);
-            this.Source = source;
-        }
-
         public override IDisposable Subscribe(IStreamObserver<TKey, TResult> observer)
         {
-            IStreamObserver<TKey, TSource> pipe = CreatePipe(observer);
+            var pipe = CreatePipe(observer);
             return this.Source.Subscribe(pipe);
         }
 

@@ -16,11 +16,9 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public bool IsDisjoint { get; }
 
-        internal UnionPlanNode(PlanNode left, PlanNode right, IBinaryObserver pipe, Type keyType, Type payloadType, bool isDisjoint, bool isGenerated, string errorMessages, bool withStateManager)
+        internal UnionPlanNode(PlanNode left, PlanNode right, IBinaryObserver pipe, Type keyType, Type payloadType, bool isDisjoint, bool isGenerated, string errorMessages)
             : base(left, right, pipe, keyType, payloadType, payloadType, payloadType, isGenerated, errorMessages)
-        {
-            this.IsDisjoint = isDisjoint;
-        }
+            => this.IsDisjoint = isDisjoint;
 
         /// <summary>
         /// Indicates that the current node is a union operation.

@@ -67,9 +67,7 @@ namespace Microsoft.StreamProcessing
         }
 
         internal override void CollectDormantIngressSites(System.Collections.Generic.Dictionary<string, IngressPlanNode> working)
-        {
-            this.Previous.CollectDormantIngressSites(working);
-        }
+            => this.Previous.CollectDormantIngressSites(working);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

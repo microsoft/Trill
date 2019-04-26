@@ -210,6 +210,5 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             this.bitvector = newBitvector;
             this.resizeThreshold = this.Size >> 1;
         }
-
     }
 }

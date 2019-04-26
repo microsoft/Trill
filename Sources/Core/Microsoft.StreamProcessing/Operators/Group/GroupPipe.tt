@@ -24,126 +24,124 @@ namespace Microsoft.StreamProcessing
 <#  var groupDomain = i == 0 ? new [] { 0, 1 } : new [] { 1 };
     foreach (var j in groupDomain) { #>
 
-        [DataContract]
-        internal sealed class <#= j == 0 ? "Partitioned" : string.Empty #>Group<#= nestedInfix #>Pipe<TOuterKey, TSource, TInnerKey> :
-            Pipe<<#= innerKey #>, TSource>, IStreamObserver<TOuterKey, TSource>
+    [DataContract]
+    internal sealed class <#= j == 0 ? "Partitioned" : string.Empty #>Group<#= nestedInfix #>Pipe<TOuterKey, TSource, TInnerKey> :
+        Pipe<<#= innerKey #>, TSource>, IStreamObserver<TOuterKey, TSource>
+    {
+        [SchemaSerialization]
+        private readonly Expression<Func<TSource, TInnerKey>> keySelector;
+        private readonly Func<TSource, TInnerKey> keySelectorFunc;
+        [SchemaSerialization]
+        private readonly Expression<Func<TInnerKey, int>> keyComparer;
+        private readonly Func<TInnerKey, int> innerHashCode;
+
+        private readonly MemoryPool<<#= innerKey #>, TSource> l1Pool;
+        private readonly string errorMessages;
+
+        [Obsolete("Used only by serialization. Do not call directly.")]
+        public <#= j == 0 ? "Partitioned" : string.Empty #>Group<#= nestedInfix #>Pipe() { }
+
+        public <#= j == 0 ? "Partitioned" : string.Empty #>Group<#= nestedInfix #>Pipe(
+            Group<#= nestedInfix #>Streamable<TOuterKey, TSource, TInnerKey> stream,
+            IStreamObserver<<#= innerKey #>, TSource> observer)
+            : base(stream, observer)
         {
-            [SchemaSerialization]
-            private readonly Expression<Func<TSource, TInnerKey>> keySelector;
-            private readonly Func<TSource, TInnerKey> keySelectorFunc;
-            [SchemaSerialization]
-            private readonly Expression<Func<TInnerKey, int>> keyComparer;
-            private readonly Func<TInnerKey, int> innerHashCode;
-
-            private readonly MemoryPool<<#= innerKey #>, TSource> l1Pool;
-            private readonly string errorMessages;
-
-            [Obsolete("Used only by serialization. Do not call directly.")]
-            public <#= j == 0 ? "Partitioned" : string.Empty #>Group<#= nestedInfix #>Pipe() { }
-
-            public <#= j == 0 ? "Partitioned" : string.Empty #>Group<#= nestedInfix #>Pipe(
-                Group<#= nestedInfix #>Streamable<TOuterKey, TSource, TInnerKey> stream,
-                IStreamObserver<<#= innerKey #>, TSource> observer)
-                : base(stream, observer)
-            {
-                this.keySelector = stream.KeySelector;
-                this.keySelectorFunc = this.keySelector.Compile();
+            this.keySelector = stream.KeySelector;
+            this.keySelectorFunc = this.keySelector.Compile();
 <# if (i == 0) { #>
-                this.keyComparer = ((CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey>)stream.Properties.KeyEqualityComparer).innerComparer.GetGetHashCodeExpr();
+            this.keyComparer = ((CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey>)stream.Properties.KeyEqualityComparer).innerComparer.GetGetHashCodeExpr();
 <# }
 else { #>
-                this.keyComparer = stream.Properties.KeyEqualityComparer.GetGetHashCodeExpr();
+            this.keyComparer = stream.Properties.KeyEqualityComparer.GetGetHashCodeExpr();
 <# } #>
-                this.innerHashCode = this.keyComparer.Compile();
+            this.innerHashCode = this.keyComparer.Compile();
 
-                this.errorMessages = stream.ErrorMessages;
-                this.l1Pool = MemoryManager.GetMemoryPool<<#= innerKey #>, TSource>(stream.Properties.IsColumnar);
-            }
+            this.errorMessages = stream.ErrorMessages;
+            this.l1Pool = MemoryManager.GetMemoryPool<<#= innerKey #>, TSource>(stream.Properties.IsColumnar);
+        }
 
-            public unsafe void OnNext(StreamMessage<TOuterKey, TSource> batch)
-            {
-                this.l1Pool.Get(out StreamMessage<<#= innerKey #>, TSource> outputBatch);
-                outputBatch.vsync = batch.vsync;
-                outputBatch.vother = batch.vother;
-                outputBatch.payload = batch.payload;
-                outputBatch.hash = batch.hash.MakeWritable(this.l1Pool.intPool);
-                outputBatch.bitvector = batch.bitvector;
-                this.l1Pool.GetKey(out outputBatch.key);
+        public unsafe void OnNext(StreamMessage<TOuterKey, TSource> batch)
+        {
+            this.l1Pool.Get(out StreamMessage<<#= innerKey #>, TSource> outputBatch);
+            outputBatch.vsync = batch.vsync;
+            outputBatch.vother = batch.vother;
+            outputBatch.payload = batch.payload;
+            outputBatch.hash = batch.hash.MakeWritable(this.l1Pool.intPool);
+            outputBatch.bitvector = batch.bitvector;
+            this.l1Pool.GetKey(out outputBatch.key);
 
-                outputBatch.Count = batch.Count;
+            outputBatch.Count = batch.Count;
 
-                var count = batch.Count;
+            var count = batch.Count;
 
 <# if (i == 0) { #>
-                var srckey = batch.key.col;
+            var srckey = batch.key.col;
 <# } #>
-                var destkey = outputBatch.key.col;
-                var destpayload = outputBatch;
-                fixed (long* srcbv = batch.bitvector.col)
+            var destkey = outputBatch.key.col;
+            var destpayload = outputBatch;
+            fixed (long* srcbv = batch.bitvector.col)
+            {
+                fixed (int* desthash = outputBatch.hash.col)
                 {
-                    fixed (int* desthash = outputBatch.hash.col)
+                    for (int i = 0; i < count; i++)
                     {
-                        for (int i = 0; i < count; i++)
-                        {
 <# if (j == 0) { #>
-                            if ((srcbv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                        if ((srcbv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                        {
+                            if (batch.vother.col[i] == long.MinValue)
                             {
-                                if (batch.vother.col[i] == long.MinValue)
-                                {
-                                    destkey[i].outerGroup = srckey[i];
-                                    destkey[i].innerGroup = default;
-                                    desthash[i] = batch.hash.col[i];
-                                    outputBatch.bitvector.col[i >> 6] |= (1L << (i & 0x3f));
-                                }
-                                continue;
+                                destkey[i].outerGroup = srckey[i];
+                                destkey[i].innerGroup = default;
+                                desthash[i] = batch.hash.col[i];
+                                outputBatch.bitvector.col[i >> 6] |= (1L << (i & 0x3f));
                             }
-<# }
-else { #>
-                            if ((srcbv[i >> 6] & (1L << (i & 0x3f))) != 0) continue;
-<# } #>
-                            var key = this.keySelectorFunc(destpayload[i]);
-<# if (i == 0) { #>
-                            var innerHash = this.innerHashCode(key);
-                            var hash = desthash[i] ^ innerHash;
-
-                            destkey[i].outerGroup = srckey[i];
-                            destkey[i].innerGroup = key;
-                            destkey[i].hashCode = hash;
-                            desthash[i] = hash;
-<# }
-else { #>
-                            destkey[i] = key;
-                            desthash[i] = this.innerHashCode(key);
-<# } #>
+                            continue;
                         }
+<# }
+else { #>
+                        if ((srcbv[i >> 6] & (1L << (i & 0x3f))) != 0) continue;
+<# } #>
+                        var key = this.keySelectorFunc(destpayload[i]);
+<# if (i == 0) { #>
+                        var innerHash = this.innerHashCode(key);
+                        var hash = desthash[i] ^ innerHash;
+
+                        destkey[i].outerGroup = srckey[i];
+                        destkey[i].innerGroup = key;
+                        destkey[i].hashCode = hash;
+                        desthash[i] = hash;
+<# }
+else { #>
+                        destkey[i] = key;
+                        desthash[i] = this.innerHashCode(key);
+<# } #>
                     }
                 }
-
-                batch.key.Return();
-                batch.Return();
-                this.Observer.OnNext(outputBatch);
             }
 
-            public override void ProduceQueryPlan(PlanNode previous)
-            {
-                this.Observer.ProduceQueryPlan(new GroupPlanNode(
-                    previous,
-                    this,
-                    typeof(TOuterKey),
-                    typeof(<#= innerKey #>),
-                    typeof(TSource),
-                    this.keySelector,
-                    int.MinValue,
-                    1,
-                    false,
-                    false,
-                    this.errorMessages));
-            }
-
-            public override int CurrentlyBufferedOutputCount => 0;
-
-            public override int CurrentlyBufferedInputCount => 0;
+            batch.key.Return();
+            batch.Return();
+            this.Observer.OnNext(outputBatch);
         }
+
+        public override void ProduceQueryPlan(PlanNode previous)
+            => this.Observer.ProduceQueryPlan(new GroupPlanNode(
+                previous,
+                this,
+                typeof(TOuterKey),
+                typeof(<#= innerKey #>),
+                typeof(TSource),
+                this.keySelector,
+                int.MinValue,
+                1,
+                false,
+                false,
+                this.errorMessages));
+
+        public override int CurrentlyBufferedOutputCount => 0;
+
+        public override int CurrentlyBufferedInputCount => 0;
+    }
 <# } #>
 <# } #>
 }

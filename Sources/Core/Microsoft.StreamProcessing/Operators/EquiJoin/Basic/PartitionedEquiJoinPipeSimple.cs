@@ -57,7 +57,7 @@ namespace Microsoft.StreamProcessing
         public PartitionedEquiJoinPipeSimple() { }
 
         public PartitionedEquiJoinPipeSimple(
-            EquiJoinStreamable<PartitionKey<TPartitionKey>, TLeft, TRight, TResult> stream,
+            BinaryStreamable<PartitionKey<TPartitionKey>, TLeft, TRight, TResult> stream,
             Expression<Func<TLeft, TRight, TResult>> selector,
             IStreamObserver<PartitionKey<TPartitionKey>, TResult> observer)
             : base(stream, observer)
@@ -119,19 +119,22 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(PartitionKey<TPartitionKey>),
                 JoinKind.EquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             node.AddJoinExpression("right key comparer", this.rightComparer);
             this.Observer.ProduceQueryPlan(node);
         }
 
-        private void NewPartition(TPartitionKey pKey)
+        private void NewPartition(TPartitionKey pKey, int hash)
         {
             this.leftQueue.Insert(pKey, new Queue<LEntry>());
             this.rightQueue.Insert(pKey, new Queue<REntry>());
 
-            if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(ref index, pKey, new PartitionEntry(this, pKey));
+            if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(
+                ref index,
+                pKey,
+                new PartitionEntry { endPointHeap = this.endpointGenerator(), key = pKey, hash = hash });
         }
 
         protected override void ProcessBothBatches(StreamMessage<PartitionKey<TPartitionKey>, TLeft> leftBatch, StreamMessage<PartitionKey<TPartitionKey>, TRight> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
@@ -166,7 +169,7 @@ namespace Microsoft.StreamProcessing
                 var partitionKey = batch.key.col[i].Key;
                 if (first || !partitionKey.Equals(previous))
                 {
-                    if (this.seenKeys.Add(partitionKey)) NewPartition(partitionKey);
+                    if (this.seenKeys.Add(partitionKey)) NewPartition(partitionKey, batch.hash.col[i]);
                     this.leftQueue.Lookup(partitionKey, out int index);
                     queue = this.leftQueue.entries[index].value;
                     this.processQueue.Add(partitionKey);
@@ -176,7 +179,6 @@ namespace Microsoft.StreamProcessing
                     Sync = batch.vsync.col[i],
                     Other = batch.vother.col[i],
                     Payload = batch.payload.col[i],
-                    Hash = batch.hash.col[i],
                 };
                 queue.Enqueue(e);
                 first = false;
@@ -212,7 +214,7 @@ namespace Microsoft.StreamProcessing
                 var partitionKey = batch.key.col[i].Key;
                 if (first || !partitionKey.Equals(previous))
                 {
-                    if (this.seenKeys.Add(partitionKey)) NewPartition(partitionKey);
+                    if (this.seenKeys.Add(partitionKey)) NewPartition(partitionKey, batch.hash.col[i]);
                     this.rightQueue.Lookup(partitionKey, out int index);
                     queue = this.rightQueue.entries[index].value;
                     this.processQueue.Add(partitionKey);
@@ -222,7 +224,6 @@ namespace Microsoft.StreamProcessing
                     Sync = batch.vsync.col[i],
                     Other = batch.vother.col[i],
                     Payload = batch.payload.col[i],
-                    Hash = batch.hash.col[i],
                 };
                 queue.Enqueue(e);
                 first = false;
@@ -273,8 +274,7 @@ namespace Microsoft.StreamProcessing
                                     partition,
                                     partition.nextLeftTime,
                                     leftEntry.Other,
-                                    leftEntry.Payload,
-                                    leftEntry.Hash);
+                                    leftEntry.Payload);
                             }
                             else if (partition.currTime > old)
                             {
@@ -282,10 +282,9 @@ namespace Microsoft.StreamProcessing
                                 AddToBatch(
                                     partition.currTime,
                                     long.MinValue,
-                                    ref partition.key,
+                                    partition,
                                     ref leftEntry.Payload,
-                                    ref r,
-                                    leftEntry.Hash);
+                                    ref r);
                             }
 
                             leftWorking.Dequeue();
@@ -300,8 +299,7 @@ namespace Microsoft.StreamProcessing
                                     partition,
                                     partition.nextRightTime,
                                     rightEntry.Other,
-                                    rightEntry.Payload,
-                                    rightEntry.Hash);
+                                    rightEntry.Payload);
                             }
                             else if (partition.currTime > old)
                             {
@@ -309,10 +307,9 @@ namespace Microsoft.StreamProcessing
                                 AddToBatch(
                                     partition.currTime,
                                     long.MinValue,
-                                    ref partition.key,
+                                    partition,
                                     ref l,
-                                    ref rightEntry.Payload,
-                                    rightEntry.Hash);
+                                    ref rightEntry.Payload);
                             }
 
                             rightWorking.Dequeue();
@@ -323,7 +320,14 @@ namespace Microsoft.StreamProcessing
                         leftEntry = leftWorking.Peek();
                         UpdateNextLeftTime(partition, leftEntry.Sync);
                         partition.nextRightTime = Math.Max(partition.nextRightTime, this.lastRightCTI);
-                        if (partition.nextLeftTime > partition.nextRightTime) break;
+                        if (partition.nextLeftTime > partition.nextRightTime)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, right), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextRightTime)
+                                UpdateTime(partition, partition.nextRightTime);
+                            break;
+                        }
 
                         UpdateTime(partition, partition.nextLeftTime);
 
@@ -333,8 +337,7 @@ namespace Microsoft.StreamProcessing
                                 partition,
                                 partition.nextLeftTime,
                                 leftEntry.Other,
-                                leftEntry.Payload,
-                                leftEntry.Hash);
+                                leftEntry.Payload);
                         }
                         else if (partition.currTime > old)
                         {
@@ -342,10 +345,9 @@ namespace Microsoft.StreamProcessing
                             AddToBatch(
                                 partition.currTime,
                                 long.MinValue,
-                                ref partition.key,
+                                partition,
                                 ref leftEntry.Payload,
-                                ref r,
-                                leftEntry.Hash);
+                                ref r);
                         }
 
                         leftWorking.Dequeue();
@@ -355,7 +357,14 @@ namespace Microsoft.StreamProcessing
                         rightEntry = rightWorking.Peek();
                         UpdateNextRightTime(partition, rightEntry.Sync);
                         partition.nextLeftTime = Math.Max(partition.nextLeftTime, this.lastLeftCTI);
-                        if (partition.nextLeftTime < partition.nextRightTime) break;
+                        if (partition.nextLeftTime < partition.nextRightTime)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, left), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextLeftTime)
+                                UpdateTime(partition, partition.nextLeftTime);
+                            break;
+                        }
 
                         UpdateTime(partition, partition.nextRightTime);
 
@@ -365,8 +374,7 @@ namespace Microsoft.StreamProcessing
                                 partition,
                                 partition.nextRightTime,
                                 rightEntry.Other,
-                                rightEntry.Payload,
-                                rightEntry.Hash);
+                                rightEntry.Payload);
                         }
                         else if (partition.currTime > old)
                         {
@@ -374,10 +382,9 @@ namespace Microsoft.StreamProcessing
                             AddToBatch(
                                 partition.currTime,
                                 long.MinValue,
-                                ref partition.key,
+                                partition,
                                 ref l,
-                                ref rightEntry.Payload,
-                                rightEntry.Hash);
+                                ref rightEntry.Payload);
                         }
 
                         rightWorking.Dequeue();
@@ -432,7 +439,7 @@ namespace Microsoft.StreamProcessing
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessLeftEvent(PartitionEntry partition, long start, long end, TLeft payload, int hash)
+        private void ProcessLeftEvent(PartitionEntry partition, long start, long end, TLeft payload)
         {
             if (start < end)
             {
@@ -445,15 +452,15 @@ namespace Microsoft.StreamProcessing
                     {
                         if (!partition.isRightComplete)
                         {
-                            int index = partition.leftEdgeMap.Insert(hash);
+                            int index = partition.leftEdgeMap.Insert(partition.hash);
                             partition.leftEdgeMap.Values[index].Populate(start, ref payload);
                         }
 
-                        CreateOutputForStartEdge(partition, start, ref payload, hash);
+                        CreateOutputForStartEdge(partition, start, ref payload);
                     }
                     else
                     {
-                        int index = partition.leftEdgeMap.InsertInvisible(hash);
+                        int index = partition.leftEdgeMap.InsertInvisible(partition.hash);
                         partition.leftEdgeMap.Values[index].Populate(start, ref payload);
                     }
                 }
@@ -462,14 +469,14 @@ namespace Microsoft.StreamProcessing
                     // Row is an interval.
                     if (processable)
                     {
-                        int index = partition.leftIntervalMap.Insert(hash);
+                        int index = partition.leftIntervalMap.Insert(partition.hash);
                         partition.leftIntervalMap.Values[index].Populate(start, end, ref payload);
-                        CreateOutputForStartInterval(partition, start, end, ref payload, hash);
+                        CreateOutputForStartInterval(partition, start, end, ref payload);
                         partition.endPointHeap.Insert(end, index);
                     }
                     else
                     {
-                        int index = partition.leftIntervalMap.InsertInvisible(hash);
+                        int index = partition.leftIntervalMap.InsertInvisible(partition.hash);
                         partition.leftIntervalMap.Values[index].Populate(start, end, ref payload);
                     }
                 }
@@ -481,7 +488,7 @@ namespace Microsoft.StreamProcessing
                 // Remove from leftEdgeMap.
                 if (!partition.isRightComplete)
                 {
-                    var edges = partition.leftEdgeMap.Find(hash);
+                    var edges = partition.leftEdgeMap.Find(partition.hash);
                     while (edges.Next(out int index))
                     {
                         if (AreSame(end, ref payload, ref partition.leftEdgeMap.Values[index]))
@@ -493,12 +500,12 @@ namespace Microsoft.StreamProcessing
                 }
 
                 // Output end edges.
-                CreateOutputForEndEdge(partition, start, end, ref payload, hash);
+                CreateOutputForEndEdge(partition, start, end, ref payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessRightEvent(PartitionEntry partition, long start, long end, TRight payload, int hash)
+        private void ProcessRightEvent(PartitionEntry partition, long start, long end, TRight payload)
         {
             if (start < end)
             {
@@ -511,15 +518,15 @@ namespace Microsoft.StreamProcessing
                     {
                         if (!partition.isLeftComplete)
                         {
-                            int index = partition.rightEdgeMap.Insert(hash);
+                            int index = partition.rightEdgeMap.Insert(partition.hash);
                             partition.rightEdgeMap.Values[index].Populate(start, ref payload);
                         }
 
-                        CreateOutputForStartEdge(partition, start, ref payload, hash);
+                        CreateOutputForStartEdge(partition, start, ref payload);
                     }
                     else
                     {
-                        int index = partition.rightEdgeMap.InsertInvisible(hash);
+                        int index = partition.rightEdgeMap.InsertInvisible(partition.hash);
                         partition.rightEdgeMap.Values[index].Populate(start, ref payload);
                     }
                 }
@@ -528,14 +535,14 @@ namespace Microsoft.StreamProcessing
                     // Row is an interval.
                     if (processable)
                     {
-                        int index = partition.rightIntervalMap.Insert(hash);
+                        int index = partition.rightIntervalMap.Insert(partition.hash);
                         partition.rightIntervalMap.Values[index].Populate(start, end, ref payload);
-                        CreateOutputForStartInterval(partition, start, end, ref payload, hash);
+                        CreateOutputForStartInterval(partition, start, end, ref payload);
                         partition.endPointHeap.Insert(end, ~index);
                     }
                     else
                     {
-                        int index = partition.rightIntervalMap.InsertInvisible(hash);
+                        int index = partition.rightIntervalMap.InsertInvisible(partition.hash);
                         partition.rightIntervalMap.Values[index].Populate(start, end, ref payload);
                     }
                 }
@@ -547,7 +554,7 @@ namespace Microsoft.StreamProcessing
                 // Remove from leftEdgeMap.
                 if (!partition.isLeftComplete)
                 {
-                    var edges = partition.rightEdgeMap.Find(hash);
+                    var edges = partition.rightEdgeMap.Find(partition.hash);
                     while (edges.Next(out int index))
                     {
                         if (AreSame(end, ref payload, ref partition.rightEdgeMap.Values[index]))
@@ -559,7 +566,7 @@ namespace Microsoft.StreamProcessing
                 }
 
                 // Output end edges.
-                CreateOutputForEndEdge(partition, start, end, ref payload, hash);
+                CreateOutputForEndEdge(partition, start, end, ref payload);
             }
         }
 
@@ -567,51 +574,47 @@ namespace Microsoft.StreamProcessing
         private void LeaveTime(PartitionEntry partition)
         {
             var leftEdges = partition.leftEdgeMap.TraverseInvisible();
-            while (leftEdges.Next(out int index, out int hash))
+            while (leftEdges.Next(out int index, out _))
             {
                 CreateOutputForStartEdge(
                     partition,
                     partition.currTime,
-                    ref partition.leftEdgeMap.Values[index].Payload,
-                    hash);
+                    ref partition.leftEdgeMap.Values[index].Payload);
                 leftEdges.MakeVisible();
             }
 
             var leftIntervals = partition.leftIntervalMap.TraverseInvisible();
-            while (leftIntervals.Next(out int index, out int hash))
+            while (leftIntervals.Next(out int index, out _))
             {
                 long end = partition.leftIntervalMap.Values[index].End;
                 CreateOutputForStartInterval(
                     partition,
                     partition.currTime,
                     end,
-                    ref partition.leftIntervalMap.Values[index].Payload,
-                    hash);
+                    ref partition.leftIntervalMap.Values[index].Payload);
                 leftIntervals.MakeVisible();
                 partition.endPointHeap.Insert(end, index);
             }
 
             var rightEdges = partition.rightEdgeMap.TraverseInvisible();
-            while (rightEdges.Next(out int index, out int hash))
+            while (rightEdges.Next(out int index, out _))
             {
                 CreateOutputForStartEdge(
                     partition,
                     partition.currTime,
-                    ref partition.rightEdgeMap.Values[index].Payload,
-                    hash);
+                    ref partition.rightEdgeMap.Values[index].Payload);
                 rightEdges.MakeVisible();
             }
 
             var rightIntervals = partition.rightIntervalMap.TraverseInvisible();
-            while (rightIntervals.Next(out int index, out int hash))
+            while (rightIntervals.Next(out int index, out _))
             {
                 long end = partition.rightIntervalMap.Values[index].End;
                 CreateOutputForStartInterval(
                     partition,
                     partition.currTime,
                     end,
-                    ref partition.rightIntervalMap.Values[index].Payload,
-                    hash);
+                    ref partition.rightIntervalMap.Values[index].Payload);
                 rightIntervals.MakeVisible();
                 partition.endPointHeap.Insert(end, ~index);
             }
@@ -635,8 +638,7 @@ namespace Microsoft.StreamProcessing
                         partition,
                         endPointTime,
                         partition.leftIntervalMap.Values[index].Start,
-                        ref partition.leftIntervalMap.Values[index].Payload,
-                        partition.leftIntervalMap.GetHash(index));
+                        ref partition.leftIntervalMap.Values[index].Payload);
                     partition.leftIntervalMap.Remove(index);
                 }
                 else
@@ -647,18 +649,17 @@ namespace Microsoft.StreamProcessing
                         partition,
                         endPointTime,
                         partition.rightIntervalMap.Values[index].Start,
-                        ref partition.rightIntervalMap.Values[index].Payload,
-                        partition.rightIntervalMap.GetHash(index));
+                        ref partition.rightIntervalMap.Values[index].Payload);
                     partition.rightIntervalMap.Remove(index);
                 }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForEndEdge(PartitionEntry partition, long currentTime, long start, ref TLeft payload, int hash)
+        private void CreateOutputForEndEdge(PartitionEntry partition, long currentTime, long start, ref TLeft payload)
         {
             // Create end edges for all joined right edges.
-            var edges = partition.rightEdgeMap.Find(hash);
+            var edges = partition.rightEdgeMap.Find(partition.hash);
             int index;
             while (edges.Next(out index))
             {
@@ -666,32 +667,30 @@ namespace Microsoft.StreamProcessing
                 AddToBatch(
                     currentTime,
                     start > rightStart ? start : rightStart,
-                    ref partition.key,
+                    partition,
                     ref payload,
-                    ref partition.rightEdgeMap.Values[index].Payload,
-                    hash);
+                    ref partition.rightEdgeMap.Values[index].Payload);
             }
 
             // Create end edges for all joined right intervals.
-            var intervals = partition.rightIntervalMap.Find(hash);
+            var intervals = partition.rightIntervalMap.Find(partition.hash);
             while (intervals.Next(out index))
             {
                 long rightStart = partition.rightIntervalMap.Values[index].Start;
                 AddToBatch(
                     currentTime,
                     start > rightStart ? start : rightStart,
-                    ref partition.key,
+                    partition,
                     ref payload,
-                    ref partition.rightIntervalMap.Values[index].Payload,
-                    hash);
+                    ref partition.rightIntervalMap.Values[index].Payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForEndEdge(PartitionEntry partition, long currentTime, long start, ref TRight payload, int hash)
+        private void CreateOutputForEndEdge(PartitionEntry partition, long currentTime, long start, ref TRight payload)
         {
             // Create end edges for all joined left edges.
-            var edges = partition.leftEdgeMap.Find(hash);
+            var edges = partition.leftEdgeMap.Find(partition.hash);
             int index;
             while (edges.Next(out index))
             {
@@ -699,186 +698,174 @@ namespace Microsoft.StreamProcessing
                 AddToBatch(
                     currentTime,
                     start > leftStart ? start : leftStart,
-                    ref partition.key,
+                    partition,
                     ref partition.leftEdgeMap.Values[index].Payload,
-                    ref payload,
-                    hash);
+                    ref payload);
             }
 
             // Create end edges for all joined left intervals.
-            var intervals = partition.leftIntervalMap.Find(hash);
+            var intervals = partition.leftIntervalMap.Find(partition.hash);
             while (intervals.Next(out index))
             {
                 long leftStart = partition.leftIntervalMap.Values[index].Start;
                 AddToBatch(
                     currentTime,
                     start > leftStart ? start : leftStart,
-                    ref partition.key,
+                    partition,
                     ref partition.leftIntervalMap.Values[index].Payload,
-                    ref payload,
-                    hash);
+                    ref payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForStartEdge(PartitionEntry partition, long currentTime, ref TLeft payload, int hash)
+        private void CreateOutputForStartEdge(PartitionEntry partition, long currentTime, ref TLeft payload)
         {
             // Create end edges for all joined right edges.
-            var edges = partition.rightEdgeMap.Find(hash);
+            var edges = partition.rightEdgeMap.Find(partition.hash);
             int index;
             while (edges.Next(out index))
             {
                 AddToBatch(
                     currentTime,
                     StreamEvent.InfinitySyncTime,
-                    ref partition.key,
+                    partition,
                     ref payload,
-                    ref partition.rightEdgeMap.Values[index].Payload,
-                    hash);
+                    ref partition.rightEdgeMap.Values[index].Payload);
             }
 
             // Create end edges for all joined right intervals.
-            var intervals = partition.rightIntervalMap.Find(hash);
+            var intervals = partition.rightIntervalMap.Find(partition.hash);
             while (intervals.Next(out index))
             {
                 AddToBatch(
                     currentTime,
                     StreamEvent.InfinitySyncTime,
-                    ref partition.key,
+                    partition,
                     ref payload,
-                    ref partition.rightIntervalMap.Values[index].Payload,
-                    hash);
+                    ref partition.rightIntervalMap.Values[index].Payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForStartEdge(PartitionEntry partition, long currentTime, ref TRight payload, int hash)
+        private void CreateOutputForStartEdge(PartitionEntry partition, long currentTime, ref TRight payload)
         {
             // Create end edges for all joined left edges.
-            var edges = partition.leftEdgeMap.Find(hash);
+            var edges = partition.leftEdgeMap.Find(partition.hash);
             int index;
             while (edges.Next(out index))
             {
                 AddToBatch(
                     currentTime,
                     StreamEvent.InfinitySyncTime,
-                    ref partition.key,
+                    partition,
                     ref partition.leftEdgeMap.Values[index].Payload,
-                    ref payload,
-                    hash);
+                    ref payload);
             }
 
             // Create end edges for all joined left intervals.
-            var intervals = partition.leftIntervalMap.Find(hash);
+            var intervals = partition.leftIntervalMap.Find(partition.hash);
             while (intervals.Next(out index))
             {
                 AddToBatch(
                     currentTime,
                     StreamEvent.InfinitySyncTime,
-                    ref partition.key,
+                    partition,
                     ref partition.leftIntervalMap.Values[index].Payload,
-                    ref payload,
-                    hash);
+                    ref payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForStartInterval(PartitionEntry partition, long currentTime, long end, ref TLeft payload, int hash)
+        private void CreateOutputForStartInterval(PartitionEntry partition, long currentTime, long end, ref TLeft payload)
         {
             // Create end edges for all joined right edges.
-            var edges = partition.rightEdgeMap.Find(hash);
+            var edges = partition.rightEdgeMap.Find(partition.hash);
             int index;
             while (edges.Next(out index))
             {
                 AddToBatch(
                     currentTime,
                     StreamEvent.InfinitySyncTime,
-                    ref partition.key,
+                    partition,
                     ref payload,
-                    ref partition.rightEdgeMap.Values[index].Payload,
-                    hash);
+                    ref partition.rightEdgeMap.Values[index].Payload);
             }
 
             // Create end edges for all joined right intervals.
-            var intervals = partition.rightIntervalMap.Find(hash);
+            var intervals = partition.rightIntervalMap.Find(partition.hash);
             while (intervals.Next(out index))
             {
                 long rightEnd = partition.rightIntervalMap.Values[index].End;
                 AddToBatch(
                     currentTime,
                     end < rightEnd ? end : rightEnd,
-                    ref partition.key,
+                    partition,
                     ref payload,
-                    ref partition.rightIntervalMap.Values[index].Payload,
-                    hash);
+                    ref partition.rightIntervalMap.Values[index].Payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForStartInterval(PartitionEntry partition, long currentTime, long end, ref TRight payload, int hash)
+        private void CreateOutputForStartInterval(PartitionEntry partition, long currentTime, long end, ref TRight payload)
         {
             // Create end edges for all joined left edges.
-            var edges = partition.leftEdgeMap.Find(hash);
+            var edges = partition.leftEdgeMap.Find(partition.hash);
             int index;
             while (edges.Next(out index))
             {
                 AddToBatch(
                     currentTime,
                     StreamEvent.InfinitySyncTime,
-                    ref partition.key,
+                    partition,
                     ref partition.leftEdgeMap.Values[index].Payload,
-                    ref payload,
-                    hash);
+                    ref payload);
             }
 
             // Create end edges for all joined left intervals.
-            var intervals = partition.leftIntervalMap.Find(hash);
+            var intervals = partition.leftIntervalMap.Find(partition.hash);
             while (intervals.Next(out index))
             {
                 long leftEnd = partition.leftIntervalMap.Values[index].End;
                 AddToBatch(
                     currentTime,
                     end < leftEnd ? end : leftEnd,
-                    ref partition.key,
+                    partition,
                     ref partition.leftIntervalMap.Values[index].Payload,
-                    ref payload,
-                    hash);
+                    ref payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForEndInterval(PartitionEntry partition, long currentTime, long start, ref TLeft payload, int hash)
+        private void CreateOutputForEndInterval(PartitionEntry partition, long currentTime, long start, ref TLeft payload)
         {
             // Create end edges for all joined right edges.
-            var edges = partition.rightEdgeMap.Find(hash);
+            var edges = partition.rightEdgeMap.Find(partition.hash);
             while (edges.Next(out int index))
             {
                 long rightStart = partition.rightEdgeMap.Values[index].Start;
                 AddToBatch(
                     currentTime,
                     start > rightStart ? start : rightStart,
-                    ref partition.key,
+                    partition,
                     ref payload,
-                    ref partition.rightEdgeMap.Values[index].Payload,
-                    hash);
+                    ref partition.rightEdgeMap.Values[index].Payload);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CreateOutputForEndInterval(PartitionEntry partition, long currentTime, long start, ref TRight payload, int hash)
+        private void CreateOutputForEndInterval(PartitionEntry partition, long currentTime, long start, ref TRight payload)
         {
             // Create end edges for all joined left edges.
-            var edges = partition.leftEdgeMap.Find(hash);
+            var edges = partition.leftEdgeMap.Find(partition.hash);
             while (edges.Next(out int index))
             {
                 long leftStart = partition.leftEdgeMap.Values[index].Start;
                 AddToBatch(
                     currentTime,
                     start > leftStart ? start : leftStart,
-                    ref partition.key,
+                    partition,
                     ref partition.leftEdgeMap.Values[index].Payload,
-                    ref payload,
-                    hash);
+                    ref payload);
             }
         }
 
@@ -895,23 +882,23 @@ namespace Microsoft.StreamProcessing
                 this.output.key.col[index] = new PartitionKey<TPartitionKey>(default);
                 this.output[index] = default;
                 this.output.hash.col[index] = 0;
-                this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+                this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
 
                 if (this.output.Count == Config.DataBatchSize) FlushContents();
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void AddToBatch(long start, long end, ref TPartitionKey key, ref TLeft leftPayload, ref TRight rightPayload, int hash)
+        private void AddToBatch(long start, long end, PartitionEntry partition, ref TLeft leftPayload, ref TRight rightPayload)
         {
             int index = this.output.Count++;
             this.output.vsync.col[index] = start;
             this.output.vother.col[index] = end;
-            this.output.key.col[index] = new PartitionKey<TPartitionKey>(key);
-            this.output.hash.col[index] = hash;
+            this.output.key.col[index] = new PartitionKey<TPartitionKey>(partition.key);
+            this.output.hash.col[index] = partition.hash;
 
             if (end < 0)
-                this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+                this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
             else
                 this.output[index] = this.selector(leftPayload, rightPayload);
             if (this.output.Count == Config.DataBatchSize) FlushContents();
@@ -1069,8 +1056,6 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public long Other;
             [DataMember]
-            public int Hash;
-            [DataMember]
             public TLeft Payload;
         }
 
@@ -1082,8 +1067,6 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public long Other;
             [DataMember]
-            public int Hash;
-            [DataMember]
             public TRight Payload;
         }
 
@@ -1092,6 +1075,8 @@ namespace Microsoft.StreamProcessing
         {
             [DataMember]
             public TPartitionKey key;
+            [DataMember]
+            public int hash;
             [DataMember]
             public FastMap<ActiveInterval<TLeft>> leftIntervalMap = new FastMap<ActiveInterval<TLeft>>();
             [DataMember]
@@ -1112,15 +1097,6 @@ namespace Microsoft.StreamProcessing
             public bool isRightComplete = false;
             [DataMember]
             public long currTime = long.MinValue;
-
-            [Obsolete("Used only by serialization, do not use directly")]
-            public PartitionEntry() { }
-
-            public PartitionEntry(PartitionedEquiJoinPipeSimple<TLeft, TRight, TResult, TPartitionKey> parent, TPartitionKey key)
-            {
-                this.endPointHeap = parent.endpointGenerator();
-                this.key = key;
-            }
         }
     }
 }

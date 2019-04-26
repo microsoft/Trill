@@ -13,15 +13,6 @@ namespace Microsoft.StreamProcessing
     internal partial class IncreasingOrderEquiJoinTemplate
     {
         private static int IOOEJSequenceNumber = 0;
-        private Type keyType;
-        private Type leftType;
-        private Type rightType;
-        private Type resultType;
-        private string TKey;
-        private string TLeft;
-        private string TRight;
-        private string TResult;
-        private string className;
         private string BatchGeneratedFrom_TKey_TLeft;
         private string TKeyTLeftGenericParameters;
         private string BatchGeneratedFrom_TKey_TRight;
@@ -37,13 +28,13 @@ namespace Microsoft.StreamProcessing
 
         private string genericParameters = string.Empty; // BUGBUG
         private string getOutputBatch;
-        private string staticCtor;
         private IEnumerable<MyFieldInfo> leftFields;
         private IEnumerable<MyFieldInfo> rightFields;
         private ColumnarRepresentation leftMessageRepresentation;
         private ColumnarRepresentation rightMessageRepresentation;
 
-        private IncreasingOrderEquiJoinTemplate() { }
+        private IncreasingOrderEquiJoinTemplate(string className, Type keyType, Type leftType, Type rightType, Type resultType)
+            : base(className, keyType, leftType, rightType, resultType) { }
 
         /// <summary>
         /// Generate a batch class definition to be used as StartEdgeEquiJoin operator.
@@ -67,30 +58,16 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                var template = new IncreasingOrderEquiJoinTemplate();
+                var template = new IncreasingOrderEquiJoinTemplate($"GeneratedIncreasingOrderEquiJoin_{IOOEJSequenceNumber++}", typeof(TKey), typeof(TLeft), typeof(TRight), typeof(TResult));
 
-                var keyType = template.keyType = typeof(TKey);
-                var leftType = template.leftType = typeof(TLeft);
-                var rightType = template.rightType = typeof(TRight);
-                var resultType = template.resultType = typeof(TResult);
-
-                template.TKey = keyType.GetCSharpSourceSyntax();
-                template.TLeft = leftType.GetCSharpSourceSyntax();
-                template.TRight = rightType.GetCSharpSourceSyntax();
-                template.TResult = resultType.GetCSharpSourceSyntax(); // BUGBUG: need to get any generic parameters needed
-
-                template.className = string.Format("GeneratedIncreasingOrderEquiJoin_{0}", IOOEJSequenceNumber++);
-
-                template.leftMessageRepresentation = new ColumnarRepresentation(leftType);
+                template.leftMessageRepresentation = new ColumnarRepresentation(template.leftType);
                 template.leftFields = template.leftMessageRepresentation.AllFields;
-                template.rightMessageRepresentation = new ColumnarRepresentation(rightType);
+                template.rightMessageRepresentation = new ColumnarRepresentation(template.rightType);
                 template.rightFields = template.rightMessageRepresentation.AllFields;
-                var outputMessageRepresentation = new ColumnarRepresentation(resultType);
+                var resultRepresentation = new ColumnarRepresentation(template.resultType);
 
                 var leftMessageType = StreamMessageManager.GetStreamMessageType<TKey, TLeft>();
                 var rightMessageType = StreamMessageManager.GetStreamMessageType<TKey, TRight>();
-
-                var resultRepresentation = outputMessageRepresentation;
 
                 #region Key Comparer
                 var keyComparer = stream.Left.Properties.KeyComparer.GetCompareExpr();
@@ -101,13 +78,13 @@ namespace Microsoft.StreamProcessing
                         keyComparer.Inline(left, right);
                 #endregion
 
-                template.BatchGeneratedFrom_TKey_TLeft = Transformer.GetBatchClassName(keyType, leftType);
+                template.BatchGeneratedFrom_TKey_TLeft = Transformer.GetBatchClassName(template.keyType, template.leftType);
                 template.TKeyTLeftGenericParameters = string.Empty; // BUGBUG
 
-                template.BatchGeneratedFrom_TKey_TRight = Transformer.GetBatchClassName(keyType, rightType);
+                template.BatchGeneratedFrom_TKey_TRight = Transformer.GetBatchClassName(template.keyType, template.rightType);
                 template.TKeyTRightGenericParameters = string.Empty; // BUGBUG
 
-                template.BatchGeneratedFrom_TKey_TResult = Transformer.GetBatchClassName(keyType, resultType);
+                template.BatchGeneratedFrom_TKey_TResult = Transformer.GetBatchClassName(template.keyType, template.resultType);
                 template.TKeyTResultGenericParameters = string.Empty; // BUGBUG
 
                 template.outputFields = resultRepresentation.AllFields;
@@ -209,31 +186,10 @@ namespace Microsoft.StreamProcessing
 
                 template.getOutputBatch = string.Format(
                     "pool.Get(out genericOutputBatch); output = ({0}{1})genericOutputBatch;",
-                    Transformer.GetBatchClassName(keyType, resultType),
+                    Transformer.GetBatchClassName(template.keyType, template.resultType),
                     template.TKeyTResultGenericParameters);
 
-                template.staticCtor = Transformer.StaticCtor(template.className);
-                var expandedCode = template.TransformText();
-
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeof(TKey), typeof(TLeft), typeof(TRight), typeof(TResult));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TLeft>());
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TRight>());
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TResult>());
-                assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TResult>());
-                assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(selector));
-
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(template.className);
-                if (t.GetTypeInfo().IsGenericType)
-                {
-                    var list = keyType.GetAnonymousTypes();
-                    list.AddRange(leftType.GetAnonymousTypes());
-                    list.AddRange(rightType.GetAnonymousTypes());
-                    list.AddRange(resultType.GetAnonymousTypes());
-                    t = t.MakeGenericType(list.ToArray());
-                }
-                return Tuple.Create(t, errorMessages);
+                return template.Generate<TKey, TLeft, TRight, TResult>(selector);
             }
             catch
             {

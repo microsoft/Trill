@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
                 JoinKind.LeftAntiSemiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             this.Observer.ProduceQueryPlan(node);
@@ -239,7 +239,7 @@ namespace Microsoft.StreamProcessing
                 batch.iter++;
             }
 
-            return (batch.iter != batch.Count);
+            return batch.iter != batch.Count;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -264,7 +264,7 @@ namespace Microsoft.StreamProcessing
                 var map = isInterval ? this.leftIntervalMap : this.leftEdgeMap;
                 if (isProcessable)
                 {
-                    if (FindOnRight(ref key, hash, out int matchingRight))
+                    if (FindOnRight(ref key, hash, out _))
                     {
                         // Row joins with something on right, so not currently visible.
 
@@ -408,7 +408,7 @@ namespace Microsoft.StreamProcessing
             {
                 var leftIntervalItem = this.leftIntervalMap.Values[index];
                 long end = leftIntervalItem.End;
-                if (FindOnRight(ref this.leftIntervalMap.Values[index].Key, hash, out int matchingRight))
+                if (FindOnRight(ref this.leftIntervalMap.Values[index].Key, hash, out _))
                 {
                     leftEvents.MakeVisible();
                     this.leftEndPointHeap.Insert(end, index);
@@ -424,7 +424,7 @@ namespace Microsoft.StreamProcessing
                             end,
                             ref leftIntervalItem.Key,
                             ref leftIntervalItem.Payload,
-                hash);
+                            hash);
                         leftEvents.Remove();
 
                     }
@@ -437,7 +437,7 @@ namespace Microsoft.StreamProcessing
                             StreamEvent.InfinitySyncTime,
                             ref leftIntervalItem.Key,
                             ref leftIntervalItem.Payload,
-                hash);
+                            hash);
 
                         this.leftEndPointHeap.Insert(end, index);
                     }
@@ -448,7 +448,7 @@ namespace Microsoft.StreamProcessing
             leftEvents = this.leftEdgeMap.TraverseInvisible();
             while (leftEvents.Next(out int index, out hash))
             {
-                if (!FindOnRight(ref this.leftEdgeMap.Values[index].Key, hash, out int matchingRight))
+                if (!FindOnRight(ref this.leftEdgeMap.Values[index].Key, hash, out _))
                 {
                     var leftEdgeItem = this.leftEdgeMap.Values[index];
                     // Row does not join, so output start edge.
@@ -665,7 +665,7 @@ namespace Microsoft.StreamProcessing
                 this.output.key.col[index] = default;
                 this.output[index] = default;
                 this.output.hash.col[index] = 0;
-                this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+                this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
 
                 if (this.output.Count == Config.DataBatchSize) FlushContents();
             }
@@ -726,9 +726,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Start=" + this.Start + ", CurrentStart=" + this.CurrentStart + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[Start=" + this.Start + ", CurrentStart=" + this.CurrentStart + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         [DataContract]
@@ -746,10 +744,7 @@ namespace Microsoft.StreamProcessing
                 this.Count = 1;
             }
 
-            public override string ToString()
-            {
-                return "[Key='" + this.Key + "', Count=" + this.Count + "]";
-            }
+            public override string ToString() => "[Key='" + this.Key + "', Count=" + this.Count + "]";
         }
 
         [DataContract]
@@ -767,10 +762,7 @@ namespace Microsoft.StreamProcessing
                 this.Hash = hash;
             }
 
-            public override string ToString()
-            {
-                return "[Key='" + this.Key + "', Hash=" + this.Hash + "]";
-            }
+            public override string ToString() => "[Key='" + this.Key + "', Hash=" + this.Hash + "]";
         }
     }
 }

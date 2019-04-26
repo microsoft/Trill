@@ -4,7 +4,7 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 // *********************************************************************
-// Copyright (C) Microsoft Corporation.  All rights reserved.
+// Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
 /*\
@@ -54,7 +54,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
 <#  bool partitioned = (partitionString == "Partitioned");
     string baseStructure = partitionString + "StreamEvent<" + adjustedGenericArgs + ">";
-    string globalPunctuation= partitioned ? "LowWatermark" : "Punctuation";
+    string globalPunctuation = partitioned ? "LowWatermark" : "Punctuation";
     string highWatermark = partitioned ? "partitionHighWatermarks[value.PartitionKey]" : "highWatermark";
     string keyType = !partitioned ? "Microsoft.StreamProcessing.Empty" : "PartitionKey<TKey>";
     string streamEventFromValue = fusionOption == "Disordered" ? ("new " + partitionString + "StreamEvent<" + genericArguments + ">(" + (!partitioned ? string.Empty : "value.PartitionKey, ") + "value.SyncTime, value.OtherTime, default)") : "value";
@@ -64,6 +64,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
 internal sealed class <#= className #><#= genericParameters #> : <#= partitionString #><#= fusionOption == "Disordered" ? "Disordered" : string.Empty #>ObserverSubscriptionBase<<#= keyOrNothing #><#= inheritBase #>, <#= TPayload #>, <#= TResult #>>
 {
     <#= staticCtor #>
+<#  if (partitioned) { #>
+    private static readonly Func<TKey, int> GetHashCode = EqualityComparerExpression<TKey>.DefaultGetHashCodeFunction;
+<#  } #>
 
     public <#= className #>() { }
 
@@ -80,7 +83,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
 <#  } #>
         OnCompletedPolicy onCompletedPolicy,
         IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>> diagnosticOutput)
-        : base(observable,
+            : base(observable,
                 identifier,
                 streamable,
                 observer,
@@ -88,7 +91,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
                 flushPolicy,
                 punctuationPolicy,
 <#  if (partitioned) { #>
-                    lowWatermarkPolicy,
+                lowWatermarkPolicy,
 <#  } #>
                 onCompletedPolicy,
                 diagnosticOutput)
@@ -154,7 +157,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
                 value.SyncTime > lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - lowWatermark) >= lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - baselineLowWatermarkForPolicy) >= lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)lowWatermarkGenerationPeriod);
@@ -353,7 +356,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
     { #>
             // We use lowWatermark as the baseline in the delta computation because a low watermark implies
             // punctuations for all partitions
-            ulong delta = (ulong)(value.SyncTime - Math.Max(lastPunctuationTime[value.PartitionKey], lowWatermark));
+            ulong delta = (ulong)(value.SyncTime - Math.Max(lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
             if (!outOfOrder && punctuationGenerationPeriod > 0 && delta >= punctuationGenerationPeriod)
             {
                 // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -381,8 +384,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
         {
             if (outOfOrder)
             {
-                var outOfOrderMessage = string.Format(System.Globalization.CultureInfo.InvariantCulture, "Out-of-order event encountered during ingress, under a disorder policy of Throw: value.SyncTime: {0}, current:{1}", value.SyncTime, current);
-                throw new IngressException(outOfOrderMessage);
+                throw new IngressException($"Out-of-order event encountered during ingress, under a disorder policy of Throw: value.SyncTime: {value.SyncTime}, current: {current}");
             }
         }
         else
@@ -528,6 +530,17 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
     {
         if (syncTime <= <#= partitioned ? "lowWatermark" : "lastPunctuationTime" #>) return;
 
+<#      if (!partitioned)
+        { #>
+            // Update the <#= globalPunctuation #> to be at least the currentTime, so the <#= globalPunctuation #>
+            // is not before the preceding data event.
+<#          if (latencyOption == "WithLatency")
+            { #>
+            // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
+<#          } #>
+            syncTime = Math.Max(syncTime, this.currentTime);
+<#      } #>
+
 <#      if (latencyOption == "WithLatency")
         { #>
         // Process events queued for reorderLatency up to the <#= globalPunctuation #> syncTime
@@ -584,6 +597,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
         if (lowWatermark < syncTime)
         {
             lowWatermark = syncTime;
+            this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
 
             // Gather keys whose high watermarks are before the new low watermark
             var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
@@ -614,7 +628,9 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
         else
         { #>
         currentTime = Math.Max(syncTime, currentTime);
-        lastPunctuationTime = Math.Max(syncTime, lastPunctuationTime);
+        this.lastPunctuationTime = Math.Max(
+            syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+            this.lastPunctuationTime);
 <#      } #>
 
         // Add <#= globalPunctuation #> to batch
@@ -672,7 +688,7 @@ private void AddToGeneratedBatch()
     currentBatch.vsync.col[count] = value.SyncTime;
     currentBatch.vother.col[count] = <#= generatedEndTimeVariable #>;
     currentBatch.key.col[count] = <#= emptyOrPartition #>;
-    currentBatch.hash.col[count] = <#= partitionString == "Partitioned" ? "value.PartitionKey.GetHashCode()" : "0" #>;
+    currentBatch.hash.col[count] = <#= partitionString == "Partitioned" ? "GetHashCode(value.PartitionKey)" : "0" #>;
 <#+ if (resultRepresentation.noFields)
     { #>
     generatedBatch.payload.col[count] = <#= valueString #>;

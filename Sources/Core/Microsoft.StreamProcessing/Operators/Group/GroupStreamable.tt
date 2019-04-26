@@ -31,7 +31,6 @@ namespace Microsoft.StreamProcessing
         public readonly IStreamable<TOuterKey, TSource> Source;
 
         public Group<#= nestedInfix #>Streamable(
-            IEqualityComparerExpression<TInnerKey> comparer,
             IStreamable<TOuterKey, TSource> source, Expression<Func<TSource, TInnerKey>> keySelector)
 <# if (i == 0) { #>
             : base(source.Properties.GroupNested(keySelector))
@@ -55,10 +54,9 @@ else { #>
 
         public override IDisposable Subscribe(IStreamObserver<<#= innerKey #>, TSource> observer)
         {
-            IStreamObserver<TOuterKey, TSource> pipe = null;
-            if (Properties.IsColumnar) pipe = GetPipe(observer);
-            else pipe = CreatePipe(observer);
-
+            var pipe = Properties.IsColumnar
+                ? GetPipe(observer)
+                : CreatePipe(observer);
             return Source.Subscribe(pipe);
         }
 

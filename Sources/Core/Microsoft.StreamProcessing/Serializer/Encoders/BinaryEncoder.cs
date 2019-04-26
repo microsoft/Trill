@@ -156,13 +156,13 @@ namespace Microsoft.StreamProcessing.Serializer
             if (numElements < 0) numElements = blob.Length;
 
             if ((numElements <= 0) || (numElements > blob.Length))
-                throw new Exception("Out of bounds");
+                throw new InvalidOperationException("Out of bounds");
 
             Buffer.BlockCopy(blob, 0, buffer, 0, buffer.Length);
             this.stream.Write(buffer, 0, buffer.Length);
         }
 
-        private static DoublingArrayPool<byte> bytePool;
+        private static readonly Lazy<DoublingArrayPool<byte>> bytePool = new Lazy<DoublingArrayPool<byte>>(MemoryManager.GetDoublingArrayPool<byte>);
 
         public unsafe void Encode(CharArrayWrapper value)
         {
@@ -176,21 +176,19 @@ namespace Microsoft.StreamProcessing.Serializer
 
             if (Config.SerializationCompressionLevel.HasFlag(SerializationCompressionLevel.CharArrayToUTF8))
             {
-                if (bytePool == null) bytePool = MemoryManager.GetDoublingArrayPool<byte>();
-
                 byte[] result;
                 int encodedSize = Encoding.UTF8.GetByteCount(value.charArray.content, 0, value.UsedLength);
                 Encode(encodedSize);
 
                 if (encodedSize > 0)
-                    bytePool.Get(out result, encodedSize);
+                    bytePool.Value.Get(out result, encodedSize);
                 else
-                    bytePool.Get(out result, 1);
+                    bytePool.Value.Get(out result, 1);
 
                 Encoding.UTF8.GetBytes(value.charArray.content, 0, value.UsedLength, result, 0);
 
                 this.stream.Write(result, 0, encodedSize);
-                bytePool.Return(result);
+                bytePool.Value.Return(result);
             }
             else
             {
@@ -218,9 +216,8 @@ namespace Microsoft.StreamProcessing.Serializer
 
         public unsafe void Encode(ColumnBatch<string> value)
         {
-            if (bytePool == null || charPool == null || intPool == null || shortPool == null || batchSize != Config.DataBatchSize)
+            if (charPool == null || intPool == null || shortPool == null || batchSize != Config.DataBatchSize)
             {
-                bytePool = MemoryManager.GetDoublingArrayPool<byte>();
                 charPool = MemoryManager.GetCharArrayPool();
                 intPool = MemoryManager.GetColumnPool<int>();
                 shortPool = MemoryManager.GetColumnPool<short>();
@@ -245,7 +242,7 @@ namespace Microsoft.StreamProcessing.Serializer
 
             if (maxLength <= short.MaxValue)
             {
-                shortPool.Get(out ColumnBatch<short> lengths);
+                shortPool.Get(out var lengths);
                 lengths.UsedLength = value.UsedLength;
 
                 CharArrayWrapper caw;

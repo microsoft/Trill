@@ -108,15 +108,9 @@ namespace ComponentTesting.Aggregates
                 return 0;
             }
 
-            public bool Equals(SumCount other)
-            {
-                return this.Sum == other.Sum && this.Count == other.Count;
-            }
+            public bool Equals(SumCount other) => this.Sum == other.Sum && this.Count == other.Count;
 
-            public override string ToString()
-            {
-                return "[Sum=" + this.Sum + ", Count=" + this.Count + "]";
-            }
+            public override string ToString() => "[Sum=" + this.Sum + ", Count=" + this.Count + "]";
         }
     }
 }

@@ -20,9 +20,34 @@ namespace Microsoft.StreamProcessing
             this.innerComparer = innerComparer ?? EqualityComparerExpression<TInnerKey>.Default;
         }
 
-        public Expression<Func<CompoundGroupKey<TOuterKey, TInnerKey>, CompoundGroupKey<TOuterKey, TInnerKey>, bool>> GetEqualsExpr() => Utility.CreateCompoundEqualityPredicate(this.outerComparer.GetEqualsExpr(), this.innerComparer.GetEqualsExpr());
+        public Expression<Func<CompoundGroupKey<TOuterKey, TInnerKey>, CompoundGroupKey<TOuterKey, TInnerKey>, bool>> GetEqualsExpr()
+        {
+            var equalityOnT1 = this.outerComparer.GetEqualsExpr();
+            var equalityOnT2 = this.innerComparer.GetEqualsExpr();
 
-        public Expression<Func<CompoundGroupKey<TOuterKey, TInnerKey>, int>> GetGetHashCodeExpr() => Utility.CreateCompoundHashPredicate(this.outerComparer.GetGetHashCodeExpr(), this.innerComparer.GetGetHashCodeExpr());
+            // (e1,e2) => equalityOnT1(e1.outerGroup, e2.outerGroup) && equalityOnT2(e1.innerGroup, e2.innerGroup)
+            var e1 = Expression.Parameter(typeof(CompoundGroupKey<TOuterKey, TInnerKey>), "e1");
+            var e2 = Expression.Parameter(typeof(CompoundGroupKey<TOuterKey, TInnerKey>), "e2");
+            return Expression.Lambda<Func<CompoundGroupKey<TOuterKey, TInnerKey>, CompoundGroupKey<TOuterKey, TInnerKey>, bool>>(
+                Expression.AndAlso(
+                    Expression.Invoke(equalityOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
+                    Expression.Invoke(equalityOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
+                    new ParameterExpression[] { e1, e2 });
+        }
+
+        public Expression<Func<CompoundGroupKey<TOuterKey, TInnerKey>, int>> GetGetHashCodeExpr()
+        {
+            var hashOnT1 = this.outerComparer.GetGetHashCodeExpr();
+            var hashOnT2 = this.innerComparer.GetGetHashCodeExpr();
+
+            // (e1) => hashOnT1(e1.outerGroup) && hashOnT2(e1.innerGroup)
+            var e1 = Expression.Parameter(typeof(CompoundGroupKey<TOuterKey, TInnerKey>), "e1");
+            return Expression.Lambda<Func<CompoundGroupKey<TOuterKey, TInnerKey>, int>>(
+                Expression.ExclusiveOr(
+                    Expression.Invoke(hashOnT1, Expression.Field(e1, "outerGroup")),
+                    Expression.Invoke(hashOnT2, Expression.Field(e1, "innerGroup"))),
+                    new ParameterExpression[] { e1 });
+        }
     }
 
     internal sealed class CompoundGroupKeyComparer<TOuterKey, TInnerKey> : IComparerExpression<CompoundGroupKey<TOuterKey, TInnerKey>>
@@ -38,6 +63,32 @@ namespace Microsoft.StreamProcessing
             this.innerComparer = innerComparer ?? ComparerExpression<TInnerKey>.Default;
         }
 
-        public Expression<Comparison<CompoundGroupKey<TOuterKey, TInnerKey>>> GetCompareExpr() => Utility.CreateCompoundComparerPredicate(this.outerComparer.GetCompareExpr(), this.innerComparer.GetCompareExpr());
+        public Expression<Comparison<CompoundGroupKey<TOuterKey, TInnerKey>>> GetCompareExpr()
+        {
+            var comparerOnT1 = this.outerComparer.GetCompareExpr();
+            var comparerOnT2 = this.innerComparer.GetCompareExpr();
+
+            var e1 = Expression.Parameter(typeof(CompoundGroupKey<TOuterKey, TInnerKey>), "e1");
+            var e2 = Expression.Parameter(typeof(CompoundGroupKey<TOuterKey, TInnerKey>), "e2");
+            if ((comparerOnT1 == null) || typeof(TOuterKey) == typeof(Empty))
+            {
+                // (e1,e2) => comparerOnT2(e1.innerGroup, e2.innerGroup)
+                return Expression.Lambda<Comparison<CompoundGroupKey<TOuterKey, TInnerKey>>>(
+                        Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup")),
+                        new ParameterExpression[] { e1, e2 });
+            }
+            else
+            {
+                // (e1,e2) => comparerOnT1(e1.outerGroup, e2.outerGroup) != 0 ? (comparerOnT1(e1.outerGroup, e2.outerGroup)) : comparerOnT2(e1.innerGroup, e2.innerGroup)
+                return Expression.Lambda<Comparison<CompoundGroupKey<TOuterKey, TInnerKey>>>(
+                    Expression.Condition(
+                    Expression.NotEqual(
+                    Expression.Invoke(comparerOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
+                    Expression.Constant(0, typeof(int))),
+                    Expression.Invoke(comparerOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
+                    Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
+                    new ParameterExpression[] { e1, e2 });
+            }
+        }
     }
 }

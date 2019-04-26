@@ -36,6 +36,9 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<TKey, TKey, bool>> keyComparerEqualsExpr;
         private readonly Func<TKey, TKey, bool> keyComparerEquals;
+        [SchemaSerialization]
+        private readonly Expression<Func<TKey, int>> keyComparerGetHashCodeExpr;
+        private readonly Func<TKey, int> keyComparerGetHashCode;
 
         [DataMember]
         private StreamMessage<TKey, TOutput> batch;
@@ -66,22 +69,21 @@ namespace Microsoft.StreamProcessing
             var comparer = stream.Properties.KeyEqualityComparer;
             this.keyComparerEqualsExpr = comparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparerEqualsExpr.Compile();
+            this.keyComparerGetHashCodeExpr = comparer.GetGetHashCodeExpr();
+            this.keyComparerGetHashCode = this.keyComparerGetHashCodeExpr.Compile();
 
             this.errorMessages = stream.ErrorMessages;
             this.pool = MemoryManager.GetMemoryPool<TKey, TOutput>(false);
             this.pool.Get(out this.batch);
             this.batch.Allocate();
 
-            var hashCodeFunction = comparer.GetGetHashCodeExpr().Compile();
-            this.aggregateByKey = comparer.CreateFastDictionary2Generator<TKey, HeldState<TState>>(1, this.keyComparerEquals, hashCodeFunction, stream.Properties.QueryContainer).Invoke();
+            this.aggregateByKey = comparer.CreateFastDictionary2Generator<TKey, HeldState<TState>>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer).Invoke();
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(TKey), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages, false));
-        }
+                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {
@@ -93,86 +95,88 @@ namespace Microsoft.StreamProcessing
             fixed (long* col_vother = batch.vother.col)
             fixed (int* col_hash = batch.hash.col)
             fixed (long* col_bv = batch.bitvector.col)
-            for (int i = 0; i < count; i++)
             {
-                if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                for (int i = 0; i < count; i++)
                 {
-                    if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                    if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
                     {
-                        // We have found a row that corresponds to punctuation
-                        OnPunctuation(col_vsync[i]);
+                        if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                        {
+                            // We have found a row that corresponds to punctuation
+                            OnPunctuation(col_vsync[i]);
 
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = col_vsync[i];
-                        this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
-                        this.batch.key.col[c] = default;
-                        this.batch.hash.col[c] = 0;
-                        this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                    }
-                    continue;
-                }
-
-                var syncTime = col_vsync[i];
-                HeldState<TState> heldState;
-
-                // Handle time moving forward
-                if (syncTime > this.lastSyncTime)
-                {
-                    foreach (int iter1 in this.heldAggregates)
-                    {
-                        var iter1entry = this.aggregateByKey.entries[iter1];
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = iter1entry.value.timestamp;
-                        this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
-                        this.batch.payload.col[c] = this.computeResult(iter1entry.value.state);
-                        this.batch.key.col[c] = iter1entry.key;
-                        this.batch.hash.col[c] = iter1entry.key.GetHashCode();
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = col_vsync[i];
+                            this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
+                            this.batch.key.col[c] = default;
+                            this.batch.hash.col[c] = 0;
+                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        }
+                        continue;
                     }
 
-                    this.heldAggregates.Clear();
+                    var syncTime = col_vsync[i];
+                    HeldState<TState> heldState;
 
-                    // Since sync time changed, set lastSyncTime
-                    this.lastSyncTime = syncTime;
-                }
-
-                // Need to retrieve the key from the dictionary
-                if (!this.aggregateByKey.Lookup(colkey[i], col_hash[i], out int aggindex))
-                {
-                    // New group. Create new state
-                    heldState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
-                    this.heldAggregates.Add(this.aggregateByKey.Insert(colkey[i], heldState, col_hash[i]));
-                    // No output because initial state is empty
-                }
-                else if (this.heldAggregates.Add(aggindex))
-                {
-                    // First time group is active for this time
-                    heldState = this.aggregateByKey.entries[aggindex].value;
-                    if (syncTime > heldState.timestamp)
+                    // Handle time moving forward
+                    if (syncTime > this.lastSyncTime)
                     {
-                        // Output end edge
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = syncTime;
-                        this.batch.vother.col[c] = heldState.timestamp;
-                        this.batch.payload.col[c] = this.computeResult(heldState.state);
-                        this.batch.key.col[c] = colkey[i];
-                        this.batch.hash.col[c] = colkey[i].GetHashCode();
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                        heldState.timestamp = syncTime;
-                    }
-                }
-                else
-                {
-                    // read new currentState from _heldAgg index
-                    heldState = this.aggregateByKey.entries[aggindex].value;
-                }
+                        foreach (int iter1 in this.heldAggregates)
+                        {
+                            var iter1entry = this.aggregateByKey.entries[iter1];
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = iter1entry.value.timestamp;
+                            this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
+                            this.batch.payload.col[c] = this.computeResult(iter1entry.value.state);
+                            this.batch.key.col[c] = iter1entry.key;
+                            this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        }
 
-                // It's always a start edge
-                heldState.state = this.accumulate(heldState.state, col_vsync[i], colpayload[i]);
+                        this.heldAggregates.Clear();
+
+                        // Since sync time changed, set lastSyncTime
+                        this.lastSyncTime = syncTime;
+                    }
+
+                    // Need to retrieve the key from the dictionary
+                    if (!this.aggregateByKey.Lookup(colkey[i], col_hash[i], out int aggindex))
+                    {
+                        // New group. Create new state
+                        heldState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
+                        this.heldAggregates.Add(this.aggregateByKey.Insert(colkey[i], heldState, col_hash[i]));
+                        // No output because initial state is empty
+                    }
+                    else if (this.heldAggregates.Add(aggindex))
+                    {
+                        // First time group is active for this time
+                        heldState = this.aggregateByKey.entries[aggindex].value;
+                        if (syncTime > heldState.timestamp)
+                        {
+                            // Output end edge
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = syncTime;
+                            this.batch.vother.col[c] = heldState.timestamp;
+                            this.batch.payload.col[c] = this.computeResult(heldState.state);
+                            this.batch.key.col[c] = colkey[i];
+                            this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            heldState.timestamp = syncTime;
+                        }
+                    }
+                    else
+                    {
+                        // read new currentState from _heldAgg index
+                        heldState = this.aggregateByKey.entries[aggindex].value;
+                    }
+
+                    // It's always a start edge
+                    heldState.state = this.accumulate(heldState.state, col_vsync[i], colpayload[i]);
+                }
             }
 
             batch.Release();
@@ -192,7 +196,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
                     this.batch.payload.col[c] = this.computeResult(iter1entry.value.state);
                     this.batch.key.col[c] = iter1entry.key;
-                    this.batch.hash.col[c] = iter1entry.key.GetHashCode();
+                    this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
                 }

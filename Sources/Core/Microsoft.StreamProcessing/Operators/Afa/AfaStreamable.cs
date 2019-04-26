@@ -88,15 +88,13 @@ namespace Microsoft.StreamProcessing
                     var emptyObserver = observer as IStreamObserver<Empty, TRegister>;
                     if (this.afa.uncompiledAfa.IsDeterministic)
                     {
-                        if (this.Source.Properties.IsColumnar)
-                            return GetUngroupedDAfaPipe(emptyObserver) as IStreamObserver<TKey, TPayload>;
-                        else
-                            return new CompiledUngroupedDAfaPipe<TPayload, TRegister, TAccumulator>(downcast, observer as IStreamObserver<Empty, TRegister>, this.afa, this.MaxDuration) as IStreamObserver<TKey, TPayload>;
+                        return this.Source.Properties.IsColumnar
+                            ? GetUngroupedDAfaPipe(emptyObserver) as IStreamObserver<TKey, TPayload>
+                            : new CompiledUngroupedDAfaPipe<TPayload, TRegister, TAccumulator>(downcast, observer as IStreamObserver<Empty, TRegister>, this.afa, this.MaxDuration) as IStreamObserver<TKey, TPayload>;
                     }
-                    else if (this.Source.Properties.IsColumnar)
-                        return GetUngroupedAFAPipe(emptyObserver) as IStreamObserver<TKey, TPayload>;
-                    else
-                        return new CompiledUngroupedAfaPipe<TPayload, TRegister, TAccumulator>(downcast, observer as IStreamObserver<Empty, TRegister>, this.afa, this.MaxDuration) as IStreamObserver<TKey, TPayload>;
+                    else return this.Source.Properties.IsColumnar
+                        ? GetUngroupedAFAPipe(emptyObserver) as IStreamObserver<TKey, TPayload>
+                        : new CompiledUngroupedAfaPipe<TPayload, TRegister, TAccumulator>(downcast, observer as IStreamObserver<Empty, TRegister>, this.afa, this.MaxDuration) as IStreamObserver<TKey, TPayload>;
                 }
                 else
                 {
@@ -157,26 +155,20 @@ namespace Microsoft.StreamProcessing
             {
                 if (typeof(TKey) == typeof(Empty))
                 {
-                    if (this.afa.uncompiledAfa.IsDeterministic)
-                        return Config.CodegenOptions.CodeGenAfa && CanGenerateUngroupedDAfaPipe();
-                    else
-                        return Config.CodegenOptions.CodeGenAfa && CanGenerateUngroupedAFAPipe();
+                    return this.afa.uncompiledAfa.IsDeterministic
+                        ? Config.CodegenOptions.CodeGenAfa && CanGenerateUngroupedDAfaPipe()
+                        : Config.CodegenOptions.CodeGenAfa && CanGenerateUngroupedAFAPipe();
                 }
                 else
                     return Config.CodegenOptions.CodeGenAfa && CanGenerateGroupedAFAPipe();
             }
-            else if (Config.CodegenOptions.CodeGenAfa && CanGenerateAFAMultiEventListPipe())
-                return true;
-            else return false;
+            else return Config.CodegenOptions.CodeGenAfa && CanGenerateAFAMultiEventListPipe();
         }
 
         private bool CanGenerateUngroupedAFAPipe()
         {
-            var typeOfTPayload = typeof(TPayload);
-            var typeOfTRegister = typeof(TRegister);
-
-            if (!typeOfTPayload.CanRepresentAsColumnar()) return false;
-            if (!typeOfTRegister.CanRepresentAsColumnar()) return false;
+            if (!typeof(TPayload).CanRepresentAsColumnar()) return false;
+            if (!typeof(TRegister).CanRepresentAsColumnar()) return false;
 
             var lookupKey = CacheKey.Create((object)this.afa);
             var downcast = this as AfaStreamable<Empty, TPayload, TRegister, TAccumulator>;
@@ -185,6 +177,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
+
         private UnaryPipe<Empty, TPayload, TRegister> GetUngroupedAFAPipe(IStreamObserver<Empty, TRegister> observer)
         {
             var lookupKey = CacheKey.Create((object)this.afa);
@@ -198,13 +191,9 @@ namespace Microsoft.StreamProcessing
 
         private bool CanGenerateGroupedAFAPipe()
         {
-            var typeOfTKey = typeof(TKey);
-            var typeOfTPayload = typeof(TPayload);
-            var typeOfTRegister = typeof(TRegister);
-
-            if (!typeOfTPayload.CanRepresentAsColumnar()) return false;
-            if (!typeOfTRegister.CanRepresentAsColumnar()) return false;
-            if (typeOfTKey.GetPartitionType() != null) return false;
+            if (!typeof(TPayload).CanRepresentAsColumnar()) return false;
+            if (!typeof(TRegister).CanRepresentAsColumnar()) return false;
+            if (typeof(TKey).GetPartitionType() != null) return false;
 
             var lookupKey = CacheKey.Create((object)this.afa);
 
@@ -213,6 +202,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
+
         private UnaryPipe<TKey, TPayload, TRegister> GetGroupedAFAPipe(IStreamObserver<TKey, TRegister> observer)
         {
             var lookupKey = CacheKey.Create((object)this.afa);
@@ -225,11 +215,8 @@ namespace Microsoft.StreamProcessing
 
         private bool CanGenerateUngroupedDAfaPipe()
         {
-            var typeOfTPayload = typeof(TPayload);
-            var typeOfTRegister = typeof(TRegister);
-
-            if (!typeOfTPayload.CanRepresentAsColumnar()) return false;
-            if (!typeOfTRegister.CanRepresentAsColumnar()) return false;
+            if (!typeof(TPayload).CanRepresentAsColumnar()) return false;
+            if (!typeof(TRegister).CanRepresentAsColumnar()) return false;
 
             var lookupKey = CacheKey.Create((object)this.afa);
 
@@ -238,6 +225,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
+
         private UnaryPipe<Empty, TPayload, TRegister> GetUngroupedDAfaPipe(IStreamObserver<Empty, TRegister> observer)
         {
             var lookupKey = CacheKey.Create((object)this.afa);
@@ -250,13 +238,9 @@ namespace Microsoft.StreamProcessing
 
         private bool CanGenerateGroupedAFAEventListPipe()
         {
-            var typeOfTKey = typeof(TKey);
-            var typeOfTPayload = typeof(TPayload);
-            var typeOfTRegister = typeof(TRegister);
-
-            if (!typeOfTPayload.CanRepresentAsColumnar()) return false;
-            if (!typeOfTRegister.CanRepresentAsColumnar()) return false;
-            if (typeOfTKey.GetPartitionType() != null) return false;
+            if (!typeof(TPayload).CanRepresentAsColumnar()) return false;
+            if (!typeof(TRegister).CanRepresentAsColumnar()) return false;
+            if (typeof(TKey).GetPartitionType() != null) return false;
 
             var lookupKey = CacheKey.Create((object)this.afa);
 
@@ -265,6 +249,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
+
         private UnaryPipe<TKey, TPayload, TRegister> GetGroupedAFAEventListPipe(IStreamObserver<TKey, TRegister> observer)
         {
             var lookupKey = CacheKey.Create((object)this.afa);
@@ -277,13 +262,9 @@ namespace Microsoft.StreamProcessing
 
         private bool CanGenerateGroupedAFAMultiEventPipe()
         {
-            var typeOfTKey = typeof(TKey);
-            var typeOfTPayload = typeof(TPayload);
-            var typeOfTRegister = typeof(TRegister);
-
-            if (!typeOfTPayload.CanRepresentAsColumnar()) return false;
-            if (!typeOfTRegister.CanRepresentAsColumnar()) return false;
-            if (typeOfTKey.GetPartitionType() != null) return false;
+            if (!typeof(TPayload).CanRepresentAsColumnar()) return false;
+            if (!typeof(TRegister).CanRepresentAsColumnar()) return false;
+            if (typeof(TKey).GetPartitionType() != null) return false;
 
             var lookupKey = CacheKey.Create((object)this.afa);
 
@@ -292,6 +273,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
+
         private UnaryPipe<TKey, TPayload, TRegister> GetGroupedAFAMultiEventPipe(IStreamObserver<TKey, TRegister> observer)
         {
             var lookupKey = CacheKey.Create((object)this.afa);
@@ -304,13 +286,9 @@ namespace Microsoft.StreamProcessing
 
         private bool CanGenerateAFAMultiEventListPipe()
         {
-            var typeOfTKey = typeof(TKey);
-            var typeOfTPayload = typeof(TPayload);
-            var typeOfTRegister = typeof(TRegister);
-
-            if (!typeOfTPayload.CanRepresentAsColumnar()) return false;
-            if (!typeOfTRegister.CanRepresentAsColumnar()) return false;
-            if (typeOfTKey.GetPartitionType() != null) return false;
+            if (!typeof(TPayload).CanRepresentAsColumnar()) return false;
+            if (!typeof(TRegister).CanRepresentAsColumnar()) return false;
+            if (typeof(TKey).GetPartitionType() != null) return false;
 
             var lookupKey = CacheKey.Create((object)this.afa);
 
@@ -319,6 +297,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
+
         private UnaryPipe<TKey, TPayload, TRegister> GetAFAMultiEventListPipe(IStreamObserver<TKey, TRegister> observer)
         {
             var lookupKey = CacheKey.Create((object)this.afa);

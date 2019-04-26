@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing
@@ -28,7 +27,7 @@ namespace Microsoft.StreamProcessing
             // This operator uses the equality method on payloads from the left side
             if (left.Properties.IsColumnar && !this.LeftComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of payload, '{0}', to Clip does not have a valid equality operator for columnar mode.", typeof(TLeft).FullName));
+                throw new InvalidOperationException($"Type of payload, '{typeof(TLeft).FullName}', to Clip does not have a valid equality operator for columnar mode.");
             }
 
             Initialize();
@@ -78,8 +77,8 @@ namespace Microsoft.StreamProcessing
             {
                 var node = new JoinPlanNode(
                         left, right, o,
-                        typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
-                        JoinKind.Clip, true, generatedPipeType.Item2, false);
+                    typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
+                    JoinKind.Clip, true, generatedPipeType.Item2);
                 node.AddJoinExpression("left comparer", this.LeftComparer.GetEqualsExpr());
                 node.AddJoinExpression("key comparer", this.Properties.KeyComparer.GetCompareExpr());
                 return node;

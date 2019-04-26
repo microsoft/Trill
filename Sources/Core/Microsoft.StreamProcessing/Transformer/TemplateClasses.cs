@@ -26,7 +26,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing
 {
-    internal class Transformer
+    internal static class Transformer
     {
         // used so the compiler has access to the Microsoft.StramProcessing types it needs.
         // Fix this when there is a static location so we don't have to use Reflection to get it each time
@@ -35,88 +35,51 @@ namespace Microsoft.StreamProcessing
         public static Assembly SystemCoreDll = typeof(BinaryExpression).GetTypeInfo().Assembly;
 
 #if DOTNETCORE
-        internal static IEnumerable<PortableExecutableReference> NetCoreAssemblyReferences
+        internal static IEnumerable<PortableExecutableReference> GetNetCoreAssemblyReferences()
         {
-            get
+            var allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
+                .Split(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':');
+
+            // From: http://source.roslyn.io/#Microsoft.CodeAnalysis.Scripting/ScriptOptions.cs,40
+            // These references are resolved lazily. Keep in sync with list in core csi.rsp.
+            var files = new[]
             {
-                if (netCoreAssemblyReferences == null)
-                {
-                    string[] allAvailableAssemblies;
-
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")).Split(';');
-                    else
-                        allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")).Split(':');
-
-                    // From: http://source.roslyn.io/#Microsoft.CodeAnalysis.Scripting/ScriptOptions.cs,40
-                    // These references are resolved lazily. Keep in sync with list in core csi.rsp.
-                    var files = new[]
-                    {
-                        "System.Collections",
-                        "System.Collections.Concurrent",
-                        "System.Console",
-                        "System.Diagnostics.Debug",
-                        "System.Diagnostics.Process",
-                        "System.Diagnostics.StackTrace",
-                        "System.Globalization",
-                        "System.IO",
-                        "System.IO.FileSystem",
-                        "System.IO.FileSystem.Primitives",
-                        "System.Reflection",
-                        "System.Reflection.Extensions",
-                        "System.Reflection.Primitives",
-                        "System.Runtime",
-                        "System.Runtime.Extensions",
-                        "System.Runtime.InteropServices",
-                        "System.Text.Encoding",
-                        "System.Text.Encoding.CodePages",
-                        "System.Text.Encoding.Extensions",
-                        "System.Text.RegularExpressions",
-                        "System.Threading",
-                        "System.Threading.Tasks",
-                        "System.Threading.Tasks.Parallel",
-                        "System.Threading.Thread",
-                    };
-                    var filteredPaths = allAvailableAssemblies.Where(p => files.Concat(new string[] { "mscorlib", "netstandard", "System.Private.CoreLib", "System.Runtime.Serialization.Primitives", }).Any(f => Path.GetFileNameWithoutExtension(p).Equals(f)));
-                    netCoreAssemblyReferences = filteredPaths.Select(p => MetadataReference.CreateFromFile(p));
-                }
-                return netCoreAssemblyReferences;
-            }
+                "System.Collections",
+                "System.Collections.Concurrent",
+                "System.Console",
+                "System.Diagnostics.Debug",
+                "System.Diagnostics.Process",
+                "System.Diagnostics.StackTrace",
+                "System.Globalization",
+                "System.IO",
+                "System.IO.FileSystem",
+                "System.IO.FileSystem.Primitives",
+                "System.Reflection",
+                "System.Reflection.Extensions",
+                "System.Reflection.Primitives",
+                "System.Runtime",
+                "System.Runtime.Extensions",
+                "System.Runtime.InteropServices",
+                "System.Text.Encoding",
+                "System.Text.Encoding.CodePages",
+                "System.Text.Encoding.Extensions",
+                "System.Text.RegularExpressions",
+                "System.Threading",
+                "System.Threading.Tasks",
+                "System.Threading.Tasks.Parallel",
+                "System.Threading.Thread",
+            };
+            var filteredPaths = allAvailableAssemblies.Where(p => files.Concat(new string[] { "mscorlib", "netstandard", "System.Private.CoreLib", "System.Runtime.Serialization.Primitives", }).Any(f => Path.GetFileNameWithoutExtension(p).Equals(f)));
+            return filteredPaths.Select(p => MetadataReference.CreateFromFile(p));
         }
-        private static IEnumerable<PortableExecutableReference> netCoreAssemblyReferences;
+        private static readonly Lazy<IEnumerable<PortableExecutableReference>> netCoreAssemblyReferences
+            = new Lazy<IEnumerable<PortableExecutableReference>>(GetNetCoreAssemblyReferences);
 #endif
 
         /// <summary>
         /// This is used as part of constructing the name of a field in a StreamMessage that is a column representing a field of the payload type.
         /// </summary>
         internal const string ColumnFieldPrefix = "c_";
-
-        /// <summary>
-        /// The string to inject into operators that is their static constructor.
-        /// </summary>
-        /// <param name="className"></param>
-        /// <returns></returns>
-        public static string StaticCtor(string className)
-        {
-            var includeDebugInfo = Config.CodegenOptions.GenerateDebugInfo
-                && ((Config.CodegenOptions.BreakIntoCodeGen & Config.CodegenOptions.DebugFlags.Operators) != 0);
-#if DEBUG
-            includeDebugInfo = (Config.CodegenOptions.BreakIntoCodeGen & Config.CodegenOptions.DebugFlags.Operators) != 0;
-#endif
-            if (includeDebugInfo)
-            {
-                return string.Format(
-                    CultureInfo.InvariantCulture,
-@"
-    static {0}() {{
-        if (System.Diagnostics.Debugger.IsAttached)
-            System.Diagnostics.Debugger.Break();
-        else
-            System.Diagnostics.Debugger.Launch();
-    }}", className);
-            }
-            else return string.Empty;
-        }
 
         /// <summary>
         /// Generate a batch class definition from the types <typeparamref name="TKey"/> and <typeparamref name="TPayload"/>.
@@ -240,7 +203,7 @@ namespace Microsoft.StreamProcessing
                 .Concat(uniqueReferences.Where(reference => metadataReferenceCache.ContainsKey(reference)).Select(reference => metadataReferenceCache[reference]));
 
 #if DOTNETCORE
-            refs = refs.Concat(NetCoreAssemblyReferences);
+            refs = refs.Concat(netCoreAssemblyReferences.Value);
 #endif
 
             var options = new CSharpCompilationOptions(
@@ -255,7 +218,6 @@ namespace Microsoft.StreamProcessing
             var ignoreAccessibility = binderFlagsType.GetTypeInfo().GetField("IgnoreAccessibility", BindingFlags.Static | BindingFlags.Public);
             topLevelBinderFlagsProperty.SetValue(options, (uint)ignoreCorLibraryDuplicatedTypesMember.GetValue(null) | (uint)ignoreAccessibility.GetValue(null));
 
-
             var compilation = CSharpCompilation.Create(assemblyName, trees, refs, options);
             var a = EmitCompilationAndLoadAssembly(compilation, includeDebugInfo, out errorMessages);
 
@@ -267,7 +229,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public static Dictionary<Assembly, MetadataReference> metadataReferenceCache = new Dictionary<Assembly, MetadataReference>();
-        private static InteractiveAssemblyLoader loader = new InteractiveAssemblyLoader();
+        private static readonly InteractiveAssemblyLoader loader = new InteractiveAssemblyLoader();
 
         internal static Assembly EmitCompilationAndLoadAssembly(CSharpCompilation compilation, bool makeAssemblyDebuggable, out string errorMessages)
         {
@@ -362,9 +324,10 @@ namespace Microsoft.StreamProcessing
         public static IEnumerable<Assembly> AssemblyReferencesNeededFor(Expression expression)
             => AssemblyLocationFinder.GetAssemblyLocationsFor(expression);
 
-        private class AssemblyLocationFinder : ExpressionVisitor
+        private sealed class AssemblyLocationFinder : ExpressionVisitor
         {
-            private HashSet<Assembly> assemblyLocations = new HashSet<Assembly>();
+            private readonly HashSet<Assembly> assemblyLocations = new HashSet<Assembly>();
+
             private AssemblyLocationFinder() { }
             public static IEnumerable<Assembly> GetAssemblyLocationsFor(Expression e)
             {
@@ -415,7 +378,7 @@ namespace System.Runtime.CompilerServices
 
             private static Assembly CreateIgnoreAccessChecksAssembly()
             {
-                var assembly = CompileSourceCode(IgnoreAccessChecksSourceCode, Array.Empty<Assembly>(), out string errorMessages, false);
+                var assembly = CompileSourceCode(IgnoreAccessChecksSourceCode, Array.Empty<Assembly>(), out _, false);
                 if (assembly == null)
                 {
                     throw new InvalidOperationException("Code Generation failed for IgnoresAccessChecksToAttribute!");
@@ -425,29 +388,28 @@ namespace System.Runtime.CompilerServices
         }
 
         private static int BatchClassSequenceNumber = 0;
-        private static SafeConcurrentDictionary<string> batchType2Name = new SafeConcurrentDictionary<string>();
+        private static readonly SafeConcurrentDictionary<string> batchType2Name = new SafeConcurrentDictionary<string>();
+
         internal static string GetBatchClassName(Type keyType, Type payloadType)
         {
             if (!payloadType.CanRepresentAsColumnar())
-                return string.Format(CultureInfo.InvariantCulture, "StreamMessage<{0}, {1}>", keyType.GetCSharpSourceSyntax(), payloadType.GetCSharpSourceSyntax());
+                return $"StreamMessage<{keyType.GetCSharpSourceSyntax()}, {payloadType.GetCSharpSourceSyntax()}>";
 
             var dictionaryKey = CacheKey.Create(keyType, payloadType);
-            var generatedBatchClassName = batchType2Name.GetOrAdd(
+            return batchType2Name.GetOrAdd(
                 dictionaryKey,
-                key => string.Format(CultureInfo.InvariantCulture, "GeneratedBatch_{0}", BatchClassSequenceNumber++));
-            return generatedBatchClassName;
+                key => $"GeneratedBatch_{BatchClassSequenceNumber++}");
         }
 
         internal static string GetMemoryPoolClassName(Type keyType, Type payloadType)
         {
             if (!keyType.KeyTypeNeedsGeneratedMemoryPool() && payloadType.MemoryPoolHasGetMethodFor())
-                return string.Format(CultureInfo.InvariantCulture, "MemoryPool<{0}, {1}>", keyType.GetCSharpSourceSyntax(), payloadType.GetCSharpSourceSyntax());
+                return $"MemoryPool<{keyType.GetCSharpSourceSyntax()}, {payloadType.GetCSharpSourceSyntax()}>";
 
             if (!payloadType.CanRepresentAsColumnar())
-                return string.Format(CultureInfo.InvariantCulture, "MemoryPool<{0}, {1}>", keyType.GetCSharpSourceSyntax(), payloadType.GetCSharpSourceSyntax());
+                return $"MemoryPool<{keyType.GetCSharpSourceSyntax()}, {payloadType.GetCSharpSourceSyntax()}>";
 
-            var generatedMemoryPoolName = string.Format(CultureInfo.InvariantCulture, "MemoryPool_{0}_{1}", keyType.Name.CleanUpIdentifierName(), payloadType.Name.CleanUpIdentifierName());
-            return generatedMemoryPoolName;
+            return $"MemoryPool_{keyType.Name.CleanUpIdentifierName()}_{payloadType.Name.CleanUpIdentifierName()}";
         }
 
         internal static string GetValidIdentifier(Type t) => t.GetCSharpSourceSyntax().CleanUpIdentifierName();
@@ -529,7 +491,7 @@ namespace System.Runtime.CompilerServices
             => MemoryManager.GetMemoryPool<TKey, TPayload>().GetType().GetTypeInfo().Assembly;
     }
 
-    internal class TypeMapper
+    internal sealed class TypeMapper
     {
         private readonly Dictionary<Type, string> typeMap;
 
@@ -568,10 +530,9 @@ namespace System.Runtime.CompilerServices
         {
             Contract.Requires(t != null);
             Contract.Requires(d != null);
+            if (d.TryGetValue(t, out _)) return;
 
-            if (d.TryGetValue(t, out string typeName)) return;
-
-            typeName = t.FullName.Replace('#', '_').Replace('+', '.');
+            var typeName = t.FullName.Replace('#', '_').Replace('+', '.');
             if (t.IsAnonymousTypeName())
             {
                 var newGenericTypeParameter = "A" + anonymousTypeCount.ToString(CultureInfo.InvariantCulture);
@@ -603,7 +564,7 @@ namespace System.Runtime.CompilerServices
         }
     }
 
-    internal class ColumnarRepresentation
+    internal sealed class ColumnarRepresentation
     {
         public readonly Type RepresentationFor;
         public readonly IDictionary<string, MyFieldInfo> Fields; // keyed by field name
@@ -704,10 +665,7 @@ namespace System.Runtime.CompilerServices
             this.DeclaringType = t.DeclaringType;
         }
 
-        public override string ToString()
-        {
-            return "|" + this.TypeName + ", " + this.Name + "|";
-        }
+        public override string ToString() => "|" + this.TypeName + ", " + this.Name + "|";
     }
 
     internal partial class SafeBatchTemplate
@@ -765,15 +723,15 @@ namespace System.Runtime.CompilerServices
         public string expandedCode;
         public List<Assembly> assemblyReferences;
 
-        private Type keyType;
-        private Type payloadType;
+        private readonly Type keyType;
+        private readonly Type payloadType;
 
         /// <summary>
         /// A set so that there is just one memory pool and Get method per type.
         /// </summary>
-        private HashSet<Type> types;
+        private readonly HashSet<Type> types;
 
-        private string className;
+        private readonly string className;
 
         internal MemoryPoolTemplate(ColumnarRepresentation keyRepresentation, ColumnarRepresentation payloadRepresentation)
         {
@@ -786,326 +744,21 @@ namespace System.Runtime.CompilerServices
             this.assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(keyType));
             this.keyType = keyType;
 
-
 #region Decompose TPayload into columns
             var payloadType = payloadRepresentation.RepresentationFor;
             this.assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(payloadType));
             this.payloadType = payloadType;
-            IEnumerable<Type> payloadTypes = payloadRepresentation.AllFields.Select(f => f.Type).Where(t => !t.MemoryPoolHasGetMethodFor());
+            var payloadTypes = payloadRepresentation.AllFields.Select(f => f.Type).Where(t => !t.MemoryPoolHasGetMethodFor());
 
             this.types = new HashSet<Type>(payloadTypes.Distinct());
 
             this.assemblyReferences.AddRange(this.types.SelectMany(t => Transformer.AssemblyReferencesNeededFor(t)));
-
 #endregion
 
             this.generatedClassName = Transformer.GetMemoryPoolClassName(keyType, payloadType);
             this.className = this.generatedClassName.CleanUpIdentifierName();
             this.generatedClassName += "`2";
             this.expandedCode = TransformText();
-        }
-    }
-
-    internal abstract class CommonBaseTemplate
-    {
-        public abstract string TransformText();
-#region Fields
-        private StringBuilder generationEnvironmentField;
-        private List<int> indentLengthsField;
-        private bool endsWithNewline;
-        private IDictionary<string, object> sessionField;
-#endregion
-#region Properties
-        /// <summary>
-        /// The string builder that generation-time code is using to assemble generated output
-        /// </summary>
-        protected StringBuilder GenerationEnvironment
-        {
-            get
-            {
-                if ((this.generationEnvironmentField == null)) this.generationEnvironmentField = new StringBuilder();
-                return this.generationEnvironmentField;
-            }
-            set
-            {
-                this.generationEnvironmentField = value;
-            }
-        }
-
-        /// <summary>
-        /// A list of the lengths of each indent that was added with PushIndent
-        /// </summary>
-        private List<int> IndentLengths
-        {
-            get
-            {
-                if (this.indentLengthsField == null) this.indentLengthsField = new List<int>();
-                return this.indentLengthsField;
-            }
-        }
-
-        /// <summary>
-        /// Gets the current indent we use when adding lines to the output
-        /// </summary>
-        public string CurrentIndent { get; private set; } = string.Empty;
-
-        /// <summary>
-        /// Current transformation session
-        /// </summary>
-        public virtual IDictionary<string, object> Session
-        {
-            get => this.sessionField;
-            set => this.sessionField = value;
-        }
-#endregion
-#region Transform-time helpers
-        /// <summary>
-        /// Write text directly into the generated output
-        /// </summary>
-        public void Write(string textToAppend)
-        {
-            if (string.IsNullOrEmpty(textToAppend)) return;
-
-            // If we're starting off, or if the previous text ended with a newline,
-            // we have to append the current indent first.
-            if (((this.GenerationEnvironment.Length == 0)
-                        || this.endsWithNewline))
-            {
-                this.GenerationEnvironment.Append(this.CurrentIndent);
-                this.endsWithNewline = false;
-            }
-            // Check if the current text ends with a newline
-            if (textToAppend.EndsWith(Environment.NewLine, StringComparison.CurrentCulture))
-            {
-                this.endsWithNewline = true;
-            }
-            // This is an optimization. If the current indent is "", then we don't have to do any
-            // of the more complex stuff further down.
-            if ((this.CurrentIndent.Length == 0))
-            {
-                this.GenerationEnvironment.Append(textToAppend);
-                return;
-            }
-
-            // Everywhere there is a newline in the text, add an indent after it
-            textToAppend = textToAppend.Replace(Environment.NewLine, (Environment.NewLine + this.CurrentIndent));
-            // If the text ends with a newline, then we should strip off the indent added at the very end
-            // because the appropriate indent will be added when the next time Write() is called
-            if (this.endsWithNewline)
-                this.GenerationEnvironment.Append(textToAppend, 0, (textToAppend.Length - this.CurrentIndent.Length));
-            else
-                this.GenerationEnvironment.Append(textToAppend);
-        }
-        /// <summary>
-        /// Write text directly into the generated output
-        /// </summary>
-        public void WriteLine(string textToAppend)
-        {
-            Write(textToAppend);
-            this.GenerationEnvironment.AppendLine();
-            this.endsWithNewline = true;
-        }
-
-        /// <summary>
-        /// Write formatted text directly into the generated output
-        /// </summary>
-        public void Write(string format, params object[] args)
-            => Write(string.Format(CultureInfo.CurrentCulture, format, args));
-
-        /// <summary>
-        /// Write formatted text directly into the generated output
-        /// </summary>
-        public void WriteLine(string format, params object[] args)
-            => WriteLine(string.Format(CultureInfo.CurrentCulture, format, args));
-
-        /// <summary>
-        /// Increase the indent
-        /// </summary>
-        public void PushIndent(string indent)
-        {
-            this.CurrentIndent += indent ?? throw new ArgumentNullException(nameof(indent));
-            this.IndentLengths.Add(indent.Length);
-        }
-
-        /// <summary>
-        /// Remove the last indent that was added with PushIndent
-        /// </summary>
-        public string PopIndent()
-        {
-            string returnValue = string.Empty;
-            if ((this.IndentLengths.Count > 0))
-            {
-                int indentLength = this.IndentLengths[(this.IndentLengths.Count - 1)];
-                this.IndentLengths.RemoveAt((this.IndentLengths.Count - 1));
-                if ((indentLength > 0))
-                {
-                    returnValue = this.CurrentIndent.Substring((this.CurrentIndent.Length - indentLength));
-                    this.CurrentIndent = this.CurrentIndent.Remove((this.CurrentIndent.Length - indentLength));
-                }
-            }
-            return returnValue;
-        }
-        /// <summary>
-        /// Remove any indentation
-        /// </summary>
-        public void ClearIndent()
-        {
-            this.IndentLengths.Clear();
-            this.CurrentIndent = string.Empty;
-        }
-#endregion
-#region ToString Helpers
-        /// <summary>
-        /// Utility class to produce culture-oriented representation of an object as a string.
-        /// </summary>
-        public class ToStringInstanceHelper
-        {
-            private IFormatProvider formatProviderField = CultureInfo.InvariantCulture;
-            /// <summary>
-            /// Gets or sets format provider to be used by ToStringWithCulture method.
-            /// </summary>
-            public IFormatProvider FormatProvider
-            {
-                get => this.formatProviderField;
-                set
-                {
-                    if ((value != null)) this.formatProviderField = value;
-                }
-            }
-            /// <summary>
-            /// This is called from the compile/run appdomain to convert objects within an expression block to a string
-            /// </summary>
-            public string ToStringWithCulture(object objectToConvert)
-            {
-                if ((objectToConvert == null)) throw new ArgumentNullException(nameof(objectToConvert));
-
-                Type t = objectToConvert.GetType();
-                MethodInfo method = t.GetTypeInfo().GetMethod("ToString", new Type[] { typeof(IFormatProvider) });
-
-                if ((method == null))
-                    return objectToConvert.ToString();
-                else
-                    return ((string)(method.Invoke(objectToConvert, new object[] { this.formatProviderField })));
-            }
-        }
-
-        /// <summary>
-        /// Helper to produce culture-oriented representation of an object as a string
-        /// </summary>
-        public ToStringInstanceHelper ToStringHelper { get; } = new ToStringInstanceHelper();
-        #endregion
-    }
-
-    internal abstract class CommonUnaryTemplate : CommonBaseTemplate
-    {
-        protected Type keyType;
-        protected Type payloadType;
-        protected Type resultType;
-
-        protected string TKey;
-        protected string TPayload;
-        protected string TResult;
-
-        protected string BatchGeneratedFrom_TKey_TPayload;
-        protected string TKeyTPayloadGenericParameters;
-
-        protected string staticCtor;
-        protected string className;
-
-        protected ColumnarRepresentation payloadRepresentation;
-        protected ColumnarRepresentation resultRepresentation;
-
-        protected IEnumerable<MyFieldInfo> fields;
-        protected bool noFields;
-
-        protected CommonUnaryTemplate(string className, Type keyType, Type payloadType, Type resultType, bool suppressPayloadBatch = false)
-        {
-            this.keyType = keyType;
-            this.payloadType = payloadType;
-            this.resultType = resultType;
-
-            var tm = new TypeMapper(keyType, payloadType, resultType);
-            this.TKey = tm.CSharpNameFor(keyType);
-            this.TPayload = tm.CSharpNameFor(payloadType);
-            this.TResult = tm.CSharpNameFor(resultType);
-
-            if (!suppressPayloadBatch)
-            {
-                this.TKeyTPayloadGenericParameters = tm.GenericTypeVariables(keyType, payloadType).BracketedCommaSeparatedString();
-                this.BatchGeneratedFrom_TKey_TPayload = Transformer.GetBatchClassName(keyType, payloadType);
-            }
-
-            this.className = className;
-            this.staticCtor = Transformer.StaticCtor(className);
-
-            this.payloadRepresentation = new ColumnarRepresentation(payloadType);
-            this.fields = this.payloadRepresentation.AllFields;
-            this.noFields = this.payloadRepresentation.noFields;
-
-            this.resultRepresentation = new ColumnarRepresentation(resultType);
-        }
-
-        protected Tuple<Type, string> Generate<TKey, TPayload>(params Type[] types)
-        {
-            string errorMessages = null;
-            try
-            {
-                var expandedCode = TransformText();
-
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(this.keyType, this.payloadType, typeof(SortedDictionary<,>));
-                assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(types));
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
-
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var realClassName = this.className.AddNumberOfNecessaryGenericArguments(this.keyType, this.payloadType);
-                var t = a.GetType(realClassName);
-                if (t.GetTypeInfo().IsGenericType)
-                {
-                    var list = this.keyType.GetAnonymousTypes();
-                    list.AddRange(this.payloadType.GetAnonymousTypes());
-                    return Tuple.Create(t.MakeGenericType(list.ToArray()), errorMessages);
-                }
-                else return Tuple.Create(t, errorMessages);
-            }
-            catch (Exception e)
-            {
-                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
-                    throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!", e);
-
-                return Tuple.Create((Type)null, errorMessages);
-            }
-        }
-
-        protected Tuple<Type, string> Generate<TKey, TPayload, TResult>(params Type[] types)
-        {
-            string errorMessages = null;
-            try
-            {
-                var expandedCode = TransformText();
-
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(this.keyType, this.payloadType, this.resultType, typeof(SortedDictionary<,>));
-                assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(types));
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TResult>());
-
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var realClassName = this.className.AddNumberOfNecessaryGenericArguments(this.keyType, this.payloadType);
-                var t = a.GetType(realClassName);
-                if (t.GetTypeInfo().IsGenericType)
-                {
-                    var list = this.keyType.GetAnonymousTypes();
-                    list.AddRange(this.payloadType.GetAnonymousTypes());
-                    return Tuple.Create(t.MakeGenericType(list.ToArray()), errorMessages);
-                }
-                else return Tuple.Create(t, errorMessages);
-            }
-            catch (Exception e)
-            {
-                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
-                    throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!", e);
-
-                return Tuple.Create((Type)null, errorMessages);
-            }
         }
     }
 }

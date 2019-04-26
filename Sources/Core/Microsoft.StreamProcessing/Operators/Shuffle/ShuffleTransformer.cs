@@ -14,25 +14,20 @@ namespace Microsoft.StreamProcessing
 {
     internal partial class ShuffleTemplate
     {
-        internal readonly string CLASSNAME;
-        private readonly Type outerKeyType;
-        private readonly Type sourceType;
-        private readonly Type innerKeyType;
         public IEnumerable<MyFieldInfo> fields;
         public string inlinedHashCodeComputation;
         public string transformedKeySelectorAsString = string.Empty;
-        private string TOuterKeyTSourceGenericParameters;
-        private string TOuterKey;
-        private string TSource;
+        private readonly string TOuterKeyTSourceGenericParameters;
+        private readonly string TOuterKey;
+        private readonly string TSource;
         public string TInnerKey;
-        private string genericParameters;
+        private readonly string genericParameters;
         public bool innerKeyIsAnonymous;
-        private string resultBatchClassType;
-        private string sourceBatchClassType;
-        private string resultBatchGenericParameters;
-        public string staticCtor;
-        private bool isFirstLevelGroup;
-        private bool powerOf2;
+        private readonly string resultBatchClassType;
+        private readonly string sourceBatchClassType;
+        private readonly string resultBatchGenericParameters;
+        private readonly bool isFirstLevelGroup;
+        private readonly bool powerOf2;
         public string vectorHashCodeInitialization = string.Empty;
 
         private static int shuffleCounter = 0;
@@ -43,17 +38,13 @@ namespace Microsoft.StreamProcessing
             Type sourceType,
             Type innerKeyType,
             string inlinedHashCodeComputation,
-            bool nested, bool powerOf2)
+            bool nested, bool powerOf2) : base(className)
         {
             Contract.Requires(className != null);
             Contract.Requires(outerKeyType != null);
             Contract.Requires(sourceType != null);
             Contract.Requires(innerKeyType != null);
 
-            this.CLASSNAME = className;
-            this.outerKeyType = outerKeyType;
-            this.sourceType = sourceType;
-            this.innerKeyType = innerKeyType;
             this.inlinedHashCodeComputation = inlinedHashCodeComputation;
             this.isFirstLevelGroup = !nested;
             this.powerOf2 = powerOf2;
@@ -106,8 +97,7 @@ namespace Microsoft.StreamProcessing
                 if (keySelector != null)
                 {
                     var transformedKeySelector = Extensions.TransformUnaryFunction<TOuterKey, TSource>(keySelector);
-                    var keySelectorAsNewExpression = keySelector.Body as NewExpression;
-                    if (innerKeyIsAnonymous && keySelectorAsNewExpression != null)
+                    if (innerKeyIsAnonymous && keySelector.Body is NewExpression keySelectorAsNewExpression)
                     {
                         var newPrime = (NewExpression)transformedKeySelector.Body;
                         template.transformedKeySelectorAsString = string.Format(CultureInfo.InvariantCulture, "({0})Activator.CreateInstance(typeof({0}), {1})",
@@ -122,8 +112,8 @@ namespace Microsoft.StreamProcessing
                             keySelector.IsSimpleFieldOrPropertyAccess())
                         {
                             template.inlinedHashCodeComputation = "hashCodeVector.col[i]";
-                            var fieldName = ((MemberExpression)(keySelector.Body)).Member.Name;
-                            template.vectorHashCodeInitialization = string.Format(CultureInfo.InvariantCulture, "var hashCodeVector = {0}{1}_col.GetHashCode(batch.bitvector);", Transformer.ColumnFieldPrefix, fieldName);
+                            var fieldName = ((MemberExpression)keySelector.Body).Member.Name;
+                            template.vectorHashCodeInitialization = $"var hashCodeVector = {Transformer.ColumnFieldPrefix}{fieldName}_col.GetHashCode(batch.bitvector);";
                         }
                     }
                 }
@@ -133,7 +123,6 @@ namespace Microsoft.StreamProcessing
                 }
 
                 template.innerKeyIsAnonymous = innerKeyIsAnonymous;
-                template.staticCtor = Transformer.StaticCtor(template.CLASSNAME);
                 var expandedCode = template.TransformText();
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeOfTOuterKey, typeOfTSource, typeOfTInnerKey);

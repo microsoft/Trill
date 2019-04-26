@@ -25,8 +25,6 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<TKey, TPayload> output;
 
         [DataMember]
-        private long lastSyncTime = long.MinValue;
-        [DataMember]
         private FastMap<ActiveEvent> syncTimeMap = new FastMap<ActiveEvent>();
         [DataMember]
         private EndPointHeap endPointHeap = new EndPointHeap();
@@ -62,12 +60,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new ExtendLifetimePlanNode(
+            => this.Observer.ProduceQueryPlan(new ExtendLifetimePlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload),
                 false, this.errorMessages, true));
-        }
 
         private void ReachTime(long timestamp)
         {
@@ -108,8 +104,6 @@ namespace Microsoft.StreamProcessing
 
                 this.syncTimeMap.Remove(index);
             }
-
-            this.lastSyncTime = timestamp;
         }
 
         public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
@@ -235,10 +229,7 @@ namespace Microsoft.StreamProcessing
                 this.Hash = hash;
             }
 
-            public override string ToString()
-            {
-                return "Key='" + this.Key + "', Payload='" + this.Payload;
-            }
+            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
     }
 }

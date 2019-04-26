@@ -18,7 +18,7 @@ namespace Microsoft.StreamProcessing
         private const int DefaultCapacity = 64;
         private readonly MemoryPool<TKey, TResult> pool;
         private readonly string errorMessages;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [SchemaSerialization]
         private readonly Expression<Func<TLeft, TRight, TResult>> selectorExpr;
@@ -50,10 +50,7 @@ namespace Microsoft.StreamProcessing
         private bool emitCTI = false;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedStartEdgeEquiJoinPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedStartEdgeEquiJoinPipe() { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void UpdateNextLeftTime(PartitionEntry partition, long time)
@@ -75,7 +72,6 @@ namespace Microsoft.StreamProcessing
             IStreamObserver<TKey, TResult> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.selectorExpr = selector;
             this.selector = this.selectorExpr.Compile();
 
@@ -95,7 +91,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TResult), typeof(TKey),
                 JoinKind.StartEdgeEquijoin,
-                false, this.errorMessages, false);
+                false, this.errorMessages);
             node.AddJoinExpression("selector", this.selectorExpr);
             node.AddJoinExpression("key comparer", this.keyComparerExpr);
             this.Observer.ProduceQueryPlan(node);

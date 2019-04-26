@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Microsoft.StreamProcessing
 {
@@ -14,8 +15,6 @@ namespace Microsoft.StreamProcessing
         protected Type payloadType;
         protected Type registerType;
         protected Type accumulatorType;
-        protected string className;
-        protected string staticCtor;
         protected bool hasRegister;
         protected bool isSyncTimeSimultaneityFree;
         protected readonly List<Tuple<int, List<EdgeInfo>>> currentlyActiveInfo = new List<Tuple<int, List<EdgeInfo>>>();
@@ -35,8 +34,8 @@ namespace Microsoft.StreamProcessing
         protected bool AllowOverlappingInstances;
 
         internal AfaTemplate(string className, Type keyType, Type payloadType, Type registerType, Type accumulatorType)
+            : base(className)
         {
-            this.className = className;
             this.keyType = keyType;
             this.payloadType = payloadType;
             this.registerType = registerType;
@@ -46,13 +45,10 @@ namespace Microsoft.StreamProcessing
             this.TPayload = payloadType.GetCSharpSourceSyntax();
             this.TRegister = registerType.GetCSharpSourceSyntax();
             this.TAccumulator = accumulatorType.GetCSharpSourceSyntax();
-            this.staticCtor = Transformer.StaticCtor(className);
             if (Config.ForceRowBasedExecution)
             {
                 // then need to use the field "payload" that is defined on the generic StreamMessage
-                this.sourceFields = new MyFieldInfo[] {
-                    new MyFieldInfo(payloadType, "payload"),
-                };
+                this.sourceFields = new MyFieldInfo[] { new MyFieldInfo(payloadType, "payload") };
             }
             else
             {
@@ -61,6 +57,39 @@ namespace Microsoft.StreamProcessing
             var resultFieldInfo = registerType.GetAnnotatedFields();
             this.resultFields = resultFieldInfo.Item1;
             this.noPublicResultFields = resultFieldInfo.Item2;
+        }
+
+        protected Tuple<Type, string> Generate<TKey, TPayload, TRegister, TAccumulator>()
+        {
+            string errorMessages = null;
+            try
+            {
+                var expandedCode = TransformText();
+
+                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(
+                    typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(Stack<>), typeof(IStreamable<,>));
+                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
+                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TRegister>());
+                assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TRegister>());
+
+                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
+                var t = a.GetType(this.className);
+                if (t.GetTypeInfo().IsGenericType)
+                {
+                    var list = typeof(TKey).GetAnonymousTypes();
+                    list.AddRange(this.payloadType.GetAnonymousTypes());
+                    list.AddRange(this.registerType.GetAnonymousTypes());
+                    t = t.MakeGenericType(list.ToArray());
+                }
+                return Tuple.Create(t, errorMessages);
+            }
+            catch
+            {
+                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
+                    throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!");
+
+                return Tuple.Create((Type)null, errorMessages);
+            }
         }
 
         internal class EdgeInfo
@@ -74,7 +103,7 @@ namespace Microsoft.StreamProcessing
 
         }
 
-        internal class MultiEdgeInfo : EdgeInfo
+        internal sealed class MultiEdgeInfo : EdgeInfo
         {
             public int TargetNode;
             public bool fromStartState = false;
@@ -84,10 +113,7 @@ namespace Microsoft.StreamProcessing
             public Func<string, string> Dispose;
             public Func<string, string, string, string> SkipToEnd;
 
-            public MultiEdgeInfo()
-            {
-                this.Type = EdgeType.Multi;
-            }
+            public MultiEdgeInfo() => this.Type = EdgeType.Multi;
         }
 
         protected static List<int> EpsilonClosure<TPayload, TRegister, TAccumulator>(CompiledAfa<TPayload, TRegister, TAccumulator> afa, int node)
@@ -100,7 +126,7 @@ namespace Microsoft.StreamProcessing
             return result;
         }
 
-        protected static EdgeInfo CreateSingleEdgeInfo<TKey, TPayload, TRegister, TAccumulator>(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, int targetNodeNumber, SingleElementArc<TPayload, TRegister> searc, string indexVariableName)
+        protected static EdgeInfo CreateSingleEdgeInfo<TKey, TPayload, TRegister, TAccumulator>(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, int targetNodeNumber, SingleElementArc<TPayload, TRegister> searc)
         {
             var edgeInfo = new EdgeInfo()
             {
@@ -109,18 +135,13 @@ namespace Microsoft.StreamProcessing
                 SourceNode = targetNodeNumber,
                 Fence = (ts, ev, reg) => searc.Fence.Inline(ts, ev, reg),
             };
-            if (searc.Transfer == null)
-            {
-                edgeInfo.Transfer = null;
-            }
-            else
-            {
-                edgeInfo.Transfer = (ts, ev, reg) => searc.Transfer.Inline(ts, ev, reg);
-            }
+            edgeInfo.Transfer = searc.Transfer == null
+                ? (Func<string, string, string, string>)null
+                : ((ts, ev, reg) => searc.Transfer.Inline(ts, ev, reg));
             return edgeInfo;
         }
 
-        protected static EdgeInfo CreateListEdgeInfo<TKey, TPayload, TRegister, TAccumulator>(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, ColumnarRepresentation payloadRepresentation, int targetNodeNumber, ListElementArc<TPayload, TRegister> edge, string indexVariableName)
+        protected static EdgeInfo CreateListEdgeInfo<TKey, TPayload, TRegister, TAccumulator>(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, int targetNodeNumber, ListElementArc<TPayload, TRegister> edge)
         {
             var edgeInfo = new EdgeInfo()
             {
@@ -135,26 +156,20 @@ namespace Microsoft.StreamProcessing
 
         protected void UpdateRegisterValue(EdgeInfo e, string defaultRegisterValue, string ts, string payloadList, string reg)
         {
-            string newRegisterValue;
-            if (!this.hasRegister || e.Transfer == null)
-                newRegisterValue = defaultRegisterValue;
-            else
-                newRegisterValue = e.Transfer(ts, payloadList, reg);
+            var newRegisterValue = !this.hasRegister || e.Transfer == null
+                ? defaultRegisterValue
+                : e.Transfer(ts, payloadList, reg);
             WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
             return;
-
         }
 
         protected void UpdateRegisterValue(MultiEdgeInfo e, string defaultRegisterValue, string ts, string acc, string reg)
         {
-            string newRegisterValue;
-            if (e.Transfer == null)
-                newRegisterValue = defaultRegisterValue;
-            else
-                newRegisterValue = e.Transfer(ts, acc, reg);
+            var newRegisterValue = e.Transfer == null
+                ? defaultRegisterValue
+                : e.Transfer(ts, acc, reg);
             WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
             return;
-
         }
 
         private static void EpsilonClosureHelper<TPayload, TRegister, TAccumulator>(CompiledAfa<TPayload, TRegister, TAccumulator> afa, int node, List<int> accumulator)
@@ -170,55 +185,24 @@ namespace Microsoft.StreamProcessing
             }
             return;
         }
+
         protected static string BeginColumnPointerDeclaration(MyFieldInfo f, string batchName)
-        {
-            if (f.canBeFixed)
-            {
-                return string.Format("fixed ({0}* {2}_{1}_col = {2}.{1}.col) {{", f.TypeName, f.Name, batchName);
-            }
-            else if (f.OptimizeString())
-            {
-                return string.Format("var {1}_{0}_col = {1}.{0};", f.Name, batchName);
-            }
-            else
-            {
-                return string.Format("var {1}_{0}_col = {1}.{0}.col;", f.Name, batchName);
-            }
-        }
-        protected static string EndColumnPointerDeclaration(MyFieldInfo f)
-        {
-            if (f.canBeFixed)
-            {
-                return "}";
-            }
-            else
-            {
-                return string.Empty;
-            }
-        }
+            => f.canBeFixed
+                ? string.Format("fixed ({0}* {2}_{1}_col = {2}.{1}.col) {{", f.TypeName, f.Name, batchName)
+                : f.OptimizeString()
+                    ? string.Format("var {1}_{0}_col = {1}.{0};", f.Name, batchName)
+                    : string.Format("var {1}_{0}_col = {1}.{0}.col;", f.Name, batchName);
+
+        protected static string EndColumnPointerDeclaration(MyFieldInfo f) => f.canBeFixed ? "}" : string.Empty;
+
         protected static string ColumnPointerFieldDeclaration(MyFieldInfo f, string batchName)
-        {
-            if (f.OptimizeString())
-            {
-                return string.Format("Microsoft.StreamProcessing.Internal.Collections.Multistring {1}_{0}_col;", f.Name, batchName);
-            }
-            else
-            {
-                return string.Format("{2} {1}_{0}_col;", f.Name, batchName, f.Type.MakeArrayType().GetCSharpSourceSyntax());
-            }
-        }
+            => f.OptimizeString()
+                ? string.Format("Microsoft.StreamProcessing.Internal.Collections.Multistring {1}_{0}_col;", f.Name, batchName)
+                : string.Format("{2} {1}_{0}_col;", f.Name, batchName, f.Type.MakeArrayType().GetCSharpSourceSyntax());
+
         protected static string ColumnPointerFieldAssignment(MyFieldInfo f, string batchName)
-        {
-            if (f.OptimizeString())
-            {
-                return string.Format("this.{1}_{0}_col = {1}.{0};", f.Name, batchName);
-            }
-            else
-            {
-                return string.Format("this.{1}_{0}_col = {1}.{0}.col;", f.Name, batchName);
-            }
-        }
-
+            => f.OptimizeString()
+                ? string.Format("this.{1}_{0}_col = {1}.{0};", f.Name, batchName)
+                : string.Format("this.{1}_{0}_col = {1}.{0}.col;", f.Name, batchName);
     }
-
 }

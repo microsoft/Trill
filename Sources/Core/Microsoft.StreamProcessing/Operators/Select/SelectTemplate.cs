@@ -62,7 +62,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write("\r\n// Computed Fields: ");
             this.Write(this.ToStringHelper.ToStringWithCulture(String.Join(",", this.computedFields.Keys.Select(f => f.OriginalName))));
             this.Write("\r\n// Swinging Fields: ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(String.Join(",", this.swingingFields.Select(tup => string.Format("<{0},{1}>", tup.Item1.OriginalName, tup.Item2.Name)))));
+            this.Write(this.ToStringHelper.ToStringWithCulture(String.Join(",", this.swingingFields.Select(tup => $"<{tup.Item1.OriginalName},{tup.Item2.Name}>"))));
             this.Write("\r\n\r\n[DataContract]\r\ninternal sealed class ");
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write(this.ToStringHelper.ToStringWithCulture(genericParameters));
@@ -119,9 +119,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));
             this.Write(".col.Length);\r\n");
  } 
-            this.Write("\r\n    }\r\n\r\n    public override void ProduceQueryPlan(PlanNode previous)\r\n    {\r\n " +
-                    "       Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));\r\n    }\r\n\r\n" +
-                    "    protected override void DisposeState()\r\n    {\r\n");
+            this.Write("\r\n    }\r\n\r\n    public override void ProduceQueryPlan(PlanNode previous)\r\n        " +
+                    "=> Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));\r\n\r\n    protect" +
+                    "ed override void DisposeState()\r\n    {\r\n");
  foreach (var f in this.unassignedFields.Where(fld => !fld.OptimizeString())) { 
             this.Write("        this.sharedDefaultColumnFor_");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));

@@ -114,7 +114,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         this.pool.Get(out StreamMessage<TKey, TSpray> broadcastClone);
-                        broadcastClone.CloneFromNoPayload(broadcastMaster);
+                        broadcastClone.CloneFrom(broadcastMaster);
                         this.Observers[i].OnNext(broadcastClone);
                     }
                 }
@@ -147,7 +147,7 @@ namespace Microsoft.StreamProcessing
         public override void ProduceQueryPlan(PlanNode previous)
         {
             var node = new SprayPlanNode(
-                previous, this, typeof(TKey), typeof(TSpray), this.totalBranches, this.multicast, this.spraySortOrderComparer, false, false);
+                previous, this, typeof(TKey), typeof(TSpray), this.totalBranches, this.multicast, this.spraySortOrderComparer, false);
             this.Observers.ForEach(o => o.ProduceQueryPlan(node));
         }
 

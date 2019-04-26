@@ -14,13 +14,11 @@ namespace Microsoft.StreamProcessing
 {
     internal partial class AggregateTemplate
     {
-        protected string className;
         protected Type keyType;
         protected Type inputType;
         protected Type stateType;
         protected Type outputType;
         private static int sequenceNumber = 0;
-        protected string hopsPerDuration;
 
         protected IEnumerable<MyFieldInfo> inputFields;
         protected IEnumerable<MyFieldInfo> outputFields;
@@ -39,9 +37,8 @@ namespace Microsoft.StreamProcessing
         protected bool useCompiledDeaccumulate;
         protected bool useCompiledDifference;
         protected bool isUngrouped;
-        protected string staticCtor;
 
-        protected AggregateTemplate() { }
+        protected AggregateTemplate(string className) : base(className) { }
 
         public static Tuple<Type, string> Generate<TKey, TInput, TState, TOutput>(SnapshotWindowStreamable<TKey, TInput, TState, TOutput> stream, AggregatePipeType pipeType)
         {
@@ -49,7 +46,7 @@ namespace Microsoft.StreamProcessing
             Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(IStreamObserver<TKey, TInput>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             var container = stream.Properties.QueryContainer;
-            string generatedClassName;
+            string generatedClassName = string.Format("Aggregate_{0}", sequenceNumber++);
             string expandedCode;
             List<Assembly> assemblyReferences;
             string errorMessages = null;
@@ -60,29 +57,28 @@ namespace Microsoft.StreamProcessing
                 switch (pipeType)
                 {
                     case AggregatePipeType.StartEdge:
-                        template = new SnapshotWindowStartEdgeTemplate();
+                        template = new SnapshotWindowStartEdgeTemplate(generatedClassName);
                         break;
                     case AggregatePipeType.PriorityQueue:
-                        template = new SnapshotWindowPriorityQueueTemplate();
+                        template = new SnapshotWindowPriorityQueueTemplate(generatedClassName);
                         break;
                     case AggregatePipeType.Tumbling:
-                        template = new SnapshotWindowTumblingTemplate();
+                        template = new SnapshotWindowTumblingTemplate(generatedClassName);
                         break;
                     case AggregatePipeType.Sliding:
-                        template = new SnapshotWindowSlidingTemplate();
+                        template = new SnapshotWindowSlidingTemplate(generatedClassName);
                         break;
                     case AggregatePipeType.Hopping:
-                        template = new SnapshotWindowHoppingTemplate
-                        {
-                            hopsPerDuration = ((int)(stream.Source.Properties.ConstantDurationLength.Value / stream.Source.Properties.ConstantHopLength) + 1).ToString()
-                        };
+                        template = new SnapshotWindowHoppingTemplate(
+                            generatedClassName,
+                            ((int)(stream.Source.Properties.ConstantDurationLength.Value / stream.Source.Properties.ConstantHopLength) + 1).ToString());
                         break;
                     default:
                         Contract.Assert(false, "case meant to be exhaustive");
                         throw new InvalidOperationException("case meant to be exhaustive");
                 }
 
-                template.isUngrouped = (typeof(TKey) == typeof(Empty));
+                template.isUngrouped = typeof(TKey) == typeof(Empty);
                 var keyType = template.keyType = typeof(TKey);
                 var inputType = template.inputType = typeof(TInput);
                 var stateType = template.stateType = typeof(TState);
@@ -101,16 +97,16 @@ namespace Microsoft.StreamProcessing
                 var getHashcodeExpression = keyComparer.GetGetHashCodeExpr();
                 template.inlinedKeyComparerEquals =
                     (left, right) =>
-                        string.Format("({0})", equalsExpression.Inline(left, right));
+                        $"({equalsExpression.Inline(left, right)})";
                 template.inlinedKeyComparerGetHashCode =
                     (x) =>
-                        string.Format("({0}/* inlined GetHashCode */)", getHashcodeExpression.Inline(x));
+                        $"({getHashcodeExpression.Inline(x)}/* inlined GetHashCode */)";
                 if (keyType.IsAnonymousType())
                 {
                     template.inlinedKeyComparerEquals =
-                        (left, right) => string.Format("keyComparerEquals({0}, {1})", left, right);
+                        (left, right) => $"keyComparerEquals({left}, {right})";
                     template.inlinedKeyComparerGetHashCode =
-                        (x) => string.Format("keyComparerGetHashCode({0})", x);
+                        (x) => $"keyComparerGetHashCode({x})";
                 }
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(equalsExpression));
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(getHashcodeExpression));
@@ -241,10 +237,7 @@ namespace Microsoft.StreamProcessing
                 }
                 #endregion
 
-                generatedClassName = template.className = string.Format("Aggregate_{0}", sequenceNumber++);
                 generatedClassName = generatedClassName.AddNumberOfNecessaryGenericArguments(keyType, inputType, stateType, outputType);
-
-                template.staticCtor = Transformer.StaticCtor(template.className);
                 expandedCode = template.TransformText();
 
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(typeof(TKey), typeof(TInput), typeof(TState), typeof(TOutput), typeof(FastDictionaryGenerator), typeof(SortedDictionary<,>)));
@@ -317,7 +310,33 @@ namespace Microsoft.StreamProcessing
             var be = Expression.Block(assignments);
             return be;
         }
-
     }
 
+    internal partial class SnapshotWindowStartEdgeTemplate
+    {
+        public SnapshotWindowStartEdgeTemplate(string className) : base(className) { }
+    }
+
+    internal partial class SnapshotWindowPriorityQueueTemplate
+    {
+        public SnapshotWindowPriorityQueueTemplate(string className) : base(className) { }
+    }
+
+    internal partial class SnapshotWindowTumblingTemplate
+    {
+        public SnapshotWindowTumblingTemplate(string className) : base(className) { }
+    }
+
+    internal partial class SnapshotWindowSlidingTemplate
+    {
+        public SnapshotWindowSlidingTemplate(string className) : base(className) { }
+    }
+
+    internal partial class SnapshotWindowHoppingTemplate
+    {
+        private readonly string hopsPerDuration;
+
+        public SnapshotWindowHoppingTemplate(string className, string hopsPerDuration) : base(className)
+            => this.hopsPerDuration = hopsPerDuration;
+    }
 }

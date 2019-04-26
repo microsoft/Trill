@@ -21,7 +21,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, Empty, bool> SingleElement<TInput>()
         {
-            var afa = new Afa<TInput, Empty>();
+            var afa = Afa.Create<TInput>();
             afa.AddArc(0, 1, new SingleElementArc<TInput, Empty> { Fence = (ts, ev, r) => true });
             afa.Seal();
             return afa;
@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, Empty, bool> SingleElement<TInput>(Expression<Func<TInput, bool>> condition)
         {
-            var afa = new Afa<TInput, Empty>();
+            var afa = Afa.Create<TInput>();
             Expression<Func<long, TInput, Empty, bool>> template = (ts, ev, r) => CallInliner.Call(condition, ev);
             afa.AddArc(0, 1, new SingleElementArc<TInput, Empty> { Fence = template.InlineCalls() });
             afa.Seal();
@@ -50,7 +50,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>()
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = (ts, ev, r) => true });
             afa.Seal();
             return afa;
@@ -65,7 +65,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<TInput, bool>> condition)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, bool>> template = (ts, ev, r) => CallInliner.Call(condition, ev);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = template.InlineCalls() });
             afa.Seal();
@@ -82,7 +82,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<TInput, bool>> condition, Expression<Func<TInput, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             Expression<Func<long, TInput, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregatorTemplate.InlineCalls(), });
@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<TInput, bool>> condition, Expression<Func<TInput, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             Expression<Func<long, TInput, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregatorTemplate.InlineCalls(), });
@@ -118,7 +118,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<TInput, bool>> condition, Expression<Func<long, TInput, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregator, });
             afa.Seal();
@@ -134,7 +134,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<TInput, TRegister, bool>> condition)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), });
             afa.Seal();
@@ -151,7 +151,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<TInput, TRegister, bool>> condition, Expression<Func<TInput, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             Expression<Func<long, TInput, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregatorTemplate.InlineCalls(), });
@@ -169,7 +169,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<TInput, TRegister, bool>> condition, Expression<Func<TInput, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             Expression<Func<long, TInput, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregatorTemplate.InlineCalls(), });
@@ -187,7 +187,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<TInput, TRegister, bool>> condition, Expression<Func<long, TInput, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregator, });
             afa.Seal();
@@ -203,7 +203,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<long, TInput, TRegister, bool>> condition)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = condition });
             afa.Seal();
             return afa;
@@ -219,7 +219,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<long, TInput, TRegister, bool>> condition, Expression<Func<TInput, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, TRegister>> aggregatorTemplate = (ts, ev, reg) => CallInliner.Call(aggregator, ev);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = condition, Transfer = aggregatorTemplate.InlineCalls(), });
             afa.Seal();
@@ -236,7 +236,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<long, TInput, TRegister, bool>> condition, Expression<Func<TInput, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, TInput, TRegister, TRegister>> aggregatorTemplate = (ts, ev, reg) => CallInliner.Call(aggregator, ev, reg);
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = condition, Transfer = aggregatorTemplate.InlineCalls(), });
             afa.Seal();
@@ -253,7 +253,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> SingleElement<TInput, TRegister>(Expression<Func<long, TInput, TRegister, bool>> condition, Expression<Func<long, TInput, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             afa.AddArc(0, 1, new SingleElementArc<TInput, TRegister> { Fence = condition, Transfer = aggregator });
             afa.Seal();
             return afa;
@@ -268,7 +268,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, Empty, bool> ListElement<TInput>()
         {
-            var afa = new Afa<TInput, Empty>();
+            var afa = Afa.Create<TInput>();
             afa.AddArc(0, 1, new ListElementArc<TInput, Empty> { Fence = (ts, ev, r) => true });
             afa.Seal();
             return afa;
@@ -282,7 +282,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, Empty, bool> ListElement<TInput>(Expression<Func<List<TInput>, bool>> condition)
         {
-            var afa = new Afa<TInput, Empty>();
+            var afa = Afa.Create<TInput>();
             Expression<Func<long, List<TInput>, Empty, bool>> template = (ts, ev, r) => CallInliner.Call(condition, ev);
             afa.AddArc(0, 1, new ListElementArc<TInput, Empty> { Fence = template.InlineCalls() });
             afa.Seal();
@@ -297,7 +297,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>()
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = (ts, ev, r) => true });
             afa.Seal();
             return afa;
@@ -312,7 +312,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<List<TInput>, bool>> condition)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, bool>> template = (ts, ev, r) => CallInliner.Call(condition, ev);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = template.InlineCalls() });
             afa.Seal();
@@ -329,7 +329,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<List<TInput>, bool>> condition, Expression<Func<List<TInput>, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             Expression<Func<long, List<TInput>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregatorTemplate.InlineCalls(), });
@@ -347,7 +347,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<List<TInput>, bool>> condition, Expression<Func<List<TInput>, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             Expression<Func<long, List<TInput>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregatorTemplate.InlineCalls(), });
@@ -365,7 +365,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<List<TInput>, bool>> condition, Expression<Func<long, List<TInput>, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregator, });
             afa.Seal();
@@ -381,7 +381,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<List<TInput>, TRegister, bool>> condition)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), });
             afa.Seal();
@@ -398,7 +398,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<List<TInput>, TRegister, bool>> condition, Expression<Func<List<TInput>, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             Expression<Func<long, List<TInput>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregatorTemplate.InlineCalls(), });
@@ -416,7 +416,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<List<TInput>, TRegister, bool>> condition, Expression<Func<List<TInput>, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             Expression<Func<long, List<TInput>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregatorTemplate.InlineCalls(), });
@@ -434,7 +434,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<List<TInput>, TRegister, bool>> condition, Expression<Func<long, List<TInput>, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = conditionTemplate.InlineCalls(), Transfer = aggregator, });
             afa.Seal();
@@ -450,7 +450,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<long, List<TInput>, TRegister, bool>> condition)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = condition });
             afa.Seal();
             return afa;
@@ -466,7 +466,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<long, List<TInput>, TRegister, bool>> condition, Expression<Func<List<TInput>, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, reg) => CallInliner.Call(aggregator, ev);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = condition, Transfer = aggregatorTemplate.InlineCalls(), });
             afa.Seal();
@@ -483,7 +483,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<long, List<TInput>, TRegister, bool>> condition, Expression<Func<List<TInput>, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             Expression<Func<long, List<TInput>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, reg) => CallInliner.Call(aggregator, ev, reg);
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = condition, Transfer = aggregatorTemplate.InlineCalls(), });
             afa.Seal();
@@ -500,7 +500,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern with an updatable register whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> ListElement<TInput, TRegister>(Expression<Func<long, List<TInput>, TRegister, bool>> condition, Expression<Func<long, List<TInput>, TRegister, TRegister>> aggregator)
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             afa.AddArc(0, 1, new ListElementArc<TInput, TRegister> { Fence = condition, Transfer = aggregator });
             afa.Seal();
             return afa;
@@ -515,7 +515,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, Empty, bool> Epsilon<TInput>()
         {
-            var afa = new Afa<TInput, Empty>();
+            var afa = Afa.Create<TInput>();
             afa.AddArc(0, 1, new EpsilonArc<TInput, Empty> { });
             afa.Seal();
             return afa;
@@ -529,7 +529,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, bool> Epsilon<TInput, TRegister>()
         {
-            var afa = new Afa<TInput, TRegister>();
+            var afa = Afa.Create<TInput, TRegister>();
             afa.AddArc(0, 1, new EpsilonArc<TInput, TRegister> { });
             afa.Seal();
             return afa;
@@ -548,9 +548,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="patterns">Any remaining patterns to be concatenated, in order</param>
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, TAccumulator> Concat<TInput, TRegister, TAccumulator>(Afa<TInput, TRegister, TAccumulator> pattern1, Afa<TInput, TRegister, TAccumulator> pattern2, params Afa<TInput, TRegister, TAccumulator>[] patterns)
-        {
-            return ConcatWorker(false, pattern1, pattern2, patterns);
-        }
+            => ConcatWorker(false, pattern1, pattern2, patterns);
 
         /// <summary>
         /// Creates a new pattern resulting from the concatenation of other patterns, but where each individual pattern may result in a final state
@@ -563,13 +561,10 @@ namespace Microsoft.StreamProcessing
         /// <param name="patterns">Any remaining patterns to be concatenated, in order</param>
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, TAccumulator> OrConcat<TInput, TRegister, TAccumulator>(Afa<TInput, TRegister, TAccumulator> pattern1, Afa<TInput, TRegister, TAccumulator> pattern2, params Afa<TInput, TRegister, TAccumulator>[] patterns)
-        {
-            return ConcatWorker(true, pattern1, pattern2, patterns);
-        }
+            => ConcatWorker(true, pattern1, pattern2, patterns);
 
         private static Afa<TInput, TRegister, TAccumulator> ConcatWorker<TInput, TRegister, TAccumulator>(bool isOr, Afa<TInput, TRegister, TAccumulator> pattern1, Afa<TInput, TRegister, TAccumulator> pattern2, params Afa<TInput, TRegister, TAccumulator>[] patterns)
         {
-
             var allPatterns = new Afa<TInput, TRegister, TAccumulator>[patterns.Length + 2];
             allPatterns[0] = pattern1;
             allPatterns[1] = pattern2;
@@ -581,7 +576,6 @@ namespace Microsoft.StreamProcessing
 
             for (int i = 1; i < allPatterns.Length; i++)
             {
-
                 var nextPattern = allPatterns[i];
 
                 var newFinal = result.MaxState + 1;
@@ -589,7 +583,7 @@ namespace Microsoft.StreamProcessing
                 var epsilonArcAdded = false;
                 foreach (var finalState in result.finalStates)
                 {
-                    if (result.transitionInfo.TryGetValue(finalState, out Dictionary<int, Arc<TInput, TRegister>> outgoingEdges))
+                    if (result.transitionInfo.TryGetValue(finalState, out var outgoingEdges))
                     {
                         result.AddArc(finalState, newFinal, new EpsilonArc<TInput, TRegister> { });
                         if (!epsilonArcAdded)
@@ -618,15 +612,13 @@ namespace Microsoft.StreamProcessing
                             int from = kvp1.Key;
                             int to = kvp2.Key;
 
-                            if (from == nextPattern.StartState)
-                                from = oldFinal;
-                            else
-                                from = from + oldMax;
+                            from = from == nextPattern.StartState
+                                ? oldFinal
+                                : from + oldMax;
 
-                            if (to == nextPattern.StartState)
-                                to = oldFinal;
-                            else
-                                to = to + oldMax;
+                            to = to == nextPattern.StartState
+                                ? oldFinal
+                                : to + oldMax;
 
                             result.AddArc(from, to, kvp2.Value);
 
@@ -685,11 +677,8 @@ namespace Microsoft.StreamProcessing
                 {
                     foreach (var kvp2 in kvp1.Value)
                     {
-                        int from = kvp1.Key;
-                        int to = kvp2.Key;
-
-                        from = from + oldMax;
-                        to = to + oldMax;
+                        int from = kvp1.Key + oldMax;
+                        int to = kvp2.Key + oldMax;
 
                         result.AddArc(from, to, kvp2.Value);
 
@@ -750,9 +739,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="pattern">The pattern to iterate</param>
         /// <returns>A pattern whose first transition is the one just created</returns>
         public static Afa<TInput, TRegister, TAccumulator> KleenePlus<TInput, TRegister, TAccumulator>(Afa<TInput, TRegister, TAccumulator> pattern)
-        {
-            return Concat(pattern, KleeneStar(pattern));
-        }
+            => Concat(pattern, KleeneStar(pattern));
 
         /// <summary>
         /// Creates a new pattern resulting from zero or one instances of the given pattern

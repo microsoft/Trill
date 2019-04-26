@@ -10,17 +10,13 @@
 namespace Microsoft.StreamProcessing
 {
     using System.Linq;
-    using System.Text;
-    using System.Collections.Generic;
-    using System.Linq.Expressions;
-    using System.Reflection;
     using System;
     
     /// <summary>
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class UnionTemplate : CommonBaseTemplate
+    internal partial class UnionTemplate : CommonBinaryTemplate
     {
         /// <summary>
         /// Create the template output
@@ -44,7 +40,9 @@ using Microsoft.StreamProcessing.Aggregates;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Internal.Collections;
 
-// TKey: ");
+");
+ var TPayload = this.TResult; 
+            this.Write("// TKey: ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write("\r\n// TPayload: ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));

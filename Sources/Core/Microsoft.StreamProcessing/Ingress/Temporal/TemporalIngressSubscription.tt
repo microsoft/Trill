@@ -309,7 +309,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.lowWatermark) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -344,12 +344,6 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-<#          if (ingressType == "StreamEvent")
-            { #>
-            if (value.IsData)
-            {
-<#              PushIndent("    ");
-            } #>
             var oldTime = <#= highWatermark #>;
             if (value.SyncTime > oldTime)
             {
@@ -364,14 +358,26 @@ namespace Microsoft.StreamProcessing
                 if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
                 else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
 
+<#          }
+            if (ingressType == "StreamEvent" && partitioned)
+            {
+                PushIndent("    "); #>
+            if (value.IsData)
+            {
+                // moveTo for punctuations is updated below
 <#          } #>
                 moveTo = value.SyncTime - this.reorderLatency;
                 if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
                 if (moveTo < moveFrom) moveTo = moveFrom;
             }
-<#          if (ingressType == "StreamEvent")
+<#          if (ingressType == "StreamEvent" && partitioned)
             {
                 PopIndent(); #>
+            }
+
+            if (value.IsPunctuation)
+            {
+                moveTo = value.SyncTime;
             }
 <#          } #>
 
@@ -515,7 +521,7 @@ namespace Microsoft.StreamProcessing
         { #>
                 // We use lowWatermark as the baseline in the delta computation because a low watermark implies
                 // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.lowWatermark));
+                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
                 if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
@@ -543,8 +549,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (outOfOrder)
                 {
-                    var outOfOrderMessage = string.Format(System.Globalization.CultureInfo.InvariantCulture, "Out-of-order event encountered during ingress, under a disorder policy of Throw: value.SyncTime: {0}, current:{1}", value.SyncTime, current);
-                    throw new IngressException(outOfOrderMessage);
+                    throw new IngressException($"Out-of-order event encountered during ingress, under a disorder policy of Throw: value.SyncTime: {value.SyncTime}, current:{current}");
                 }
             }
             else
@@ -702,6 +707,17 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= <#= partitioned ? "this.lowWatermark" : "this.lastPunctuationTime" #>) return;
 
+<#      if (!partitioned)
+        { #>
+            // Update the <#= globalPunctuation #> to be at least the currentTime, so the <#= globalPunctuation #>
+            // is not before the preceding data event.
+<#          if (latencyOption == "WithLatency")
+            { #>
+            // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
+<#          } #>
+            syncTime = Math.Max(syncTime, this.currentTime);
+<#      } #>
+
 <#      if (latencyOption == "WithLatency")
         { #>
             // Process events queued for reorderLatency up to the <#= globalPunctuation #> syncTime
@@ -758,6 +774,7 @@ namespace Microsoft.StreamProcessing
             if (this.lowWatermark < syncTime)
             {
                 this.lowWatermark = syncTime;
+                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
 <#          if (latencyOption == "WithLatency")
             { #>
 
@@ -791,7 +808,9 @@ namespace Microsoft.StreamProcessing
         else
         { #>
             this.currentTime = Math.Max(syncTime, this.currentTime);
-            this.lastPunctuationTime = Math.Max(syncTime, this.lastPunctuationTime);
+            this.lastPunctuationTime = Math.Max(
+                syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                this.lastPunctuationTime);
 <#      } #>
 
             // Add <#= globalPunctuation #> to batch

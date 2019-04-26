@@ -100,11 +100,6 @@ namespace Microsoft.StreamProcessing.Internal
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class DisorderedSubscriptionBase<TIngressStructure, TPayload, TResult> : Pipe<Empty, TResult>, IIngressStreamObserver
     {
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected IDisposable disposer;
         private readonly string errorMessages;
         private new readonly bool isColumnar;
 
@@ -291,7 +286,9 @@ namespace Microsoft.StreamProcessing.Internal
         {
             Contract.Requires(value.IsPunctuation);
 
-            this.lastPunctuationTime = Math.Max(value.SyncTime, this.lastPunctuationTime);
+            this.lastPunctuationTime = Math.Max(
+                value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                this.lastPunctuationTime);
 
             var count = this.currentBatch.Count;
             this.currentBatch.vsync.col[count] = value.SyncTime;
@@ -340,11 +337,9 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(
                 this,
                 typeof(Empty), typeof(TPayload), this.isColumnar, this.errorMessages));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -365,10 +360,10 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void DisposeState()
         {
+            this.subscription?.Dispose();
+            this.impatienceSorter?.Dispose();
             this.currentBatch?.Free();
             this.currentBatch = null;
-            this.impatienceSorter?.Dispose();
-            this.disposer?.Dispose();
         }
 
         /// <summary>
@@ -501,10 +496,7 @@ namespace Microsoft.StreamProcessing.Internal
                 this.disposed = true;
             }
 
-            private void DisposeInternal()
-            {
-                this.inner.Dispose();
-            }
+            private void DisposeInternal() => this.inner.Dispose();
         }
     }
 
@@ -595,11 +587,6 @@ namespace Microsoft.StreamProcessing.Internal
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class SubscriptionBase<TIngressStructure, TPayload, TResult> : Pipe<Empty, TResult>, IIngressStreamObserver
     {
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected IDisposable disposer;
         private readonly string errorMessages;
         private new readonly bool isColumnar;
 
@@ -786,7 +773,9 @@ namespace Microsoft.StreamProcessing.Internal
         {
             Contract.Requires(value.IsPunctuation);
 
-            this.lastPunctuationTime = Math.Max(value.SyncTime, this.lastPunctuationTime);
+            this.lastPunctuationTime = Math.Max(
+                value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                this.lastPunctuationTime);
 
             var count = this.currentBatch.Count;
             this.currentBatch.vsync.col[count] = value.SyncTime;
@@ -835,11 +824,9 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(
                 this,
                 typeof(Empty), typeof(TPayload), this.isColumnar, this.errorMessages));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -860,10 +847,10 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void DisposeState()
         {
+            this.subscription?.Dispose();
+            this.impatienceSorter?.Dispose();
             this.currentBatch?.Free();
             this.currentBatch = null;
-            this.impatienceSorter?.Dispose();
-            this.disposer?.Dispose();
         }
 
         /// <summary>
@@ -996,10 +983,7 @@ namespace Microsoft.StreamProcessing.Internal
                 this.disposed = true;
             }
 
-            private void DisposeInternal()
-            {
-                this.inner.Dispose();
-            }
+            private void DisposeInternal() => this.inner.Dispose();
         }
     }
 
@@ -1095,11 +1079,6 @@ namespace Microsoft.StreamProcessing.Internal
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class DisorderedPartitionedSubscriptionBase<TKey, TIngressStructure, TPayload, TResult> : Pipe<PartitionKey<TKey>, TResult>, IIngressStreamObserver
     {
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected IDisposable disposer;
         private readonly string errorMessages;
         private new readonly bool isColumnar;
 
@@ -1228,6 +1207,15 @@ namespace Microsoft.StreamProcessing.Internal
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Baseline low watermark value used for low watermark and punctuation generation policies. This value will be
+        /// quantized to lowWatermarkGenerationPeriod boundaries.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long baselineLowWatermarkForPolicy = 0;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -1340,17 +1328,14 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                this.lastPunctuationTime[value.PartitionKey] = Math.Max(value.SyncTime, this.lastPunctuationTime[value.PartitionKey]);
+                this.lastPunctuationTime[value.PartitionKey] = Math.Max(
+                    value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                    this.lastPunctuationTime[value.PartitionKey]);
             }
 
             var count = this.currentBatch.Count;
-            this.currentBatch.vsync.col[count] = value.SyncTime;
-            this.currentBatch.vother.col[count] = value.OtherTime;
+            this.currentBatch.Add(value.SyncTime, value.OtherTime, new PartitionKey<TKey>(value.PartitionKey), default);
             this.currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
-            this.currentBatch.key.col[count] = new PartitionKey<TKey>(value.PartitionKey);
-            this.currentBatch.hash.col[count] = value.PartitionKey.GetHashCode();
-            this.currentBatch[count] = default;
-            this.currentBatch.Count = count + 1;
             if (this.currentBatch.Count == Config.DataBatchSize)
             {
                 if (this.flushPolicy == PartitionedFlushPolicy.FlushOnBatchBoundary) OnFlush();
@@ -1386,11 +1371,9 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(
                 this,
                 typeof(PartitionKey<TKey>), typeof(TPayload), this.isColumnar, this.errorMessages));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1411,10 +1394,10 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void DisposeState()
         {
+            this.subscription?.Dispose();
+            this.impatienceSorter?.Dispose();
             this.currentBatch?.Free();
             this.currentBatch = null;
-            this.impatienceSorter?.Dispose();
-            this.disposer?.Dispose();
         }
 
         /// <summary>
@@ -1547,10 +1530,7 @@ namespace Microsoft.StreamProcessing.Internal
                 this.disposed = true;
             }
 
-            private void DisposeInternal()
-            {
-                this.inner.Dispose();
-            }
+            private void DisposeInternal() => this.inner.Dispose();
         }
     }
 
@@ -1646,11 +1626,6 @@ namespace Microsoft.StreamProcessing.Internal
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class PartitionedSubscriptionBase<TKey, TIngressStructure, TPayload, TResult> : Pipe<PartitionKey<TKey>, TResult>, IIngressStreamObserver
     {
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        protected IDisposable disposer;
         private readonly string errorMessages;
         private new readonly bool isColumnar;
 
@@ -1779,6 +1754,15 @@ namespace Microsoft.StreamProcessing.Internal
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Baseline low watermark value used for low watermark and punctuation generation policies. This value will be
+        /// quantized to lowWatermarkGenerationPeriod boundaries.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long baselineLowWatermarkForPolicy = 0;
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -1891,17 +1875,14 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                this.lastPunctuationTime[value.PartitionKey] = Math.Max(value.SyncTime, this.lastPunctuationTime[value.PartitionKey]);
+                this.lastPunctuationTime[value.PartitionKey] = Math.Max(
+                    value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
+                    this.lastPunctuationTime[value.PartitionKey]);
             }
 
             var count = this.currentBatch.Count;
-            this.currentBatch.vsync.col[count] = value.SyncTime;
-            this.currentBatch.vother.col[count] = value.OtherTime;
+            this.currentBatch.Add(value.SyncTime, value.OtherTime, new PartitionKey<TKey>(value.PartitionKey), default);
             this.currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
-            this.currentBatch.key.col[count] = new PartitionKey<TKey>(value.PartitionKey);
-            this.currentBatch.hash.col[count] = value.PartitionKey.GetHashCode();
-            this.currentBatch[count] = default;
-            this.currentBatch.Count = count + 1;
             if (this.currentBatch.Count == Config.DataBatchSize)
             {
                 if (this.flushPolicy == PartitionedFlushPolicy.FlushOnBatchBoundary) OnFlush();
@@ -1937,11 +1918,9 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(
                 this,
                 typeof(PartitionKey<TKey>), typeof(TPayload), this.isColumnar, this.errorMessages));
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1962,10 +1941,10 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void DisposeState()
         {
+            this.subscription?.Dispose();
+            this.impatienceSorter?.Dispose();
             this.currentBatch?.Free();
             this.currentBatch = null;
-            this.impatienceSorter?.Dispose();
-            this.disposer?.Dispose();
         }
 
         /// <summary>
@@ -2098,10 +2077,7 @@ namespace Microsoft.StreamProcessing.Internal
                 this.disposed = true;
             }
 
-            private void DisposeInternal()
-            {
-                this.inner.Dispose();
-            }
+            private void DisposeInternal() => this.inner.Dispose();
         }
     }
 

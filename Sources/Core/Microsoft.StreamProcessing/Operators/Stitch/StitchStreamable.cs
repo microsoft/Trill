@@ -3,7 +3,6 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Globalization;
 using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing
@@ -19,7 +18,7 @@ namespace Microsoft.StreamProcessing
             // This operator uses the equality method on payloads
             if (this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of payload, '{0}', to Stitch does not have a valid equality operator for columnar mode.", typeof(TPayload).FullName));
+                throw new InvalidOperationException($"Type of payload, '{typeof(TPayload).FullName}', to Stitch does not have a valid equality operator for columnar mode.");
             }
 
             Initialize();
@@ -30,8 +29,9 @@ namespace Microsoft.StreamProcessing
             var part = typeof(TKey).GetPartitionType();
             if (part == null)
             {
-                if (this.Source.Properties.IsColumnar) return GetPipe(observer);
-                else return new StitchPipe<TKey, TPayload>(this, observer);
+                return this.Source.Properties.IsColumnar
+                    ? GetPipe(observer)
+                    : new StitchPipe<TKey, TPayload>(this, observer);
             }
 
             var outputType = typeof(PartitionedStitchPipe<,,>).MakeGenericType(
@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create(this.Properties.KeyEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Properties.PayloadEqualityComparer.GetEqualsExpr().ExpressionToCSharp());
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => StitchTemplate.Generate(this));
-            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new StitchPlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2, false));
+            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new StitchPlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode);
             var returnValue = (UnaryPipe<TKey, TPayload, TPayload>)instance;

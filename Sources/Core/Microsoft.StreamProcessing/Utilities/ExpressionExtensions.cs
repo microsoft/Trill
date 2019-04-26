@@ -111,20 +111,15 @@ namespace Microsoft.StreamProcessing
             var stringBuilder = new StringBuilder();
             var visitor = new ConvertToCSharpButWithStringParameters(new StringWriter(stringBuilder, CultureInfo.InvariantCulture), map);
             visitor.Visit(e);
-            var s = stringBuilder.ToString();
-            return s;
+            return stringBuilder.ToString();
         }
 
         public static LambdaExpression RemoveCastToObject(this LambdaExpression lambda)
-        {
-            if (lambda.Body is UnaryExpression body &&
-                (body.NodeType == ExpressionType.Convert || body.NodeType == ExpressionType.TypeAs) &&
-                (body.Type == typeof(object)))
-            {
-                return Expression.Lambda(body.Operand, lambda.Parameters);
-            }
-            return lambda;
-        }
+            => lambda.Body is UnaryExpression body
+            && (body.NodeType == ExpressionType.Convert || body.NodeType == ExpressionType.TypeAs)
+            && (body.Type == typeof(object))
+                ? Expression.Lambda(body.Operand, lambda.Parameters)
+                : lambda;
 
         public static Expression ReplaceParametersInBody(this LambdaExpression lambda, Expression exp0)
             => ParameterSubstituter.Replace(lambda.Parameters[0], exp0, lambda.Body);
@@ -157,10 +152,9 @@ namespace Microsoft.StreamProcessing
         }
 
         protected override Expression VisitParameter(ParameterExpression node)
-        {
-            if (this.arguments.TryGetValue(node, out Expression replacement) && replacement != null) return replacement;
-            return node;
-        }
+            => this.arguments.TryGetValue(node, out var replacement) && replacement != null
+                ? replacement
+                : node;
     }
 
     internal sealed class ConstantExpressionFinder : ExpressionVisitor
@@ -181,15 +175,17 @@ namespace Microsoft.StreamProcessing
             me.Visit(function.Body);
             return me.isConstant;
         }
+
         protected override Expression VisitConstant(ConstantExpression node)
         {
             var t = node.Type;
             if (!t.GetTypeInfo().IsPrimitive) this.isConstant = false;
             return base.VisitConstant(node);
         }
+
         protected override Expression VisitMember(MemberExpression node)
         {
-            if (!(node.Expression is MemberExpression me)) // if it is a member expression, then let visitor recurse down to the left-most branch
+            if (!(node.Expression is MemberExpression)) // if it is a member expression, then let visitor recurse down to the left-most branch
             {
                 if (!(node.Expression is ParameterExpression p) || !this.parameters.Contains(p)) this.isConstant = false;
             }
@@ -231,11 +227,11 @@ namespace Microsoft.StreamProcessing
         private readonly Dictionary<ParameterExpression, int> parameterMap = new Dictionary<ParameterExpression, int>();
         private int uniqueParameterNumber;
 
-        private EqualityComparer(Expression e1, Expression e2) => this.uniqueParameterNumber = 0;
+        private EqualityComparer() => this.uniqueParameterNumber = 0;
 
         public static bool IsEqual(Expression e1, Expression e2)
         {
-            var me = new EqualityComparer(e1, e2);
+            var me = new EqualityComparer();
             return me.Equals(e1, e2);
         }
 
@@ -313,8 +309,9 @@ namespace Microsoft.StreamProcessing
             if (e1 is NewExpression new1)
             {
                 var new2 = e2 as NewExpression;
-                if (new1.Constructor == null) return new2.Constructor == null;
-                return new1.Constructor.Equals(new2.Constructor) && Equals(new1.Arguments, new2.Arguments);
+                return new1.Constructor == null
+                    ? new2.Constructor == null
+                    : new1.Constructor.Equals(new2.Constructor) && Equals(new1.Arguments, new2.Arguments);
             }
             if (e1 is NewArrayExpression newarr1)
             {
@@ -392,7 +389,7 @@ namespace Microsoft.StreamProcessing
 
     internal sealed class VariableFinder : ExpressionVisitor
     {
-        private List<object> foundVariables = new List<object>();
+        private readonly List<object> foundVariables = new List<object>();
 
         public static List<object> Find(Expression exp)
         {
@@ -434,20 +431,20 @@ namespace Microsoft.StreamProcessing
         }
 
         public static Expression Replace(ParameterExpression eOld, Expression eNew, Expression expression)
-            => (new ParameterSubstituter(new Dictionary<ParameterExpression, Expression> { { eOld, eNew } })).Visit(expression);
+            => new ParameterSubstituter(new Dictionary<ParameterExpression, Expression> { { eOld, eNew } }).Visit(expression);
 
         public static Expression Replace(
             ParameterExpression eOld, Expression eNew,
             ParameterExpression eOld2, Expression eNew2,
             Expression expression)
-            => (new ParameterSubstituter(new Dictionary<ParameterExpression, Expression> { { eOld, eNew }, { eOld2, eNew2 } })).Visit(expression);
+            => new ParameterSubstituter(new Dictionary<ParameterExpression, Expression> { { eOld, eNew }, { eOld2, eNew2 } }).Visit(expression);
 
         public static Expression Replace(
             ParameterExpression eOld, Expression eNew,
             ParameterExpression eOld2, Expression eNew2,
             ParameterExpression eOld3, Expression eNew3,
             Expression expression)
-            => (new ParameterSubstituter(new Dictionary<ParameterExpression, Expression> { { eOld, eNew }, { eOld2, eNew2 }, { eOld3, eNew3 } })).Visit(expression);
+            => new ParameterSubstituter(new Dictionary<ParameterExpression, Expression> { { eOld, eNew }, { eOld2, eNew2 }, { eOld3, eNew3 } }).Visit(expression);
 
         public static Expression<Func<PartitionKey<TPartitionKey>, TPayload, TResult>> FirstParameterAsPartitionKey<TPartitionKey, TPayload, TResult>(
             Expression<Func<TPartitionKey, TPayload, TResult>> expression)
@@ -475,10 +472,9 @@ namespace Microsoft.StreamProcessing
             => this.arguments = new Dictionary<ParameterExpression, Expression>(arguments);
 
         protected override Expression VisitParameter(ParameterExpression node)
-        {
-            if (this.arguments.TryGetValue(node, out Expression replacement)) return replacement;
-            return base.VisitParameter(node);
-        }
+            => this.arguments.TryGetValue(node, out var replacement)
+                ? replacement
+                : base.VisitParameter(node);
     }
 
     /// <summary>
@@ -521,30 +517,8 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        // Summary:
-        //     Dispatches the expression to one of the more specialized visit methods in
-        //     this class.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
-        public override Expression Visit(Expression node) { return base.Visit(node); }
+        public override Expression Visit(Expression node) => base.Visit(node);
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.BinaryExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitBinary(BinaryExpression node)
         {
             if (!node.NodeType.ToString().Contains("Assign"))
@@ -561,17 +535,6 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.BlockExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitBlock(BlockExpression node)
         {
             this.writer.WriteLine("{");
@@ -586,31 +549,12 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.CatchBlock.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
-        protected override CatchBlock VisitCatchBlock(CatchBlock node) {
-            this.writer.Write(node.ToString()); return base.VisitCatchBlock(node); }
+        protected override CatchBlock VisitCatchBlock(CatchBlock node)
+        {
+            this.writer.Write(node.ToString());
+            return base.VisitCatchBlock(node);
+        }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.ConditionalExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitConditional(ConditionalExpression node)
         {
             if (node.Type != typeof(void)
@@ -624,7 +568,8 @@ namespace Microsoft.StreamProcessing
                 this.writer.Write(" : ");
                 base.Visit(node.IfFalse);
                 this.writer.Write(")");
-            } else
+            }
+            else
             {
                 this.writer.Write("if (");
                 base.Visit(node.Test);
@@ -641,17 +586,6 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the System.Linq.Expressions.ConstantExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitConstant(ConstantExpression node)
         {
             var t = node.Type;
@@ -689,25 +623,18 @@ namespace Microsoft.StreamProcessing
             {
                 // A constant of a non-primitive struct type must be a default value for that type
                 // At least, that is what is assumed here.
-                this.writer.Write(string.Format(CultureInfo.InvariantCulture, "default({0})", GetTypeName(t)));
+                this.writer.Write($"default({GetTypeName(t)})");
                 return null;
             }
-            var isString = (t == typeof(string));
-            if (isString)
+
+            if (v == null) this.writer.Write("null");
+            else
             {
-                if (v == null)
-                    this.writer.Write("null");
-                else
+                if (t == typeof(string))
                 {
                     var s = (string)v;
                     this.writer.Write(ToLiteral(s));
-
                 }
-            }
-            else
-            {
-                if (v == null)
-                    this.writer.Write("null");
                 else
                 {
                     this.writer.Write(v.ToString());
@@ -724,34 +651,12 @@ namespace Microsoft.StreamProcessing
             return s;
         }
 
-        //
-        // Summary:
-        //     Visits the System.Linq.Expressions.DebugInfoExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitDebugInfo(DebugInfoExpression node)
         {
             this.writer.Write(node.ToString());
             return base.VisitDebugInfo(node);
         }
 
-        //
-        // Summary:
-        //     Visits the System.Linq.Expressions.DefaultExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitDefault(DefaultExpression node)
         {
             this.writer.Write(node.ToString());
@@ -759,17 +664,6 @@ namespace Microsoft.StreamProcessing
         }
 
 #if !DOTNETCORE
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.DynamicExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitDynamic(DynamicExpression node)
         {
             this.writer.Write(node.ToString());
@@ -777,51 +671,18 @@ namespace Microsoft.StreamProcessing
         }
 #endif
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.ElementInit.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override ElementInit VisitElementInit(ElementInit node)
         {
             this.writer.Write(node.ToString());
             return base.VisitElementInit(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the extension expression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitExtension(Expression node)
         {
             this.writer.Write(node.ToString());
             return base.VisitExtension(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.GotoExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitGoto(GotoExpression node)
         {
             if (node.Kind == GotoExpressionKind.Break)
@@ -832,17 +693,6 @@ namespace Microsoft.StreamProcessing
             throw new NotImplementedException();
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.IndexExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitIndex(IndexExpression node)
         {
             Visit(node.Object);
@@ -859,17 +709,6 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.InvocationExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitInvocation(InvocationExpression node)
         {
             var inlinedLambda = ParameterSubstituter.InlineInvocation(node);
@@ -887,55 +726,18 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.LabelExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitLabel(LabelExpression node)
         {
             this.writer.Write(node.ToString());
             return base.VisitLabel(node);
         }
 
-        //
-        // Summary:
-        //     Visits the System.Linq.Expressions.LabelTarget.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override LabelTarget VisitLabelTarget(LabelTarget node)
         {
             this.writer.Write(node.Name);
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.Expression<TDelegate>.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Type parameters:
-        //   T:
-        //     The type of the delegate.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitLambda<T>(Expression<T> node)
         {
             this.writer.Write("(");
@@ -960,17 +762,6 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.ListInitExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitListInit(ListInitExpression node)
         {
             Visit(node.NewExpression);
@@ -989,17 +780,6 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.LoopExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitLoop(LoopExpression node)
         {
             this.writer.Write("while (true) {");
@@ -1013,17 +793,6 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.MemberExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitMember(MemberExpression node)
         {
             if (node.Expression != null) Visit(node.Expression);
@@ -1034,17 +803,6 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.MemberAssignment.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
         {
             this.writer.Write(node.Member.Name);
@@ -1053,33 +811,9 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.MemberBinding.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override MemberBinding VisitMemberBinding(MemberBinding node)
-        {
-            return base.VisitMemberBinding(node); // taken care of by VisitMemberAssignment, but what if there are other subtypes of MemberBinding?
-        }
+            => base.VisitMemberBinding(node); // taken care of by VisitMemberAssignment, but what if there are other subtypes of MemberBinding?
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.MemberInitExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitMemberInit(MemberInitExpression node)
         {
             Visit(node.NewExpression);
@@ -1096,51 +830,18 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.MemberListBinding.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override MemberListBinding VisitMemberListBinding(MemberListBinding node)
         {
             this.writer.Write(node.ToString());
             return base.VisitMemberListBinding(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.MemberMemberBinding.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override MemberMemberBinding VisitMemberMemberBinding(MemberMemberBinding node)
         {
             this.writer.Write(node.ToString());
             return base.VisitMemberMemberBinding(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.MethodCallExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
             var isIndexer = node.Method.IsSpecialName && node.Method.Name.Equals("get_Item");
@@ -1187,17 +888,6 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.NewExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitNew(NewExpression node)
         {
             this.writer.Write("new ");
@@ -1230,17 +920,6 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.NewArrayExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitNewArray(NewArrayExpression node)
         {
             this.writer.Write("new {0} {{ ", GetTypeName(node.Type));
@@ -1252,119 +931,42 @@ namespace Microsoft.StreamProcessing
             return null;
         }
 
-        //
-        // Summary:
-        //     Visits the System.Linq.Expressions.ParameterExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitParameter(ParameterExpression node)
         {
             this.writer.Write(node.ToString());
             return base.VisitParameter(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.RuntimeVariablesExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitRuntimeVariables(RuntimeVariablesExpression node)
         {
             this.writer.Write(node.ToString());
             return base.VisitRuntimeVariables(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.SwitchExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitSwitch(SwitchExpression node)
         {
             this.writer.Write(node.ToString());
             return base.VisitSwitch(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.SwitchCase.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override SwitchCase VisitSwitchCase(SwitchCase node)
         {
             this.writer.Write(node.ToString());
             return base.VisitSwitchCase(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.TryExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitTry(TryExpression node)
         {
             this.writer.Write(node.ToString());
             return base.VisitTry(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.TypeBinaryExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitTypeBinary(TypeBinaryExpression node)
         {
             this.writer.Write(node.ToString());
             return base.VisitTypeBinary(node);
         }
 
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.UnaryExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
         protected override Expression VisitUnary(UnaryExpression node)
         {
             this.writer.Write("(");
@@ -1795,7 +1397,7 @@ namespace Microsoft.StreamProcessing
 
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            if (this.parameterTableForAtomicTypes.TryGetValue(node, out ParameterInformation parameterInfo))
+            if (this.parameterTableForAtomicTypes.TryGetValue(node, out var parameterInfo))
             {
                 var arrayAccess = Expression.ArrayAccess(parameterInfo.ArrayVariable, parameterInfo.IndexVariable);
                 return arrayAccess;
@@ -1868,9 +1470,9 @@ namespace Microsoft.StreamProcessing
             var m = node.Member;
             if (node.Expression is ParameterExpression parameter)
             {
-                if (this.parameterTableForDecomposableTypes.TryGetValue(Tuple.Create(parameter, m.Name), out ParameterInformation parameterInfo))
+                if (this.parameterTableForDecomposableTypes.TryGetValue(Tuple.Create(parameter, m.Name), out var parameterInfo))
                     return MakeIndexedAccessExpression(parameterInfo);
-                if (this.parameterTableForAtomicTypes.TryGetValue(parameter, out parameterInfo))
+                if (this.parameterTableForAtomicTypes.TryGetValue(parameter, out _))
                     throw new InvalidOperationException();
             }
 
@@ -2027,10 +1629,9 @@ namespace Microsoft.StreamProcessing
         }
 
         protected override Expression VisitMember(MemberExpression node)
-        {
-            if (node.Member.Name == "Key" && node.Expression == parameter) return newParameter;
-            return base.VisitMember(node);
-        }
+            => node.Member.Name == "Key" && node.Expression == parameter
+                ? newParameter
+                : base.VisitMember(node);
 
         protected override Expression VisitParameter(ParameterExpression node)
         {
@@ -2068,17 +1669,7 @@ namespace Microsoft.StreamProcessing
             me.Visit(function.Body);
             return me.foundInstance;
         }
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.MethodCallExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
+
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
             if (node.Object != null)
@@ -2093,17 +1684,7 @@ namespace Microsoft.StreamProcessing
             }
             return node;
         }
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.BinaryExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
+
         protected override Expression VisitBinary(BinaryExpression node)
         {
             if (node.Left is ParameterExpression p && this.parameters.Contains(p)) this.foundInstance = true;
@@ -2115,17 +1696,7 @@ namespace Microsoft.StreamProcessing
 
             return node;
         }
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.UnaryExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
+
         protected override Expression VisitUnary(UnaryExpression node)
         {
             if (node.Operand is ParameterExpression p && this.parameters.Contains(p)) this.foundInstance = true;
@@ -2133,17 +1704,7 @@ namespace Microsoft.StreamProcessing
 
             return node;
         }
-        //
-        // Summary:
-        //     Visits the children of the System.Linq.Expressions.ConditionalExpression.
-        //
-        // Parameters:
-        //   node:
-        //     The expression to visit.
-        //
-        // Returns:
-        //     The modified expression, if it or any subexpression was modified; otherwise,
-        //     returns the original expression.
+
         protected override Expression VisitConditional(ConditionalExpression node)
         {
             if (node.Test is ParameterExpression p && this.parameters.Contains(p)) this.foundInstance = true;
@@ -2159,6 +1720,5 @@ namespace Microsoft.StreamProcessing
 
             return node;
         }
-
     }
 }

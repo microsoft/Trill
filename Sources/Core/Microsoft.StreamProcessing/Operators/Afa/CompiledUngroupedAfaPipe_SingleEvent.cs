@@ -25,8 +25,8 @@ namespace Microsoft.StreamProcessing
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledUngroupedAfaPipe() { }
 
-        public CompiledUngroupedAfaPipe(AfaStreamable<Empty, TPayload, TRegister, TAccumulator> stream, IStreamObserver<Empty, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+        public CompiledUngroupedAfaPipe(Streamable<Empty, TRegister> stream, IStreamObserver<Empty, TRegister> observer, object afa, long maxDuration)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastLinkedList<GroupedActiveState<Empty, TRegister>>();
 
@@ -45,7 +45,7 @@ namespace Microsoft.StreamProcessing
             var stack = new Stack<int>();
             var activeFindTraverser = new FastLinkedList<GroupedActiveState<Empty, TRegister>>.ListTraverser(this.activeStates);
             var tentativeFindTraverser = new FastLinkedList<OutputEvent<Empty, TRegister>>.ListTraverser(this.tentativeOutput);
-            var tentativeVisibleTraverser = new FastLinkedList<OutputEvent<Empty, TRegister>>.VisibleTraverser(this.tentativeOutput);
+            var tentativeOutputIndex = 0;
 
             var count = batch.Count;
 
@@ -74,11 +74,11 @@ namespace Microsoft.StreamProcessing
 
                                     if (this.tentativeOutput.Count > 0)
                                     {
-                                        tentativeVisibleTraverser.currIndex = 0;
+                                        tentativeOutputIndex = 0;
 
-                                        while (tentativeVisibleTraverser.Next(out int index))
+                                        while (this.tentativeOutput.Iterate(ref tentativeOutputIndex))
                                         {
-                                            var elem = this.tentativeOutput.Values[index];
+                                            var elem = this.tentativeOutput.Values[tentativeOutputIndex];
 
                                             dest_vsync[this.iter] = this.lastSyncTime;
                                             dest_vother[this.iter] = elem.other;
@@ -148,10 +148,9 @@ namespace Microsoft.StreamProcessing
 
                                                 if (arcinfo.Fence(synctime, batch[i], state.register))
                                                 {
-                                                    TRegister newReg;
-                                                    if (arcinfo.Transfer == null) newReg = state.register;
-                                                    else newReg = arcinfo.Transfer(synctime, batch[i], state.register);
-
+                                                    var newReg = arcinfo.Transfer == null
+                                                        ? state.register
+                                                        : arcinfo.Transfer(synctime, batch[i], state.register);
                                                     int ns = arcinfo.toState;
                                                     while (true)
                                                     {
@@ -228,10 +227,9 @@ namespace Microsoft.StreamProcessing
                                         var arcinfo = startStateMap[cnt];
                                         if (arcinfo.Fence(synctime, batch[i], this.defaultRegister))
                                         {
-                                            TRegister newReg;
-                                            if (arcinfo.Transfer == null) newReg = this.defaultRegister;
-                                            else newReg = arcinfo.Transfer(synctime, batch[i], this.defaultRegister);
-
+                                            var newReg = arcinfo.Transfer == null
+                                                ? this.defaultRegister
+                                                : arcinfo.Transfer(synctime, batch[i], this.defaultRegister);
                                             int ns = arcinfo.toState;
                                             while (true)
                                             {
@@ -300,11 +298,11 @@ namespace Microsoft.StreamProcessing
 
                                     if (this.tentativeOutput.Count > 0)
                                     {
-                                        tentativeVisibleTraverser.currIndex = 0;
+                                        tentativeOutputIndex = 0;
 
-                                        while (tentativeVisibleTraverser.Next(out int index))
+                                        while (this.tentativeOutput.Iterate(ref tentativeOutputIndex))
                                         {
-                                            var elem = this.tentativeOutput.Values[index];
+                                            var elem = this.tentativeOutput.Values[tentativeOutputIndex];
 
                                             this.batch.vsync.col[this.iter] = this.lastSyncTime;
                                             this.batch.vother.col[this.iter] = elem.other;
@@ -312,10 +310,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize)
-                                            {
-                                                FlushContents();
-                                            }
+                                            if (this.iter == Config.DataBatchSize) FlushContents();
                                         }
 
                                         this.tentativeOutput.Clear(); // Clear the tentative output list

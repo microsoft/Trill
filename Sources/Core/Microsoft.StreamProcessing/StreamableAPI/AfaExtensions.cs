@@ -36,9 +36,7 @@ namespace Microsoft.StreamProcessing
             if (maxDuration == 0)
             {
                 if (!(source.Properties.IsConstantDuration && (source.Properties.ConstantDurationLength != null)))
-                {
-                    throw new Exception("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
-                }
+                    throw new InvalidOperationException("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
 
                 maxDuration = source.Properties.ConstantDurationLength.Value;
             }
@@ -70,7 +68,7 @@ namespace Microsoft.StreamProcessing
             if (maxDuration == 0)
             {
                 if (!(source.Properties.IsConstantDuration && (source.Properties.ConstantDurationLength != null)))
-                    throw new Exception("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
+                    throw new InvalidOperationException("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
 
                 maxDuration = source.Properties.ConstantDurationLength.Value;
             }
@@ -106,7 +104,7 @@ namespace Microsoft.StreamProcessing
             if (maxDuration == 0)
             {
                 if (!(source.Properties.IsConstantDuration && (source.Properties.ConstantDurationLength != null)))
-                    throw new Exception("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
+                    throw new InvalidOperationException("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
 
                 maxDuration = source.Properties.ConstantDurationLength.Value;
             }
@@ -166,9 +164,20 @@ namespace Microsoft.StreamProcessing
         /// <param name="source">Input stream over which to define a pattern</param>
         /// <returns>The beginning of a builder from which a pattern may be defined</returns>
         public static IAbstractPattern<TKey, TPayload, Empty, bool> DefinePattern<TKey, TPayload>(this IStreamable<TKey, TPayload> source)
-        {
-            return new PatternMatcher<TKey, TPayload, Empty, bool>(source, null);
-        }
+            => new PatternMatcher<TKey, TPayload, Empty, bool>(source);
+
+        /// <summary>
+        /// Define a pattern against which data in the input stream may be matched
+        /// </summary>
+        /// <typeparam name="TKey">Key type</typeparam>
+        /// <typeparam name="TPayload">Payload type</typeparam>
+        /// <typeparam name="TRegister">Result type (output of matcher is the register at an accepting state of the AFA)</typeparam>
+        /// <param name="source">Source stream</param>
+        /// <param name="defaultRegister">Default register value for the automata</param>
+        /// <returns>The beginning of a builder from which a pattern may be defined</returns>
+        public static IAbstractPattern<TKey, TPayload, TRegister, bool> DefinePattern<TKey, TPayload, TRegister>(
+            this IStreamable<TKey, TPayload> source, TRegister defaultRegister)
+            => new PatternMatcher<TKey, TPayload, TRegister, bool>(source, null, defaultRegister);
 
         /// <summary>
         /// Define a pattern against which data in the input stream may be matched
@@ -183,9 +192,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>The beginning of a builder from which a pattern may be defined</returns>
         public static IAbstractPattern<TKey, TPayload, TRegister, TAccumulator> DefinePattern<TKey, TPayload, TRegister, TAccumulator>(
             this IStreamable<TKey, TPayload> source, TRegister defaultRegister, TAccumulator defaultAccumulator)
-        {
-            return new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(source, null);
-        }
+            => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(source, null, defaultRegister);
         #endregion
 
         #region Macro extensions for pattern matching
@@ -224,9 +231,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TAccumulator>> accumulatorInitialization,
             Expression<Func<TAccumulator, bool>> accumulatorBoolField,
             Expression<Func<long, TPayload, TRegister, bool>> fence)
-        {
-            return CreateMultiElementFunctions(source, accumulatorInitialization, accumulatorBoolField, fence, false, b => b);
-        }
+            => CreateMultiElementFunctions(source, accumulatorInitialization, accumulatorBoolField, fence, false, b => b);
 
         /// <summary>
         /// Add to the current pattern a new pattern symbol that matches all elements
@@ -266,9 +271,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TAccumulator>> accumulatorInitialization,
             Expression<Func<TAccumulator, bool>> accumulatorBoolField,
             Expression<Func<long, TPayload, TRegister, bool>> fence)
-        {
-            return CreateMultiElementFunctions(source, accumulatorInitialization, accumulatorBoolField, fence, true, b => !b);
-        }
+            => CreateMultiElementFunctions(source, accumulatorInitialization, accumulatorBoolField, fence, true, b => !b);
 
         private static IPattern<TKey, TPayload, TRegister, TAccumulator> CreateMultiElementFunctions<TKey, TPayload, TRegister, TAccumulator>(IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator> source, Expression<Func<TAccumulator>> accumulatorInitialization, Expression<Func<TAccumulator, bool>> accumulatorboolField, Expression<Func<long, TPayload, TRegister, bool>> fence, bool initialValueForBooleanField, Expression<Func<bool, bool>> shortCircuitCondition)
         {

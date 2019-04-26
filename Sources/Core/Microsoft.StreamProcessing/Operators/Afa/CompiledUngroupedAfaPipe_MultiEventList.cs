@@ -31,7 +31,7 @@ namespace Microsoft.StreamProcessing
         public CompiledUngroupedAfaPipe_MultiEventList() { }
 
         public CompiledUngroupedAfaPipe_MultiEventList(Streamable<Empty, TRegister> stream, IStreamObserver<Empty, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastLinkedList<GroupedActiveState<Empty, TRegister>>();
 
@@ -74,7 +74,7 @@ namespace Microsoft.StreamProcessing
                                 {
                                     var arcinfo = currentStateMap[cnt];
 
-                                    TAccumulator acc = arcinfo.Initialize(synctime, state.register);
+                                    var acc = arcinfo.Initialize(synctime, state.register);
                                     for (int i = 0; i < this.currentTimestampEventList.Count; i++)
                                     {
                                         var payload = this.currentTimestampEventList[i];
@@ -84,10 +84,9 @@ namespace Microsoft.StreamProcessing
 
                                     if (arcinfo.Fence(synctime, acc, state.register))
                                     {
-                                        TRegister newReg;
-                                        if (arcinfo.Transfer == null) newReg = state.register;
-                                        else newReg = arcinfo.Transfer(synctime, acc, state.register);
-
+                                        var newReg = arcinfo.Transfer == null
+                                            ? state.register
+                                            : arcinfo.Transfer(synctime, acc, state.register);
                                         int ns = arcinfo.toState;
                                         while (true)
                                         {
@@ -99,10 +98,7 @@ namespace Microsoft.StreamProcessing
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
 
-                                                if (this.iter == Config.DataBatchSize)
-                                                {
-                                                    FlushContents();
-                                                }
+                                                if (this.iter == Config.DataBatchSize) FlushContents();
                                             }
 
                                             if (this.hasOutgoingArcs[ns])
@@ -148,10 +144,9 @@ namespace Microsoft.StreamProcessing
 
                                     if (arcinfo.Fence(synctime, item, state.register))
                                     {
-                                        TRegister newReg;
-                                        if (arcinfo.Transfer == null) newReg = state.register;
-                                        else newReg = arcinfo.Transfer(synctime, item, state.register);
-
+                                        var newReg = arcinfo.Transfer == null
+                                            ? state.register
+                                            : arcinfo.Transfer(synctime, item, state.register);
                                         int ns = arcinfo.toState;
                                         while (true)
                                         {
@@ -163,10 +158,7 @@ namespace Microsoft.StreamProcessing
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
 
-                                                if (this.iter == Config.DataBatchSize)
-                                                {
-                                                    FlushContents();
-                                                }
+                                                if (this.iter == Config.DataBatchSize) FlushContents();
                                             }
 
                                             if (this.hasOutgoingArcs[ns])
@@ -220,10 +212,9 @@ namespace Microsoft.StreamProcessing
 
                                     if (arcinfo.Fence(synctime, payloadList, state.register))
                                     {
-                                        TRegister newReg;
-                                        if (arcinfo.Transfer == null) newReg = state.register;
-                                        else newReg = arcinfo.Transfer(synctime, payloadList, state.register);
-
+                                        var newReg = arcinfo.Transfer == null
+                                            ? state.register
+                                            : arcinfo.Transfer(synctime, payloadList, state.register);
                                         int ns = arcinfo.toState;
                                         while (true)
                                         {
@@ -235,10 +226,7 @@ namespace Microsoft.StreamProcessing
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
 
-                                                if (this.iter == Config.DataBatchSize)
-                                                {
-                                                    FlushContents();
-                                                }
+                                                if (this.iter == Config.DataBatchSize) FlushContents();
                                             }
 
                                             if (this.hasOutgoingArcs[ns])
@@ -293,7 +281,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 var arcinfo = startStateMap[cnt];
 
-                                TAccumulator acc = arcinfo.Initialize(synctime, this.defaultRegister);
+                                var acc = arcinfo.Initialize(synctime, this.defaultRegister);
                                 for (int i = 0; i < this.currentTimestampEventList.Count; i++)
                                 {
                                     var payload = this.currentTimestampEventList[i];
@@ -303,10 +291,9 @@ namespace Microsoft.StreamProcessing
 
                                 if (arcinfo.Fence(synctime, acc, this.defaultRegister))
                                 {
-                                    TRegister newReg;
-                                    if (arcinfo.Transfer == null) newReg = this.defaultRegister;
-                                    else newReg = arcinfo.Transfer(synctime, acc, this.defaultRegister);
-
+                                    var newReg = arcinfo.Transfer == null
+                                        ? this.defaultRegister
+                                        : arcinfo.Transfer(synctime, acc, this.defaultRegister);
                                     int ns = arcinfo.toState;
                                     while (true)
                                     {
@@ -318,10 +305,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize)
-                                            {
-                                                FlushContents();
-                                            }
+                                            if (this.iter == Config.DataBatchSize) FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -364,10 +348,9 @@ namespace Microsoft.StreamProcessing
 
                                 if (arcinfo.Fence(synctime, item, this.defaultRegister))
                                 {
-                                    TRegister newReg;
-                                    if (arcinfo.Transfer == null) newReg = this.defaultRegister;
-                                    else newReg = arcinfo.Transfer(synctime, item, this.defaultRegister);
-
+                                    var newReg = arcinfo.Transfer == null
+                                        ? this.defaultRegister
+                                        : arcinfo.Transfer(synctime, item, this.defaultRegister);
                                     int ns = arcinfo.toState;
                                     while (true)
                                     {
@@ -379,10 +362,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize)
-                                            {
-                                                FlushContents();
-                                            }
+                                            if (this.iter == Config.DataBatchSize) FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -432,10 +412,9 @@ namespace Microsoft.StreamProcessing
 
                                 if (arcinfo.Fence(synctime, payloadList, this.defaultRegister))
                                 {
-                                    TRegister newReg;
-                                    if (arcinfo.Transfer == null) newReg = this.defaultRegister;
-                                    else newReg = arcinfo.Transfer(synctime, payloadList, this.defaultRegister);
-
+                                    var newReg = arcinfo.Transfer == null
+                                        ? this.defaultRegister
+                                        : arcinfo.Transfer(synctime, payloadList, this.defaultRegister);
                                     int ns = arcinfo.toState;
                                     while (true)
                                     {
@@ -447,10 +426,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize)
-                                            {
-                                                FlushContents();
-                                            }
+                                            if (this.iter == Config.DataBatchSize) FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {

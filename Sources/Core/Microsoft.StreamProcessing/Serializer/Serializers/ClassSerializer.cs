@@ -66,15 +66,15 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
             private Expression<Func<BinaryDecoder, T>> GenerateCachedDeserializer()
             {
-                ParameterExpression decoderParam = Expression.Parameter(typeof(BinaryDecoder), "decoder");
-                ParameterExpression instance = Expression.Variable(this.RuntimeType, "instance");
+                var decoderParam = Expression.Parameter(typeof(BinaryDecoder), "decoder");
+                var instance = Expression.Variable(this.RuntimeType, "instance");
 
                 var body = new List<Expression>();
                 if (this.RuntimeType.HasSupportedParameterizedConstructor())
                 {
                     // Cannot create an object beforehand. Have to call a constructor with parameters.
                     var properties = this.fields.Select(f => f.Schema.BuildDeserializer(decoderParam));
-                    ConstructorInfo ctor = this.RuntimeType.GetTypeInfo()
+                    var ctor = this.RuntimeType.GetTypeInfo()
                         .GetConstructors()
                         .Single(c => c.GetParameters().Select(p => p.ParameterType).SequenceEqual(this.fields.Select(f => f.Schema.RuntimeType)));
                     body.Add(Expression.Assign(instance, Expression.New(ctor, properties)));
@@ -88,15 +88,15 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                 }
                 body.Add(instance);
 
-                BlockExpression result = Expression.Block(new[] { instance }, body);
+                var result = Expression.Block(new[] { instance }, body);
                 return Expression.Lambda<Func<BinaryDecoder, T>>(result, decoderParam);
             }
 
             private Action<T, BinaryEncoder> GenerateCachedSerializer()
             {
-                ParameterExpression instanceParam = Expression.Parameter(this.RuntimeType, "instance");
-                ParameterExpression encoderParam = Expression.Parameter(typeof(BinaryEncoder), "encoder");
-                Expression block = SerializeFields(encoderParam, instanceParam);
+                var instanceParam = Expression.Parameter(this.RuntimeType, "instance");
+                var encoderParam = Expression.Parameter(typeof(BinaryEncoder), "encoder");
+                var block = SerializeFields(encoderParam, instanceParam);
                 var lambda = Expression.Lambda<Action<T, BinaryEncoder>>(block, instanceParam, encoderParam);
                 return lambda.Compile();
             }
@@ -131,17 +131,11 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         public static Expression ThrowUnexpectedNullCheckExpression(Type type)
         {
-            MethodInfo exceptionMethodInfo = typeof(ClassSerializer).GetMethod("UnexpectedNullValueException", BindingFlags.NonPublic | BindingFlags.Static);
+            var exceptionMethodInfo = typeof(ClassSerializer).GetMethod("UnexpectedNullValueException", BindingFlags.NonPublic | BindingFlags.Static);
             return Expression.Throw(Expression.Call(exceptionMethodInfo, Expression.Constant(type)));
         }
 
         private static Exception UnexpectedNullValueException(Type type)
-        {
-            return new SerializationException(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "Unexpected null value for the object of type '{0}'. Please check the schema.",
-                    type));
-        }
+            => new SerializationException($"Unexpected null value for the object of type '{type}'. Please check the schema.");
     }
 }

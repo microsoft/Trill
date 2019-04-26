@@ -28,13 +28,13 @@ namespace Microsoft.StreamProcessing
         private long lastSyncTime;
 
         // Field instead of local variable to avoid re-initializing it
-        private Stack<int> stack = new Stack<int>();
+        private readonly Stack<int> stack = new Stack<int>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledGroupedAfaPipe_EventList() { }
 
         public CompiledGroupedAfaPipe_EventList(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastMap<GroupedActiveState<TKey, TRegister>>();
             this.activeFindTraverser = new FastMap<GroupedActiveState<TKey, TRegister>>.FindTraverser(this.activeStates);
@@ -77,64 +77,60 @@ namespace Microsoft.StreamProcessing
                             #region eventListStateMap
                             if (this.eventListStateMap != null)
                             {
-                            var currentStateMap = this.eventListStateMap[state.state];
-                            if (currentStateMap != null)
-                            {
-                                var m = currentStateMap.Length;
-                                for (int cnt = 0; cnt < m; cnt++)
+                                var currentStateMap = this.eventListStateMap[state.state];
+                                if (currentStateMap != null)
                                 {
-                                    var arcinfo = currentStateMap[cnt];
-
-                                    if (arcinfo.Fence(synctime, currentList.payloads, state.register))
+                                    var m = currentStateMap.Length;
+                                    for (int cnt = 0; cnt < m; cnt++)
                                     {
-                                        TRegister newReg;
-                                        if (arcinfo.Transfer == null) newReg = state.register;
-                                        else newReg = arcinfo.Transfer(synctime, currentList.payloads, state.register);
+                                        var arcinfo = currentStateMap[cnt];
 
-                                        int ns = arcinfo.toState;
-                                        while (true)
+                                        if (arcinfo.Fence(synctime, currentList.payloads, state.register))
                                         {
-                                            if (this.isFinal[ns])
+                                            var newReg = arcinfo.Transfer == null
+                                                ? state.register
+                                                : arcinfo.Transfer(synctime, currentList.payloads, state.register);
+                                            int ns = arcinfo.toState;
+                                            while (true)
                                             {
-                                                this.batch.vsync.col[this.iter] = synctime;
-                                                this.batch.vother.col[this.iter] = state.PatternStartTimestamp + this.MaxDuration;
-                                                this.batch[this.iter] = newReg;
-                                                this.batch.key.col[this.iter] = currentList.key;
-                                                this.batch.hash.col[this.iter] = el_hash;
-                                                this.iter++;
-
-                                                if (this.iter == Config.DataBatchSize)
+                                                if (this.isFinal[ns])
                                                 {
-                                                    FlushContents();
+                                                    this.batch.vsync.col[this.iter] = synctime;
+                                                    this.batch.vother.col[this.iter] = state.PatternStartTimestamp + this.MaxDuration;
+                                                    this.batch[this.iter] = newReg;
+                                                    this.batch.key.col[this.iter] = currentList.key;
+                                                    this.batch.hash.col[this.iter] = el_hash;
+                                                    this.iter++;
+
+                                                    if (this.iter == Config.DataBatchSize) FlushContents();
                                                 }
-                                            }
 
-                                            if (this.hasOutgoingArcs[ns])
-                                            {
-                                                if (index == -1) index = this.activeStates.Insert(el_hash);
-                                                this.activeStates.Values[index].key = currentList.key;
-                                                this.activeStates.Values[index].state = ns;
-                                                this.activeStates.Values[index].register = newReg;
-                                                this.activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
-
-                                                index = -1;
-
-                                                ended = false;
-
-                                                // Add epsilon arc destinations to stack
-                                                if (this.epsilonStateMap == null) break;
-                                                if (this.epsilonStateMap[ns] != null)
+                                                if (this.hasOutgoingArcs[ns])
                                                 {
-                                                    for (int cnt2 = 0; cnt2 < this.epsilonStateMap[ns].Length; cnt2++) this.stack.Push(this.epsilonStateMap[ns][cnt2]);
+                                                    if (index == -1) index = this.activeStates.Insert(el_hash);
+                                                    this.activeStates.Values[index].key = currentList.key;
+                                                    this.activeStates.Values[index].state = ns;
+                                                    this.activeStates.Values[index].register = newReg;
+                                                    this.activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+
+                                                    index = -1;
+
+                                                    ended = false;
+
+                                                    // Add epsilon arc destinations to stack
+                                                    if (this.epsilonStateMap == null) break;
+                                                    if (this.epsilonStateMap[ns] != null)
+                                                    {
+                                                        for (int cnt2 = 0; cnt2 < this.epsilonStateMap[ns].Length; cnt2++) this.stack.Push(this.epsilonStateMap[ns][cnt2]);
+                                                    }
                                                 }
+                                                if (this.stack.Count == 0) break;
+                                                ns = this.stack.Pop();
                                             }
-                                            if (this.stack.Count == 0) break;
-                                            ns = this.stack.Pop();
+                                            if (this.IsDeterministic) break; // We are guaranteed to have only one successful transition
                                         }
-                                        if (this.IsDeterministic) break; // We are guaranteed to have only one successful transition
                                     }
                                 }
-                            }
                             }
                             #endregion
 
@@ -151,10 +147,9 @@ namespace Microsoft.StreamProcessing
 
                                         if (arcinfo.Fence(synctime, currentList.payloads[0], state.register))
                                         {
-                                            TRegister newReg;
-                                            if (arcinfo.Transfer == null) newReg = state.register;
-                                            else newReg = arcinfo.Transfer(synctime, currentList.payloads[0], state.register);
-
+                                            var newReg = arcinfo.Transfer == null
+                                                ? state.register
+                                                : arcinfo.Transfer(synctime, currentList.payloads[0], state.register);
                                             int ns = arcinfo.toState;
                                             while (true)
                                             {
@@ -167,10 +162,7 @@ namespace Microsoft.StreamProcessing
                                                     this.batch.hash.col[this.iter] = el_hash;
                                                     this.iter++;
 
-                                                    if (this.iter == Config.DataBatchSize)
-                                                    {
-                                                        FlushContents();
-                                                    }
+                                                    if (this.iter == Config.DataBatchSize) FlushContents();
                                                 }
 
                                                 if (this.hasOutgoingArcs[ns])
@@ -217,79 +209,18 @@ namespace Microsoft.StreamProcessing
                     #region eventListStateMap
                     if (this.eventListStateMap != null)
                     {
-                    var startStateMap = this.eventListStateMap[startState];
-                    if (startStateMap != null)
-                    {
-                        var m = startStateMap.Length;
-                        for (int cnt = 0; cnt < m; cnt++)
-                        {
-                            var arcinfo = startStateMap[cnt];
-                            if (arcinfo.Fence(synctime, currentList.payloads, this.defaultRegister))
-                            {
-                                TRegister newReg;
-                                if (arcinfo.Transfer == null) newReg = this.defaultRegister;
-                                else newReg = arcinfo.Transfer(synctime, currentList.payloads, this.defaultRegister);
-
-                                int ns = arcinfo.toState;
-                                while (true)
-                                {
-                                    if (this.isFinal[ns])
-                                    {
-                                        this.batch.vsync.col[this.iter] = synctime;
-                                        this.batch.vother.col[this.iter] = synctime + this.MaxDuration;
-                                        this.batch[this.iter] = newReg;
-                                        this.batch.key.col[this.iter] = currentList.key;
-                                        this.batch.hash.col[this.iter] = el_hash;
-                                        this.iter++;
-
-                                        if (this.iter == Config.DataBatchSize)
-                                        {
-                                            FlushContents();
-                                        }
-                                    }
-                                    if (this.hasOutgoingArcs[ns])
-                                    {
-                                        int index = this.activeStates.Insert(el_hash);
-                                        this.activeStates.Values[index].key = currentList.key;
-                                        this.activeStates.Values[index].state = ns;
-                                        this.activeStates.Values[index].register = newReg;
-                                        this.activeStates.Values[index].PatternStartTimestamp = synctime;
-
-
-                                        // Add epsilon arc destinations to stack
-                                        if (this.epsilonStateMap == null) break;
-                                        if (this.epsilonStateMap[ns] != null)
-                                        {
-                                            for (int cnt2 = 0; cnt2 < this.epsilonStateMap[ns].Length; cnt2++) this.stack.Push(this.epsilonStateMap[ns][cnt2]);
-                                        }
-                                    }
-                                    if (this.stack.Count == 0) break;
-                                    ns = this.stack.Pop();
-                                }
-                                if (this.IsDeterministic) break; // We are guaranteed to have only one successful transition
-                            }
-                        }
-                    }
-                    }
-                    #endregion
-
-                    #region singleEventStateMap
-                    if ((this.singleEventStateMap != null) && (currentList.payloads.Count == 1))
-                    {
-                        var startStateMap = this.singleEventStateMap[startState];
+                        var startStateMap = this.eventListStateMap[startState];
                         if (startStateMap != null)
                         {
-
                             var m = startStateMap.Length;
                             for (int cnt = 0; cnt < m; cnt++)
                             {
                                 var arcinfo = startStateMap[cnt];
-                                if (arcinfo.Fence(synctime, currentList.payloads[0], this.defaultRegister))
+                                if (arcinfo.Fence(synctime, currentList.payloads, this.defaultRegister))
                                 {
-                                    TRegister newReg;
-                                    if (arcinfo.Transfer == null) newReg = this.defaultRegister;
-                                    else newReg = arcinfo.Transfer(synctime, currentList.payloads[0], this.defaultRegister);
-
+                                    var newReg = arcinfo.Transfer == null
+                                        ? this.defaultRegister
+                                        : arcinfo.Transfer(synctime, currentList.payloads, this.defaultRegister);
                                     int ns = arcinfo.toState;
                                     while (true)
                                     {
@@ -302,10 +233,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = el_hash;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize)
-                                            {
-                                                FlushContents();
-                                            }
+                                            if (this.iter == Config.DataBatchSize) FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -315,6 +243,59 @@ namespace Microsoft.StreamProcessing
                                             this.activeStates.Values[index].register = newReg;
                                             this.activeStates.Values[index].PatternStartTimestamp = synctime;
 
+                                            // Add epsilon arc destinations to stack
+                                            if (this.epsilonStateMap == null) break;
+                                            if (this.epsilonStateMap[ns] != null)
+                                            {
+                                                for (int cnt2 = 0; cnt2 < this.epsilonStateMap[ns].Length; cnt2++) this.stack.Push(this.epsilonStateMap[ns][cnt2]);
+                                            }
+                                        }
+                                        if (this.stack.Count == 0) break;
+                                        ns = this.stack.Pop();
+                                    }
+                                    if (this.IsDeterministic) break; // We are guaranteed to have only one successful transition
+                                }
+                            }
+                        }
+                    }
+                    #endregion
+
+                    #region singleEventStateMap
+                    if ((this.singleEventStateMap != null) && (currentList.payloads.Count == 1))
+                    {
+                        var startStateMap = this.singleEventStateMap[startState];
+                        if (startStateMap != null)
+                        {
+                            var m = startStateMap.Length;
+                            for (int cnt = 0; cnt < m; cnt++)
+                            {
+                                var arcinfo = startStateMap[cnt];
+                                if (arcinfo.Fence(synctime, currentList.payloads[0], this.defaultRegister))
+                                {
+                                    var newReg = arcinfo.Transfer == null
+                                        ? this.defaultRegister
+                                        : arcinfo.Transfer(synctime, currentList.payloads[0], this.defaultRegister);
+                                    int ns = arcinfo.toState;
+                                    while (true)
+                                    {
+                                        if (this.isFinal[ns])
+                                        {
+                                            this.batch.vsync.col[this.iter] = synctime;
+                                            this.batch.vother.col[this.iter] = synctime + this.MaxDuration;
+                                            this.batch[this.iter] = newReg;
+                                            this.batch.key.col[this.iter] = currentList.key;
+                                            this.batch.hash.col[this.iter] = el_hash;
+                                            this.iter++;
+
+                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                        }
+                                        if (this.hasOutgoingArcs[ns])
+                                        {
+                                            int index = this.activeStates.Insert(el_hash);
+                                            this.activeStates.Values[index].key = currentList.key;
+                                            this.activeStates.Values[index].state = ns;
+                                            this.activeStates.Values[index].register = newReg;
+                                            this.activeStates.Values[index].PatternStartTimestamp = synctime;
 
                                             // Add epsilon arc destinations to stack
                                             if (this.epsilonStateMap == null) break;

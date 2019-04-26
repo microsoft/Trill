@@ -38,6 +38,9 @@ namespace Microsoft.StreamProcessing
         [SchemaSerialization]
         private readonly Expression<Func<TKey, TKey, bool>> keyComparerEqualsExpr;
         private readonly Func<TKey, TKey, bool> keyComparerEquals;
+        [SchemaSerialization]
+        private readonly Expression<Func<TKey, int>> keyComparerGetHashCodeExpr;
+        private readonly Func<TKey, int> keyComparerGetHashCode;
 
         [DataMember]
         private StreamMessage<TKey, TOutput> batch;
@@ -45,18 +48,17 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary2<TPartitionKey, PartitionEntry> partitionData = new FastDictionary2<TPartitionKey, PartitionEntry>();
 
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         private readonly Func<FastDictionary<TKey, TState>> dictionaryGenerator;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedSnapshotWindowTumblingPipe() => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public PartitionedSnapshotWindowTumblingPipe() { }
 
         public PartitionedSnapshotWindowTumblingPipe(
             SnapshotWindowStreamable<TKey, TInput, TState, TOutput> stream,
             IStreamObserver<TKey, TOutput> observer, long hop)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.aggregate = stream.Aggregate;
             this.initialStateExpr = this.aggregate.InitialState();
             this.initialState = this.initialStateExpr.Compile();
@@ -68,23 +70,22 @@ namespace Microsoft.StreamProcessing
             var comparer = stream.Properties.KeyEqualityComparer;
             this.keyComparerEqualsExpr = comparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparerEqualsExpr.Compile();
+            this.keyComparerGetHashCodeExpr = comparer.GetGetHashCodeExpr();
+            this.keyComparerGetHashCode = this.keyComparerGetHashCodeExpr.Compile();
 
             this.errorMessages = stream.ErrorMessages;
             this.pool = MemoryManager.GetMemoryPool<TKey, TOutput>(false);
             this.pool.Get(out this.batch);
             this.batch.Allocate();
-            var getHashCode = comparer.GetGetHashCodeExpr().Compile();
-            this.dictionaryGenerator = comparer.CreateFastDictionaryGenerator<TKey, TState>(1, this.keyComparerEquals, getHashCode, stream.Properties.QueryContainer);
+            this.dictionaryGenerator = comparer.CreateFastDictionaryGenerator<TKey, TState>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer);
 
             this.hop = hop;
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(TKey), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages, false));
-        }
+                AggregatePipeType.StartEdge, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {
@@ -96,96 +97,98 @@ namespace Microsoft.StreamProcessing
             fixed (long* col_vother = batch.vother.col)
             fixed (int* col_hash = batch.hash.col)
             fixed (long* col_bv = batch.bitvector.col)
-            for (int i = 0; i < count; i++)
             {
-                if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                for (int i = 0; i < count; i++)
                 {
-                    if (col_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
+                    if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
                     {
-                        OnLowWatermark(col_vsync[i]);
+                        if (col_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
+                        {
+                            OnLowWatermark(col_vsync[i]);
 
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = col_vsync[i];
-                        this.batch.vother.col[c] = PartitionedStreamEvent.LowWatermarkOtherTime;
-                        this.batch.key.col[c] = default;
-                        this.batch.hash.col[c] = 0;
-                        this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                    }
-                    else if (col_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
-                    {
-                        // We have found a row that corresponds to punctuation
-                        var partitionKey = this.getPartitionKey(colkey[i]);
-                        bool emitPunctuation = false;
-                        PartitionEntry partitionEntry;
-                        if (!this.partitionData.Lookup(partitionKey, out int partitionKeyIndex))
-                        {
-                            this.partitionData.Insert(partitionKey, partitionEntry = new PartitionEntry { lastSyncTime = col_vsync[i], heldAggregates = this.dictionaryGenerator() });
-                            emitPunctuation = true;
-                        }
-                        else
-                        {
-                            partitionEntry = this.partitionData.entries[partitionKeyIndex].value;
-                            emitPunctuation = partitionEntry.lastSyncTime < col_vsync[i];
-                        }
-                        OnPunctuation(partitionEntry, col_vsync[i]);
-
-                        if (emitPunctuation)
-                        {
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
-                            this.batch.vother.col[c] = long.MinValue;
-                            this.batch.key.col[c] = colkey[i];
-                            this.batch.hash.col[c] = col_hash[i];
+                            this.batch.vother.col[c] = PartitionedStreamEvent.LowWatermarkOtherTime;
+                            this.batch.key.col[c] = default;
+                            this.batch.hash.col[c] = 0;
                             this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
-                    }
-                    continue;
-                }
-
-                var syncTime = col_vsync[i];
-                var partition = this.getPartitionKey(colkey[i]);
-                PartitionEntry entry;
-
-                // Handle time moving forward
-                if (!this.partitionData.Lookup(partition, out int partitionIndex))
-                    this.partitionData.Insert(partition, entry = new PartitionEntry { lastSyncTime = syncTime, heldAggregates = this.dictionaryGenerator() });
-                else if (syncTime > (entry = this.partitionData.entries[partitionIndex].value).lastSyncTime)
-                {
-                    int iter1 = FastDictionary<TKey, TState>.IteratorStart;
-                    while (entry.heldAggregates.Iterate(ref iter1))
-                    {
-                        var iter1entry = entry.heldAggregates.entries[iter1];
-
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = entry.lastSyncTime;
-                        this.batch.vother.col[c] = entry.lastSyncTime + this.hop;
-                        this.batch.payload.col[c] = this.computeResult(iter1entry.value);
-                        this.batch.key.col[c] = iter1entry.key;
-                        this.batch.hash.col[c] = iter1entry.key.GetHashCode();
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-
-                        if (hasDisposableState)
+                        else if (col_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
                         {
-                            ((IDisposable)iter1entry.value).Dispose();
+                            // We have found a row that corresponds to punctuation
+                            var partitionKey = this.getPartitionKey(colkey[i]);
+                            bool emitPunctuation = false;
+                            PartitionEntry partitionEntry;
+                            if (!this.partitionData.Lookup(partitionKey, out int partitionKeyIndex))
+                            {
+                                this.partitionData.Insert(partitionKey, partitionEntry = new PartitionEntry { lastSyncTime = col_vsync[i], heldAggregates = this.dictionaryGenerator() });
+                                emitPunctuation = true;
+                            }
+                            else
+                            {
+                                partitionEntry = this.partitionData.entries[partitionKeyIndex].value;
+                                emitPunctuation = partitionEntry.lastSyncTime < col_vsync[i];
+                            }
+                            OnPunctuation(partitionEntry, col_vsync[i]);
+
+                            if (emitPunctuation)
+                            {
+                                int c = this.batch.Count;
+                                this.batch.vsync.col[c] = col_vsync[i];
+                                this.batch.vother.col[c] = long.MinValue;
+                                this.batch.key.col[c] = colkey[i];
+                                this.batch.hash.col[c] = col_hash[i];
+                                this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                                this.batch.Count++;
+                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            }
                         }
+                        continue;
                     }
-                    entry.heldAggregates.Clear();
 
-                    // Since sync time changed, set lastSyncTime
-                    entry.lastSyncTime = syncTime;
+                    var syncTime = col_vsync[i];
+                    var partition = this.getPartitionKey(colkey[i]);
+                    PartitionEntry entry;
+
+                    // Handle time moving forward
+                    if (!this.partitionData.Lookup(partition, out int partitionIndex))
+                        this.partitionData.Insert(partition, entry = new PartitionEntry { lastSyncTime = syncTime, heldAggregates = this.dictionaryGenerator() });
+                    else if (syncTime > (entry = this.partitionData.entries[partitionIndex].value).lastSyncTime)
+                    {
+                        int iter1 = FastDictionary<TKey, TState>.IteratorStart;
+                        while (entry.heldAggregates.Iterate(ref iter1))
+                        {
+                            var iter1entry = entry.heldAggregates.entries[iter1];
+
+                            int c = this.batch.Count;
+                            this.batch.vsync.col[c] = entry.lastSyncTime;
+                            this.batch.vother.col[c] = entry.lastSyncTime + this.hop;
+                            this.batch.payload.col[c] = this.computeResult(iter1entry.value);
+                            this.batch.key.col[c] = iter1entry.key;
+                            this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
+                            this.batch.Count++;
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+
+                            if (hasDisposableState)
+                            {
+                                ((IDisposable)iter1entry.value).Dispose();
+                            }
+                        }
+                        entry.heldAggregates.Clear();
+
+                        // Since sync time changed, set lastSyncTime
+                        entry.lastSyncTime = syncTime;
+                    }
+
+                    // Need to retrieve the key from the dictionary
+                    if (!entry.heldAggregates.Lookup(colkey[i], col_hash[i], out int index))
+                        entry.heldAggregates.Insert(ref index, colkey[i], this.initialState());
+
+                    var entries = entry.heldAggregates.entries;
+                    entries[index].value = this.accumulate(entries[index].value, col_vsync[i], colpayload[i]);
                 }
-
-                // Need to retrieve the key from the dictionary
-                if (!entry.heldAggregates.Lookup(colkey[i], col_hash[i], out int index))
-                    entry.heldAggregates.Insert(ref index, colkey[i], this.initialState());
-
-                var entries = entry.heldAggregates.entries;
-                entries[index].value = this.accumulate(entries[index].value, col_vsync[i], colpayload[i]);
             }
 
             batch.Release();
@@ -225,7 +228,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.vother.col[c] = partitionSyncTime + this.hop;
                     this.batch.payload.col[c] = this.computeResult(iter1entry.value);
                     this.batch.key.col[c] = iter1entry.key;
-                    this.batch.hash.col[c] = iter1entry.key.GetHashCode();
+                    this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
 

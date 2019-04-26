@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing
         public CompiledUngroupedDAfaPipe() { }
 
         public CompiledUngroupedDAfaPipe(Streamable<Empty, TRegister> stream, IStreamObserver<Empty, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeState_state = -1;
             this.startState = this.startStates[0];
@@ -50,7 +50,7 @@ namespace Microsoft.StreamProcessing
         public override unsafe void OnNext(StreamMessage<Empty, TPayload> batch)
         {
             var tentativeFindTraverser = new FastLinkedList<OutputEvent<Empty, TRegister>>.ListTraverser(this.tentativeOutput);
-            var tentativeVisibleTraverser = new FastLinkedList<OutputEvent<Empty, TRegister>>.VisibleTraverser(this.tentativeOutput);
+            var tentativeOutputIndex = 0;
 
             var count = batch.Count;
 
@@ -79,11 +79,11 @@ namespace Microsoft.StreamProcessing
 
                                     if (this.tentativeOutput.Count > 0)
                                     {
-                                        tentativeVisibleTraverser.currIndex = 0;
+                                        tentativeOutputIndex = 0;
 
-                                        while (tentativeVisibleTraverser.Next(out int index))
+                                        while (this.tentativeOutput.Iterate(ref tentativeOutputIndex))
                                         {
-                                            var elem = this.tentativeOutput.Values[index];
+                                            var elem = this.tentativeOutput.Values[tentativeOutputIndex];
 
                                             dest_vsync[this.iter] = this.lastSyncTime;
                                             dest_vother[this.iter] = elem.other;
@@ -205,10 +205,9 @@ namespace Microsoft.StreamProcessing
                                     var arcinfo = startStateMap[cnt];
                                     if (arcinfo.Fence(synctime, batch[i], this.defaultRegister))
                                     {
-                                        if (arcinfo.Transfer != null)
-                                            this.activeState_register = arcinfo.Transfer(synctime, batch[i], this.defaultRegister);
-                                        else
-                                            this.activeState_register = this.defaultRegister;
+                                        this.activeState_register = arcinfo.Transfer != null
+                                            ? arcinfo.Transfer(synctime, batch[i], this.defaultRegister)
+                                            : this.defaultRegister;
 
                                         this.activeState_state = arcinfo.toState;
                                         if (this.isFinal[this.activeState_state])
@@ -264,11 +263,11 @@ namespace Microsoft.StreamProcessing
 
                                     if (this.tentativeOutput.Count > 0)
                                     {
-                                        tentativeVisibleTraverser.currIndex = 0;
+                                        tentativeOutputIndex = 0;
 
-                                        while (tentativeVisibleTraverser.Next(out int index))
+                                        while (this.tentativeOutput.Iterate(ref tentativeOutputIndex))
                                         {
-                                            var elem = this.tentativeOutput.Values[index];
+                                            var elem = this.tentativeOutput.Values[tentativeOutputIndex];
 
                                             this.batch.vsync.col[this.iter] = this.lastSyncTime;
                                             this.batch.vother.col[this.iter] = elem.other;
@@ -276,10 +275,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize)
-                                            {
-                                                FlushContents();
-                                            }
+                                            if (this.iter == Config.DataBatchSize) FlushContents();
                                         }
 
                                         this.tentativeOutput.Clear(); // Clear the tentative output list
@@ -296,9 +292,6 @@ namespace Microsoft.StreamProcessing
             batch.Free();
         }
 
-        protected override void UpdatePointers()
-        {
-            this.startState = this.startStates[0];
-        }
+        protected override void UpdatePointers() => this.startState = this.startStates[0];
     }
 }

@@ -26,10 +26,9 @@ namespace Microsoft.StreamProcessing
         {
             Contract.Requires(types != null);
             var i = types.Count(t => t.IsAnonymousType());
-            if (i > 0)
-                return s + "`" + i.ToString(CultureInfo.InvariantCulture);
-            else
-                return s;
+            return i > 0
+                ? s + "`" + i.ToString(CultureInfo.InvariantCulture)
+                : s;
         }
 
         public static bool OptimizeString(this MyFieldInfo field) => Config.UseMultiString && field.Type == typeof(string);
@@ -182,9 +181,7 @@ namespace Microsoft.StreamProcessing
                     nameForIndexVariable = indexVariableName,
                     typeOfBatchVariable = batchType,
                 });
-            var l_prime = ColumnOriented.Transform(f, d);
-            if (l_prime == null) return null;
-            return l_prime;
+            return ColumnOriented.Transform(f, d);
         }
 
         public static string AccessExpressionForRowValue(this MyFieldInfo f, string batchVariableName, string indexVariableName)

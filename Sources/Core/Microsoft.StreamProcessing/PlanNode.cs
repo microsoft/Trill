@@ -118,9 +118,7 @@ namespace Microsoft.StreamProcessing
 
         internal IngressPlanNode(IIngressStreamObserver observer, Type keyType, Type payloadType, bool isGenerated, string compileErrors)
             : base(observer, keyType, payloadType, isGenerated, compileErrors)
-        {
-            this.observer = observer;
-        }
+            => this.observer = observer;
 
         /// <summary>
         /// Returns the kind of plan node, which can then be used for type casting.
@@ -146,9 +144,7 @@ namespace Microsoft.StreamProcessing
         }
 
         internal override void CollectDormantIngressSites(Dictionary<string, IngressPlanNode> working)
-        {
-            working[this.observer.IngressSiteIdentifier] = this;
-        }
+            => working[this.observer.IngressSiteIdentifier] = this;
 
         /// <summary>
         /// Visitor pattern acceptor method.

@@ -82,9 +82,9 @@ namespace Microsoft.StreamProcessing
 
             var comparer = EqualityComparerExpression<TKey>.Default;
             this.keyComparerEqualsExpr = comparer.GetEqualsExpr();
-            this.keyComparerEquals = this.keyComparerEqualsExpr.Compile();
+            this.keyComparerEquals = EqualityComparerExpression<TKey>.DefaultEqualsFunction;
             this.keyComparerGetHashCodeExpr = comparer.GetGetHashCodeExpr();
-            this.keyComparerGetHashCode = this.keyComparerGetHashCodeExpr.Compile();
+            this.keyComparerGetHashCode = EqualityComparerExpression<TKey>.DefaultGetHashCodeFunction;
 
             this.keySelectorExpr = stream.KeySelector;
             this.keySelector = this.keySelectorExpr.Compile();
@@ -126,8 +126,8 @@ namespace Microsoft.StreamProcessing
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
                             this.batch.vother.col[c] = long.MinValue;
-                            this.batch.key.col[c] = batch.key.col[i];
-                            this.batch.hash.col[c] = batch.key.col[i].GetHashCode();
+                            this.batch.key.col[c] = Empty.Default;
+                            this.batch.hash.col[c] = 0;
                             this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
@@ -360,12 +360,10 @@ namespace Microsoft.StreamProcessing
         public override int CurrentlyBufferedInputCount => this.aggregateByKey.Count;
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new GroupedWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new GroupedWindowPlanNode<TInput, TState, TOutput>(
                 previous, this,
                 typeof(TKey), typeof(TInput), typeof(TOutput), this.aggregate, this.keySelectorExpr, this.finalResultSelectorExpr,
-                false, this.errorMessages, false));
-        }
+                false, this.errorMessages));
 
         protected override void UpdatePointers()
         {

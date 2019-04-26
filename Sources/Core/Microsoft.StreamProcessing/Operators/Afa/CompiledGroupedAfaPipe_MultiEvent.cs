@@ -26,14 +26,11 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private long lastSyncTime;
 
-        // Field instead of local variable to avoid re-initializing it
-        private readonly Stack<int> stack = new Stack<int>();
-
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledGroupedAfaPipe_MultiEvent() { }
 
         public CompiledGroupedAfaPipe_MultiEvent(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastMap<GroupedActiveStateAccumulator<TKey, TPayload, TRegister, TAccumulator>>(1);
             this.activeFindTraverser = new FastMap<GroupedActiveStateAccumulator<TKey, TPayload, TRegister, TAccumulator>>.FindTraverser(this.activeStates);

@@ -144,9 +144,8 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="observer"></param>
         /// <param name="afa"></param>
         /// <param name="maxDuration"></param>
-        /// <param name="isGenerated"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected CompiledAfaPipeBase(IStreamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration, bool isGenerated)
+        protected CompiledAfaPipeBase(IStreamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
             : base(stream, observer)
         {
             var compiledAfa = (CompiledAfa<TPayload, TRegister, TAccumulator>)afa;
@@ -189,10 +188,7 @@ namespace Microsoft.StreamProcessing.Internal
             if (this.batch.key != null) this.batch.key.col[this.iter] = default;
             this.batch.hash.col[this.iter] = 0;
             this.iter++;
-            if (this.iter == Config.DataBatchSize)
-            {
-                FlushContents();
-            }
+            if (this.iter == Config.DataBatchSize) FlushContents();
         }
 
         /// <summary>
@@ -209,10 +205,7 @@ namespace Microsoft.StreamProcessing.Internal
             if (this.batch.key != null) this.batch.key.col[this.iter] = default;
             this.batch.hash.col[this.iter] = 0;
             this.iter++;
-            if (this.iter == Config.DataBatchSize)
-            {
-                FlushContents();
-            }
+            if (this.iter == Config.DataBatchSize) FlushContents();
         }
 
         /// <summary>
@@ -251,9 +244,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new AfaPlanNode(
+            => this.Observer.ProduceQueryPlan(new AfaPlanNode(
                 previous, this, typeof(TKey), typeof(TPayload), this.IsGenerated, this.errorMessages));
-        }
     }
 }

@@ -1,4 +1,4 @@
-﻿<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+﻿<#@ template language="C#" inherits="CommonPipeTemplate" visibility="internal" linePragmas="false" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Collections.Generic" #>
@@ -33,15 +33,18 @@ using Microsoft.StreamProcessing.Internal.Collections;
 #>
 
 [DataContract]
-internal sealed class <#= CLASSNAME #><#= genericParameters #> :
+internal sealed class <#= className #><#= genericParameters #> :
                        Pipe<<#= TOuterKey #>, <#= TResult #>>, IStreamObserver<<#= inputKey #>, <#= TInnerResult #>>
 {
     private readonly <#= memoryPoolClassName #> outPool;
     private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
-<# if (ungroupingToUnit) { #>
 
+<# if (ungroupingToUnit) { #>
     private readonly ColumnBatch<Microsoft.StreamProcessing.Empty> unitColumn;
     private readonly ColumnBatch<int> unitHashColumn;
+<# } #>
+<# else { #>
+    private readonly Func<<#= TOuterKey #>, int> outerHashCode;
 <# } #>
 <# foreach (var f in this.unassignedFields) { #>
     private readonly ColumnBatch<<#= f.TypeName #>> sharedDefaultColumnFor_<#= f.Name #>;
@@ -49,24 +52,27 @@ internal sealed class <#= CLASSNAME #><#= genericParameters #> :
 
     <#= staticCtor #>
 
-    public <#= CLASSNAME #>() { }
+    public <#= className #>() { }
 
-    public <#= CLASSNAME #>(
+    public <#= className #>(
         IStreamable<<#= TOuterKey #>, <#= TResult #>> stream,
         IStreamObserver<<#= TOuterKey #>, <#= TResult #>> observer,
         Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator)
         : base(stream, observer)
     {
-        outPool = MemoryManager.GetMemoryPool<<#= TOuterKey #>, <#= TResult #>>(true) as <#= memoryPoolClassName #>;
+        this.outPool = MemoryManager.GetMemoryPool<<#= TOuterKey #>, <#= TResult #>>(true) as <#= memoryPoolClassName #>;
         this.queryPlanGenerator = queryPlanGenerator;
-<# if (ungroupingToUnit) { #>
 
-        outPool.GetKey(out unitColumn);
-        outPool.Get(out unitHashColumn);
-        Array.Clear(unitHashColumn.col, 0, unitHashColumn.col.Length);
+<# if (ungroupingToUnit) { #>
+        this.outPool.GetKey(out this.unitColumn);
+        this.outPool.Get(out this.unitHashColumn);
+        Array.Clear(this.unitHashColumn.col, 0, this.unitHashColumn.col.Length);
+<# } #>
+<# else { #>
+        this.outerHashCode = stream.Properties.KeyEqualityComparer.GetGetHashCodeExpr().Compile();
 <# } #>
 <# foreach (var f in this.unassignedFields) { #>
-        outPool.Get(out sharedDefaultColumnFor_<#= f.Name #>);
+        this.outPool.Get(out sharedDefaultColumnFor_<#= f.Name #>);
         Array.Clear(sharedDefaultColumnFor_<#= f.Name #>.col, 0, sharedDefaultColumnFor_<#= f.Name #>.col.Length);
 <# } #>
     }
@@ -185,7 +191,7 @@ internal sealed class <#= CLASSNAME #><#= genericParameters #> :
                 }
 <#     if (!ungroupingToUnit) { #>
                 destkey[i] = srckey[i].outerGroup;
-                desthash[i] = destkey[i].GetHashCode();
+                desthash[i] = this.outerHashCode(destkey[i]);
 <#     } #>
 <#     foreach (var kv in this.computedFields) {
             var f = kv.Key;

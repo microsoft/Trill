@@ -11,13 +11,39 @@ using System.Net;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Serializer;
+using Microsoft.StreamProcessing.Sharding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting
 {
+    public static class Helpers
+    {
+        public static void RunTwiceForRowAndColumnar(Action action)
+        {
+            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+            var savedRowFallback = Config.CodegenOptions.DontFallBackToRowBasedExecution;
+            try
+            {
+                foreach (var rowBased in new bool[] { true, false })
+                {
+                    Config.ForceRowBasedExecution = rowBased;
+                    Config.CodegenOptions.DontFallBackToRowBasedExecution = !rowBased;
+                    action();
+                }
+            }
+            finally
+            {
+                Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                Config.CodegenOptions.DontFallBackToRowBasedExecution = savedRowFallback;
+            }
+        }
+    }
+
     [TestClass]
     public class AdHoc : TestWithConfigSettingsAndMemoryLeakDetection
     {
@@ -116,7 +142,7 @@ namespace SimpleTesting
 
             for (int x = 0; x < 100; x++)
             {
-                pool.Get(out ColumnBatch<string> inputStr);
+                pool.Get(out var inputStr);
 
                 var toss1 = rand.NextDouble();
                 inputStr.UsedLength = toss1 < 0.1 ? 0 : rand.Next(Config.DataBatchSize);
@@ -129,7 +155,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                var s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream
                 {
                     Position = 0
@@ -550,6 +576,270 @@ namespace SimpleTesting
 
             Assert.IsTrue(inputData.SequenceEqual(output));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void FileStreamDoubleQuery()
+        {
+            const bool serializeStreamProperties = true;
+
+            string filePath = $"{Path.GetTempPath()}\\{nameof(FileStreamDoubleQuery)}.bin";
+            const int inputEventCount = 100;
+            var inputData = Enumerable.Range(0, inputEventCount)
+                .Select(e => StreamEvent.CreatePoint<long>(0, e))
+                .ToList();
+            var input = inputData.ToObservable().ToStreamable();
+
+            // Stream to file
+            using (var stream = File.Create(filePath))
+            {
+                input.ToBinaryStream(stream, writePropertiesToStream: serializeStreamProperties);
+            }
+
+            // Stream from file, twice. This should be supported for streams that support Seek.
+            using (var stream = File.OpenRead(filePath))
+            {
+                Assert.IsTrue(stream.CanSeek);
+
+                var streamable = stream.ToStreamable<long>(readPropertiesFromStream: serializeStreamProperties);
+                for (int i = 0; i < 2; i++)
+                {
+                    var output = new List<StreamEvent<long>>();
+                    streamable.ToStreamEventObservable().Where(e => e.IsData).ForEachAsync(e => output.Add(e)).Wait();
+                    Assert.IsTrue(inputData.SequenceEqual(output));
+                }
+            }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExplicitAndGeneratedPunctuations()
+        {
+            Helpers.RunTwiceForRowAndColumnar(() =>
+            {
+                var input = new StreamEvent<int>[]
+                {
+                    StreamEvent.CreateInterval(90, 91, 0),
+                    StreamEvent.CreatePunctuation<int>(80),
+                    StreamEvent.CreateInterval(110, 111, 0),
+                    StreamEvent.CreateInterval(195, 200, 0),
+
+                    StreamEvent.CreateInterval(200, 201, 0),
+                    StreamEvent.CreatePunctuation<int>(300),
+                    StreamEvent.CreateInterval(300, 301, 0),
+                }.ToObservable().ToStreamable(periodicPunctuationPolicy: PeriodicPunctuationPolicy.Time(100));
+
+                var output = new List<StreamEvent<int>>();
+                input.ToStreamEventObservable()
+                    .ForEachAsync(x => output.Add(x))
+                    .Wait();
+
+                var expected = new List<StreamEvent<int>>
+                {
+                    StreamEvent.CreateInterval(90, 91, 0),
+                    StreamEvent.CreatePunctuation<int>(90),  // Explicitly ingressed punctuation is adjusted to currentTime
+                    StreamEvent.CreatePunctuation<int>(100), // Generated punctuation based on quantized previous punctuation
+                    StreamEvent.CreateInterval(110, 111, 0),
+                    StreamEvent.CreateInterval(195, 200, 0),
+
+                    StreamEvent.CreatePunctuation<int>(200), // Generated punctuation
+                    StreamEvent.CreateInterval(200, 201, 0),
+                    StreamEvent.CreatePunctuation<int>(300), // Explicitly ingressed punctuation should not be replicated
+                    StreamEvent.CreateInterval(300, 301, 0),
+
+                    StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+                };
+
+                Assert.IsTrue(expected.SequenceEqual(output));
+            });
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExplicitAndGeneratedLowWatermarks()
+        {
+            var input = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreateInterval(0, 90, 91, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(80),
+                PartitionedStreamEvent.CreateInterval(0, 110, 111, 0),
+                PartitionedStreamEvent.CreateInterval(0, 195, 196, 0),
+
+                PartitionedStreamEvent.CreateInterval(0, 200, 201, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(300),
+                PartitionedStreamEvent.CreateInterval(0, 300, 301, 0),
+
+                PartitionedStreamEvent.CreateInterval(0, 400, 401, 0),
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 450),
+                PartitionedStreamEvent.CreateInterval(0, 450, 451, 0),
+            }.ToObservable()
+            .ToStreamable(
+                periodicPunctuationPolicy: PeriodicPunctuationPolicy.Time(50),
+                periodicLowWatermarkPolicy: PeriodicLowWatermarkPolicy.Time(generationPeriod: 100, lowWatermarkTimestampLag: 0));
+
+            var output = new List<PartitionedStreamEvent<int, int>>();
+            input.ToStreamEventObservable()
+                .ForEachAsync(x => output.Add(x))
+                .Wait();
+
+            var expected = new List<PartitionedStreamEvent<int, int>>
+            {
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 50),
+                PartitionedStreamEvent.CreateInterval(0, 90, 91, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(80),    // Explicitly ingressed low watermark
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(100),   // Generated punctuation based on quantized previous lowWatermark
+                PartitionedStreamEvent.CreateInterval(0, 110, 111, 0),
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 150), // Generated punctuation
+                PartitionedStreamEvent.CreateInterval(0, 195, 196, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(200),   // Generated low watermark
+                PartitionedStreamEvent.CreateInterval(0, 200, 201, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(300),   // Explicitly ingressed low watermark should not be replicated
+                PartitionedStreamEvent.CreateInterval(0, 300, 301, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(400),   // Generated low watermark
+                PartitionedStreamEvent.CreateInterval(0, 400, 401, 0),
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 450), // Explicitly ingressed punctuation should not be replicated
+                PartitionedStreamEvent.CreateInterval(0, 450, 451, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(PartitionedStreamEvent.InfinitySyncTime)
+            };
+
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void LASJ_OutOfOrderLWM()
+        {
+            const int key = 0; // Just use one key as the key and payload
+            const long duration = 5;
+            PartitionedStreamEvent<int, int> CreateInterval(long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+            PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+
+            var leftData = new PartitionedStreamEvent<int, int>[]
+            {
+                CreateInterval(10),
+                CreateInterval(15),     // This will not be processed until right side's LWM at 20
+                CreateInterval(30),
+                CreateInterval(40),
+                CreateInterval(50),
+            };
+
+            var rightData = new PartitionedStreamEvent<int, int>[]
+            {
+                CreateInterval(5),
+                CreateInterval(6),
+                CreateInterval(7),
+                CreateInterval(10),     // Matches all of 10-15
+                CreateLowWatermark(20), // This should process left's 15, then output the low watermark at 10 (not vice versa)
+
+                CreateInterval(20),     // No match
+            };
+
+            var expected = new PartitionedStreamEvent<int, int>[]
+            {
+                CreateInterval(15),
+                CreateLowWatermark(20),
+                CreateInterval(30),
+                CreateInterval(40),
+                CreateInterval(50),
+                CreateLowWatermark(StreamEvent.InfinitySyncTime),
+            };
+
+            var qc = new QueryContainer();
+            var leftInput = qc.RegisterInput(leftData.ToObservable(), flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+            var rightInput = qc.RegisterInput(rightData.ToObservable(), flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+
+            var query = leftInput.WhereNotExists(
+                rightInput,
+                e => e,
+                e => e);
+
+            var output = new List<PartitionedStreamEvent<int, int>>();
+            var egress = qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+            process.Flush();
+            egress.Wait();
+
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+
+        internal struct SimpleStruct
+        {
+            public long One { get; set; }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void SimpleShardTest()
+        {
+            const int BatchCount = 1000;
+            const int SourceCount = 6;
+
+            var input =
+                Enumerable.Range(0, BatchCount * SourceCount)
+                .Select(i => StreamEvent.CreateInterval(DateTime.Now.Ticks, 1, new SimpleStruct() { One = 1 }))
+                .ToList();
+
+            var generatorShard = input
+                .ToObservable()
+                .ToStreamable()
+                .Shard(SourceCount);
+
+            var output = new List<StreamEvent<SimpleStruct>>();
+            var passthrough = generatorShard
+                .Query(e => e.Select(x => x))
+                .Unshard()
+                .ToStreamEventObservable()
+                .Where(e => e.IsData)
+                .ForEachAsync(e => output.Add(e));
+
+            Assert.IsTrue(output.SequenceEqual(input));
+        }
+    }
+
+    [TestClass]
+    public class AdHocWithoutMemoryLeakDetection : TestWithConfigSettingsWithoutMemoryLeakDetection
+    {
+        public AdHocWithoutMemoryLeakDetection() : base(new ConfigModifier()
+            .ForceRowBasedExecution(false)
+            .DontFallBackToRowBasedExecution(true))
+        { }
+
+        [TestMethod, TestCategory("Gated")]
+        public async Task DisposeTest1()
+        {
+            var cancelTokenSource = new CancellationTokenSource();
+            var inputSubject = new Subject<int>();
+            var lastSeenSubscription = 0;
+            var observableInput = inputSubject.AsObservable();
+
+            var inputTask = new Task(() =>
+            {
+                var n = 0;
+                while (!cancelTokenSource.Token.IsCancellationRequested)
+                {
+                    inputSubject.OnNext(++n);
+                    Thread.Sleep(10);
+                }
+                inputSubject.OnCompleted();
+            });
+
+            var semaphore = new SemaphoreSlim(0, 1);
+            var subscription = observableInput.ToAtemporalStreamable(TimelinePolicy.Sequence(1)).Count().ToStreamEventObservable().Where(c => c.IsData).Subscribe(c =>
+            {
+                Interlocked.Exchange(ref lastSeenSubscription, (int)c.Payload);
+                if (semaphore.CurrentCount == 0) semaphore.Release();
+            });
+            // Start the input feed.
+            inputTask.Start();
+            // Wait until we have at least one output data event.
+            await semaphore.WaitAsync();
+            // Dispose the subscription.
+            subscription.Dispose();
+            // Keep the input feed going, before cancel. This should behave properly if the subscription is disposed of properly.
+            await Task.Delay(200);
+            cancelTokenSource.Cancel();
+            await inputTask;
+            // Make sure we really got an output data event.
+            Assert.IsTrue(lastSeenSubscription > 0);
+        }
     }
 
     [TestClass]
@@ -851,10 +1141,7 @@ namespace SimpleTesting
                 return this;
             }
 
-            public void Dispose()
-            {
-                this.observer = null;
-            }
+            public void Dispose() => this.observer = null;
 
             internal void Checkpoint()
             {
@@ -865,15 +1152,9 @@ namespace SimpleTesting
                 }
             }
 
-            internal void SendEvent(StreamEvent<InputEvent> evt)
-            {
-                this.observer.OnNext(evt);
-            }
+            internal void SendEvent(StreamEvent<InputEvent> evt) => this.observer.OnNext(evt);
 
-            internal void Flush()
-            {
-                this.observer.OnCompleted();
-            }
+            internal void Flush() => this.observer.OnCompleted();
 
             private IStreamable<Empty, OutputEvent> Query(IObservableIngressStreamable<InputEvent> input)
             {
@@ -898,14 +1179,13 @@ namespace SimpleTesting
                 string clusterName = (i % 15).ToString();
                 var evt = new InputEvent() { ClusterName = clusterName, IntValue = 0, };
 
-                DateTime start = startTime.AddMilliseconds(i * 111); // we want to cover about one hour with about 50,000 events --> 111 milliseconds
-                DateTime end = start.AddMinutes(60);
+                var start = startTime.AddMilliseconds(i * 111); // we want to cover about one hour with about 50,000 events --> 111 milliseconds
+                var end = start.AddMinutes(60);
                 bool isPunc = i % 5000 == 0;
 
-                if (isPunc)
-                    yield return StreamEvent.CreatePunctuation<InputEvent>(start.Ticks);
-                else
-                    yield return StreamEvent.CreateInterval(start.Ticks, end.Ticks, evt);
+                yield return isPunc
+                    ? StreamEvent.CreatePunctuation<InputEvent>(start.Ticks)
+                    : StreamEvent.CreateInterval(start.Ticks, end.Ticks, evt);
             }
         }
 
@@ -1052,10 +1332,9 @@ namespace SimpleTesting
             public Expression<Func<SomeClass, int>> GetGetHashCodeExpr()
                 => sc => sc.Timestamp.GetHashCode() ^ sc.CycleStart.GetHashCode() ^ sc.BC.GetHashCode();
         }
+
         private static long GetDateTimeTicks(int year, int month, int day, int hours, int minutes, int seconds)
-        {
-            return new DateTime(year, month, day, hours, minutes, seconds).Ticks;
-        }
+            => new DateTime(year, month, day, hours, minutes, seconds).Ticks;
 
         [TestMethod, TestCategory("Gated")]
         public void What_is_wrong()
@@ -1166,20 +1445,14 @@ namespace SimpleTesting
         {
             public DateTime Timestamp;
             public Guid SessionID;
-            public override string ToString()
-            {
-                return new { this.Timestamp, this.SessionID }.ToString();
-            }
+            public override string ToString() => new { this.Timestamp, this.SessionID }.ToString();
         }
 
         public class UlsSessionBootFinishedEvent
         {
             public DateTime Timestamp;
             public Guid SessionID;
-            public override string ToString()
-            {
-                return new { this.Timestamp, this.SessionID }.ToString();
-            }
+            public override string ToString() => new { this.Timestamp, this.SessionID }.ToString();
         }
 
         [TestMethod]
@@ -1200,17 +1473,13 @@ namespace SimpleTesting
 
             var inputStreamStarts =
                    inputDataStarts
-                         .Select(
-                                e =>
-                                       StreamEvent.CreatePoint(e.Timestamp.Ticks, e))
+                         .Select(e => StreamEvent.CreatePoint(e.Timestamp.Ticks, e))
                          .ToObservable()
                          .ToStreamable();
 
             var inputStreamFinishes =
                    inputDataFinishes
-                         .Select(
-                                e =>
-                                       StreamEvent.CreatePoint(e.Timestamp.Ticks, e))
+                         .Select(e => StreamEvent.CreatePoint(e.Timestamp.Ticks, e))
                          .ToObservable()
                          .ToStreamable();
 
@@ -1321,20 +1590,12 @@ namespace SimpleTesting
                 if (!(obj is ClassWithAutoProps other)) return false;
                 return this.IntAutoProp == other.IntAutoProp && this.IntField == other.IntField;
             }
-            public override int GetHashCode()
-            {
-                return this.IntAutoProp.GetHashCode() ^ this.IntField.GetHashCode();
-            }
+            public override int GetHashCode() => this.IntAutoProp.GetHashCode() ^ this.IntField.GetHashCode();
 
             public Expression<Func<ClassWithAutoProps, ClassWithAutoProps, bool>> GetEqualsExpr()
-            {
-                return (c1, c2) => c1.IntAutoProp == c2.IntAutoProp && c1.IntField == c2.IntField;
-            }
+                => (c1, c2) => c1.IntAutoProp == c2.IntAutoProp && c1.IntField == c2.IntField;
 
-            public Expression<Func<ClassWithAutoProps, int>> GetGetHashCodeExpr()
-            {
-                return c => c.IntAutoProp ^ c.IntField;
-            }
+            public Expression<Func<ClassWithAutoProps, int>> GetGetHashCodeExpr() => c => c.IntAutoProp ^ c.IntField;
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1385,6 +1646,41 @@ namespace SimpleTesting
             Assert.IsTrue(expected.SequenceEqual(output));
         }
 
+        [TestMethod, TestCategory("Gated")]
+        public void UnionWithBatchEndingInPastPunctuation()
+        {
+            Helpers.RunTwiceForRowAndColumnar(() =>
+            {
+                var leftInput = new StreamEvent<int>[]
+                {
+                        StreamEvent.CreateInterval(100, 101, 0),
+                        StreamEvent.CreatePunctuation<int>(50)
+                }.ToObservable().ToStreamable();
+                var rightInput = new StreamEvent<int>[]
+                {
+                        StreamEvent.CreateInterval(50, 51, 0),
+                        StreamEvent.CreatePunctuation<int>(200)
+                }.ToObservable().ToStreamable();
+
+                var query = leftInput.Union(rightInput);
+
+                var output = new List<StreamEvent<int>>();
+                query.ToStreamEventObservable()
+                    .ForEachAsync(x => output.Add(x))
+                    .Wait();
+
+                var expected = new List<StreamEvent<int>>
+                    {
+                        StreamEvent.CreateInterval(50, 51, 0),
+                        StreamEvent.CreateInterval(100, 101, 0),
+                        StreamEvent.CreatePunctuation<int>(100),
+                        StreamEvent.CreatePunctuation<int>(200),
+                        StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+                    };
+
+                Assert.IsTrue(expected.SequenceEqual(output));
+            });
+        }
     }
 
     [TestClass]
@@ -1455,10 +1751,7 @@ namespace SimpleTesting
 
             public override bool Equals(object obj) => obj is ClassOverridingEquals other && other.x == this.x;
 
-            public override int GetHashCode()
-            {
-                return this.x.GetHashCode();
-            }
+            public override int GetHashCode() => this.x.GetHashCode();
         }
 
         /// <summary>
@@ -1516,10 +1809,7 @@ namespace SimpleTesting
                 if (!(obj is Basetype other)) return false;
                 return other.x == this.x;
             }
-            public override int GetHashCode()
-            {
-                return this.x.GetHashCode();
-            }
+            public override int GetHashCode() => this.x.GetHashCode();
         }
 
         public class Subtype : Basetype
@@ -1527,10 +1817,7 @@ namespace SimpleTesting
             public int fieldOfSubtype;
 
             public override bool Equals(object obj) => obj is Subtype other && this.fieldOfSubtype == other.fieldOfSubtype && base.Equals(obj);
-            public override int GetHashCode()
-            {
-                return this.fieldOfSubtype.GetHashCode() ^ base.GetHashCode();
-            }
+            public override int GetHashCode() => this.fieldOfSubtype.GetHashCode() ^ base.GetHashCode();
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1567,7 +1854,6 @@ namespace SimpleTesting
             {
                 if (!a[j].Equals(b[j])) return false;
             }
-
             return true;
         }
 
@@ -1607,10 +1893,7 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
-        public void WhereWithNonColumnar()
-        {
-            Enumerable.Range(0, 100).Select(i => new NonColumnarClass(i, 'x')).TestWhere(r => r.x > 3);
-        }
+        public void WhereWithNonColumnar() => Enumerable.Range(0, 100).Select(i => new NonColumnarClass(i, 'x')).TestWhere(r => r.x > 3);
 
         // Total number of input events
         private const int NumEvents = 100;
@@ -1618,10 +1901,7 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private void TestWhere(Expression<Func<MyStruct2, bool>> predicate)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere<MyStruct2>(predicate));
-        }
+        private void TestWhere(Expression<Func<MyStruct2, bool>> predicate) => Assert.IsTrue(this.enumerable.TestWhere(predicate));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeWithColToRow()

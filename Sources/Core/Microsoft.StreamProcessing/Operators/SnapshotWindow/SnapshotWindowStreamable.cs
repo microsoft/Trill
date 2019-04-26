@@ -100,11 +100,11 @@ namespace Microsoft.StreamProcessing
 
         private static int GetAggregateFunctionsHashCode(IAggregate<TInput, TState, TOutput> a)
         {
-            int x = a.Accumulate().ExpressionToCSharp().GetHashCode();
-            x = x << 3 ^ a.ComputeResult().ExpressionToCSharp().GetHashCode();
-            x = x << 3 ^ a.Deaccumulate().ExpressionToCSharp().GetHashCode();
-            x = x << 3 ^ a.Difference().ExpressionToCSharp().GetHashCode();
-            x = x << 3 ^ a.InitialState().ExpressionToCSharp().GetHashCode();
+            int x = a.Accumulate().ExpressionToCSharp().StableHash();
+            x = x << 3 ^ a.ComputeResult().ExpressionToCSharp().StableHash();
+            x = x << 3 ^ a.Deaccumulate().ExpressionToCSharp().StableHash();
+            x = x << 3 ^ a.Difference().ExpressionToCSharp().StableHash();
+            x = x << 3 ^ a.InitialState().ExpressionToCSharp().StableHash();
             return x;
         }
 
@@ -134,7 +134,7 @@ namespace Microsoft.StreamProcessing
                 {
                     var tuple = GetPipe(observer);
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
-                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2, false));
+                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate);
                     var returnValue = (IStreamObserver<TKey, TInput>)instance;
                     return returnValue;
@@ -182,7 +182,7 @@ namespace Microsoft.StreamProcessing
                 {
                     var tuple = GetPipe(observer);
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
-                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2, false));
+                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate, this.sourceProps.ConstantDurationLength.Value);
                     var returnValue = (IStreamObserver<TKey, TInput>)instance;
                     return returnValue;
@@ -230,7 +230,7 @@ namespace Microsoft.StreamProcessing
                 {
                     var tuple = GetPipe(observer);
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
-                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2, false));
+                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate);
                     var returnValue = (IStreamObserver<TKey, TInput>)instance;
                     return returnValue;
@@ -278,7 +278,7 @@ namespace Microsoft.StreamProcessing
                 {
                     var tuple = GetPipe(observer);
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
-                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2, false));
+                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate);
                     var returnValue = (IStreamObserver<TKey, TInput>)instance;
                     return returnValue;
@@ -326,7 +326,7 @@ namespace Microsoft.StreamProcessing
                 {
                     var tuple = GetPipe(observer);
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
-                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2, false));
+                        p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate);
                     var returnValue = (IStreamObserver<TKey, TInput>)instance;
                     return returnValue;

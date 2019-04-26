@@ -9,7 +9,7 @@ namespace Microsoft.StreamProcessing
 {
     internal sealed class SetPropertyStreamable<TKey, TPayload> : Streamable<TKey, TPayload>
     {
-        private IStreamable<TKey, TPayload> Source;
+        private readonly IStreamable<TKey, TPayload> Source;
 
         public SetPropertyStreamable(IStreamable<TKey, TPayload> source, Func<StreamProperties<TKey, TPayload>, StreamProperties<TKey, TPayload>> propertySetter)
             : base(propertySetter(source.Properties))

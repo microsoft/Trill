@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing
@@ -24,9 +23,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="defaultAccumulator"></param>
         /// <returns></returns>
         public static Afa<TInput, TRegister, TAccumulator> Create<TInput, TRegister, TAccumulator>(TRegister defaultRegister = default, TAccumulator defaultAccumulator = default)
-        {
-            return new Afa<TInput, TRegister, TAccumulator>(defaultRegister, defaultAccumulator);
-        }
+            => new Afa<TInput, TRegister, TAccumulator>(defaultRegister, defaultAccumulator);
 
         /// <summary>
         ///
@@ -35,12 +32,17 @@ namespace Microsoft.StreamProcessing
         /// <typeparam name="TRegister"></typeparam>
         /// <param name="defaultRegister"></param>
         /// <returns></returns>
-        public static Afa<TInput, TRegister> Create<TInput, TRegister>(TRegister defaultRegister = default)
-        {
-            return new Afa<TInput, TRegister>(defaultRegister);
-        }
-    }
+        public static Afa<TInput, TRegister, bool> Create<TInput, TRegister>(TRegister defaultRegister = default)
+            => new Afa<TInput, TRegister, bool>(defaultRegister);
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="TInput"></typeparam>
+        /// <returns></returns>
+        public static Afa<TInput, Empty, bool> Create<TInput>()
+            => new Afa<TInput, Empty, bool>();
+    }
 
     /// <summary>
     /// Class that describes an AFA completely, along with its properties.
@@ -48,7 +50,7 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TInput">The event type.</typeparam>
     /// <typeparam name="TRegister">The register type.</typeparam>
     /// <typeparam name="TAccumulator">The accumulator type.</typeparam>
-    public class Afa<TInput, TRegister, TAccumulator>
+    public sealed class Afa<TInput, TRegister, TAccumulator>
     {
         /// <summary>
         /// Create a new instance of an AFA object.
@@ -56,12 +58,15 @@ namespace Microsoft.StreamProcessing
         /// <param name="defaultRegister">The default register for new instances of the AFA.</param>
         /// <param name="defaultAccumulator">The default accumulator for new instances of the AFA.</param>
         public Afa(TRegister defaultRegister = default, TAccumulator defaultAccumulator = default)
-            => this.DefaultRegister = defaultRegister;
+        {
+            this.DefaultRegister = defaultRegister;
+            this.DefaultAccumulator = defaultAccumulator;
+        }
 
         /// <summary>
         /// AFA is sealed or not.
         /// </summary>
-        protected bool isSealed = false;
+        private bool isSealed = false;
 
         /// <summary>
         /// The set of final states in the AFA.
@@ -86,6 +91,11 @@ namespace Microsoft.StreamProcessing
         internal TRegister DefaultRegister = default;
 
         /// <summary>
+        /// The default value of the accumulator.
+        /// </summary>
+        internal TAccumulator DefaultAccumulator = default;
+
+        /// <summary>
         /// This property specifies whether, on a new incoming event, we allow new
         /// matches to be initiated (from AFA start state) while an existing pattern is still
         /// being matched by the AFA. If set to false, we do not start matching an incoming event from
@@ -107,9 +117,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="fence">An added condition that must be met for the transition to occur</param>
         /// <param name="transfer">An expression to mutate the register value when the transition occurs</param>
         public void AddSingleElementArc(int fromState, int toState, Expression<Func<long, TInput, TRegister, bool>> fence, Expression<Func<long, TInput, TRegister, TRegister>> transfer = null)
-        {
-            AddArc(fromState, toState, new SingleElementArc<TInput, TRegister> { Fence = fence, Transfer = transfer });
-        }
+            => AddArc(fromState, toState, new SingleElementArc<TInput, TRegister> { Fence = fence, Transfer = transfer });
 
         /// <summary>
         /// Adds a transition to the AFA triggered by a list of concurrent elements
@@ -119,9 +127,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="fence">An added condition that must be met for the transition to occur</param>
         /// <param name="transfer">An expression to mutate the register value when the transition occurs</param>
         public void AddListElementArc(int fromState, int toState, Expression<Func<long, List<TInput>, TRegister, bool>> fence, Expression<Func<long, List<TInput>, TRegister, TRegister>> transfer = null)
-        {
-            AddArc(fromState, toState, new ListElementArc<TInput, TRegister> { Fence = fence, Transfer = transfer });
-        }
+            => AddArc(fromState, toState, new ListElementArc<TInput, TRegister> { Fence = fence, Transfer = transfer });
 
         /// <summary>
         /// Adds an epsilon (no action) arc to the AFA
@@ -129,9 +135,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="fromState">Starting state of the transition</param>
         /// <param name="toState">Ending state of the transition</param>
         public void AddEpsilonElementArc(int fromState, int toState)
-        {
-            AddArc(fromState, toState, new EpsilonArc<TInput, TRegister>());
-        }
+            => AddArc(fromState, toState, new EpsilonArc<TInput, TRegister>());
 
         /// <summary>
         /// Adds a transition that handles multiple elements (events) at a given timestamp
@@ -151,12 +155,15 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, TAccumulator, TRegister, bool>> fence = null,
             Expression<Func<long, TAccumulator, TRegister, TRegister>> transfer = null,
             Expression<Action<TAccumulator>> dispose = null)
-        {
-            AddArc(fromState, toState, new MultiElementArc<TInput, TRegister, TAccumulator>
+            => AddArc(fromState, toState, new MultiElementArc<TInput, TRegister, TAccumulator>
             {
-                Initialize = initialize, Accumulate = accumulate, SkipToEnd = skipToEnd, Fence = fence, Transfer = transfer, Dispose = dispose
+                Initialize = initialize,
+                Accumulate = accumulate,
+                SkipToEnd = skipToEnd,
+                Fence = fence,
+                Transfer = transfer,
+                Dispose = dispose
             });
-        }
 
         /// <summary>
         /// Adds an arc to the AFA.
@@ -166,7 +173,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="arc">The arc, defined as a method.</param>
         internal void AddArc(int fromState, int toState, Arc<TInput, TRegister> arc)
         {
-            if (this.isSealed) throw new Exception("Cannot add arcs to a sealed AFA");
+            if (this.isSealed) throw new InvalidOperationException("Cannot add arcs to a sealed AFA");
 
             if (fromState > this.MaxState) this.MaxState = fromState;
             if (toState > this.MaxState) this.MaxState = toState;
@@ -249,10 +256,7 @@ namespace Microsoft.StreamProcessing
         /// Set default value of register.
         /// </summary>
         /// <param name="register"></param>
-        public void SetDefaultRegister(TRegister register)
-        {
-            this.DefaultRegister = register;
-        }
+        public void SetDefaultRegister(TRegister register) => this.DefaultRegister = register;
 
         internal CompiledAfa<TInput, TRegister, TAccumulator> Compile() => new CompiledAfa<TInput, TRegister, TAccumulator>(this);
 
@@ -263,7 +267,7 @@ namespace Microsoft.StreamProcessing
         public override string ToString()
         {
             string result = string.Empty;
-            result += string.Format(CultureInfo.InvariantCulture, "Start State: {0}\n", this.StartState);
+            result += $"Start State: {this.StartState}\n";
             result += "Final States:";
             this.finalStates.ForEach(x => result += " " + x);
             result += "\n";
@@ -277,22 +281,6 @@ namespace Microsoft.StreamProcessing
             }
 
             return result;
-        }
-    }
-
-    /// <summary>
-    /// A simpler form of AFA whose accumulator is a simple boolean indicating that the pattern has matched
-    /// </summary>
-    /// <typeparam name="TInput">The event type.</typeparam>
-    /// <typeparam name="TRegister">The register type.</typeparam>
-    public class Afa<TInput, TRegister> : Afa<TInput, TRegister, bool>
-    {
-        /// <summary>
-        /// Create a new instance of the simplified AFA
-        /// </summary>
-        /// <param name="defaultRegister">The default value for the register</param>
-        public Afa(TRegister defaultRegister = default) : base(defaultRegister)
-        {
         }
     }
 }

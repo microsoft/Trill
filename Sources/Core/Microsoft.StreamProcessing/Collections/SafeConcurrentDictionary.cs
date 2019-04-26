@@ -12,7 +12,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 {
     /// <summary>
     /// A dictionary that supports concurrency with similar interface to .NET's ConcurrentDictionary.
-    /// However, this dictionary changes the implementation of AddOrUpdate and GetOrAdd functions to
+    /// However, this dictionary changes the implementation and GetOrAdd functions to
     /// guarantee atomicity per-key for factory lambdas.
     /// </summary>
     /// <typeparam name="TValue">Type of values in the dictionary</typeparam>
@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue GetOrAdd(CacheKey key, Func<CacheKey, TValue> valueFactory)
         {
-            if (this.dictionary.TryGetValue(key, out TValue value))
+            if (this.dictionary.TryGetValue(key, out var value))
             {
                 return value;
             }
@@ -37,12 +37,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 return this.dictionary.GetOrAdd(key, valueFactory);
             }
         }
-
-        /// <summary>
-        /// Adds a key/value pair to the dictionary if it does not exist.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TValue GetOrAdd(CacheKey key, TValue value) => this.dictionary.GetOrAdd(key, value);
 
         /// <summary>
         /// Returns an enumerator of the elements in the dictionary.

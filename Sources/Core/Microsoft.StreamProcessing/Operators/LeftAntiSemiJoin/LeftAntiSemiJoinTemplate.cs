@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
     /// Class to produce the template output
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "15.0.0.0")]
-    internal partial class LeftAntiSemiJoinTemplate : CommonBaseTemplate
+    internal partial class LeftAntiSemiJoinTemplate : CommonBinaryTemplate
     {
         /// <summary>
         /// Create the template output

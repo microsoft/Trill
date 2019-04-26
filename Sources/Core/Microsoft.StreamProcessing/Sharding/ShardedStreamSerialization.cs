@@ -48,7 +48,6 @@ namespace Microsoft.StreamProcessing.Sharding
 
     internal sealed class ShardedSerializerObserver<TKey, TPayload> : IObserver<StreamMessage<TKey, TPayload>>, IDisposable
     {
-        private readonly StreamProperties<TKey, TPayload> sourceProps;
         private Exception e = null;
 
         private readonly StateSerializer<QueuedMessage<StreamMessage<TKey, TPayload>>> serializer;
@@ -59,7 +58,6 @@ namespace Microsoft.StreamProcessing.Sharding
         // TODO: This appears to be copied code from Binary egress - can we unify?
         public ShardedSerializerObserver(Stream destination, StreamProperties<TKey, TPayload> sourceProps, bool writePropertiesToStream = false)
         {
-            this.sourceProps = sourceProps;
             this.destination = destination;
             if (writePropertiesToStream)
             {
@@ -102,7 +100,6 @@ namespace Microsoft.StreamProcessing.Sharding
             if (this.e != null) throw this.e;
         }
     }
-
 
     /// <summary>
     /// Static class to provide deserialization services to sharded streamable from and to binary streams
@@ -156,8 +153,6 @@ namespace Microsoft.StreamProcessing.Sharding
         /// <param name="async">States whether serialization should be able to be done asynchronously</param>
         /// <param name="writePropertiesToStream">Write stream properties to the binary stream</param>
         public static void ToBinaryStream<TKey, TPayload>(this IShardedStreamable<TKey, TPayload> source, Stream[] destinations, bool async = false, bool writePropertiesToStream = false)
-        {
-            new ShardedStreamSerializer<TKey, TPayload>(source, destinations, async, writePropertiesToStream);
-        }
+            => new ShardedStreamSerializer<TKey, TPayload>(source, destinations, async, writePropertiesToStream);
     }
 }

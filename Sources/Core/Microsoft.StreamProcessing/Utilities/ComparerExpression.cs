@@ -45,7 +45,7 @@ namespace Microsoft.StreamProcessing
 
         public static bool TryGetCachedComparer<T>(out IComparerExpression<T> comparer)
         {
-            Type t = typeof(T);
+            var t = typeof(T);
             comparer = null;
             if (typeComparerCache.TryGetValue(t, out object temp))
             {
@@ -84,7 +84,7 @@ namespace Microsoft.StreamProcessing
         {
             get
             {
-                Type type = typeof(T);
+                var type = typeof(T);
 
                 lock (sentinel)
                 {

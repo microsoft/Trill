@@ -17,18 +17,14 @@ namespace SimpleTesting.PartitionedIngressAndEgress.LaggingCleanup
     {
         public static IStreamable<PartitionKey<int>, double> GroupAggregateAverageTestRecord(
             this IStreamable<PartitionKey<int>, LaggingPartitionCleanupTests.TestRecord> source)
-        {
-            return source.GroupAggregate(
+            => source.GroupAggregate(
                         testRecord => testRecord.Key,
                         w => w.Average(testRecord => testRecord.Payload),
                         (key, testRecord) => testRecord);
-        }
 
         public static IStreamable<PartitionKey<int>, double> AggregateAverageLong(
             this IStreamable<PartitionKey<int>, long> source)
-        {
-            return source.Aggregate(w => w.Average(payload => payload));
-        }
+            => source.Aggregate(w => w.Average(payload => payload));
     }
 
     // Tests scenarios where some partitions lag behind the low watermark to ensure appropriate and correct cleanup
@@ -43,7 +39,6 @@ namespace SimpleTesting.PartitionedIngressAndEgress.LaggingCleanup
         public void HoppingWindow() =>
             HoppingWindowWorker(
                 ingress => ingress.HoppingWindowLifetime(WindowSize, HopSize).GroupAggregateAverageTestRecord(), this.testRecordCreator);
-
 
         [TestMethod, TestCategory("Gated")]
         public void HoppingWindowSimple() =>
@@ -322,13 +317,13 @@ namespace SimpleTesting.PartitionedIngressAndEgress.LaggingCleanup
         private Task egress;
         private Process process;
 
-        private PartitionedStreamEvent<int, TInput> CreateInputInterval<TInput>(int key, long startTime, Func<int, long, TInput> resultCreator) =>
+        private static PartitionedStreamEvent<int, TInput> CreateInputInterval<TInput>(int key, long startTime, Func<int, long, TInput> resultCreator) =>
             PartitionedStreamEvent.CreateInterval(key, startTime, startTime + IntervalLength, resultCreator(key, startTime));
-        private PartitionedStreamEvent<int, double> CreateOutputStart(int key, long startTime, double average) =>
+        private static PartitionedStreamEvent<int, double> CreateOutputStart(int key, long startTime, double average) =>
             PartitionedStreamEvent.CreateStart(key, startTime, average);
-        private PartitionedStreamEvent<int, double> CreateOutputEnd(int key, long endTime, long originalStart, double average) =>
+        private static PartitionedStreamEvent<int, double> CreateOutputEnd(int key, long endTime, long originalStart, double average) =>
             PartitionedStreamEvent.CreateEnd(key, endTime, originalStart, average);
-        private PartitionedStreamEvent<int, double> CreateOutputInterval(int key, long startTime, long endTime, double average) =>
+        private static PartitionedStreamEvent<int, double> CreateOutputInterval(int key, long startTime, long endTime, double average) =>
             PartitionedStreamEvent.CreateInterval(key, startTime, endTime, average);
 
         public class TestRecord

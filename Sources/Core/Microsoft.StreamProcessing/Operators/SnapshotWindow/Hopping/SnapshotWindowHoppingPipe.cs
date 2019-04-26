@@ -99,11 +99,9 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(TKey), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.Hopping, this.aggregate, false, this.errorMessages, false));
-        }
+                AggregatePipeType.Hopping, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {
@@ -117,122 +115,124 @@ namespace Microsoft.StreamProcessing
             fixed (long* col_vother = batch.vother.col)
             fixed (int* col_hash = batch.hash.col)
             fixed (long* col_bv = batch.bitvector.col)
-            for (int i = 0; i < count; i++)
             {
-                if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                for (int i = 0; i < count; i++)
                 {
-                    if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                    if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
                     {
-                        // We have found a row that corresponds to punctuation
-                        OnPunctuation(col_vsync[i]);
-
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = col_vsync[i];
-                        this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
-                        this.batch.key.col[c] = default;
-                        this.batch.hash.col[c] = 0;
-                        this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                    }
-                    continue;
-                }
-
-                var syncTime = col_vsync[i];
-
-                // Handle time moving forward
-                if (syncTime > this.lastSyncTime) AdvanceTime(syncTime);
-
-                // Need to retrieve the key from the dictionary
-                HeldState<TState> heldState;
-                if (!this.aggregateByKey.Lookup(colkey[i], col_hash[i], out int aggindex))
-                {
-                    // New group. Create new state
-                    heldState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
-                    this.heldAggregates.Add(this.aggregateByKey.Insert(colkey[i], heldState, col_hash[i]));
-                    // No output because initial state is empty
-                }
-                else if (this.heldAggregates.Add(aggindex))
-                {
-                    // First time group is active for this time
-                    heldState = this.aggregateByKey.entries[aggindex].value;
-                    if (syncTime > heldState.timestamp)
-                    {
-                        if (heldState.active > 0)
+                        if (col_vother[i] == StreamEvent.PunctuationOtherTime)
                         {
-                            // Output end edge
+                            // We have found a row that corresponds to punctuation
+                            OnPunctuation(col_vsync[i]);
+
                             int c = this.batch.Count;
-                            this.batch.vsync.col[c] = syncTime;
-                            this.batch.vother.col[c] = heldState.timestamp;
-                            this.batch.payload.col[c] = this.computeResult(heldState.state);
-                            this.batch.key.col[c] = colkey[i];
-                            this.batch.hash.col[c] = colkey[i].GetHashCode();
+                            this.batch.vsync.col[c] = col_vsync[i];
+                            this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
+                            this.batch.key.col[c] = default;
+                            this.batch.hash.col[c] = 0;
+                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
-                        heldState.timestamp = syncTime;
+                        continue;
                     }
-                }
-                else
-                {
-                    // read new currentState from _heldAgg index
-                    heldState = this.aggregateByKey.entries[aggindex].value;
-                }
 
-                if (col_vsync[i] < col_vother[i]) // insert event
-                {
-                    heldState.state = this.accumulate(heldState.state, col_vsync[i], colpayload[i]);
-                    heldState.active++;
+                    var syncTime = col_vsync[i];
 
-                    // Update ECQ
-                    if (col_vother[i] < StreamEvent.InfinitySyncTime)
+                    // Handle time moving forward
+                    if (syncTime > this.lastSyncTime) AdvanceTime(syncTime);
+
+                    // Need to retrieve the key from the dictionary
+                    HeldState<TState> heldState;
+                    if (!this.aggregateByKey.Lookup(colkey[i], col_hash[i], out int aggindex))
                     {
-                        EcqState ecqState;
-                        StateAndActive<TState> newState;
-                        int index;
-                        if (this.ecq.Count > 0)
+                        // New group. Create new state
+                        heldState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
+                        this.heldAggregates.Add(this.aggregateByKey.Insert(colkey[i], heldState, col_hash[i]));
+                        // No output because initial state is empty
+                    }
+                    else if (this.heldAggregates.Add(aggindex))
+                    {
+                        // First time group is active for this time
+                        heldState = this.aggregateByKey.entries[aggindex].value;
+                        if (syncTime > heldState.timestamp)
                         {
-                            ecqState = this.ecq.PeekLast();
-                            if (ecqState.timestamp != col_vother[i])
+                            if (heldState.active > 0)
+                            {
+                                // Output end edge
+                                int c = this.batch.Count;
+                                this.batch.vsync.col[c] = syncTime;
+                                this.batch.vother.col[c] = heldState.timestamp;
+                                this.batch.payload.col[c] = this.computeResult(heldState.state);
+                                this.batch.key.col[c] = colkey[i];
+                                this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
+                                this.batch.Count++;
+                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            }
+                            heldState.timestamp = syncTime;
+                        }
+                    }
+                    else
+                    {
+                        // read new currentState from _heldAgg index
+                        heldState = this.aggregateByKey.entries[aggindex].value;
+                    }
+
+                    if (col_vsync[i] < col_vother[i]) // insert event
+                    {
+                        heldState.state = this.accumulate(heldState.state, col_vsync[i], colpayload[i]);
+                        heldState.active++;
+
+                        // Update ECQ
+                        if (col_vother[i] < StreamEvent.InfinitySyncTime)
+                        {
+                            EcqState ecqState;
+                            StateAndActive<TState> newState;
+                            int index;
+                            if (this.ecq.Count > 0)
+                            {
+                                ecqState = this.ecq.PeekLast();
+                                if (ecqState.timestamp != col_vother[i])
+                                {
+                                    ecqState = new EcqState { timestamp = col_vother[i] };
+                                    this.ecqEntryPool.Get(out ecqState.states);
+
+                                    newState = new StateAndActive<TState> { state = this.initialState() };
+
+                                    ecqState.states.Lookup(colkey[i], col_hash[i], out index);
+                                    ecqState.states.Insert(ref index, colkey[i], newState);
+                                    this.ecq.Enqueue(ref ecqState);
+                                }
+                                else
+                                {
+                                    if (!ecqState.states.Lookup(colkey[i], col_hash[i], out index))
+                                    {
+                                        newState = new StateAndActive<TState> { state = this.initialState() };
+                                        ecqState.states.Insert(ref index, colkey[i], newState);
+                                    }
+                                    else newState = ecqState.states.entries[index].value;
+                                }
+                            }
+                            else
                             {
                                 ecqState = new EcqState { timestamp = col_vother[i] };
                                 this.ecqEntryPool.Get(out ecqState.states);
-
                                 newState = new StateAndActive<TState> { state = this.initialState() };
 
                                 ecqState.states.Lookup(colkey[i], col_hash[i], out index);
                                 ecqState.states.Insert(ref index, colkey[i], newState);
                                 this.ecq.Enqueue(ref ecqState);
                             }
-                            else
-                            {
-                                if (!ecqState.states.Lookup(colkey[i], col_hash[i], out index))
-                                {
-                                    newState = new StateAndActive<TState> { state = this.initialState() };
-                                    ecqState.states.Insert(ref index, colkey[i], newState);
-                                }
-                                else newState = ecqState.states.entries[index].value;
-                            }
-                        }
-                        else
-                        {
-                            ecqState = new EcqState { timestamp = col_vother[i] };
-                            this.ecqEntryPool.Get(out ecqState.states);
-                            newState = new StateAndActive<TState> { state = this.initialState() };
 
-                            ecqState.states.Lookup(colkey[i], col_hash[i], out index);
-                            ecqState.states.Insert(ref index, colkey[i], newState);
-                            this.ecq.Enqueue(ref ecqState);
+                            newState.state = this.accumulate(newState.state, col_vsync[i], colpayload[i]);
+                            newState.active++;
                         }
-
-                        newState.state = this.accumulate(newState.state, col_vsync[i], colpayload[i]);
-                        newState.active++;
                     }
-                }
-                else // is a retraction
-                {
-                    heldState.state = this.deaccumulate(heldState.state, col_vsync[i], colpayload[i]);
-                    heldState.active--;
+                    else // is a retraction
+                    {
+                        heldState.state = this.deaccumulate(heldState.state, col_vsync[i], colpayload[i]);
+                        heldState.active--;
+                    }
                 }
             }
 
@@ -260,7 +260,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
                     this.batch.payload.col[c] = this.computeResult(iter1entry.value.state);
                     this.batch.key.col[c] = iter1entry.key;
-                    this.batch.hash.col[c] = iter1entry.key.GetHashCode();
+                    this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
                 }
@@ -290,7 +290,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.vother.col[c] = heldState.timestamp;
                         this.batch.payload.col[c] = this.computeResult(heldState.state);
                         this.batch.key.col[c] = ecqState.states.entries[iter].key;
-                        this.batch.hash.col[c] = ecqState.states.entries[iter].key.GetHashCode();
+                        this.batch.hash.col[c] = this.keyComparerGetHashCode(ecqState.states.entries[iter].key);
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     }
@@ -312,7 +312,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
                             this.batch.payload.col[c] = this.computeResult(heldState.state);
                             this.batch.key.col[c] = ecqState.states.entries[iter].key;
-                            this.batch.hash.col[c] = ecqState.states.entries[iter].key.GetHashCode();
+                            this.batch.hash.col[c] = this.keyComparerGetHashCode(ecqState.states.entries[iter].key);
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }

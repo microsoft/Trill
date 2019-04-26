@@ -33,12 +33,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SelectPlanNode(
+            => this.Observer.ProduceQueryPlan(new SelectPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), typeof(TResult),
                 this.selector, false, false, false, this.errorMessages));
-        }
 
         public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
         {
@@ -96,12 +94,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SelectPlanNode(
+            => this.Observer.ProduceQueryPlan(new SelectPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), typeof(TResult),
                 this.selector, false, true, false, this.errorMessages));
-        }
 
         public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
         {
@@ -161,12 +157,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SelectPlanNode(
+            => this.Observer.ProduceQueryPlan(new SelectPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), typeof(TResult),
                 this.selector, true, false, false, this.errorMessages));
-        }
 
         public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
         {
@@ -225,12 +219,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SelectPlanNode(
+            => this.Observer.ProduceQueryPlan(new SelectPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), typeof(TResult),
                 this.selector, true, true, false, this.errorMessages));
-        }
 
         public override unsafe void OnNext(StreamMessage<TKey, TPayload> batch)
         {

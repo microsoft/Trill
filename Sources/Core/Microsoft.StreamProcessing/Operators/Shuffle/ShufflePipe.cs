@@ -300,8 +300,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
+            => this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
                 previous,
                 this,
                 typeof(TOuterKey),
@@ -313,7 +312,6 @@ namespace Microsoft.StreamProcessing
                 true,
                 false,
                 this.errorMessages)));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 
@@ -591,8 +589,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
+            => this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
                 previous,
                 this,
                 typeof(TOuterKey),
@@ -604,7 +601,6 @@ namespace Microsoft.StreamProcessing
                 true,
                 false,
                 this.errorMessages)));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 
@@ -877,8 +873,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
+            => this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
                 previous,
                 this,
                 typeof(TOuterKey),
@@ -890,7 +885,6 @@ namespace Microsoft.StreamProcessing
                 true,
                 false,
                 this.errorMessages)));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 
@@ -1150,8 +1144,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
+            => this.Observers.ForEach(o => o.ProduceQueryPlan(new GroupPlanNode(
                 previous,
                 this,
                 typeof(TOuterKey),
@@ -1163,7 +1156,6 @@ namespace Microsoft.StreamProcessing
                 true,
                 false,
                 this.errorMessages)));
-        }
 
         public override int CurrentlyBufferedOutputCount => 0;
 

@@ -37,12 +37,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new PointAtEndPlanNode(
+            => this.Observer.ProduceQueryPlan(new PointAtEndPlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload),
-                false, this.errorMessages, false));
-        }
+                false, this.errorMessages));
 
         private void ReachTime(long timestamp)
         {
@@ -148,10 +146,7 @@ namespace Microsoft.StreamProcessing
                 this.Hash = hash;
             }
 
-            public override string ToString()
-            {
-                return "Key='" + this.Key + "', Payload='" + this.Payload;
-            }
+            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
 
     }

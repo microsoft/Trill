@@ -1,5 +1,5 @@
 ﻿// *********************************************************************
-// Copyright (C) Microsoft Corporation.  All rights reserved.
+// Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
 using System;
@@ -414,41 +414,37 @@ namespace Microsoft.StreamProcessing
         }
 
         private static string SchedToStr(IInternalScheduler sch)
-        {
-            return sch == null
+            => sch == null
                 ? "NULL"
                 : string.Format(
                     System.Globalization.CultureInfo.InvariantCulture,
                     "{0}(Map:{1}, Reduce:{2})", sch.GetType().Name, sch.MapArity, sch.ReduceArity);
-        }
 
         /// <summary>
         /// Provides a string representation of the configuration settings.
         /// </summary>
         /// <returns>A string representation of the configuration settings.</returns>
         public static string Describe()
-        {
-            return new
-            {
-                MapArity,
-                ReduceArity,
-                ForceRowBasedExecution,
-                DeterministicWithinTimestamp,
-                ClearColumnsOnReturn,
-                DisableMemoryPooling,
-                DataBatchSize,
-                UseMultiString,
-                IngressSortingTechnique,
-                MultiStringTransforms,
-                Scheduler = SchedToStr(StreamScheduler.scheduler),
-                GeneratedCodePath,
-                CodegenOptions.GenerateDebugInfo,
-                CodegenOptions.BreakIntoCodeGen,
-                CodegenOptions.DontFallBackToRowBasedExecution,
-                CodegenOptions.SuperStrictColumnar,
-                CodegenOptions.CodeGenAfa,
-            }.ToString();
-        }
+            => new
+                {
+                    MapArity,
+                    ReduceArity,
+                    ForceRowBasedExecution,
+                    DeterministicWithinTimestamp,
+                    ClearColumnsOnReturn,
+                    DisableMemoryPooling,
+                    DataBatchSize,
+                    UseMultiString,
+                    IngressSortingTechnique,
+                    MultiStringTransforms,
+                    Scheduler = SchedToStr(StreamScheduler.scheduler),
+                    GeneratedCodePath,
+                    CodegenOptions.GenerateDebugInfo,
+                    CodegenOptions.BreakIntoCodeGen,
+                    CodegenOptions.DontFallBackToRowBasedExecution,
+                    CodegenOptions.SuperStrictColumnar,
+                    CodegenOptions.CodeGenAfa,
+                }.ToString();
     }
 
     // ConfigModifier allows to modify multiple Config values at once, guaranteeing that only
@@ -639,12 +635,9 @@ namespace Microsoft.StreamProcessing
         {
             private readonly Action dispose;
 
-            public ConfigModifierDisposable(Action dispose) { this.dispose = dispose; }
+            public ConfigModifierDisposable(Action dispose) => this.dispose = dispose;
 
-            public void Dispose()
-            {
-                this.dispose();
-            }
+            public void Dispose() => this.dispose();
         }
 
         private interface IGatedModification
@@ -658,18 +651,13 @@ namespace Microsoft.StreamProcessing
             private Func<T, T> modifier;
 
             public static GatedModification<T> Create(T newValue, Func<T, T> modifier)
-            {
-                return new GatedModification<T>
-                {
-                    val = newValue,
-                    modifier = modifier
-                };
-            }
+                => new GatedModification<T>
+                    {
+                        val = newValue,
+                        modifier = modifier
+                    };
 
-            public void Modify()
-            {
-                this.val = this.modifier(this.val);
-            }
+            public void Modify() => this.val = this.modifier(this.val);
         }
     }
 }

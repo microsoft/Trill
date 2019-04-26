@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
                 JoinKind.EquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             node.AddJoinExpression("right key comparer", this.rightComparer);
@@ -249,7 +249,7 @@ namespace Microsoft.StreamProcessing
             while (batch.iter < batch.Count && (batch.bitvector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0 && batch.vother.col[batch.iter] >= 0)
                 batch.iter++;
 
-            return (batch.iter != batch.Count);
+            return batch.iter != batch.Count;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -307,7 +307,6 @@ namespace Microsoft.StreamProcessing
                     {
                         int index = this.leftEdgeMap.InsertInvisible(hash);
                         this.leftEdgeMap.Values[index].Populate(start, ref key, ref payload);
-
                     }
                 }
                 else

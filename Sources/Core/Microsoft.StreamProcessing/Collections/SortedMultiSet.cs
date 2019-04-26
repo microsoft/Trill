@@ -54,10 +54,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="generator">The generator function for creating the underlying storage of the object.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public SortedMultiSet(Func<SortedDictionary<T, long>> generator)
-        {
-            this.Elements = generator();
-        }
+        public SortedMultiSet(Func<SortedDictionary<T, long>> generator) => this.Elements = generator();
 
         /// <summary>
         /// States whether the given instance of a Sorted Multiset is empty.

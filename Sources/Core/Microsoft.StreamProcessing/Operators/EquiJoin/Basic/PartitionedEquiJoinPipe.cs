@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
     {
         private readonly Func<TLeft, TRight, TResult> selector;
         private readonly MemoryPool<TKey, TResult> pool;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         private readonly Func<IEndPointOrderer> endpointGenerator;
 
         [SchemaSerialization]
@@ -56,18 +56,14 @@ namespace Microsoft.StreamProcessing
         private bool emitCTI = false;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedEquiJoinPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedEquiJoinPipe() { }
 
         public PartitionedEquiJoinPipe(
-            EquiJoinStreamable<TKey, TLeft, TRight, TResult> stream,
+            BinaryStreamable<TKey, TLeft, TRight, TResult> stream,
             Expression<Func<TLeft, TRight, TResult>> selector,
             IStreamObserver<TKey, TResult> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.selector = selector.Compile();
 
             this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
@@ -126,7 +122,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
                 JoinKind.EquiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             node.AddJoinExpression("right key comparer", this.rightComparer);
@@ -138,7 +134,8 @@ namespace Microsoft.StreamProcessing
             this.leftQueue.Insert(pKey, new Queue<LEntry>());
             this.rightQueue.Insert(pKey, new Queue<REntry>());
 
-            if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(ref index, pKey, new PartitionEntry(this, pKey));
+            if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(
+                ref index, pKey, new PartitionEntry { endPointHeap = this.endpointGenerator(), key = pKey });
         }
 
         protected override void ProcessBothBatches(StreamMessage<TKey, TLeft> leftBatch, StreamMessage<TKey, TRight> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
@@ -333,7 +330,14 @@ namespace Microsoft.StreamProcessing
                         leftEntry = leftWorking.Peek();
                         UpdateNextLeftTime(partition, leftEntry.Sync);
                         partition.nextRightTime = Math.Max(partition.nextRightTime, this.lastRightCTI);
-                        if (partition.nextLeftTime > partition.nextRightTime) break;
+                        if (partition.nextLeftTime > partition.nextRightTime)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, right), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextRightTime)
+                                UpdateTime(partition, partition.nextRightTime);
+                            break;
+                        }
 
                         UpdateTime(partition, partition.nextLeftTime);
 
@@ -366,7 +370,14 @@ namespace Microsoft.StreamProcessing
                         rightEntry = rightWorking.Peek();
                         UpdateNextRightTime(partition, rightEntry.Sync);
                         partition.nextLeftTime = Math.Max(partition.nextLeftTime, this.lastLeftCTI);
-                        if (partition.nextLeftTime < partition.nextRightTime) break;
+                        if (partition.nextLeftTime < partition.nextRightTime)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, left), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextLeftTime)
+                                UpdateTime(partition, partition.nextLeftTime);
+                            break;
+                        }
 
                         UpdateTime(partition, partition.nextRightTime);
 
@@ -1182,15 +1193,6 @@ namespace Microsoft.StreamProcessing
             public bool isRightComplete = false;
             [DataMember]
             public long currTime = long.MinValue;
-
-            [Obsolete("Used only by serialization, do not use directly")]
-            public PartitionEntry() { }
-
-            public PartitionEntry(PartitionedEquiJoinPipe<TKey, TLeft, TRight, TResult, TPartitionKey> parent, TPartitionKey key)
-            {
-                this.endPointHeap = parent.endpointGenerator();
-                this.key = key;
-            }
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿
-<#@ template language="C#" inherits="CommonBaseTemplate" visibility="internal" linePragmas="false" #>
+<#@ template language="C#" inherits="CommonPipeTemplate" visibility="internal" linePragmas="false" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Collections.Generic" #>
@@ -52,7 +52,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 // TSource: <#= TSource #>
 
 [DataContract]
-internal sealed class <#= CLASSNAME #><#= genericParameters #> :
+internal sealed class <#= className #><#= genericParameters #> :
                        Pipe<<#= outputKey #>, <#= TSource #>>, IStreamObserver<<#= TOuterKey #>, <#= TSource #>>
 {
 <# if (innerKeyIsAnonymous) { #>
@@ -71,9 +71,9 @@ internal sealed class <#= CLASSNAME #><#= genericParameters #> :
 
     <#= staticCtor #>
 
-    public <#= CLASSNAME #>() { }
+    public <#= className #>() { }
 
-    public <#= CLASSNAME #>(
+    public <#= className #>(
         IStreamable<<#= outputKey #>, <#= TSource #>> stream,
         IStreamObserver<<#= outputKey #>, <#= TSource #>> observer,
         Expression<Func<<#= TInnerKey #>, int>> keyComparer,

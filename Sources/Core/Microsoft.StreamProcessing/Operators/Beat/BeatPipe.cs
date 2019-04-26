@@ -194,10 +194,8 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new BeatPlanNode(
+            => this.Observer.ProduceQueryPlan(new BeatPlanNode(
                 previous, this, typeof(TKey), typeof(TPayload), this.offset, this.period, false, this.errorMessages));
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AdvanceTime(long time)
@@ -433,9 +431,7 @@ namespace Microsoft.StreamProcessing
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool AreSame(long start, ref TKey key, ref TPayload payload, ref ActiveEdge active)
-        {
-            return start == active.Start && this.keyComparer(key, active.Key) && this.payloadComparer(payload, active.Payload);
-        }
+            => start == active.Start && this.keyComparer(key, active.Key) && this.payloadComparer(payload, active.Payload);
 
         protected override void FlushContents()
         {
@@ -471,9 +467,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         [DataContract]
@@ -494,10 +488,7 @@ namespace Microsoft.StreamProcessing
                 this.Payload = payload;
             }
 
-            public override string ToString()
-            {
-                return "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+            public override string ToString() => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
     }
 }

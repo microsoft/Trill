@@ -16,10 +16,10 @@ namespace Microsoft.StreamProcessing
     internal sealed class PartitionedStitchPipe<TKey, TPayload, TPartitionKey> : UnaryPipe<TKey, TPayload, TPayload>
     {
         private readonly string errorMessages;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         // transient; don't need to contract it
-        private DataStructurePool<FastDictionary2<KHP, List<ActiveEvent>>> dictPool;
+        private readonly DataStructurePool<FastDictionary2<KHP, List<ActiveEvent>>> dictPool;
         private readonly MemoryPool<TKey, TPayload> pool;
 
         [DataMember]
@@ -67,15 +67,11 @@ namespace Microsoft.StreamProcessing
         private int ClosedEventsIndex;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedStitchPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedStitchPipe() { }
 
-        public PartitionedStitchPipe(StitchStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
+        public PartitionedStitchPipe(IStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.errorMessages = stream.ErrorMessages;
             this.outputCount = 0;
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);
@@ -119,7 +115,7 @@ namespace Microsoft.StreamProcessing
         private static ActiveEvent RemoveOne(FastDictionary2<KHP, List<ActiveEvent>> events, KHP key)
         {
             if (!events.Lookup(key, out int indx))
-                throw new Exception("Can't remove if it's not already there!");
+                throw new InvalidOperationException("Can't remove if it's not already there!");
 
             var lst = events.entries[indx].value;
             var rv = lst[0];
@@ -131,7 +127,7 @@ namespace Microsoft.StreamProcessing
         private static ActiveEventExt RemoveOne(FastDictionary2<KHP, List<ActiveEventExt>> events, KHP key, long startMatch)
         {
             if (!events.Lookup(key, out int indx))
-                throw new Exception("Can't remove if it's not already there!");
+                throw new InvalidOperationException("Can't remove if it's not already there!");
 
             var lst = events.entries[indx].value;
             var itemIndex = lst.FindIndex(s => s.Start == startMatch);
@@ -141,7 +137,7 @@ namespace Microsoft.StreamProcessing
                 lst.RemoveAt(itemIndex);
                 return item;
             }
-            throw new Exception("Can't remove if it's not in the item list!");
+            throw new InvalidOperationException("Can't remove if it's not in the item list!");
         }
 
         protected override void DisposeState()
@@ -151,11 +147,9 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new StitchPlanNode(
+            => this.Observer.ProduceQueryPlan(new StitchPlanNode(
                 previous, this,
-                typeof(TKey), typeof(TPayload), false, this.errorMessages, false));
-        }
+                typeof(TKey), typeof(TPayload), false, this.errorMessages));
 
         private struct ActiveEvent
         {
@@ -179,9 +173,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         private struct ActiveEventExt
@@ -194,9 +186,7 @@ namespace Microsoft.StreamProcessing
             public int Hash;
 
             public override string ToString()
-            {
-                return "[OriginalStart=" + this.OriginalStart + ", Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[OriginalStart=" + this.OriginalStart + ", Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         private struct KHP
@@ -206,9 +196,7 @@ namespace Microsoft.StreamProcessing
             public int Hash;
 
             public override string ToString()
-            {
-                return "[Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         protected override void FlushContents()
@@ -263,6 +251,7 @@ namespace Microsoft.StreamProcessing
                             this.batch[this.outputCount] = default;
                             this.batch.key.col[this.outputCount] = default;
                             this.batch.hash.col[this.outputCount] = 0;
+                            this.batch.bitvector.col[this.outputCount >> 6] |= 1L << (this.outputCount & 0x3f);
                             this.outputCount++;
 
                             if (this.outputCount == Config.DataBatchSize) FlushContents();
@@ -301,7 +290,7 @@ namespace Microsoft.StreamProcessing
             };
 
             // We should match ONLY on
-            bool foundInClosedEvents = this.ClosedEvents.entries[this.ClosedEventsIndex].value.ContainsKey(eventstart) && this.ClosedEvents.entries[this.ClosedEventsIndex].value[eventstart].Lookup(lookupStart, out int indx);
+            bool foundInClosedEvents = this.ClosedEvents.entries[this.ClosedEventsIndex].value.ContainsKey(eventstart) && this.ClosedEvents.entries[this.ClosedEventsIndex].value[eventstart].Lookup(lookupStart, out _);
 
             if (foundInClosedEvents)
             {
@@ -318,7 +307,6 @@ namespace Microsoft.StreamProcessing
                 };
 
                 InsertOrAppend(this.OpenEvents.entries[this.OpenEventsIndex].value, lookupStart, originalExt);
-
             }
             else
             {
@@ -330,7 +318,7 @@ namespace Microsoft.StreamProcessing
                 // END  ( Payload = P, End = 1, Start = 0)
                 // In this case, we don't want to issue a new Start on the second Begin--instead, we
                 // want to wait for the Begin and get rid of it.
-                bool candidatesInOpenEvents = this.OpenEvents.entries[this.OpenEventsIndex].value.Lookup(lookupStart, out indx);
+                bool candidatesInOpenEvents = this.OpenEvents.entries[this.OpenEventsIndex].value.Lookup(lookupStart, out var indx);
 
                 if (candidatesInOpenEvents && !skipBuffering && this.OpenEvents.entries[this.OpenEventsIndex].value.entries[indx].value.Count > 0)
                 {

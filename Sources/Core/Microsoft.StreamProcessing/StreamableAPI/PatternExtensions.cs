@@ -34,8 +34,8 @@ namespace Microsoft.StreamProcessing
             if (withinDuration >= 0)
             {
                 // Set match duration
-                if (withinDuration < 2) throw new Exception("Duration has to be at least 2 chronons");
-                if (withinDuration > StreamEvent.MaxSyncTime) throw new Exception("Duration is too large");
+                if (withinDuration < 2) throw new ArgumentException("Duration has to be at least 2 chronons");
+                if (withinDuration > StreamEvent.MaxSyncTime) throw new ArgumentException("Duration is too large");
                 stream = stream.AlterEventDuration(withinDuration - 1);
             }
             // Clip the stream with itself, to make it a signal stream
@@ -94,8 +94,8 @@ namespace Microsoft.StreamProcessing
             if (withinDuration >= 0)
             {
                 // Set match duration
-                if (withinDuration < 2) throw new Exception("Duration has to be at least 2 chronons");
-                if (withinDuration > StreamEvent.MaxSyncTime) throw new Exception("Duration is too large");
+                if (withinDuration < 2) throw new ArgumentException("Duration has to be at least 2 chronons");
+                if (withinDuration > StreamEvent.MaxSyncTime) throw new ArgumentException("Duration is too large");
                 stream = stream.AlterEventDuration(withinDuration - 1);
             }
 

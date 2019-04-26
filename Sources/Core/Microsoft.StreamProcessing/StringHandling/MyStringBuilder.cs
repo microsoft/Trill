@@ -12,8 +12,8 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class MyStringBuilder : IDisposable
     {
-        private const string CapacityField = "Capacity";
         internal const int DefaultCapacity = 0x10;
+        internal const int MaxChunkSize = 0x1f40;
         [DataMember]
         internal char[] m_ChunkChars;
         [DataMember]
@@ -25,12 +25,7 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         internal int m_MaxCapacity;
 
-        private const string MaxCapacityField = "m_MaxCapacity";
-        internal const int MaxChunkSize = 0x1f40;
-        private const string StringValueField = "m_StringValue";
-        private const string ThreadIDField = "m_currentThread";
-
-        private CharArrayPool cap;
+        private readonly CharArrayPool cap;
 
         [DataMember]
         internal CharArrayWrapper m_ChunkCharsWrapper;
@@ -263,7 +258,7 @@ namespace Microsoft.StreamProcessing
 
         private MyStringBuilder FindChunkForIndex(int index)
         {
-            MyStringBuilder chunkPrevious = this;
+            var chunkPrevious = this;
             while (chunkPrevious.m_ChunkOffset > index)
             {
                 chunkPrevious = chunkPrevious.m_ChunkPrevious;
@@ -291,7 +286,7 @@ namespace Microsoft.StreamProcessing
 
             if (this.Length == 0) return resultCaw;
 
-            MyStringBuilder chunkPrevious = this;
+            var chunkPrevious = this;
             fixed (char* str2 = result)
             {
                 char* charPtr = str2;
@@ -379,7 +374,7 @@ namespace Microsoft.StreamProcessing
                     }
                     else
                     {
-                        MyStringBuilder builder = FindChunkForIndex(value);
+                        var builder = FindChunkForIndex(value);
                         if (builder != this)
                         {
                             int num3 = capacity - builder.m_ChunkOffset;

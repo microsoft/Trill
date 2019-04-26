@@ -27,7 +27,6 @@ namespace Microsoft.StreamProcessing
         internal IStreamable<<#= memberKey #>, TMapInputRight> sourceRight;
         internal Func<IStreamable<<#= memberKey #>, TMapInputLeft>, IStreamable<<#= memberKey #>, TMapInputRight>, IStreamable<<#= memberKey #>, TReduceInput>> mapper;
         internal Expression<Func<TReduceInput, TReduceKey>> keySelector;
-        internal IEqualityComparerExpression<TReduceKey> keyComparer;
         internal bool leftAsymmetric;
 
         public MapDefinition(
@@ -35,14 +34,12 @@ namespace Microsoft.StreamProcessing
             IStreamable<<#= memberKey #>, TMapInputRight> sourceRight,
             Func<IStreamable<<#= memberKey #>, TMapInputLeft>, IStreamable<<#= memberKey #>, TMapInputRight>, IStreamable<<#= memberKey #>, TReduceInput>> mapper,
             Expression<Func<TReduceInput, TReduceKey>> keySelector,
-            IEqualityComparerExpression<TReduceKey> keyComparer,
             bool leftAsymmetric = false)
         {
             this.sourceLeft = sourceLeft;
             this.sourceRight = sourceRight;
             this.mapper = mapper;
             this.keySelector = keySelector;
-            this.keyComparer = keyComparer;
             this.leftAsymmetric = leftAsymmetric;
         }
 
@@ -69,7 +66,6 @@ namespace Microsoft.StreamProcessing
                 sourceR,
                 mapper,
                 keySelector,
-                keyComparer,
                 reducer,
                 inlinedResultSelector,
                 leftAsymmetric);
@@ -87,7 +83,6 @@ namespace Microsoft.StreamProcessing
                 sourceR,
                 mapper,
                 keySelector,
-                keyComparer,
                 leftAsymmetric);
         }
 
@@ -101,7 +96,6 @@ namespace Microsoft.StreamProcessing
             OperationalHint reduceOptions)
         {
             Contract.Assume(sourceLeft != null);
-            Contract.Assume(keyComparer == ((MapDefinition<<#= declarationKey #>TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput2>)imapDefinitionRight).keyComparer);
 
             var mapDefinitionRight = (MapDefinition<<#= declarationKey #>TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput2>)imapDefinitionRight;
             var sourceL1 = sourceLeft;
@@ -123,7 +117,6 @@ namespace Microsoft.StreamProcessing
                 sourceR2,
                 mapDefinitionRight.mapper,
                 mapDefinitionRight.keySelector,
-                keyComparer,
                 reducer,
                 inlinedResultSelector,
                 leftAsymmetric,

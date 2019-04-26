@@ -3,7 +3,6 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System.ComponentModel;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
@@ -151,6 +150,6 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns>A string representation of the ranked event.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => string.Format(CultureInfo.InvariantCulture, "[Rank={0}, Payload={1}]", this.rank, this.payload);
+        public override string ToString() => $"[Rank={this.rank}, Payload={this.payload}]";
     }
 }

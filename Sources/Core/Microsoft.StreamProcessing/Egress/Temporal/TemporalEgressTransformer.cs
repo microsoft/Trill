@@ -13,35 +13,31 @@ namespace Microsoft.StreamProcessing
     {
         private static int TemporalEgressSequenceNumber = 0;
 
-        private string className;
-        private string staticCtor;
-
-        private string TKey;
-        private string TPayload;
-        private string TResult;
+        private readonly string TKey;
+        private readonly string TPayload;
+        private readonly string TResult;
 
         private Func<string, string, string> startEdgeFunction;
         private Func<string, string, string, string> intervalFunction;
 
-        private string partitionString;
-        private string ingressType;
+        private readonly string partitionString;
+        private readonly string ingressType;
 
-        private string genericArguments;
-        private string egress;
-        private string inputKey;
-        private string partitionKeyArgument;
+        private readonly string genericArguments;
+        private readonly string egress;
+        private readonly string inputKey;
+        private readonly string partitionKeyArgument;
 
-        private string BatchGeneratedFrom_TKey_TPayload;
-        private string TKeyTPayloadGenericParameters;
-        private IEnumerable<MyFieldInfo> fields;
-        private ColumnarRepresentation payloadRepresentation;
-        private bool isColumnar;
+        private readonly string BatchGeneratedFrom_TKey_TPayload;
+        private readonly string TKeyTPayloadGenericParameters;
+        private readonly IEnumerable<MyFieldInfo> fields;
+        private readonly ColumnarRepresentation payloadRepresentation;
+        private readonly bool isColumnar;
 
         private TemporalEgressTemplate(Type tKey, Type tPayload, Type tResult, string partitionString, string ingressType, bool isColumnar)
+            : base($"GeneratedTemporalEgress_{TemporalEgressSequenceNumber++}")
         {
             var tm = new TypeMapper(tKey, tPayload, tResult);
-
-            this.className = string.Format("GeneratedTemporalEgress_{0}", TemporalEgressSequenceNumber++);
 
             this.payloadRepresentation = new ColumnarRepresentation(tPayload);
 
@@ -52,8 +48,6 @@ namespace Microsoft.StreamProcessing
             this.TKeyTPayloadGenericParameters = tm.GenericTypeVariables(tKey, tPayload).BracketedCommaSeparatedString();
 
             this.fields = this.payloadRepresentation.AllFields;
-
-            this.staticCtor = Transformer.StaticCtor(this.className);
 
             this.TKey = tm.CSharpNameFor(tKey);
             this.TPayload = tm.CSharpNameFor(tPayload);
@@ -105,12 +99,12 @@ namespace Microsoft.StreamProcessing
             {
                 var template = new TemporalEgressTemplate(typeof(Empty), typeof(TPayload), typeof(TResult), string.Empty, "StartEdge", startEdgeObservable.source.Properties.IsColumnar);
                 if (startEdgeObservable.constructor != null)
-                    template.startEdgeFunction = ((x, y) => startEdgeObservable.constructor.Body.ExpressionToCSharpStringWithParameterSubstitution(
+                    template.startEdgeFunction = (x, y) => startEdgeObservable.constructor.Body.ExpressionToCSharpStringWithParameterSubstitution(
                                                 new Dictionary<ParameterExpression, string>
                                                         {
                                                             { startEdgeObservable.constructor.Parameters[0], x },
                                                             { startEdgeObservable.constructor.Parameters[1], y },
-                                                        }));
+                                                        });
                 var keyType = typeof(Empty);
                 var expandedCode = template.TransformText();
 
@@ -139,13 +133,13 @@ namespace Microsoft.StreamProcessing
             {
                 var template = new TemporalEgressTemplate(typeof(Empty), typeof(TPayload), typeof(TResult), string.Empty, "Interval", intervalObservable.source.Properties.IsColumnar);
                 if (intervalObservable.constructor != null)
-                    template.intervalFunction = ((x, y, z) => intervalObservable.constructor.Body.ExpressionToCSharpStringWithParameterSubstitution(
+                    template.intervalFunction = (x, y, z) => intervalObservable.constructor.Body.ExpressionToCSharpStringWithParameterSubstitution(
                                                 new Dictionary<ParameterExpression, string>
                                                         {
                                                             { intervalObservable.constructor.Parameters[0], x },
                                                             { intervalObservable.constructor.Parameters[1], y },
                                                             { intervalObservable.constructor.Parameters[2], z },
-                                                        }));
+                                                        });
                 var keyType = typeof(Empty);
                 var expandedCode = template.TransformText();
 
@@ -202,13 +196,13 @@ namespace Microsoft.StreamProcessing
             {
                 var template = new TemporalEgressTemplate(typeof(TKey), typeof(TPayload), typeof(TResult), "Partitioned", "StartEdge", partitionedStartEdgeObservable.source.Properties.IsColumnar);
                 if (partitionedStartEdgeObservable.constructor != null)
-                    template.startEdgeFunction = ((x, y) => partitionedStartEdgeObservable.constructor.Body.ExpressionToCSharpStringWithParameterSubstitution(
+                    template.startEdgeFunction = (x, y) => partitionedStartEdgeObservable.constructor.Body.ExpressionToCSharpStringWithParameterSubstitution(
                                                 new Dictionary<ParameterExpression, string>
                                                         {
                                                             { partitionedStartEdgeObservable.constructor.Parameters[0], "colkey[i].Key" },
                                                             { partitionedStartEdgeObservable.constructor.Parameters[0], x },
                                                             { partitionedStartEdgeObservable.constructor.Parameters[1], y },
-                                                        }));
+                                                        });
                 var keyType = typeof(PartitionKey<>).MakeGenericType(typeof(TKey));
                 var expandedCode = template.TransformText();
 
@@ -237,14 +231,14 @@ namespace Microsoft.StreamProcessing
             {
                 var template = new TemporalEgressTemplate(typeof(TKey), typeof(TPayload), typeof(TResult), "Partitioned", "Interval", partitionedIntervalObservable.source.Properties.IsColumnar);
                 if (partitionedIntervalObservable.constructor != null)
-                    template.intervalFunction = ((x, y, z) => partitionedIntervalObservable.constructor.Body.ExpressionToCSharpStringWithParameterSubstitution(
+                    template.intervalFunction = (x, y, z) => partitionedIntervalObservable.constructor.Body.ExpressionToCSharpStringWithParameterSubstitution(
                                                 new Dictionary<ParameterExpression, string>
                                                         {
                                                             { partitionedIntervalObservable.constructor.Parameters[0], "colkey[i].Key" },
                                                             { partitionedIntervalObservable.constructor.Parameters[0], x },
                                                             { partitionedIntervalObservable.constructor.Parameters[1], y },
                                                             { partitionedIntervalObservable.constructor.Parameters[2], z },
-                                                        }));
+                                                        });
                 var keyType = typeof(PartitionKey<>).MakeGenericType(typeof(TKey));
                 var expandedCode = template.TransformText();
 

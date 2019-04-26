@@ -14,16 +14,13 @@ namespace Microsoft.StreamProcessing
     internal partial class GroupTemplate
     {
         private static int GroupStreamableSequenceNumber = 0;
-        private readonly string CLASSNAME;
         private readonly Type outerKeyType;
         private readonly Type sourceType;
         private readonly Type innerKeyType;
         public IEnumerable<MyFieldInfo> fields;
         private string transformedKeySelectorAsString;
         private string inlinedHashCodeComputation;
-        private ColumnarRepresentation innerKeyFieldRepresentation;
-        private string staticCtor;
-        private bool isFirstLevelGroup;
+        private readonly bool isFirstLevelGroup;
         private MyFieldInfo swingingField;
         public string vectorHashCodeInitialization = string.Empty;
         private bool swingingHashColumn;
@@ -36,14 +33,13 @@ namespace Microsoft.StreamProcessing
             Type innerKeyType,
             string transformedKeySelectorAsString,
             string inlinedHashCodeComputation,
-            bool nested)
+            bool nested) : base(className)
         {
             Contract.Requires(className != null);
             Contract.Requires(outerKeyType != null);
             Contract.Requires(sourceType != null);
             Contract.Requires(innerKeyType != null);
 
-            this.CLASSNAME = className;
             this.outerKeyType = outerKeyType;
             this.sourceType = sourceType;
             this.innerKeyType = innerKeyType;
@@ -65,7 +61,7 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                string generatedClassName = string.Format("GeneratedGroupStreamable_{0}", GroupStreamableSequenceNumber++);
+                string generatedClassName = $"GeneratedGroupStreamable_{GroupStreamableSequenceNumber++}";
 
                 string transformedKeySelectorAsString;
                 MyFieldInfo swingingField = default;
@@ -79,9 +75,8 @@ namespace Microsoft.StreamProcessing
                 else
                 {
                     var body = keySelector.Body;
-                    var singleFieldProjection = body as MemberExpression;
 
-                    if (!nested && singleFieldProjection != null)
+                    if (!nested && body is MemberExpression singleFieldProjection)
                     {
                         if (singleFieldProjection.Expression is ParameterExpression dereferencedObject)
                         {
@@ -132,15 +127,13 @@ namespace Microsoft.StreamProcessing
                     var transformedPredicate = Extensions.TransformUnaryFunction<TOuterKey, TSource>(keySelector).Body;
                     template.transformedKeySelectorAsString = transformedPredicate.ExpressionToCSharp();
                     template.inlinedHashCodeComputation = "hashCodeVector.col[i]";
-                    var fieldName = ((MemberExpression)(keySelector.Body)).Member.Name;
-                    template.vectorHashCodeInitialization = string.Format("resultBatch.hash = {0}{1}_col.GetHashCode(batch.bitvector);", Transformer.ColumnFieldPrefix, fieldName);
+                    var fieldName = ((MemberExpression)keySelector.Body).Member.Name;
+                    template.vectorHashCodeInitialization = $"resultBatch.hash = {Transformer.ColumnFieldPrefix}{fieldName}_col.GetHashCode(batch.bitvector);";
                     template.swingingHashColumn = true;
                 }
 
                 template.fields = new ColumnarRepresentation(typeOfTSource).AllFields;
-                template.innerKeyFieldRepresentation = new ColumnarRepresentation(typeOfTInnerKey);
 
-                template.staticCtor = Transformer.StaticCtor(template.CLASSNAME);
                 expandedCode = template.TransformText();
 
                 assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeOfTOuterKey, typeOfTSource, typeOfTInnerKey);

@@ -80,7 +80,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
   var genericParameters = Transformer.GenericParameterList(genericTypeNames);
 
-  var genericParameters2 = string.Format("<{0}, {1}>", TKey, TPayload);
+  var genericParameters2 = $"<{TKey}, {TPayload}>";
   if (payloadType == typeof(int) || payloadType == typeof(long) || payloadType == typeof(string)) genericParameters2 = string.Empty;
 
             this.Write("\r\n[DataContract]\r\ninternal sealed class ");

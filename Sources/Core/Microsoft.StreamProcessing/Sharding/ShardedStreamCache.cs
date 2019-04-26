@@ -107,9 +107,7 @@ namespace Microsoft.StreamProcessing.Sharding
         }
 
         public void OnNext(StreamMessage<TKey, TPayload> value)
-        {
-            this.elements.Add(new QueuedMessage<StreamMessage<TKey, TPayload>> { Kind = MessageKind.DataBatch, Message = value });
-        }
+            => this.elements.Add(new QueuedMessage<StreamMessage<TKey, TPayload>> { Kind = MessageKind.DataBatch, Message = value });
 
         public void Wait()
         {
@@ -131,8 +129,6 @@ namespace Microsoft.StreamProcessing.Sharding
         /// <param name="source">The sharded streamable to cache</param>
         /// <returns>A cached sharded streamable</returns>
         public static ShardedStreamCache<TKey, TPayload> Cache<TKey, TPayload>(this IShardedStreamable<TKey, TPayload> source)
-        {
-            return new ShardedStreamCache<TKey, TPayload>(source);
-        }
+            => new ShardedStreamCache<TKey, TPayload>(source);
     }
 }

@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
     {
         private const long NotActive = long.MaxValue;
         private readonly MemoryPool<TKey, TLeft> pool;
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
         private readonly Func<IEndPointOrderer> leftEndPointGenerator;
         private readonly Func<IEndPointOrderer> rightEndPointGenerator;
 
@@ -53,15 +53,11 @@ namespace Microsoft.StreamProcessing
         private bool emitCTI = false;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedLeftAntiSemiJoinPipe()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public PartitionedLeftAntiSemiJoinPipe() { }
 
         public PartitionedLeftAntiSemiJoinPipe(LeftAntiSemiJoinStreamable<TKey, TLeft, TRight> stream, IStreamObserver<TKey, TLeft> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparer.Compile();
 
@@ -88,7 +84,7 @@ namespace Microsoft.StreamProcessing
                 left, right, this,
                 typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey),
                 JoinKind.LeftAntiSemiJoin,
-                false, null, false);
+                false, null);
             node.AddJoinExpression("key comparer", this.keyComparer);
             node.AddJoinExpression("left key comparer", this.leftComparer);
             this.Observer.ProduceQueryPlan(node);
@@ -225,8 +221,8 @@ namespace Microsoft.StreamProcessing
                 while (true)
                 {
                     var old = partition.currTime;
-                    bool hasLeftBatch = leftWorking.TryPeekFirst(out LEntry leftEntry);
-                    bool hasRightBatch = rightWorking.TryPeekFirst(out REntry rightEntry);
+                    bool hasLeftBatch = leftWorking.TryPeekFirst(out var leftEntry);
+                    bool hasRightBatch = rightWorking.TryPeekFirst(out var rightEntry);
                     if (hasLeftBatch && hasRightBatch)
                     {
                         partition.nextLeftTime = leftEntry.Sync;
@@ -289,7 +285,14 @@ namespace Microsoft.StreamProcessing
                     {
                         partition.nextLeftTime = leftEntry.Sync;
                         partition.nextRightTime = Math.Max(partition.nextRightTime, this.lastRightCTI);
-                        if (leftEntry.Sync > partition.nextRightTime) break;
+                        if (leftEntry.Sync > partition.nextRightTime)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, right), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextRightTime)
+                                UpdateTime(partition, partition.nextRightTime);
+                            break;
+                        }
 
                         UpdateTime(partition, leftEntry.Sync);
 
@@ -319,7 +322,14 @@ namespace Microsoft.StreamProcessing
                     {
                         partition.nextRightTime = rightEntry.Sync;
                         partition.nextLeftTime = Math.Max(partition.nextLeftTime, this.lastLeftCTI);
-                        if (partition.nextLeftTime < rightEntry.Sync) break;
+                        if (partition.nextLeftTime < rightEntry.Sync)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, left), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextLeftTime)
+                                UpdateTime(partition, partition.nextLeftTime);
+                            break;
+                        }
 
                         UpdateTime(partition, rightEntry.Sync);
 
@@ -416,7 +426,7 @@ namespace Microsoft.StreamProcessing
                 var leph = partition.leftEndPointHeap;
                 if (isProcessable)
                 {
-                    if (FindOnRight(partition, ref key, hash, out int matchingRight))
+                    if (FindOnRight(partition, ref key, hash, out _))
                     {
                         // Row joins with something on right, so not currently visible.
                         int index = map.Insert(hash);
@@ -547,7 +557,7 @@ namespace Microsoft.StreamProcessing
             while (leftEvents.Next(out int index, out hash))
             {
                 long end = lim.Values[index].End;
-                if (FindOnRight(partition, ref lim.Values[index].Key, hash, out int matchingRight))
+                if (FindOnRight(partition, ref lim.Values[index].Key, hash, out _))
                 {
                     leftEvents.MakeVisible();
                     leph.Insert(end, index);
@@ -586,7 +596,7 @@ namespace Microsoft.StreamProcessing
             leftEvents = lem.TraverseInvisible();
             while (leftEvents.Next(out int index, out hash))
             {
-                if (!FindOnRight(partition, ref lem.Values[index].Key, hash, out int matchingRight))
+                if (!FindOnRight(partition, ref lem.Values[index].Key, hash, out _))
                 {
                     // Row does not join, so output start edge.
                     lem.Values[index].CurrentStart = partition.currTime;
@@ -796,7 +806,7 @@ namespace Microsoft.StreamProcessing
                 this.output.key.col[index] = default;
                 this.output[index] = default;
                 this.output.hash.col[index] = 0;
-                this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+                this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
 
                 if (this.output.Count == Config.DataBatchSize) FlushContents();
             }
@@ -812,7 +822,7 @@ namespace Microsoft.StreamProcessing
             this.output[index] = payload;
             this.output.hash.col[index] = hash;
 
-            if (end == long.MinValue) this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+            if (end == long.MinValue) this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
             if (this.output.Count == Config.DataBatchSize) FlushContents();
         }
 
@@ -922,9 +932,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Start=" + this.Start + ", CurrentStart=" + this.CurrentStart + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
-            }
+                => "[Start=" + this.Start + ", CurrentStart=" + this.CurrentStart + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         [DataContract]
@@ -943,9 +951,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Key='" + this.Key + "', Count=" + this.Count + "]";
-            }
+                => "[Key='" + this.Key + "', Count=" + this.Count + "]";
         }
 
         [DataContract]
@@ -964,9 +970,7 @@ namespace Microsoft.StreamProcessing
             }
 
             public override string ToString()
-            {
-                return "[Key='" + this.Key + "', Hash=" + this.Hash + "]";
-            }
+                => "[Key='" + this.Key + "', Hash=" + this.Hash + "]";
         }
 
         public override bool LeftInputHasState

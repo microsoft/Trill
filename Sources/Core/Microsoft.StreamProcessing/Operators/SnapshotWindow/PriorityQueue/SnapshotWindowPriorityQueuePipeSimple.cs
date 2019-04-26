@@ -79,11 +79,9 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(Empty), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.PriorityQueue, this.aggregate, false, this.errorMessages, false));
-        }
+                AggregatePipeType.PriorityQueue, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<Empty, TInput> batch)
         {
@@ -96,93 +94,95 @@ namespace Microsoft.StreamProcessing
             fixed (long* col_vother = batch.vother.col)
             fixed (int* col_hash = batch.hash.col)
             fixed (long* col_bv = batch.bitvector.col)
-            for (int i = 0; i < count; i++)
             {
-                if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
+                for (int i = 0; i < count; i++)
                 {
-                    if (col_vother[i] == StreamEvent.PunctuationOtherTime)
+                    if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0)
                     {
-                        // We have found a row that corresponds to punctuation
-                        OnPunctuation(col_vsync[i]);
-
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = col_vsync[i];
-                        this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
-                        this.batch.payload.col[c] = default;
-                        this.batch.key.col[c] = Empty.Default;
-                        this.batch.hash.col[c] = 0;
-                        this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                    }
-                    continue;
-                }
-
-                var syncTime = col_vsync[i];
-
-                // Handle time moving forward
-                if (syncTime > this.lastSyncTime) AdvanceTime(syncTime);
-
-                if (this.currentState == null)
-                {
-                    this.currentState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
-                    this.held = true;
-                    // No output because initial state is empty
-                }
-                else
-                {
-                    if (syncTime > this.currentState.timestamp)
-                    {
-                        if (this.currentState.active > 0)
+                        if (col_vother[i] == StreamEvent.PunctuationOtherTime)
                         {
-                            // Output end edge
+                            // We have found a row that corresponds to punctuation
+                            OnPunctuation(col_vsync[i]);
+
                             int c = this.batch.Count;
-                            this.batch.vsync.col[c] = syncTime;
-                            this.batch.vother.col[c] = this.currentState.timestamp;
-                            this.batch.payload.col[c] = this.computeResult(this.currentState.state);
+                            this.batch.vsync.col[c] = col_vsync[i];
+                            this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
+                            this.batch.payload.col[c] = default;
                             this.batch.key.col[c] = Empty.Default;
                             this.batch.hash.col[c] = 0;
+                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
-
-                        this.currentState.timestamp = syncTime;
-                        this.held = true;
+                        continue;
                     }
-                }
 
-                if (col_vsync[i] < col_vother[i]) // insert event
-                {
-                    this.currentState.state = this.accumulate(this.currentState.state, col_vsync[i], colpayload[i]);
-                    this.currentState.active++;
+                    var syncTime = col_vsync[i];
 
-                    // Update ECQ
-                    if (col_vother[i] < StreamEvent.InfinitySyncTime)
+                    // Handle time moving forward
+                    if (syncTime > this.lastSyncTime) AdvanceTime(syncTime);
+
+                    if (this.currentState == null)
                     {
-                        HeldState<TState> heldState;
-
-                        if (this.ecq.Count > 0)
+                        this.currentState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
+                        this.held = true;
+                        // No output because initial state is empty
+                    }
+                    else
+                    {
+                        if (syncTime > this.currentState.timestamp)
                         {
-                            if (!this.ecq.TryGetValue(col_vother[i], out heldState))
+                            if (this.currentState.active > 0)
+                            {
+                                // Output end edge
+                                int c = this.batch.Count;
+                                this.batch.vsync.col[c] = syncTime;
+                                this.batch.vother.col[c] = this.currentState.timestamp;
+                                this.batch.payload.col[c] = this.computeResult(this.currentState.state);
+                                this.batch.key.col[c] = Empty.Default;
+                                this.batch.hash.col[c] = 0;
+                                this.batch.Count++;
+                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            }
+
+                            this.currentState.timestamp = syncTime;
+                            this.held = true;
+                        }
+                    }
+
+                    if (col_vsync[i] < col_vother[i]) // insert event
+                    {
+                        this.currentState.state = this.accumulate(this.currentState.state, col_vsync[i], colpayload[i]);
+                        this.currentState.active++;
+
+                        // Update ECQ
+                        if (col_vother[i] < StreamEvent.InfinitySyncTime)
+                        {
+                            HeldState<TState> heldState;
+
+                            if (this.ecq.Count > 0)
+                            {
+                                if (!this.ecq.TryGetValue(col_vother[i], out heldState))
+                                {
+                                    heldState = new HeldState<TState> { timestamp = col_vother[i], state = this.initialState() };
+                                    this.ecq.Add(col_vother[i], heldState);
+                                }
+                            }
+                            else
                             {
                                 heldState = new HeldState<TState> { timestamp = col_vother[i], state = this.initialState() };
                                 this.ecq.Add(col_vother[i], heldState);
                             }
-                        }
-                        else
-                        {
-                            heldState = new HeldState<TState> { timestamp = col_vother[i], state = this.initialState() };
-                            this.ecq.Add(col_vother[i], heldState);
-                        }
 
-                        heldState.state = this.accumulate(heldState.state, col_vsync[i], colpayload[i]);
-                        heldState.active++;
+                            heldState.state = this.accumulate(heldState.state, col_vsync[i], colpayload[i]);
+                            heldState.active++;
+                        }
                     }
-                }
-                else // is a retraction
-                {
-                    this.currentState.state = this.deaccumulate(this.currentState.state, col_vsync[i], colpayload[i]);
-                    this.currentState.active--;
+                    else // is a retraction
+                    {
+                        this.currentState.state = this.deaccumulate(this.currentState.state, col_vsync[i], colpayload[i]);
+                        this.currentState.active--;
+                    }
                 }
             }
 

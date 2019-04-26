@@ -47,7 +47,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             IStreamObserver<Microsoft.StreamProcessing.Empty, <#= TRegister #>> observer,
             object afa,
             long MaxDuration)
-            : base(stream, observer, afa, MaxDuration, true)
+            : base(stream, observer, afa, MaxDuration)
         {
             activeState_state = -1;
 
@@ -64,7 +64,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
         {
             Stack<int> stack = new Stack<int>();
             var tentativeFindTraverser = new FastLinkedList<OutputEvent<Microsoft.StreamProcessing.Empty, <#= TRegister #>>>.ListTraverser(tentativeOutput);
-            var tentativeVisibleTraverser = new FastLinkedList<OutputEvent<Microsoft.StreamProcessing.Empty, <#= TRegister #>>>.VisibleTraverser(tentativeOutput);
+            var tentativeOutputIndex = 0;
 
             <#= sourceBatchTypeName #> sourceBatch = batch as <#= sourceBatchTypeName #>;
             <#= resultBatchTypeName #> resultBatch = this.batch as <#= resultBatchTypeName #>;
@@ -105,13 +105,13 @@ using Microsoft.StreamProcessing.Internal.Collections;
                                 {
                                     seenEvent = 0;
 
-                                    if (tentativeOutput.Count > 0)
+                                    if (this.tentativeOutput.Count > 0)
                                     {
-                                        tentativeVisibleTraverser.currIndex = 0;
+                                        tentativeOutputIndex = 0;
 
-                                        while (tentativeVisibleTraverser.Next(out index))
+                                        while (this.tentativeOutput.Iterate(ref tentativeOutputIndex))
                                         {
-                                            var elem = tentativeOutput.Values[index];
+                                            var elem = this.tentativeOutput.Values[tentativeOutputIndex];
 
                                             dest_vsync[iter] = lastSyncTime;
                                             dest_vother[iter] = elem.other;
@@ -253,13 +253,13 @@ using Microsoft.StreamProcessing.Internal.Collections;
                                 int index, hash;
                                 seenEvent = 0;
 
-                                if (tentativeOutput.Count > 0)
+                                if (this.tentativeOutput.Count > 0)
                                 {
-                                    tentativeVisibleTraverser.currIndex = 0;
+                                    tentativeOutputIndex = 0;
 
-                                    while (tentativeVisibleTraverser.Next(out index))
+                                    while (this.tentativeOutput.Iterate(ref tentativeOutputIndex))
                                     {
-                                        var elem = tentativeOutput.Values[index];
+                                        var elem = this.tentativeOutput.Values[tentativeOutputIndex];
 
                                         this.batch.vsync.col[iter] = lastSyncTime;
                                         this.batch.vother.col[iter] = elem.other;

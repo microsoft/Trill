@@ -42,12 +42,10 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new AlterLifetimePlanNode(
+            => this.Observer.ProduceQueryPlan(new AlterLifetimePlanNode(
                 previous, this,
                 typeof(TKey), typeof(TPayload), this.startTimeSelector, Expression.Constant(this.constantDurationSelector),
                 true));
-        }
 
         public unsafe override void OnNext(StreamMessage<TKey, TPayload> batch)
         {

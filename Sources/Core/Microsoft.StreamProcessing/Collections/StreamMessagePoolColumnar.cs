@@ -31,17 +31,14 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         }
 
         public override string GetStatusReport()
-        {
-            return string.Format(CultureInfo.InvariantCulture, "[{0}] Objects Created - {1,5} - Queue Size - {2,5}\t<{3},{4}>", this.createdObjects == this.batchQueue.Count ? " " : "X", this.createdObjects, this.batchQueue.Count, typeof(TKey).GetCSharpSourceSyntax(), typeof(TPayload).GetCSharpSourceSyntax());
-        }
+            => string.Format(CultureInfo.InvariantCulture, "[{0}] Objects Created - {1,5} - Queue Size - {2,5}\t<{3},{4}>", this.createdObjects == this.batchQueue.Count ? " " : "X", this.createdObjects, this.batchQueue.Count, typeof(TKey).GetCSharpSourceSyntax(), typeof(TPayload).GetCSharpSourceSyntax());
 
         public override ColumnPoolBase Leaked => this.createdObjects != this.batchQueue.Count ? this : null;
 
         public override void Free(bool reset = false)
         {
-            while (this.batchQueue.TryDequeue(out StreamMessage<TKey, TPayload> result))
+            while (this.batchQueue.TryDequeue(out _))
             {
-                result = null;
                 Interlocked.Decrement(ref this.createdObjects);
             }
             if (reset)

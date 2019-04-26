@@ -14,8 +14,8 @@ namespace Microsoft.StreamProcessing.Serializer
     {
         protected Stream stream;
 
-        private static ConcurrentDictionary<Tuple<Type, int>, object> columnPools = new ConcurrentDictionary<Tuple<Type, int>, object>();
-        private static ConcurrentDictionary<int, object> bitVectorPools = new ConcurrentDictionary<int, object>();
+        private static readonly ConcurrentDictionary<Tuple<Type, int>, object> columnPools = new ConcurrentDictionary<Tuple<Type, int>, object>();
+        private static readonly ConcurrentDictionary<int, object> bitVectorPools = new ConcurrentDictionary<int, object>();
 
         protected BinaryBase(Stream stream) => this.stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
@@ -24,13 +24,13 @@ namespace Microsoft.StreamProcessing.Serializer
             if (size == Config.DataBatchSize)
             {
                 var pool = (ColumnPool<T>)columnPools.GetOrAdd(Tuple.Create(typeof(T), Config.DataBatchSize), t => MemoryManager.GetColumnPool<T>(t.Item2));
-                pool.Get(out ColumnBatch<T> result);
+                pool.Get(out var result);
                 return result;
             }
             else if (typeof(T) == typeof(long) && size == (1 + (Config.DataBatchSize >> 6))) // bitvector
             {
                 var pool = (ColumnPool<T>)bitVectorPools.GetOrAdd(size, t => MemoryManager.GetBVPool(size)); // TODO: Push magic incantation "1 + (Config.DataBatchSize >> 6)" into method call
-                pool.Get(out ColumnBatch<T> result);
+                pool.Get(out var result);
                 return result;
             }
             return new ColumnBatch<T>(size);
@@ -41,13 +41,13 @@ namespace Microsoft.StreamProcessing.Serializer
             if (size == Config.DataBatchSize)
             {
                 var pool = (ColumnPool<T>)columnPools.GetOrAdd(Tuple.Create(typeof(T), Config.DataBatchSize), t => MemoryManager.GetColumnPool<T>(t.Item2));
-                pool.Get(out ColumnBatch<T> result);
+                pool.Get(out var result);
                 return result.col;
             }
             else if (typeof(T) == typeof(long) && size == (1 + (Config.DataBatchSize >> 6))) // bitvector
             {
                 var pool = (ColumnPool<T>)bitVectorPools.GetOrAdd(size, t => MemoryManager.GetBVPool(size)); // TODO: Push magic incantation "1 + (Config.DataBatchSize >> 6)" into method call
-                pool.Get(out ColumnBatch<T> result);
+                pool.Get(out var result);
                 return result.col;
             }
             return new T[size];

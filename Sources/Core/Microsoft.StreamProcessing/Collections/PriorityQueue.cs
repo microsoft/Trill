@@ -20,7 +20,7 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private List<T> data = new List<T>();
 
-        private IComparer<T> comp;
+        private readonly IComparer<T> comp;
 
         /// <summary>
         /// Create an instance of a priority queue with the default comparer for the underlying item type.
@@ -33,10 +33,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="comp">The comparer to be used on elements added to the queue.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public PriorityQueue(IComparer<T> comp)
-        {
-            this.comp = comp;
-        }
+        public PriorityQueue(IComparer<T> comp) => this.comp = comp;
 
         /// <summary>
         /// Add a new item to the priority queue.
@@ -63,7 +60,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns>True if the priority queue is empty.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsEmpty() => (this.data.Count == 0);
+        public bool IsEmpty() => this.data.Count == 0;
 
         /// <summary>
         /// Dequeue an element from the priority queue.
@@ -74,7 +71,7 @@ namespace Microsoft.StreamProcessing
         {
             // assumes pq is not empty; up to calling code
             int li = this.data.Count - 1; // last index (before removal)
-            T frontItem = this.data[0];   // fetch the front
+            var frontItem = this.data[0];   // fetch the front
             this.data[0] = this.data[li];
             this.data.RemoveAt(li);
 
@@ -88,14 +85,14 @@ namespace Microsoft.StreamProcessing
                 if (rc <= li && this.comp.Compare(this.data[rc], this.data[ci]) < 0) // if there is a rc (ci + 1), and it is smaller than left child, use the rc instead
                     ci = rc;
                 if (this.comp.Compare(this.data[pi], this.data[ci]) <= 0) break; // parent is smaller than (or equal to) smallest child so done
-                T tmp = this.data[pi];
+                var tmp = this.data[pi];
                 this.data[pi] = this.data[ci];
                 this.data[ci] = tmp; // swap parent and child
                 pi = ci;
             }
 
             // shrink list if needed
-            if ((this.data.Count << 3) < this.data.Capacity) this.data.Capacity = this.data.Capacity >> 1;
+            if ((this.data.Count << 3) < this.data.Capacity) this.data.Capacity >>= 1;
 
             return frontItem;
         }
@@ -105,11 +102,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns>The item next to be dequeued.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public T Peek()
-        {
-            T frontItem = this.data[0];
-            return frontItem;
-        }
+        public T Peek() => this.data[0];
 
         /// <summary>
         /// Returns the number of elements in the priority queue.

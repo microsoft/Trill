@@ -95,11 +95,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <param name="memoryPoolName"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void GetQueueReport(string memoryPoolName)
-        {
-            Console.WriteLine(
+            => Console.WriteLine(
                 "Memory Pool Name {0} == LongPool {1}, KeyPool {2}, PayloadPool {3}, IntPool {4}, StringPool {5}, BVPool {6}, StreamMessagePool {7}",
                 memoryPoolName, this.longPool.GetStatusReport(), this.keyPool.GetStatusReport(), this.payloadPool.GetStatusReport(), this.intPool.GetStatusReport(), this.stringPool.GetStatusReport(), this.bitvectorPool.GetStatusReport(), this.eventBatchPool.GetStatusReport());
-        }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

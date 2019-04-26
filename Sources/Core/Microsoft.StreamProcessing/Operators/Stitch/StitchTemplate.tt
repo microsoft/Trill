@@ -28,7 +28,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>>
 {
     // transient; don't need to contract it
-    private DataStructurePool<FastDictionary2<KHP, List<ActiveEvent>>> dictPool;
+    private readonly DataStructurePool<FastDictionary2<KHP, List<ActiveEvent>>> dictPool;
     private readonly MemoryPool<<#= TKey #>, <#= TPayload #>> pool;
     private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
 
@@ -272,6 +272,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                         this.batch[outputCount] = default;
                         this.batch.key.col[outputCount] = default;
                         this.batch.hash.col[outputCount] = 0;
+                        this.batch.bitvector.col[this.outputCount >> 6] |= 1L << (this.outputCount & 0x3f);
                         outputCount++;
 
                         if (outputCount == Config.DataBatchSize) FlushContents();
@@ -382,7 +383,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
     {
         int indx;
         if (!events.Lookup(key, out indx))
-            throw new Exception("Can't remove if it's not already there!");
+            throw new InvalidOperationException("Can't remove if it's not already there!");
 
         var lst = events.entries[indx].value;
         var rv = lst[0];
@@ -395,7 +396,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
     {
         int indx;
         if (!events.Lookup(key, out indx))
-            throw new Exception("Can't remove if it's not already there!");
+            throw new InvalidOperationException("Can't remove if it's not already there!");
 
         var lst = events.entries[indx].value;
         var itemIndex = lst.FindIndex(s => s.Start == startMatch);
@@ -405,7 +406,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
             lst.RemoveAt(itemIndex);
             return item;
         }
-        throw new Exception("Can't remove if it's not in the item list!");
+        throw new InvalidOperationException("Can't remove if it's not in the item list!");
     }
 
     private void ActOnEnd(<#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> batch, int index, long start, long endTime)

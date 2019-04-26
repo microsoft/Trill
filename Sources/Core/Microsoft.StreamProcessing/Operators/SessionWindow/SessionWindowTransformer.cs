@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
           sw.Start();
 #endif
             var template = new SessionWindowTemplate(
-                string.Format("GeneratedSessionWindow_{0}", SessionWindowSequenceNumber++),
+                $"GeneratedSessionWindow_{SessionWindowSequenceNumber++}",
                 typeof(TKey), typeof(TPayload));
 
             return template.Generate<TKey, TPayload>(typeof(IStreamable<,>));

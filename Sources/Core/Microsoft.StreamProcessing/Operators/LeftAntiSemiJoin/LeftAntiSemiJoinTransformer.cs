@@ -12,27 +12,18 @@ namespace Microsoft.StreamProcessing
     internal partial class LeftAntiSemiJoinTemplate
     {
         private static int LASJSequenceNumber = 0;
-        private Type keyType;
-        private Type leftType;
-        private Type rightType;
-        private string TKey;
-        private string TLeft;
-        private string TRight;
-        private string className;
         private string genericParameters = string.Empty;
         private string BatchGeneratedFrom_TKey_TLeft;
         private string TKeyTLeftGenericParameters;
-        private string BatchGeneratedFrom_TKey_TRight;
         private string TKeyTRightGenericParameters;
         private IEnumerable<MyFieldInfo> leftFields;
         private Func<string, string, string> keyComparer;
         private Func<string, string, string> leftComparer;
-        private string staticCtor;
         private string ActiveEventType;
         private bool noLeftFields;
-        private bool leftIsConstantDuration;
 
-        private LeftAntiSemiJoinTemplate() { }
+        private LeftAntiSemiJoinTemplate(string className, Type keyType, Type leftType, Type rightType)
+            : base(className, keyType, leftType, rightType, leftType) { }
 
         /// <summary>
         /// Generate a batch class definition to be used as a Clip pipe.
@@ -45,87 +36,43 @@ namespace Microsoft.StreamProcessing
         /// <returns>
         /// A type that is defined to be a subtype of BinaryPipe&lt;<typeparamref name="TKey"/>,<typeparamref name="TLeft"/>, <typeparamref name="TKey"/>, <typeparamref name="TRight"/>&gt;.
         /// </returns>
-        internal static Tuple<Type, string> Generate<TKey, TLeft, TRight>(LeftAntiSemiJoinStreamable<TKey, TLeft, TRight> stream, bool leftIsConstantDuration)
+        internal static Tuple<Type, string> Generate<TKey, TLeft, TRight>(LeftAntiSemiJoinStreamable<TKey, TLeft, TRight> stream)
         {
             Contract.Requires(stream != null);
             Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(BinaryPipe<TKey, TLeft, TRight, TLeft>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
-            string errorMessages = null;
-            try
-            {
-                var template = new LeftAntiSemiJoinTemplate();
+            var template = new LeftAntiSemiJoinTemplate($"GeneratedLeftAntiSemiJoin_{LASJSequenceNumber++}", typeof(TKey), typeof(TLeft), typeof(TRight));
 
-                var keyType = template.keyType = typeof(TKey);
-                var leftType = template.leftType = typeof(TLeft);
-                var rightType = template.rightType = typeof(TRight);
+            var gps = template.tm.GenericTypeVariables(template.keyType, template.leftType, template.rightType);
+            template.genericParameters = gps.BracketedCommaSeparatedString();
 
-                var tm = new TypeMapper(keyType, leftType, rightType);
-                template.TKey = tm.CSharpNameFor(keyType);
-                template.TLeft = tm.CSharpNameFor(leftType);
-                template.TRight = tm.CSharpNameFor(rightType);
-                var gps = tm.GenericTypeVariables(keyType, leftType, rightType);
-                template.genericParameters = gps.BracketedCommaSeparatedString();
+            var leftMessageRepresentation = new ColumnarRepresentation(template.leftType);
+            var resultRepresentation = new ColumnarRepresentation(template.leftType);
 
-                template.className = string.Format("GeneratedLeftAntiSemiJoin_{0}", LASJSequenceNumber++);
+            #region Key Comparer
+            var keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
+            template.keyComparer =
+                (left, right) =>
+                    keyComparer.Inline(left, right);
+            #endregion
 
-                var leftMessageRepresentation = new ColumnarRepresentation(leftType);
-                var resultRepresentation = new ColumnarRepresentation(leftType);
+            #region Left Comparer
+            template.ActiveEventType = template.leftType.GetTypeInfo().IsValueType ? template.TLeft : "Active_Event";
+            template.noLeftFields = leftMessageRepresentation.noFields;
 
-                #region Key Comparer
-                var keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
-                template.keyComparer =
-                    (left, right) =>
-                        keyComparer.Inline(left, right);
-                #endregion
+            var leftComparer = stream.LeftComparer.GetEqualsExpr();
+            var newLambda = Extensions.TransformFunction<TKey, TLeft>(leftComparer, "index");
+            template.leftComparer = (left, right) => newLambda.Inline(left, right);
+            #endregion
 
-                #region Left Comparer
-                template.ActiveEventType = leftType.GetTypeInfo().IsValueType ? template.TLeft : "Active_Event";
-                template.noLeftFields = leftMessageRepresentation.noFields;
-                template.leftIsConstantDuration = leftIsConstantDuration;
+            template.BatchGeneratedFrom_TKey_TLeft = Transformer.GetBatchClassName(template.keyType, template.leftType);
+            template.TKeyTLeftGenericParameters = template.tm.GenericTypeVariables(template.keyType, template.leftType).BracketedCommaSeparatedString();
 
-                var leftComparer = stream.LeftComparer.GetEqualsExpr();
-                var newLambda = Extensions.TransformFunction<TKey, TLeft>(leftComparer, "index");
-                template.leftComparer = (left, right) => newLambda.Inline(left, right);
-                #endregion
+            template.TKeyTRightGenericParameters = template.tm.GenericTypeVariables(template.keyType, template.rightType).BracketedCommaSeparatedString();
 
-                template.BatchGeneratedFrom_TKey_TLeft = Transformer.GetBatchClassName(keyType, leftType);
-                template.TKeyTLeftGenericParameters = tm.GenericTypeVariables(keyType, leftType).BracketedCommaSeparatedString();
+            template.leftFields = resultRepresentation.AllFields;
 
-                template.BatchGeneratedFrom_TKey_TRight = Transformer.GetBatchClassName(keyType, rightType);
-                template.TKeyTRightGenericParameters = tm.GenericTypeVariables(keyType, rightType).BracketedCommaSeparatedString();
-
-                template.leftFields = resultRepresentation.AllFields;
-
-                template.staticCtor = Transformer.StaticCtor(template.className);
-                var expandedCode = template.TransformText();
-
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeof(TKey), typeof(TLeft), typeof(TRight));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TLeft>());
-                assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TRight>());
-                assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(leftComparer));
-
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var realClassName = template.className.AddNumberOfNecessaryGenericArguments(keyType, leftType, rightType);
-                var t = a.GetType(realClassName);
-                if (t.GetTypeInfo().IsGenericType)
-                {
-                    var list = keyType.GetAnonymousTypes();
-                    list.AddRange(leftType.GetAnonymousTypes());
-                    list.AddRange(rightType.GetAnonymousTypes());
-                    return Tuple.Create(t.MakeGenericType(list.ToArray()), errorMessages);
-                }
-                else return Tuple.Create(t, errorMessages);
-            }
-            catch
-            {
-                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
-                {
-                    throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!");
-                }
-                return Tuple.Create((Type)null, errorMessages);
-            }
+            return template.Generate<TKey, TLeft, TRight>(leftComparer);
         }
-
     }
 }

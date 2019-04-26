@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.Linq.Expressions;
 using Microsoft.StreamProcessing.Internal.Collections;
 
@@ -33,24 +32,24 @@ namespace Microsoft.StreamProcessing
             // This operator uses the equality method on payloads
             if (left.Properties.IsColumnar && !left.Properties.IsStartEdgeOnly && !left.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of left side of join, '{0}', does not have a valid equality operator for columnar mode.", typeof(TLeft).FullName));
+                throw new InvalidOperationException($"Type of left side of join, '{typeof(TLeft).FullName}', does not have a valid equality operator for columnar mode.");
             }
             // This operator uses the equality method on payloads
             if (right.Properties.IsColumnar && !right.Properties.IsStartEdgeOnly && !right.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of right side of join, '{0}', does not have a valid equality operator for columnar mode.", typeof(TRight).FullName));
+                throw new InvalidOperationException($"Type of right side of join, '{typeof(TRight).FullName}', does not have a valid equality operator for columnar mode.");
             }
 
             if (left.Properties.IsStartEdgeOnly && right.Properties.IsStartEdgeOnly)
             {
                 if ((left.Properties.KeyComparer != null) && (right.Properties.KeyComparer != null) &&
-                    (left.Properties.KeyComparer.ExpressionEquals(right.Properties.KeyComparer) &&
-                    (typeof(TKey).GetPartitionType() == null)))
+                     left.Properties.KeyComparer.ExpressionEquals(right.Properties.KeyComparer) &&
+                    (typeof(TKey).GetPartitionType() == null))
                 {
                     this.joinKind = JoinKind.IncreasingOrderEquiJoin;
                     this.fallbackGenerator = (s, e, o) => new IncreasingOrderEquiJoinPipe<TKey, TLeft, TRight, TResult>(s, e, o);
                     this.partitionedGenerator = null;
-                    this.columnarGenerator = (k => IncreasingOrderEquiJoinTemplate.Generate(this, this.Selector));
+                    this.columnarGenerator = k => IncreasingOrderEquiJoinTemplate.Generate(this, this.Selector);
                 }
                 else
                 {
@@ -63,8 +62,16 @@ namespace Microsoft.StreamProcessing
                              typeof(TRight),
                              typeof(TResult),
                              typeof(TKey).GetPartitionType()), s, e, o);
-                    this.columnarGenerator = (k => StartEdgeEquiJoinTemplate.Generate(this, this.Selector));
+                    this.columnarGenerator = k => StartEdgeEquiJoinTemplate.Generate(this, this.Selector);
                 }
+            }
+            else if (left.Properties.IsConstantDuration && right.Properties.IsConstantDuration)
+            {
+                this.joinKind = JoinKind.FixedIntervalEquiJoin;
+                this.fallbackGenerator = (s, e, o) => new FixedIntervalEquiJoinPipe<TKey, TLeft, TRight, TResult>(s, e, o);
+                this.partitionedGenerator = (s, e, o) => (BinaryPipe<TKey, TLeft, TRight, TResult>)Activator.CreateInstance(
+                    CreatePartitionedFixedIntervalEquiJoinType(), s, e, o);
+                this.columnarGenerator = k => FixedIntervalEquiJoinTemplate.Generate(this, this.Selector);
             }
             else
             {
@@ -72,7 +79,7 @@ namespace Microsoft.StreamProcessing
                 this.fallbackGenerator = (s, e, o) => new EquiJoinPipe<TKey, TLeft, TRight, TResult>(s, e, o);
                 this.partitionedGenerator = (s, e, o) => (BinaryPipe<TKey, TLeft, TRight, TResult>)Activator.CreateInstance(
                     CreatePartitionedEquiJoinType(), s, e, o);
-                this.columnarGenerator = (k => EquiJoinTemplate.Generate(this, this.Selector));
+                this.columnarGenerator = k => EquiJoinTemplate.Generate(this, this.Selector);
             }
 
             Initialize();
@@ -104,13 +111,39 @@ namespace Microsoft.StreamProcessing
                                      typeof(TKey).GetPartitionType());
         }
 
+        private static Type CreatePartitionedFixedIntervalEquiJoinType()
+        {
+            // Simple case: key type is a simple partition key
+            if (typeof(TKey).GetGenericTypeDefinition() == typeof(PartitionKey<>))
+                return typeof(PartitionedFixedIntervalEquiJoinPipeSimple<,,,>).MakeGenericType(
+                                         typeof(TLeft),
+                                         typeof(TRight),
+                                         typeof(TResult),
+                                         typeof(TKey).GetPartitionType());
+            // Middle case: type is one level of grouping, e.g., TKey = CompoundGroupKey<PartitionKey<TP>, TG>
+            if (typeof(TKey).GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(PartitionKey<>))
+                return typeof(PartitionedFixedIntervalEquiJoinPipeCompound<,,,,>).MakeGenericType(
+                                         typeof(TKey).GenericTypeArguments[1],
+                                         typeof(TLeft),
+                                         typeof(TRight),
+                                         typeof(TResult),
+                                         typeof(TKey).GetPartitionType());
+            // Generic case
+            return typeof(PartitionedFixedIntervalEquiJoinPipe<,,,,>).MakeGenericType(
+                                     typeof(TKey),
+                                     typeof(TLeft),
+                                     typeof(TRight),
+                                     typeof(TResult),
+                                     typeof(TKey).GetPartitionType());
+        }
+
         protected override IBinaryObserver<TKey, TLeft, TRight, TResult> CreatePipe(IStreamObserver<TKey, TResult> observer)
         {
-            var part = typeof(TKey).GetPartitionType();
-            if (part == null)
+            if (typeof(TKey).GetPartitionType() == null)
             {
-                if (this.properties.IsColumnar) return GetPipe(observer);
-                else return this.fallbackGenerator(this, this.Selector, observer);
+                return this.properties.IsColumnar
+                    ? GetPipe(observer)
+                    : this.fallbackGenerator(this, this.Selector, observer);
             }
             return this.partitionedGenerator(this, this.Selector, observer);
         }
@@ -132,18 +165,18 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create(this.joinKind, this.Properties.KeyEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Left.Properties.PayloadEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Right.Properties.PayloadEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Selector.ExpressionToCSharp());
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, this.columnarGenerator);
-            Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> planNode = ((PlanNode left, PlanNode right, IBinaryObserver o) =>
+            Func<PlanNode, PlanNode, IBinaryObserver, BinaryPlanNode> planNode = (PlanNode left, PlanNode right, IBinaryObserver o) =>
             {
                 var node = new JoinPlanNode(
-                        left, right, o,
-                        typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), this.joinKind, true, generatedPipeType.Item2, false);
+                    left, right, o,
+                    typeof(TLeft), typeof(TRight), typeof(TLeft), typeof(TKey), this.joinKind, true, generatedPipeType.Item2);
                 node.AddJoinExpression("key comparer", this.Properties.KeyEqualityComparer.GetEqualsExpr());
                 node.AddJoinExpression("left payload comparer", this.Left.Properties.PayloadEqualityComparer.GetEqualsExpr());
                 node.AddJoinExpression("right payload comparer", this.Right.Properties.PayloadEqualityComparer.GetEqualsExpr());
                 node.AddJoinExpression("left key comparer", this.Left.Properties.KeyComparer.GetCompareExpr());
                 node.AddJoinExpression("right key comparer", this.Right.Properties.KeyComparer.GetCompareExpr());
                 return node;
-            });
+            };
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode);
             var returnValue = (BinaryPipe<TKey, TLeft, TRight, TResult>)instance;

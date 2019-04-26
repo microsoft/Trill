@@ -31,8 +31,9 @@ namespace Microsoft.StreamProcessing
             var t = typeof(TKey).GetPartitionType();
             if (t == null)
             {
-                if (this.Source.Properties.IsColumnar) return GetPipe(observer);
-                return new PointAtEndPipe<TKey, TPayload>(this, observer);
+                return this.Source.Properties.IsColumnar
+                    ? GetPipe(observer)
+                    : new PointAtEndPipe<TKey, TPayload>(this, observer);
             }
             var outputType = typeof(PartitionedPointAtEndPipe<,,>).MakeGenericType(
                 typeof(TKey),
@@ -62,7 +63,7 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create();
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => PointAtEndTemplate.Generate(this));
-            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new PointAtEndPlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2, false));
+            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new PointAtEndPlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode);
             var returnValue = (UnaryPipe<TKey, TPayload, TPayload>)instance;

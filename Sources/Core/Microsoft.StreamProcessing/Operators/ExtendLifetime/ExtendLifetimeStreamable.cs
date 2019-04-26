@@ -3,7 +3,6 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Globalization;
 using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing
@@ -12,19 +11,17 @@ namespace Microsoft.StreamProcessing
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
                           = new SafeConcurrentDictionary<Tuple<Type, string>>();
-        private readonly IStreamable<TKey, TPayload> source;
         private readonly long duration;
 
         public ExtendLifetimeStreamable(IStreamable<TKey, TPayload> source, long duration)
             : base(source, source.Properties)
         {
-            this.source = source;
             this.duration = duration;
 
             // This operator uses the equality method on payloads
             if (duration < 0 && this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of payload, '{0}', to ExtendLifetime does not have a valid equality operator for columnar mode.", typeof(TPayload).FullName));
+                throw new InvalidOperationException($"Type of payload, '{typeof(TPayload).FullName}', to ExtendLifetime does not have a valid equality operator for columnar mode.");
             }
 
             Initialize();
@@ -38,8 +35,9 @@ namespace Microsoft.StreamProcessing
                 var t = typeof(TKey).GetPartitionType();
                 if (t == null)
                 {
-                    if (this.Source.Properties.IsColumnar) return GetPipe(this, observer);
-                    else return new ExtendLifetimeNegativePipe<TKey, TPayload>(this, observer, -this.duration);
+                    return this.Source.Properties.IsColumnar
+                        ? GetPipe(this, observer)
+                        : new ExtendLifetimeNegativePipe<TKey, TPayload>(this, observer, -this.duration);
                 }
                 var outputType = typeof(PartitionedExtendLifetimeNegativePipe<,,>).MakeGenericType(
                     typeof(TKey),
@@ -52,8 +50,9 @@ namespace Microsoft.StreamProcessing
                 var t = typeof(TKey).GetPartitionType();
                 if (t == null)
                 {
-                    if (this.Source.Properties.IsColumnar) return GetPipe(this, observer);
-                    else return new ExtendLifetimePipe<TKey, TPayload>(this, observer, this.duration);
+                    return this.Source.Properties.IsColumnar
+                        ? GetPipe(this, observer)
+                        : new ExtendLifetimePipe<TKey, TPayload>(this, observer, this.duration);
                 }
                 var outputType = typeof(PartitionedExtendLifetimePipe<,,>).MakeGenericType(
                     typeof(TKey),

@@ -52,17 +52,9 @@ namespace Microsoft.StreamProcessing
                 this.pipe = CreatePipe(observer);
 
             }
-            IStreamObserver<TKey, TSpray> o;
-
-            if ((!this.multicast) && (this.spraySortOrderComparer == null))
-            {
-                o = Config.StreamScheduler.RegisterStreamObserver(observer, this.observerClassId);
-            }
-            else
-            {
-                o = Config.StreamScheduler.RegisterStreamObserver(observer);
-            }
-
+            var o = (!this.multicast) && (this.spraySortOrderComparer == null)
+                ? Config.StreamScheduler.RegisterStreamObserver(observer, this.observerClassId)
+                : Config.StreamScheduler.RegisterStreamObserver(observer);
             this.pipe.AddObserver(o);
 
             var d = o as IDisposable;
@@ -74,10 +66,9 @@ namespace Microsoft.StreamProcessing
                 this.pipe = null;
                 this.numBranches = 0;
 
-                if (d == null)
-                    return this.Source.Subscribe(oldpipe);
-                else
-                    return Utility.CreateDisposable(this.Source.Subscribe(oldpipe), d);
+                return d == null
+                    ? this.Source.Subscribe(oldpipe)
+                    : Utility.CreateDisposable(this.Source.Subscribe(oldpipe), d);
             }
         }
 

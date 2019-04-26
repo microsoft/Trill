@@ -171,6 +171,7 @@ namespace Microsoft.StreamProcessing
             {
                 var count = batches[batchIndex].Count;
                 batches[batchIndex].vsync.col[count] = syncTime;
+                batches[batchIndex].vother.col[count] = otherTime;
                 batches[batchIndex].key.col[count] = innerKey;
                 batches[batchIndex].hash.col[count] = hash;
                 batches[batchIndex].bitvector.col[count >> 6] |= (1L << (count & 0x3f));

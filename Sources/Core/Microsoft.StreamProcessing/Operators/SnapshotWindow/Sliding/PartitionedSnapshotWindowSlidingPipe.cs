@@ -56,17 +56,16 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary2<TPartitionKey, PartitionEntry> partitionData = new FastDictionary2<TPartitionKey, PartitionEntry>();
 
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public PartitionedSnapshotWindowSlidingPipe() => this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
+        public PartitionedSnapshotWindowSlidingPipe() { }
 
         public PartitionedSnapshotWindowSlidingPipe(
             SnapshotWindowStreamable<TKey, TInput, TState, TOutput> stream,
             IStreamObserver<TKey, TOutput> observer)
             : base(stream, observer)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
             this.aggregate = stream.Aggregate;
             this.initialStateExpr = this.aggregate.InitialState();
             this.initialState = this.initialStateExpr.Compile();
@@ -96,11 +95,9 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
+            => this.Observer.ProduceQueryPlan(new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                 previous, this, typeof(TKey), typeof(TInput), typeof(TOutput),
-                AggregatePipeType.Sliding, this.aggregate, false, this.errorMessages, false));
-        }
+                AggregatePipeType.Sliding, this.aggregate, false, this.errorMessages));
 
         public override unsafe void OnNext(StreamMessage<TKey, TInput> batch)
         {
@@ -146,7 +143,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.vsync.col[c] = col_vsync[i];
                             this.batch.vother.col[c] = long.MinValue;
                             this.batch.key.col[c] = colkey[i];
-                            this.batch.hash.col[c] = colkey[i].GetHashCode();
+                            this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
                             this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
@@ -186,7 +183,7 @@ namespace Microsoft.StreamProcessing
                                 this.batch.vother.col[c] = heldState.timestamp;
                                 this.batch.payload.col[c] = this.computeResult(heldState.state);
                                 this.batch.key.col[c] = colkey[i];
-                                this.batch.hash.col[c] = colkey[i].GetHashCode();
+                                this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
                                 this.batch.Count++;
                                 if (this.batch.Count == Config.DataBatchSize)
                                 {
@@ -323,7 +320,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
                     this.batch.payload.col[c] = this.computeResult(iter1entry.value.state);
                     this.batch.key.col[c] = iter1entry.key;
-                    this.batch.hash.col[c] = iter1entry.key.GetHashCode();
+                    this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
                 }
@@ -355,7 +352,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.vother.col[c] = heldState.timestamp;
                             this.batch.payload.col[c] = this.computeResult(heldState.state);
                             this.batch.key.col[c] = ecqState.states.entries[iter].key;
-                            this.batch.hash.col[c] = ecqState.states.entries[iter].key.GetHashCode();
+                            this.batch.hash.col[c] = this.keyComparerGetHashCode(ecqState.states.entries[iter].key);
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
@@ -377,7 +374,7 @@ namespace Microsoft.StreamProcessing
                                 this.batch.vother.col[c] = StreamEvent.InfinitySyncTime;
                                 this.batch.payload.col[c] = this.computeResult(heldState.state);
                                 this.batch.key.col[c] = ecqState.states.entries[iter].key;
-                                this.batch.hash.col[c] = ecqState.states.entries[iter].key.GetHashCode();
+                                this.batch.hash.col[c] = this.keyComparerGetHashCode(ecqState.states.entries[iter].key);
                                 this.batch.Count++;
                                 if (this.batch.Count == Config.DataBatchSize) FlushContents();
                             }

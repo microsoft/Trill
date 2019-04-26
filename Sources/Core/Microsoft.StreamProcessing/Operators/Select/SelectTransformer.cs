@@ -82,7 +82,7 @@ namespace Microsoft.StreamProcessing
                 template.genericParameters = gps.BracketedCommaSeparatedString();
                 template.numberOfGenericParameters = gps.Count();
                 template.TKeyTResultGenericParameters = tm.GenericTypeVariables(keyType, resultType).BracketedCommaSeparatedString();
-                template.MemoryPoolGenericParameters = string.Format("<{0}, {1}>", template.TKey, template.TResult);
+                template.MemoryPoolGenericParameters = $"<{template.TKey}, {template.TResult}>";
                 if (resultType == typeof(int) || resultType == typeof(long) || resultType == typeof(string))
                     template.MemoryPoolGenericParameters = string.Empty;
 
@@ -146,8 +146,8 @@ namespace Microsoft.StreamProcessing
                 template.nonSwingingFields = template.fields.Where(sf => !template.swingingFields.Any(swingingField => swingingField.Item2.Equals(sf)));
                 var expandedCode = template.TransformText();
 
-                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeof(TKey), typeof(TPayload), typeof(TResult));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                var assemblyReferences = Transformer.AssemblyReferencesNeededFor(
+                    typeof(TKey), typeof(TPayload), typeof(TResult), typeof(IStreamable<,>));
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TResult>());
                 assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TResult>());
@@ -161,9 +161,8 @@ namespace Microsoft.StreamProcessing
             catch
             {
                 if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
-                {
                     throw new InvalidOperationException("Code Generation failed when it wasn't supposed to!");
-                }
+
                 return Tuple.Create((Type)null, errorMessages);
             }
         }

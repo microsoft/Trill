@@ -25,8 +25,8 @@ namespace Microsoft.StreamProcessing
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledGroupedAfaPipe_SingleEvent() { }
 
-        public CompiledGroupedAfaPipe_SingleEvent(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+        public CompiledGroupedAfaPipe_SingleEvent(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
+            : base(stream, observer, afa, maxDuration)
         {
             this.activeStates = new FastMap<GroupedActiveState<TKey, TRegister>>();
 
@@ -172,10 +172,9 @@ namespace Microsoft.StreamProcessing
 
                                                 if (arcinfo.Fence(synctime, batch[i], state.register))
                                                 {
-                                                    TRegister newReg;
-                                                    if (arcinfo.Transfer == null) newReg = state.register;
-                                                    else newReg = arcinfo.Transfer(synctime, batch[i], state.register);
-
+                                                    var newReg = arcinfo.Transfer == null
+                                                        ? state.register
+                                                        : arcinfo.Transfer(synctime, batch[i], state.register);
                                                     int ns = arcinfo.toState;
                                                     while (true)
                                                     {
@@ -256,10 +255,9 @@ namespace Microsoft.StreamProcessing
                                         var arcinfo = startStateMap[cnt];
                                         if (arcinfo.Fence(synctime, batch[i], this.defaultRegister))
                                         {
-                                            TRegister newReg;
-                                            if (arcinfo.Transfer == null) newReg = this.defaultRegister;
-                                            else newReg = arcinfo.Transfer(synctime, batch[i], this.defaultRegister);
-
+                                            var newReg = arcinfo.Transfer == null
+                                                ? this.defaultRegister
+                                                : arcinfo.Transfer(synctime, batch[i], this.defaultRegister);
                                             int ns = arcinfo.toState;
                                             while (true)
                                             {
@@ -316,9 +314,9 @@ namespace Microsoft.StreamProcessing
                                         }
                                     }
                                 }
+
                                 if (this.IsDeterministic) break; // We are guaranteed to have only one start state
                             }
-
                         }
                         else if (batch.vother.col[i] < 0 && !this.IsSyncTimeSimultaneityFree)
                         {

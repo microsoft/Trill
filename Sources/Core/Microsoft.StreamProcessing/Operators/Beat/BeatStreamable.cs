@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing
@@ -18,22 +17,16 @@ namespace Microsoft.StreamProcessing
         public readonly long Period;
 
         public BeatStreamable(IStreamable<TKey, TPayload> source, long offset, long period)
-            : this(source, offset, period, source.Properties.PayloadEqualityComparer)
-        {
-            // This operator uses the equality method on payloads
-            if (this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
-            {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Type of payload, '{0}', to Beat does not have a valid equality operator for columnar mode.", typeof(TPayload).FullName));
-            }
-
-        }
-
-        public BeatStreamable(IStreamable<TKey, TPayload> source, long offset, long period, IEqualityComparerExpression<TPayload> payloadComparer)
-            : base(source, source.Properties, payloadComparer)
+            : base(source, source.Properties)
         {
             Contract.Requires(source != null);
             Contract.Requires(period > 0);
-            Contract.Requires(payloadComparer != null);
+
+            // This operator uses the equality method on payloads
+            if (this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
+            {
+                throw new InvalidOperationException($"Type of payload, '{typeof(TPayload).FullName}', to Beat does not have a valid equality operator for columnar mode.");
+            }
 
             this.Offset = offset;
             this.Period = period;
@@ -46,8 +39,9 @@ namespace Microsoft.StreamProcessing
             var p = typeof(TKey).GetPartitionType();
             if (p == null)
             {
-                if (this.Source.Properties.IsColumnar) return GetPipe(observer);
-                else return new BeatPipe<TKey, TPayload>(this, observer);
+                return this.Source.Properties.IsColumnar
+                    ? GetPipe(observer)
+                    : new BeatPipe<TKey, TPayload>(this, observer);
             }
 
             var outputType = typeof(PartitionedBeatPipe<,,>).MakeGenericType(typeof(TKey), typeof(TPayload), p);

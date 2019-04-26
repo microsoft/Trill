@@ -45,10 +45,8 @@ namespace Microsoft.StreamProcessing
             string latencyOption,
             string diagnosticOption,
             FuseModule fuseModule)
-        {
-            return Generate<Empty, TSource, TSource>("Interval", string.Empty, null, startEdgeExpression, endEdgeExpression,
+            => Generate<Empty, TSource, TSource>("Interval", string.Empty, null, startEdgeExpression, endEdgeExpression,
                 latencyOption, diagnosticOption, fuseModule);
-        }
 
         internal static Tuple<Type, string> GenerateFused<TSource, TResult>(
             Expression<Func<TSource, long>> startEdgeExpression,
@@ -56,10 +54,8 @@ namespace Microsoft.StreamProcessing
             string latencyOption,
             string diagnosticOption,
             FuseModule fuseModule)
-        {
-            return Generate<Empty, TSource, TResult>("Interval", string.Empty, null, startEdgeExpression, endEdgeExpression,
+            => Generate<Empty, TSource, TResult>("Interval", string.Empty, null, startEdgeExpression, endEdgeExpression,
                 latencyOption, diagnosticOption, fuseModule);
-        }
 
         internal static Tuple<Type, string> Generate<TKey, TSource>(
             Expression<Func<TSource, TKey>> partitionExpression,
@@ -68,10 +64,8 @@ namespace Microsoft.StreamProcessing
             string latencyOption,
             string diagnosticOption,
             FuseModule fuseModule)
-        {
-            return Generate<TKey, TSource, TSource>("Interval", "Partitioned", partitionExpression, startEdgeExpression, endEdgeExpression,
+            => Generate<TKey, TSource, TSource>("Interval", "Partitioned", partitionExpression, startEdgeExpression, endEdgeExpression,
                 latencyOption, diagnosticOption, fuseModule);
-        }
 
         internal static Tuple<Type, string> GenerateFused<TKey, TSource, TResult>(
             Expression<Func<TSource, TKey>> partitionExpression,
@@ -80,46 +74,36 @@ namespace Microsoft.StreamProcessing
             string latencyOption,
             string diagnosticOption,
             FuseModule fuseModule)
-        {
-            return Generate<TKey, TSource, TResult>("Interval", "Partitioned", partitionExpression, startEdgeExpression, endEdgeExpression,
+            => Generate<TKey, TSource, TResult>("Interval", "Partitioned", partitionExpression, startEdgeExpression, endEdgeExpression,
                 latencyOption, diagnosticOption, fuseModule);
-        }
 
         internal static Tuple<Type, string> Generate<TSource>(
             string latencyOption,
             string diagnosticOption,
             FuseModule fuseModule)
-        {
-            return Generate<Empty, TSource, TSource>("StreamEvent", string.Empty, null, null, null,
+            => Generate<Empty, TSource, TSource>("StreamEvent", string.Empty, null, null, null,
                 latencyOption, diagnosticOption, fuseModule);
-        }
 
         internal static Tuple<Type, string> GenerateFused<TSource, TResult>(
             string latencyOption,
             string diagnosticOption,
             FuseModule fuseModule)
-        {
-            return Generate<Empty, TSource, TResult>("StreamEvent", string.Empty, null, null, null,
+            => Generate<Empty, TSource, TResult>("StreamEvent", string.Empty, null, null, null,
                 latencyOption, diagnosticOption, fuseModule);
-        }
 
         internal static Tuple<Type, string> Generate<TKey, TSource>(
             string latencyOption,
             string diagnosticOption,
             FuseModule fuseModule)
-        {
-            return Generate<TKey, TSource, TSource>("StreamEvent", "Partitioned", null, null, null,
+            => Generate<TKey, TSource, TSource>("StreamEvent", "Partitioned", null, null, null,
                 latencyOption, diagnosticOption, fuseModule);
-        }
 
         internal static Tuple<Type, string> GenerateFused<TKey, TSource, TResult>(
             string latencyOption,
             string diagnosticOption,
             FuseModule fuseModule)
-        {
-            return Generate<TKey, TSource, TResult>("StreamEvent", "Partitioned", null, null, null,
+            => Generate<TKey, TSource, TResult>("StreamEvent", "Partitioned", null, null, null,
                 latencyOption, diagnosticOption, fuseModule);
-        }
 
         private static Tuple<Type, string> Generate<TKey, TSource, TResult>(
             string ingressType,
@@ -132,7 +116,7 @@ namespace Microsoft.StreamProcessing
             FuseModule fuseModule)
         {
             var template = new TemporalIngressTemplate(
-                string.Format("GeneratedTemporalIngress_{0}", TemporalIngressSequenceNumber++),
+                $"GeneratedTemporalIngress_{TemporalIngressSequenceNumber++}",
                 typeof(TKey), typeof(TSource), fuseModule?.OutputType ?? typeof(TResult));
 
             var tm = new TypeMapper(template.keyType, template.payloadType, template.resultType);
@@ -158,25 +142,25 @@ namespace Microsoft.StreamProcessing
             template.ingressType = ingressType;
             template.latencyOption = latencyOption;
 
-            template.partitionFunction = (x => partitionExpression == null ?
+            template.partitionFunction = x => partitionExpression == null ?
                     string.Empty : partitionExpression.Body.ExpressionToCSharpStringWithParameterSubstitution(
                                         new Dictionary<ParameterExpression, string>
                                                     {
                                                         { partitionExpression.Parameters.Single(), x }
-                                                    }));
-            template.startEdgeFunction = (x => startEdgeExpression == null ?
+                                                    });
+            template.startEdgeFunction = x => startEdgeExpression == null ?
                     string.Empty : startEdgeExpression.Body.ExpressionToCSharpStringWithParameterSubstitution(
                                         new Dictionary<ParameterExpression, string>
                                                     {
                                                         { startEdgeExpression.Parameters.Single(), x }
-                                                    }));
-            template.endEdgeFunction = (x => endEdgeExpression == null ?
+                                                    });
+            template.endEdgeFunction = x => endEdgeExpression == null ?
                     "StreamEvent.InfinitySyncTime" :
                 endEdgeExpression.Body.ExpressionToCSharpStringWithParameterSubstitution(
                                         new Dictionary<ParameterExpression, string>
                                                     {
                                                         { endEdgeExpression.Parameters.Single(), x }
-                                                    }));
+                                                    });
 
             template.fusionOption = fuseModule.IsEmpty ? "Simple" :
                 (Config.AllowFloatingReorderPolicy ? "Disordered" : "Fused");

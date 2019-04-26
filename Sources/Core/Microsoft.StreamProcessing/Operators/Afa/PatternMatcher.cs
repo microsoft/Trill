@@ -10,18 +10,17 @@ namespace Microsoft.StreamProcessing
 {
     internal class PatternMatcher<TKey, TPayload, TRegister, TAccumulator> : IPattern<TKey, TPayload, TRegister, TAccumulator>, IAbstractPattern<TKey, TPayload, TRegister, TAccumulator>
     {
-        private IStreamable<TKey, TPayload> source;
+        private readonly IStreamable<TKey, TPayload> source;
+        private readonly TRegister defaultRegister;
+        private readonly TAccumulator defaultAccumulator;
 
         #region Constructors
-        public PatternMatcher()
-        {
-            this.AFA = null;
-        }
-
-        public PatternMatcher(IStreamable<TKey, TPayload> source, Afa<TPayload, TRegister, TAccumulator> afa)
+        public PatternMatcher(IStreamable<TKey, TPayload> source = default, Afa<TPayload, TRegister, TAccumulator> afa = default, TRegister defaultRegister = default, TAccumulator defaultAccumulator = default)
         {
             this.source = source;
             this.AFA = afa;
+            this.defaultRegister = defaultRegister;
+            this.defaultAccumulator = defaultAccumulator;
         }
         #endregion
 
@@ -32,7 +31,7 @@ namespace Microsoft.StreamProcessing
         #region SingleElement
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<long, TPayload, TRegister, bool>> condition = null, Expression<Func<long, TPayload, TRegister, TRegister>> aggregator = null)
         {
-            var afa = new Afa<TPayload, TRegister, TAccumulator>();
+            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
             afa.AddArc(0, 1, new SingleElementArc<TPayload, TRegister> { Fence = condition, Transfer = aggregator });
             afa.Seal();
 
@@ -50,7 +49,6 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, TPayload, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
             return SingleElement(condition, aggregatorTemplate.InlineCalls());
         }
-
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, TRegister, bool>> condition, Expression<Func<long, TPayload, TRegister, TRegister>> aggregator = null)
         {
@@ -96,7 +94,7 @@ namespace Microsoft.StreamProcessing
         #region ListElement
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<long, List<TPayload>, TRegister, bool>> condition = null, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null)
         {
-            var afa = new Afa<TPayload, TRegister, TAccumulator>();
+            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
             afa.AddArc(0, 1, new ListElementArc<TPayload, TRegister> { Fence = condition, Transfer = aggregator });
             afa.Seal();
 
@@ -114,7 +112,6 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
             return ListElement(condition, aggregatorTemplate.InlineCalls());
         }
-
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, TRegister, bool>> condition, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null)
         {
@@ -160,7 +157,7 @@ namespace Microsoft.StreamProcessing
         #region EpsilonElement
         public IPattern<TKey, TPayload, TRegister, TAccumulator> Epsilon()
         {
-            var afa = new Afa<TPayload, TRegister, TAccumulator>();
+            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
             afa.AddArc(0, 1, new EpsilonArc<TPayload, TRegister> { });
             afa.Seal();
 
@@ -171,7 +168,7 @@ namespace Microsoft.StreamProcessing
         #region MultiElement
         public IPattern<TKey, TPayload, TRegister, TAccumulator> MultiElement(Expression<Func<long, TRegister, TAccumulator>> initialize, Expression<Func<long, TPayload, TRegister, TAccumulator, TAccumulator>> accumulate, Expression<Func<long, TPayload, TAccumulator, bool>> skipToEnd, Expression<Func<long, TAccumulator, TRegister, bool>> fence, Expression<Func<long, TAccumulator, TRegister, TRegister>> transfer, Expression<Action<TAccumulator>> dispose)
         {
-            var afa = new Afa<TPayload, TRegister, TAccumulator>();
+            var afa = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
             afa.AddArc(0, 1, new MultiElementArc<TPayload, TRegister, TAccumulator>
             {
                 Initialize = initialize,
@@ -193,9 +190,9 @@ namespace Microsoft.StreamProcessing
         {
             var newConcreteRegex = pattern(new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>());
 
-            var result = new Afa<TPayload, TRegister, TAccumulator>();
+            var result = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
 
-            var pattern_ = (Afa<TPayload, TRegister, TAccumulator>)newConcreteRegex.AFA;
+            var pattern_ = newConcreteRegex.AFA;
 
             // Every final state maps back to the start state
             foreach (var kvp1 in pattern_.transitionInfo)
@@ -219,9 +216,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> KleenePlus(Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern)
-        {
-            return Concat(pattern, x => x.KleeneStar(pattern));
-        }
+            => Concat(pattern, x => x.KleeneStar(pattern));
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> Concat(
             Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern,
@@ -268,7 +263,7 @@ namespace Microsoft.StreamProcessing
             for (int i = 0; i < patterns.Length; i++)
                 allPatterns[i + 2] = patterns[i](new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>()).AFA;
 
-            var result = new Afa<TPayload, TRegister, TAccumulator>();
+            var result = new Afa<TPayload, TRegister, TAccumulator>(this.defaultRegister, this.defaultAccumulator);
 
             int oldMax;
 
@@ -284,11 +279,8 @@ namespace Microsoft.StreamProcessing
                 {
                     foreach (var kvp2 in kvp1.Value)
                     {
-                        int from = kvp1.Key;
-                        int to = kvp2.Key;
-
-                        from = from + oldMax;
-                        to = to + oldMax;
+                        int from = kvp1.Key + oldMax;
+                        int to = kvp2.Key + oldMax;
 
                         result.AddArc(from, to, kvp2.Value);
 
@@ -302,21 +294,16 @@ namespace Microsoft.StreamProcessing
             }
             result.StartState = 0;
 
-
             return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, result));
         }
         #endregion
 
         #region Set Register and Accumulator
         public IAbstractPattern<TKey, TPayload, TRegister, TAccumulatorNew> SetAccumulator<TAccumulatorNew>(TAccumulatorNew defaultAccumulator = default)
-        {
-            return new PatternMatcher<TKey, TPayload, TRegister, TAccumulatorNew>(this.source, null);
-        }
+            => new PatternMatcher<TKey, TPayload, TRegister, TAccumulatorNew>(this.source, null, this.defaultRegister, defaultAccumulator);
 
         public IAbstractPattern<TKey, TPayload, TRegisterNew, TAccumulator> SetRegister<TRegisterNew>(TRegisterNew defaultRegister = default)
-        {
-            return new PatternMatcher<TKey, TPayload, TRegisterNew, TAccumulator>(this.source, null);
-        }
+            => new PatternMatcher<TKey, TPayload, TRegisterNew, TAccumulator>(this.source, null, defaultRegister, this.defaultAccumulator);
         #endregion
 
         #region Detect
@@ -326,7 +313,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (!(this.source.Properties.IsConstantDuration && (this.source.Properties.ConstantDurationLength != null)))
                 {
-                    throw new Exception("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
+                    throw new InvalidOperationException("Either specify a MaxDuration parameter or use an input stream that is windowed by a constant");
                 }
 
                 maxDuration = this.source.Properties.ConstantDurationLength.Value;
@@ -376,7 +363,6 @@ namespace Microsoft.StreamProcessing
 
             for (int i = 1; i < allPatterns.Length; i++)
             {
-
                 var nextPattern = allPatterns[i];
 
                 var newFinal = result.MaxState + 1;
@@ -384,7 +370,7 @@ namespace Microsoft.StreamProcessing
                 var epsilonArcAdded = false;
                 foreach (var finalState in result.finalStates)
                 {
-                    if (result.transitionInfo.TryGetValue(finalState, out Dictionary<int, Arc<TPayload, TRegister>> outgoingEdges))
+                    if (result.transitionInfo.TryGetValue(finalState, out var outgoingEdges))
                     {
                         result.AddArc(finalState, newFinal, new EpsilonArc<TPayload, TRegister> { });
                         if (!epsilonArcAdded)
@@ -413,23 +399,19 @@ namespace Microsoft.StreamProcessing
                             int from = kvp1.Key;
                             int to = kvp2.Key;
 
-                            if (from == nextPattern.StartState)
-                                from = oldFinal;
-                            else
-                                from = from + oldMax;
+                            from = from == nextPattern.StartState
+                                ? oldFinal
+                                : from + oldMax;
 
-                            if (to == nextPattern.StartState)
-                                to = oldFinal;
-                            else
-                                to = to + oldMax;
+                            to = to == nextPattern.StartState
+                                ? oldFinal
+                                : to + oldMax;
 
                             result.AddArc(from, to, kvp2.Value);
 
                             if (nextPattern.finalStates.Contains(kvp2.Key))
-                            {
                                 if (!result.finalStates.Contains(to))
                                     result.finalStates.Add(to);
-                            }
                         }
                     }
                 }

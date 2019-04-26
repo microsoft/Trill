@@ -23,9 +23,7 @@ namespace Microsoft.StreamProcessing
             Expression predicate,
             bool isGenerated, string errorMessages)
             : base(previous, pipe, keyType, payloadType, payloadType, isGenerated, errorMessages)
-        {
-            this.Predicate = predicate;
-        }
+            => this.Predicate = predicate;
 
         /// <summary>
         /// Indicates that the current node is a where (filter) operation.

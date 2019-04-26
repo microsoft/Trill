@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.9.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="2.10.0" />
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
@@ -238,6 +238,11 @@
     </None>
     <None Update="MapReduceStreamable.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Operators\EquiJoin\FixedInterval\FixedIntervalEquiJoinTemplate.tt">
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
+      <LastGenOutput>FixedIntervalEquiJoinTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
     </None>
     <None Update="Operators\QuantizeLifetime\QuantizeLifetimeTemplate.tt">
       <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
@@ -857,6 +862,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>TemporalIngressTemplate.tt</DependentUpon>
     </Compile>
+    <Compile Update="Operators\EquiJoin\FixedInterval\FixedIntervalEquiJoinTemplate.cs">
+      <DependentUpon>FixedIntervalEquiJoinTemplate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
     <Compile Update="Operators\QuantizeLifetime\QuantizeLifetimeTemplate.cs">
       <DependentUpon>QuantizeLifetimeTemplate.tt</DependentUpon>
       <DesignTime>True</DesignTime>
@@ -1310,5 +1320,9 @@
       <DependentUpon>FlushPolicy.tt</DependentUpon>
     </None>
   </ItemGroup>
+
+<!--  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.StreamProcessing.Provider\Microsoft.StreamProcessing.Provider.csproj" />
+  </ItemGroup> -->
   
 </Project>

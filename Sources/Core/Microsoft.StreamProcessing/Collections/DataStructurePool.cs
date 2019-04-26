@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     [EditorBrowsable(EditorBrowsableState.Never)]
     public sealed class DataStructurePool<T> : IDisposable where T : new()
     {
-        private ConcurrentQueue<T> queue;
+        private readonly ConcurrentQueue<T> queue;
         private readonly Func<T> creator;
 
         /// <summary>

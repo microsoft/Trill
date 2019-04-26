@@ -13,10 +13,10 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class CompiledPartitionedAfaPipe_SingleEvent<TKey, TPayload, TRegister, TAccumulator, TPartitionKey> : CompiledAfaPipeBase<TKey, TPayload, TRegister, TAccumulator>
     {
-        private readonly Func<TKey, TPartitionKey> getPartitionKey;
+        private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [DataMember]
-        private FastMap<GroupedActiveState<TKey, TRegister>> activeStates;
+        private FastMap<GroupedActiveState<TKey, TRegister>> activeStates = new FastMap<GroupedActiveState<TKey, TRegister>>();
         [DataMember]
         private FastDictionary2<TKey, byte> seenEvent;
 
@@ -29,17 +29,11 @@ namespace Microsoft.StreamProcessing
         private FastDictionary2<TPartitionKey, List<TKey>> seenPartitions = new FastDictionary2<TPartitionKey, List<TKey>>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
-        public CompiledPartitionedAfaPipe_SingleEvent()
-        {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-        }
+        public CompiledPartitionedAfaPipe_SingleEvent() { }
 
-        public CompiledPartitionedAfaPipe_SingleEvent(AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
-            : base(stream, observer, afa, maxDuration, false)
+        public CompiledPartitionedAfaPipe_SingleEvent(Streamable<TKey, TRegister> stream, IStreamObserver<TKey, TRegister> observer, object afa, long maxDuration)
+            : base(stream, observer, afa, maxDuration)
         {
-            this.getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
-            this.activeStates = new FastMap<GroupedActiveState<TKey, TRegister>>();
-
             if (!this.IsSyncTimeSimultaneityFree)
             {
                 var comparer = stream.Properties.KeyEqualityComparer;
@@ -184,10 +178,9 @@ namespace Microsoft.StreamProcessing
 
                                                 if (arcinfo.Fence(synctime, batch[i], state.register))
                                                 {
-                                                    TRegister newReg;
-                                                    if (arcinfo.Transfer == null) newReg = state.register;
-                                                    else newReg = arcinfo.Transfer(synctime, batch[i], state.register);
-
+                                                    var newReg = arcinfo.Transfer == null
+                                                        ? state.register
+                                                        : arcinfo.Transfer(synctime, batch[i], state.register);
                                                     int ns = arcinfo.toState;
                                                     while (true)
                                                     {
@@ -250,6 +243,7 @@ namespace Microsoft.StreamProcessing
                                             }
                                         }
                                     }
+
                                     if (index == orig_index) activeFindTraverser.Remove();
                                     if (this.IsDeterministic) break; // We are guaranteed to have only one active state
                                 }
@@ -270,10 +264,9 @@ namespace Microsoft.StreamProcessing
                                         var arcinfo = startStateMap[cnt];
                                         if (arcinfo.Fence(synctime, batch[i], this.defaultRegister))
                                         {
-                                            TRegister newReg;
-                                            if (arcinfo.Transfer == null) newReg = this.defaultRegister;
-                                            else newReg = arcinfo.Transfer(synctime, batch[i], this.defaultRegister);
-
+                                            var newReg = arcinfo.Transfer == null
+                                                ? this.defaultRegister
+                                                : arcinfo.Transfer(synctime, batch[i], this.defaultRegister);
                                             int ns = arcinfo.toState;
                                             while (true)
                                             {
@@ -325,16 +318,18 @@ namespace Microsoft.StreamProcessing
                                                             stack.Push(this.epsilonStateMap[ns][cnt2]);
                                                     }
                                                 }
+
                                                 if (stack.Count == 0) break;
                                                 ns = stack.Pop();
                                             }
+
                                             if (this.IsDeterministic) break; // We are guaranteed to have only one successful transition
                                         }
                                     }
                                 }
+
                                 if (this.IsDeterministic) break; // We are guaranteed to have only one start state
                             }
-
                         }
                         else if (src_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
                         {
@@ -365,10 +360,7 @@ namespace Microsoft.StreamProcessing
                                                 this.batch.hash.col[this.iter] = hash;
                                                 this.iter++;
 
-                                                if (this.iter == Config.DataBatchSize)
-                                                {
-                                                    FlushContents();
-                                                }
+                                                if (this.iter == Config.DataBatchSize) FlushContents();
                                             }
 
                                             this.tentativeOutput.entries[partitionIndex].value.Clear(); // Clear the tentative output list
@@ -378,6 +370,7 @@ namespace Microsoft.StreamProcessing
                                     }
                                 }
                             }
+
                             OnLowWatermark(synctime);
                         }
                         else if (src_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
@@ -411,10 +404,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = hash;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize)
-                                            {
-                                                FlushContents();
-                                            }
+                                            if (this.iter == Config.DataBatchSize) FlushContents();
                                         }
 
                                         this.tentativeOutput.entries[partitionIndex].value.Clear(); // Clear the tentative output list
@@ -432,10 +422,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.bitvector.col[this.iter >> 6] |= (1L << (this.iter & 0x3f));
                             this.iter++;
 
-                            if (this.iter == Config.DataBatchSize)
-                            {
-                                FlushContents();
-                            }
+                            if (this.iter == Config.DataBatchSize) FlushContents();
                         }
                     }
                 }
