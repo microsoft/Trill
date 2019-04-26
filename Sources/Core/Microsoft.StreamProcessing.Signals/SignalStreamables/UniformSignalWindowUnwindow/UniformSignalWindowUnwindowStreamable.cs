@@ -45,7 +45,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
             OperatorPipeline = operatorPipeline;
             Aggregate = aggregate;
 
-            bool isUngrouped = (typeof(TKey) == typeof(Empty));
+            bool isUngrouped = typeof(TKey) == typeof(Empty);
             bool isOutputOverlapping = OutputWindowSize > HopSize;
 
             if (isUngrouped)

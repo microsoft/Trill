@@ -209,7 +209,7 @@ namespace Microsoft.StreamProcessing.Signal
             if (period == source.Period && offset == source.Offset &&
                 !source.Properties.IsInterpolationPolicyDirty &&
                 (policy == null && source.InterpolationPolicy == null ||
-                 policy != null && policy.Equals(source.InterpolationPolicy))) { return source; }
+                 policy != null && policy.Equals(source.InterpolationPolicy))) return source;
 
             return source.ToSignal().SampleAndInterpolate(period, offset, policy);
         }

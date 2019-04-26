@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing.Signal
         public UniformSignal<TKey, TPayload> Scale(double factor)
         {
             Invariant.IsTrue(typeof(TPayload).SupportsOperator("*d"), "Type " + typeof(TPayload) + " does not support the multiplication operator with second argument " + typeof(double) + ".");
-            if (factor == 1.0) { return this; }
+            if (factor == 1.0) return this;
 
             var leftParam = Expression.Parameter(typeof(TPayload));
             var rightParam = Expression.Constant(factor);

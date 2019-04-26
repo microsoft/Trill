@@ -398,9 +398,6 @@ namespace Microsoft.StreamProcessing.Signal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReachBeat(long beatTime)
         {
-            long previousBeatTime = beatTime - period;
-            long nextBeatTime = beatTime + period;
-
             // Process all active edges that started between two last beats.
             var edgeTraverser = this.newEdges.Traverse();
             int index;
@@ -536,21 +533,8 @@ namespace Microsoft.StreamProcessing.Signal
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void AddToOutput(long start, long end, ref TKey key, ref TResult payload, int hash)
-        {
-            int index = output.Count++;
-            output.vsync.col[index] = start;
-            output.vother.col[index] = end;
-            output.key.col[index] = key;
-            output.payload.col[index] = payload;
-            output.hash.col[index] = hash;
-
-            if (output.Count == Config.DataBatchSize) FlushContents();
-        }
-
         public override void ProduceQueryPlan(PlanNode previous)
-            => Observer.ProduceQueryPlan(new InterpolatePlanNode(
+            => this.Observer.ProduceQueryPlan(new InterpolatePlanNode(
                 previous, this, typeof(TKey), typeof(TSource), typeof(TResult), this.offset, this.period));
 
         protected override void FlushContents()

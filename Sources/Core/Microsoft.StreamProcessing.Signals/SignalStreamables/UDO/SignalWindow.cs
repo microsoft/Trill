@@ -269,9 +269,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
     {
         public TumblingSignalWindow(ISignalWindowObserver<T> observer, long period, long offset, int sampleWindowSize, int sampleHopSize)
             : base(sampleWindowSize, 0, observer, period, offset, sampleWindowSize, sampleHopSize)
-        {
-            Contract.Requires(sampleWindowSize <= sampleHopSize);
-        }
+            => Contract.Requires(sampleWindowSize <= sampleHopSize);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public sealed override void AdvanceTime(long time)

@@ -12,44 +12,36 @@ namespace Microsoft.StreamProcessing.Signal
         public static UniformSignalProperties<TKey, TResult> Sample<TKey, TSource, TResult>(
             this StreamProperties<TKey, TSource> source,
             long period, long offset)
-        {
-            return new UniformSignalProperties<TKey, TResult>(
+            => new UniformSignalProperties<TKey, TResult>(
                 source.CloneToNewPayloadType<TResult>(),
                 period,
                 offset,
                 null);
-        }
 
         public static UniformSignalProperties<TKey, TResult> Interpolate<TKey, TSource, TResult>(
             this StreamProperties<TKey, TSource> source,
             long period, long offset, InterpolationPolicy<TResult> policy)
-        {
-            return new UniformSignalProperties<TKey, TResult>(
+            => new UniformSignalProperties<TKey, TResult>(
                 source.CloneToNewPayloadType<TResult>(),
                 period,
                 offset,
                 policy);
-        }
 
         public static UniformSignalProperties<TKey, TPayload> DotProduct<TKey, TPayload>(
             this UniformSignalProperties<TKey, TPayload> source, int sampleHopSize)
-        {
-            return new UniformSignalProperties<TKey, TPayload>(
+            => new UniformSignalProperties<TKey, TPayload>(
                 source,
                 source.Period * sampleHopSize,
                 source.Offset,
                 source.InterpolationPolicy);
-        }
 
         public static UniformSignalProperties<TKey, Complex[]> DFT<TKey, TPayload>(
             this UniformSignalProperties<TKey, TPayload> source, int sampleHopSize)
-        {
-            return new UniformSignalProperties<TKey, Complex[]>(
+            => new UniformSignalProperties<TKey, Complex[]>(
                 source.CloneToNewPayloadType<Complex[]>(),
                 source.Period * sampleHopSize,
                 source.Offset,
                 null);
-        }
 
         public static UniformSignalProperties<TKey, Complex> InverseDFT<TKey>(
             this UniformSignalProperties<TKey, Complex[]> source, int sampleWindowSize)
@@ -67,13 +59,11 @@ namespace Microsoft.StreamProcessing.Signal
         public static UniformSignalProperties<TKey, TOutput> UniformSignalOperator<TKey, TInput, TOutput>(
             this UniformSignalProperties<TKey, TInput> source,
             int sampleHopSize, InterpolationPolicy<TOutput> policy)
-        {
-            return new UniformSignalProperties<TKey, TOutput>(
+            => new UniformSignalProperties<TKey, TOutput>(
                 source.CloneToNewPayloadType<TOutput>(),
                 source.Period * sampleHopSize,
                 source.Offset,
                 policy);
-        }
     }
 
     /// <summary>
@@ -131,13 +121,11 @@ namespace Microsoft.StreamProcessing.Signal
         public UniformSignalProperties<TKey, TResult> WindowedPipelineToAggregate<TResult>(
             Func<UDO.ISignalWindowObservable<TPayload>, UDO.ISignalObservable<TResult>> operatorPipeline,
             int sampleHopSize)
-        {
-            return new UniformSignalProperties<TKey, TResult>(
+            => new UniformSignalProperties<TKey, TResult>(
                 CloneToNewPayloadType<TResult>(),
                 Period * sampleHopSize,
                 Offset,
                 null);
-        }
 
         public UDO.WindowedUniformSignalProperties<TKey, TResult> WindowedPipelineToArray<TResult>(
             Func<UDO.ISignalWindowObservable<TPayload>, UDO.ISignalWindowObservable<TResult>> operatorPipeline,
@@ -160,12 +148,10 @@ namespace Microsoft.StreamProcessing.Signal
 
         public UniformSignalProperties<TKey, TResult> WindowedPipelineUnwindow<TResult>(
             Func<UDO.ISignalWindowObservable<TPayload>, UDO.ISignalWindowObservable<TResult>> operatorPipeline)
-        {
-            return new UniformSignalProperties<TKey, TResult>(
+            => new UniformSignalProperties<TKey, TResult>(
                 CloneToNewPayloadType<TResult>(),
                 Period,
                 Offset,
                 null);
-        }
     }
 }

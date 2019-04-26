@@ -83,14 +83,8 @@ namespace Microsoft.StreamProcessing.Signal.UDO
 
         public ISignalWindowObserver<T> observer;
 
-        public BaseSignalWindowObservable(int windowSize)
-        {
-            WindowSize = windowSize;
-        }
+        public BaseSignalWindowObservable(int windowSize) => this.WindowSize = windowSize;
 
-        public void Subscribe(ISignalWindowObserver<T> observer)
-        {
-            this.observer = observer;
-        }
+        public void Subscribe(ISignalWindowObserver<T> observer) => this.observer = observer;
     }
 }

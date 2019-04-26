@@ -34,13 +34,11 @@ namespace Microsoft.StreamProcessing.Signal.UDO
 
         internal UniformSignalProperties<TKey, TResult> WindowedPipelineArrayToAggregate<TResult>(
             Func<ISignalWindowObservable<TPayload>, ISignalObservable<TResult>> operatorPipeline)
-        {
-            return new UniformSignalProperties<TKey, TResult>(
+            => new UniformSignalProperties<TKey, TResult>(
                 CloneToNewPayloadType<TResult>(),
                 Period,
                 Offset,
                 null);
-        }
 
         public WindowedUniformSignalProperties<TKey, TResult> WindowedPipelineArrayToArray<TResult>(
             Func<ISignalWindowObservable<TPayload>, ISignalWindowObservable<TResult>> operatorPipeline,
@@ -63,13 +61,11 @@ namespace Microsoft.StreamProcessing.Signal.UDO
 
         internal UniformSignalProperties<TKey, TResult> WindowedPipelineArrayUnwindow<TResult>(
             Func<ISignalWindowObservable<TPayload>, ISignalWindowObservable<TResult>> operatorPipeline)
-        {
-            return new UniformSignalProperties<TKey, TResult>(
+            => new UniformSignalProperties<TKey, TResult>(
                 CloneToNewPayloadType<TResult>(),
                 SourcePeriod,
                 Offset,
                 null);
-        }
     }
 
     /// <summary>

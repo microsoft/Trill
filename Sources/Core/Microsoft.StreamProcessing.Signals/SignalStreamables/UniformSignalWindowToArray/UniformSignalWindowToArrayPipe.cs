@@ -55,7 +55,6 @@ namespace Microsoft.StreamProcessing.Signal.UDO
 
         [SchemaSerialization]
         private readonly WindowPipeline<TSource, TResult> windowPipeline;
-        private readonly bool windowPipelineIsEmpty;
 
         public UniformSignalWindowToArrayPipe() { }
 
@@ -85,7 +84,6 @@ namespace Microsoft.StreamProcessing.Signal.UDO
             this.numberOfActiveStates = 0;
 
             this.windowPipeline = new WindowPipeline<TSource, TResult>(operatorPipeline, windowSize);
-            this.windowPipelineIsEmpty = windowPipeline.IsEmpty;
         }
 
         public override void ProduceQueryPlan(PlanNode previous)

@@ -28,9 +28,9 @@ namespace Microsoft.StreamProcessing.Signal.UDO
         public Expression<Func<int>> GetFeedBackwardSize() => () => 0;
 
         public Expression<Func<BaseWindow<double>, BaseWindow<double>, double>> Compute()
-            => (inputWindow, outputWindow) => Compute(inputWindow, outputWindow);
+            => (inputWindow, outputWindow) => Compute(inputWindow);
 
-        public double Compute(BaseWindow<double> input, BaseWindow<double> output)
+        public double Compute(BaseWindow<double> input)
         {
             double sum = 0.0;
             var range = input.CurrentRange();
@@ -49,7 +49,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
             return sum;
         }
 
-        public unsafe double ComputeUnsafe(BaseWindow<double> input, BaseWindow<double> output)
+        public unsafe double ComputeUnsafe(BaseWindow<double> input)
         {
             double sum = 0.0;
             var range = input.CurrentRange();

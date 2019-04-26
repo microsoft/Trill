@@ -18,7 +18,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
         public int Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Tail - Head; }
+            get => Tail - Head;
         }
     }
 
@@ -48,13 +48,13 @@ namespace Microsoft.StreamProcessing.Signal.UDO
         public int Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return First.Length + Second.Length; }
+            get => First.Length + Second.Length;
         }
 
         public int IteratorStart
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return First.Head - 1; }
+            get => First.Head - 1;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,7 +64,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
             {
                 index = Second.Head;
             }
-            return (index != Second.Tail);
+            return index != Second.Tail;
         }
     }
 }

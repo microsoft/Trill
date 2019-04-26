@@ -12,13 +12,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
     {
         private readonly double[] weights;
 
-        private readonly bool setMissingDataToNull;
-
-        public ElementWiseProductDoubleOperator(double[] weights, bool setMissingDataToNull)
-        {
-            this.weights = weights;
-            this.setMissingDataToNull = setMissingDataToNull;
-        }
+        public ElementWiseProductDoubleOperator(double[] weights) => this.weights = weights;
 
         public Expression<Func<int>> GetOutputWindowSize() => () => weights.Length;
 

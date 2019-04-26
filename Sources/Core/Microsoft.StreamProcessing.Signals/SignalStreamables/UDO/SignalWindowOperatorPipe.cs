@@ -24,8 +24,6 @@ namespace Microsoft.StreamProcessing.Signal.UDO
         [SchemaSerialization]
         private int OutputWindowSize { get; }
         [SchemaSerialization]
-        private ISignalWindowObservable<TSource> Source { get; }
-        [SchemaSerialization]
         private ISignalWindowObserver<TResult> Observer;
         [SchemaSerialization]
         private BaseWindow<TResult> OutputWindow;
@@ -37,8 +35,6 @@ namespace Microsoft.StreamProcessing.Signal.UDO
             RecomputeExpr = signalOperator.Recompute();
             RecomputeFunc = RecomputeExpr.Compile();
             OutputWindowSize = signalOperator.GetOutputWindowSize().Compile().Invoke();
-
-            Source = source;
             source.Subscribe(this);
         }
 
@@ -79,7 +75,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
         public int WindowSize
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return OutputWindowSize; }
+            get => OutputWindowSize;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

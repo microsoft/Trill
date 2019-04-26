@@ -49,11 +49,7 @@ namespace Microsoft.StreamProcessing.Signal
         /// <typeparam name="T">The underlying array item type</typeparam>
         /// <param name="array">The array to be serialized into a string</param>
         /// <returns>The string representation of the array</returns>
-        public static string MakeString<T>(this T[] array)
-        {
-            if (array == null) return string.Empty;
-            return "[" + string.Join(", ", array) + "]";
-        }
+        public static string MakeString<T>(this T[] array) => array == null ? string.Empty : "[" + string.Join(", ", array) + "]";
 
         /// <summary>
         /// Set every entry in an array to be the given value

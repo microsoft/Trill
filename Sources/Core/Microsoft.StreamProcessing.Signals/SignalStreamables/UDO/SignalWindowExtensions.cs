@@ -172,7 +172,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
         /// <returns>The transformed window observable</returns>
         public static ISignalWindowObservable<double> WindowFunction(this ISignalWindowObservable<double> source, double[] window)
         {
-            var signalOperator = new ElementWiseProductDoubleOperator(window, true);
+            var signalOperator = new ElementWiseProductDoubleOperator(window);
             return new SignalWindowOperatorPipe<double, double>(source, signalOperator);
         }
 
