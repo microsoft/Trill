@@ -32,12 +32,12 @@ namespace Microsoft.StreamProcessing
             // This operator uses the equality method on payloads
             if (left.Properties.IsColumnar && !left.Properties.IsStartEdgeOnly && !left.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException($"Type of left side of join, '{typeof(TLeft).FullName}', does not have a valid equality operator for columnar mode.");
+                throw new InvalidOperationException($"The left input payload type, '{typeof(TLeft).FullName}', to Equijoin does not implement the interface {nameof(IEqualityComparerExpression<TLeft>)}. This interface is needed for code generation of this operator for columnar mode.");
             }
             // This operator uses the equality method on payloads
             if (right.Properties.IsColumnar && !right.Properties.IsStartEdgeOnly && !right.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException($"Type of right side of join, '{typeof(TRight).FullName}', does not have a valid equality operator for columnar mode.");
+                throw new InvalidOperationException($"The right input payload type, '{typeof(TRight).FullName}', to Equijoin does not implement the interface {nameof(IEqualityComparerExpression<TRight>)}. This interface is needed for code generation of this operator for columnar mode.");
             }
 
             if (left.Properties.IsStartEdgeOnly && right.Properties.IsStartEdgeOnly)
@@ -138,15 +138,11 @@ namespace Microsoft.StreamProcessing
         }
 
         protected override IBinaryObserver<TKey, TLeft, TRight, TResult> CreatePipe(IStreamObserver<TKey, TResult> observer)
-        {
-            if (typeof(TKey).GetPartitionType() == null)
-            {
-                return this.properties.IsColumnar
+            => typeof(TKey).GetPartitionType() != null
+                ? this.partitionedGenerator(this, this.Selector, observer)
+                : this.properties.IsColumnar
                     ? GetPipe(observer)
                     : this.fallbackGenerator(this, this.Selector, observer);
-            }
-            return this.partitionedGenerator(this, this.Selector, observer);
-        }
 
         protected override bool CanGenerateColumnar()
         {
