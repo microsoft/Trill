@@ -1094,13 +1094,13 @@ namespace Microsoft.StreamProcessing
                 else
                 {
                     // Find the first element with non-filtered-out row
-                    int curr = 0;
-                    while (curr < this.Count && (this.bitvector.col[curr >> 6] & (1L << (curr & 0x3f))) != 0)
+                    int cur = 0;
+                    while (cur < this.Count && ((this.bitvector.col[cur >> 6] & (1L << (cur & 0x3f))) != 0) && this.vother.col[cur] >= 0)
                     {
-                        curr++;
+                        cur++;
                     }
 
-                    return curr == this.Count ? StreamEvent.MinSyncTime : this.vsync.col[curr];
+                    return cur == this.Count ? StreamEvent.MinSyncTime : this.vsync.col[cur];
                 }
             }
         }
@@ -1133,13 +1133,13 @@ namespace Microsoft.StreamProcessing
                 else
                 {
                     // Find the last element with non-filtered-out row
-                    int curr = this.Count - 1;
-                    while (curr >= 0 && (this.bitvector.col[curr >> 6] & (1L << (curr & 0x3f))) != 0)
+                    int cur = this.Count - 1;
+                    while (cur >= 0 && ((this.bitvector.col[cur >> 6] & (1L << (cur & 0x3f))) != 0) && this.vother.col[cur] >= 0)
                     {
-                        curr--;
+                        cur--;
                     }
 
-                    return curr < 0 ? StreamEvent.MaxSyncTime : this.vsync.col[curr];
+                    return cur < 0 ? StreamEvent.MaxSyncTime : this.vsync.col[cur];
                 }
             }
         }
