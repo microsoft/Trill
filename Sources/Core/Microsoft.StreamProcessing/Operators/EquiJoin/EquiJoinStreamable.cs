@@ -32,12 +32,18 @@ namespace Microsoft.StreamProcessing
             // This operator uses the equality method on payloads
             if (left.Properties.IsColumnar && !left.Properties.IsStartEdgeOnly && !left.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException($"The left input payload type, '{typeof(TLeft).FullName}', to Equijoin does not implement the interface {nameof(IEqualityComparerExpression<TLeft>)}. This interface is needed for code generation of this operator for columnar mode. Furthermore, the equality expression in the interface can only refer to input variables if used in field or property references.");
+                this.errorMessages = $"The left input payload type, '{typeof(TLeft).FullName}', to Equijoin does not implement the interface {nameof(IEqualityComparerExpression<TLeft>)}. This interface is needed for code generation of this operator for columnar mode. Furthermore, the equality expression in the interface can only refer to input variables if used in field or property references.";
+                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
+                    throw new StreamProcessingException(this.errorMessages);
+                else this.Left = this.Left.ColumnToRow();
             }
             // This operator uses the equality method on payloads
             if (right.Properties.IsColumnar && !right.Properties.IsStartEdgeOnly && !right.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {
-                throw new InvalidOperationException($"The right input payload type, '{typeof(TRight).FullName}', to Equijoin does not implement the interface {nameof(IEqualityComparerExpression<TRight>)}. This interface is needed for code generation of this operator for columnar mode. Furthermore, the equality expression in the interface can only refer to input variables if used in field or property references.");
+                this.errorMessages = $"The right input payload type, '{typeof(TRight).FullName}', to Equijoin does not implement the interface {nameof(IEqualityComparerExpression<TRight>)}. This interface is needed for code generation of this operator for columnar mode. Furthermore, the equality expression in the interface can only refer to input variables if used in field or property references.";
+                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
+                    throw new StreamProcessingException(this.errorMessages);
+                else this.Right = this.Right.ColumnToRow();
             }
 
             if (left.Properties.IsStartEdgeOnly && right.Properties.IsStartEdgeOnly)
