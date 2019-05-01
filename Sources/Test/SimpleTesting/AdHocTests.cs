@@ -1686,6 +1686,9 @@ namespace SimpleTesting
     [TestClass]
     public class LeftComparerPayload_WithCodegen : TestWithConfigSettingsAndMemoryLeakDetection
     {
+        public LeftComparerPayload_WithCodegen()
+            : base(new ConfigModifier().DontFallBackToRowBasedExecution(true)) { }
+
         public class ClassOverridingEquals
         {
             public int x;
@@ -1729,7 +1732,7 @@ namespace SimpleTesting
                        .ToEnumerable()
                        .ToArray();
             }
-            catch (Exception)
+            catch (StreamProcessingException)
             {
                 exceptionHappened = true;
             }

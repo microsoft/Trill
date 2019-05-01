@@ -7,9 +7,9 @@ using System.Linq.Expressions;
 namespace Microsoft.StreamProcessing.Provider
 {
     /// <summary>
-    ///
+    /// A concrete implementation of the IQStreamable interface for building streaming query expressions.
     /// </summary>
-    /// <typeparam name="TPayload"></typeparam>
+    /// <typeparam name="TPayload">The type of the payload of the underlying stream query.</typeparam>
     public sealed class QStreamable<TPayload> : IQStreamable<TPayload>
     {
         internal QStreamable(Expression expression, IQStreamableProvider provider)
@@ -19,12 +19,12 @@ namespace Microsoft.StreamProcessing.Provider
         }
 
         /// <summary>
-        ///
+        /// The expression representing the full query so far in the pipeline.
         /// </summary>
         public Expression Expression { get; }
 
         /// <summary>
-        ///
+        /// The assigned provider whose job it is to evaluate the query once it is constructed.
         /// </summary>
         public IQStreamableProvider Provider { get; }
     }

@@ -93,9 +93,10 @@ namespace Microsoft.StreamProcessing
                     return null;
                 #region LeftBatchSelector
                 {
+                    var leftBatchIndexVariable = selector.Parameters.GenerateFreshVariableName("i");
                     var parameterSubsitutions = new List<Tuple<ParameterExpression, SelectParameterInformation>>()
                         {
-                            Tuple.Create(selector.Parameters[0], new SelectParameterInformation() { BatchName = "leftBatch", BatchType = leftMessageType, IndexVariableName = "i", parameterRepresentation = template.leftMessageRepresentation, }),
+                            Tuple.Create(selector.Parameters[0], new SelectParameterInformation() { BatchName = "leftBatch", BatchType = leftMessageType, IndexVariableName = leftBatchIndexVariable, parameterRepresentation = template.leftMessageRepresentation, }),
                         };
                     var projectionResult = SelectTransformer.Transform(selector, parameterSubsitutions, resultRepresentation, true);
                     if (projectionResult.Error)
@@ -108,7 +109,7 @@ namespace Microsoft.StreamProcessing
                         var d = new Dictionary<ParameterExpression, string>
                         {
                             { Expression.Variable(leftMessageType, "leftBatch"), leftBatch },
-                            { Expression.Variable(typeof(int), "i"), leftIndex },
+                            { Expression.Variable(typeof(int), leftBatchIndexVariable), leftIndex },
                             { selector.Parameters[1], rightEvent }
                         };
                         var sb = new System.Text.StringBuilder();
@@ -139,9 +140,10 @@ namespace Microsoft.StreamProcessing
                 #endregion
                 #region RightBatchSelector
                 {
+                    var rightBatchIndexVariable = selector.Parameters.GenerateFreshVariableName("j");
                     var parameterSubsitutions = new List<Tuple<ParameterExpression, SelectParameterInformation>>()
                         {
-                            Tuple.Create(selector.Parameters[1], new SelectParameterInformation() { BatchName = "rightBatch", BatchType = rightMessageType, IndexVariableName = "j", parameterRepresentation = template.rightMessageRepresentation, }),
+                            Tuple.Create(selector.Parameters[1], new SelectParameterInformation() { BatchName = "rightBatch", BatchType = rightMessageType, IndexVariableName = rightBatchIndexVariable, parameterRepresentation = template.rightMessageRepresentation, }),
                         };
                     var projectionResult = SelectTransformer.Transform(selector, parameterSubsitutions, resultRepresentation, true);
                     if (projectionResult.Error)
@@ -155,7 +157,7 @@ namespace Microsoft.StreamProcessing
                         {
                             { selector.Parameters[0], leftEvent },
                             { Expression.Variable(rightMessageType, "rightBatch"), rightBatch },
-                            { Expression.Variable(typeof(int), "j"), rightIndex }
+                            { Expression.Variable(typeof(int), rightBatchIndexVariable), rightIndex }
                         };
                         var sb = new System.Text.StringBuilder();
                         sb.AppendLine("{");

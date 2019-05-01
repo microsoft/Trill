@@ -44,6 +44,15 @@ namespace Microsoft.StreamProcessing
             yield return element;
         }
 
+        internal static string GenerateFreshVariableName(this IEnumerable<ParameterExpression> parameters, string baseName)
+        {
+            var names = new HashSet<string>(parameters.Select(p => p.Name));
+            var suffix = 0;
+            var testName = baseName;
+            while (names.Contains(testName)) testName = baseName + suffix++;
+            return testName;
+        }
+
         /// <summary>
         /// Tries to get the first element in the given sorted dictionary.
         /// </summary>
