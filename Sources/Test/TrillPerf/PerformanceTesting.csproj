@@ -46,6 +46,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Streamables\EquiJoinStreamablePerfTest.cs" />
+    <Compile Include="YahooBenchmark\DataGenerator.cs" />
+    <Compile Include="YahooBenchmark\PrimaryQuery.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\app.config">
