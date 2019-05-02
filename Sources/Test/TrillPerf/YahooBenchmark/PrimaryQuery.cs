@@ -3,13 +3,14 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace PerformanceTesting
+namespace PerformanceTesting.YahooBenchmark
 {
-    public class PerfTestAttribute : Attribute
+    public class PrimaryQuery
     {
-        public readonly string Name;
-
-        public PerfTestAttribute(string name) => this.Name = name;
     }
 }

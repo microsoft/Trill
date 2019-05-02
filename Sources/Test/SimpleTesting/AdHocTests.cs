@@ -792,6 +792,35 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.SequenceEqual(input));
         }
+
+        // Tests single-punctuation batches to make sure MinTimestamp/MaxTimestamp are computed correctly.
+        [TestMethod, TestCategory("Gated")]
+        public void SinglePunctuationBatchTimestamps()
+        {
+            using (new ConfigModifier().DataBatchSize(5).Modify())
+            {
+                var qc = new QueryContainer();
+                long currentMin = 0;
+                long currentMax = 0;
+                Observable.Range(0, Config.DataBatchSize * 10)
+                    .Select(e => e % (Config.DataBatchSize + 1) == 0 ? StreamEvent.CreatePunctuation<int>(e) : StreamEvent.CreatePoint(e, e))
+                    .ToStreamable()
+                    .ToStreamMessageObservable()
+                    .ForEachAsync(
+                        batch =>
+                        {
+                            var min = batch.MinTimestamp;
+                            Assert.IsTrue(min >= currentMin);
+                            currentMin = min;
+
+                            var max = batch.MaxTimestamp;
+                            Assert.IsTrue(max >= currentMax);
+                            currentMax = max;
+
+                            batch.Free();
+                        });
+            }
+        }
     }
 
     [TestClass]
