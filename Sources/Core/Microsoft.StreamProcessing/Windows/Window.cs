@@ -190,7 +190,7 @@ namespace Microsoft.StreamProcessing
             double percentile,
             Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            Invariant.IsNotNull(selector, nameof(selector));
             Invariant.IsTrue(percentile >= 0.0 && percentile <= 1.0, "percentile must be within [0.0 .. 1.0].");
             var aggregate = new PercentileContinuousDoubleAggregate(percentile, this.Properties.QueryContainer);
             return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
@@ -204,8 +204,8 @@ namespace Microsoft.StreamProcessing
             double percentile,
             Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(comparer, "comparer");
-            Invariant.IsNotNull(selector, "selector");
+            Invariant.IsNotNull(comparer, nameof(comparer));
+            Invariant.IsNotNull(selector, nameof(selector));
             Invariant.IsTrue(percentile >= 0.0 && percentile <= 1.0, "percentile must be within [0.0 .. 1.0].");
             var aggregate = new PercentileContinuousDoubleAggregate(percentile, new ComparerExpression<double>(comparer), this.Properties.QueryContainer);
             return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
@@ -218,7 +218,7 @@ namespace Microsoft.StreamProcessing
             double percentile,
             Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            Invariant.IsNotNull(selector, nameof(selector));
             Invariant.IsTrue(percentile >= 0.0 && percentile <= 1.0, "percentile must be within [0.0 .. 1.0].");
             var aggregate = new PercentileDiscreteDoubleAggregate(percentile, this.Properties.QueryContainer);
             return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
@@ -232,8 +232,8 @@ namespace Microsoft.StreamProcessing
             double percentile,
             Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(comparer, "comparer");
-            Invariant.IsNotNull(selector, "selector");
+            Invariant.IsNotNull(comparer, nameof(comparer));
+            Invariant.IsNotNull(selector, nameof(selector));
             Invariant.IsTrue(percentile >= 0.0 && percentile <= 1.0, "percentile must be within [0.0 .. 1.0].");
             var aggregate = new PercentileDiscreteDoubleAggregate(percentile, new ComparerExpression<double>(comparer), this.Properties.QueryContainer);
             return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
