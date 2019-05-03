@@ -225,11 +225,11 @@ namespace Microsoft.StreamProcessing
                     if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0 || *vother < 0)
                     {
                         var partitionKey = this.getPartitionKey(input.key.col[i]);
-                        if (this.ClosedEvents.Lookup(partitionKey, out this.ClosedEventsIndex)) this.ClosedEvents.Insert(ref this.ClosedEventsIndex, partitionKey, new SortedDictionary<long, FastDictionary2<KHP, List<ActiveEvent>>>());
-                        if (this.OpenEvents.Lookup(partitionKey, out this.OpenEventsIndex)) this.OpenEvents.Insert(ref this.OpenEventsIndex, partitionKey, this.OpenEventsGenerator());
-                        if (this.now.Lookup(partitionKey, out this.nowIndex)) this.now.Insert(ref this.nowIndex, partitionKey, StreamEvent.MinSyncTime);
-                        if (this.CurrentTimeOpenEventBufferTime.Lookup(partitionKey, out this.CurrentTimeOpenEventBufferTimeIndex)) this.CurrentTimeOpenEventBufferTime.Insert(ref this.CurrentTimeOpenEventBufferTimeIndex, partitionKey, StreamEvent.MinSyncTime);
-                        if (this.CurrentTimeOpenEventBuffer.Lookup(partitionKey, out this.CurrentTimeOpenEventBufferIndex)) this.CurrentTimeOpenEventBuffer.Insert(ref this.CurrentTimeOpenEventBufferIndex, partitionKey, this.CurrentTimeOpenEventBufferGenerator());
+                        if (!this.ClosedEvents.Lookup(partitionKey, out this.ClosedEventsIndex)) this.ClosedEvents.Insert(ref this.ClosedEventsIndex, partitionKey, new SortedDictionary<long, FastDictionary2<KHP, List<ActiveEvent>>>());
+                        if (!this.OpenEvents.Lookup(partitionKey, out this.OpenEventsIndex)) this.OpenEvents.Insert(ref this.OpenEventsIndex, partitionKey, this.OpenEventsGenerator());
+                        if (!this.now.Lookup(partitionKey, out this.nowIndex)) this.now.Insert(ref this.nowIndex, partitionKey, StreamEvent.MinSyncTime);
+                        if (!this.CurrentTimeOpenEventBufferTime.Lookup(partitionKey, out this.CurrentTimeOpenEventBufferTimeIndex)) this.CurrentTimeOpenEventBufferTime.Insert(ref this.CurrentTimeOpenEventBufferTimeIndex, partitionKey, StreamEvent.MinSyncTime);
+                        if (!this.CurrentTimeOpenEventBuffer.Lookup(partitionKey, out this.CurrentTimeOpenEventBufferIndex)) this.CurrentTimeOpenEventBuffer.Insert(ref this.CurrentTimeOpenEventBufferIndex, partitionKey, this.CurrentTimeOpenEventBufferGenerator());
 
                         var sync = input.vsync.col[i];
                         if (this.now.entries[this.nowIndex].value < sync)
@@ -398,7 +398,7 @@ namespace Microsoft.StreamProcessing
             if (this.CurrentTimeOpenEventBuffer.entries[this.CurrentTimeOpenEventBufferIndex].value.Size > 0)
             {
                 var it = FastDictionary2<KHP, long>.IteratorStart;
-                while (this.CurrentTimeOpenEventBuffer.Iterate(ref it))
+                while (this.CurrentTimeOpenEventBuffer.entries[this.CurrentTimeOpenEventBufferIndex].value.Iterate(ref it))
                 {
                     var e = this.CurrentTimeOpenEventBuffer.entries[this.CurrentTimeOpenEventBufferIndex].value.entries[it].key;
                     for (int i = 0; i < this.CurrentTimeOpenEventBuffer.entries[this.CurrentTimeOpenEventBufferIndex].value.entries[it].value; i++)
