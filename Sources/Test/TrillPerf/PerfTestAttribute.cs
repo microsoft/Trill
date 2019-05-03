@@ -10,9 +10,6 @@ namespace PerformanceTesting
     {
         public readonly string Name;
 
-        public PerfTestAttribute(string name)
-        {
-            this.Name = name;
-        }
+        public PerfTestAttribute(string name) => this.Name = name;
     }
 }

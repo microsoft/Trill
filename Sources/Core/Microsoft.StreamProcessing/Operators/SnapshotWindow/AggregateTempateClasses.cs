@@ -150,7 +150,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledAccumulate = true;
-                        template.accumulate = (s1, s2) => string.Format("accumulate({0}, {1}, batch[i]);", s1, s2);
+                        template.accumulate = (s1, s2) => string.Format("accumulate({0}, {1}, inputBatch[i]);", s1, s2);
                     }
                 }
 
@@ -171,7 +171,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledDeaccumulate = true;
-                        template.deaccumulate = (s1, s2) => string.Format("deaccumulate({0}, {1}, batch[i]);", s1, s2);
+                        template.deaccumulate = (s1, s2) => string.Format("deaccumulate({0}, {1}, inputBatch[i]);", s1, s2);
                     }
                 }
 

@@ -50,12 +50,10 @@ namespace Microsoft.StreamProcessing
             else if (this.Left.Properties.IsColumnar)
             {
                 this.Left = this.Left.ColumnToRow();
-                this.properties = this.properties.ToRowBased();
             }
             else if (this.Right.Properties.IsColumnar)
             {
                 this.Right = this.Right.ColumnToRow();
-                this.properties = this.properties.ToRowBased();
             }
         }
 

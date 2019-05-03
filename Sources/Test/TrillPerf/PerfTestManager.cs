@@ -13,10 +13,7 @@ namespace PerformanceTesting
     {
         public delegate void PerfTestDelegate(IPerfTestState state);
 
-        public static void RunAllTests()
-        {
-            RunTests(GetAllTests());
-        }
+        public static void RunAllTests() => RunTests(GetAllTests());
 
         public static void RunTests(IEnumerable<NamedTest> tests)
         {
@@ -90,10 +87,7 @@ namespace PerformanceTesting
 
             public string Name
             {
-                get
-                {
-                    return this.name;
-                }
+                get => this.name;
 
                 set
                 {
@@ -109,10 +103,7 @@ namespace PerformanceTesting
 
             public string Action
             {
-                get
-                {
-                    return this.action;
-                }
+                get => this.action;
 
                 set
                 {
@@ -161,10 +152,7 @@ namespace PerformanceTesting
                 }
             }
 
-            public void AddMessage(string message)
-            {
-                DisplayLines("   " + message);
-            }
+            public void AddMessage(string message) => DisplayLines("   " + message);
 
             private static void DisplayOneLine(string text)
             {
