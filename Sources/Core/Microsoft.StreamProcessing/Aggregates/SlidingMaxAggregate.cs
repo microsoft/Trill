@@ -10,15 +10,15 @@ using Microsoft.StreamProcessing.Internal;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
-    internal class FixedIntervalMaxAggregate<T> : IAggregate<T, MinMaxState<T>, T>
+    internal class SlidingMaxAggregate<T> : IAggregate<T, MinMaxState<T>, T>
     {
         private static readonly long InvalidSyncTime = StreamEvent.MinSyncTime - 1;
         private readonly Comparison<T> comparer;
         private readonly Expression<Func<SortedDictionary<T, long>>> generator;
 
-        public FixedIntervalMaxAggregate(QueryContainer container) : this(ComparerExpression<T>.Default, container) { }
+        public SlidingMaxAggregate(QueryContainer container) : this(ComparerExpression<T>.Default, container) { }
 
-        public FixedIntervalMaxAggregate(IComparerExpression<T> comparer, QueryContainer container)
+        public SlidingMaxAggregate(IComparerExpression<T> comparer, QueryContainer container)
         {
             Contract.Requires(comparer != null);
             this.comparer = comparer.GetCompareExpr().Compile();

@@ -83,9 +83,7 @@ namespace Microsoft.StreamProcessing
                 this.apt = AggregatePipeType.StartEdge;
             else if (this.sourceProps.IsConstantDuration)
             {
-                if (this.sourceProps.ConstantDurationLength.HasValue &&
-                    ((this.sourceProps.ConstantDurationLength == 1) ||
-                     (this.sourceProps.IsConstantHop && this.sourceProps.ConstantHopLength.HasValue && this.sourceProps.ConstantHopLength.Value >= this.sourceProps.ConstantDurationLength.Value)))
+                if (this.sourceProps.IsTumbling)
                     this.apt = AggregatePipeType.Tumbling;
                 else if (this.sourceProps.ConstantDurationLength.HasValue && this.sourceProps.IsConstantHop && this.sourceProps.ConstantHopLength.HasValue)
                     this.apt = AggregatePipeType.Hopping;

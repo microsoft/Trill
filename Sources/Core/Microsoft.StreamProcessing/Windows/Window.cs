@@ -86,16 +86,14 @@ namespace Microsoft.StreamProcessing
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(Expression<Func<TSource, TValue>> selector)
         {
             Invariant.IsNotNull(selector, nameof(selector));
-            if (this.Properties.IsConstantDuration)
-            {
-                var aggregate = new FixedIntervalMinAggregate<TValue>(this.Properties.QueryContainer);
-                return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-            }
-            else
-            {
-                var aggregate = new MinAggregate<TValue>(this.Properties.QueryContainer);
-                return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-            }
+
+            var aggregate = this.Properties.IsTumbling
+                ? new TumblingMinAggregate<TValue>()
+                : this.Properties.IsConstantDuration
+                    ? new SlidingMinAggregate<TValue>(this.Properties.QueryContainer)
+                    : (IAggregate<TValue, MinMaxState<TValue>, TValue>)new MinAggregate<TValue>(this.Properties.QueryContainer);
+
+            return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
 
         /// <summary>
@@ -105,16 +103,14 @@ namespace Microsoft.StreamProcessing
         {
             Invariant.IsNotNull(selector, nameof(selector));
             Invariant.IsNotNull(comparer, nameof(comparer));
-            if (this.Properties.IsConstantDuration)
-            {
-                var aggregate = new FixedIntervalMinAggregate<TValue>(comparer, this.Properties.QueryContainer);
-                return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-            }
-            else
-            {
-                var aggregate = new MinAggregate<TValue>(comparer, this.Properties.QueryContainer);
-                return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-            }
+
+            var aggregate = this.Properties.IsTumbling
+                ? new TumblingMinAggregate<TValue>(comparer)
+                : this.Properties.IsConstantDuration
+                    ? new SlidingMinAggregate<TValue>(comparer, this.Properties.QueryContainer)
+                    : (IAggregate<TValue, MinMaxState<TValue>, TValue>)new MinAggregate<TValue>(comparer, this.Properties.QueryContainer);
+
+            return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
 
         /// <summary>
@@ -129,16 +125,14 @@ namespace Microsoft.StreamProcessing
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Max<TValue>(Expression<Func<TSource, TValue>> selector)
         {
             Invariant.IsNotNull(selector, nameof(selector));
-            if (this.Properties.IsConstantDuration)
-            {
-                var aggregate = new FixedIntervalMaxAggregate<TValue>(this.Properties.QueryContainer);
-                return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-            }
-            else
-            {
-                var aggregate = new MaxAggregate<TValue>(this.Properties.QueryContainer);
-                return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-            }
+
+            var aggregate = this.Properties.IsTumbling
+                ? new TumblingMaxAggregate<TValue>()
+                : this.Properties.IsConstantDuration
+                    ? new SlidingMaxAggregate<TValue>(this.Properties.QueryContainer)
+                    : (IAggregate<TValue, MinMaxState<TValue>, TValue>)new MaxAggregate<TValue>(this.Properties.QueryContainer);
+
+            return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
 
         /// <summary>
@@ -148,16 +142,14 @@ namespace Microsoft.StreamProcessing
         {
             Invariant.IsNotNull(selector, nameof(selector));
             Invariant.IsNotNull(comparer, nameof(comparer));
-            if (this.Properties.IsConstantDuration)
-            {
-                var aggregate = new FixedIntervalMaxAggregate<TValue>(comparer, this.Properties.QueryContainer);
-                return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-            }
-            else
-            {
-                var aggregate = new MaxAggregate<TValue>(comparer, this.Properties.QueryContainer);
-                return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
-            }
+
+            var aggregate = this.Properties.IsTumbling
+                ? new TumblingMaxAggregate<TValue>(comparer)
+                : this.Properties.IsConstantDuration
+                    ? new SlidingMaxAggregate<TValue>(comparer, this.Properties.QueryContainer)
+                    : (IAggregate<TValue, MinMaxState<TValue>, TValue>)new MaxAggregate<TValue>(comparer, this.Properties.QueryContainer);
+
+            return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
 
         /// <summary>

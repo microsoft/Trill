@@ -20,11 +20,12 @@ namespace PerformanceTesting.YahooBenchmark
                 .Where(e => e.event_type == Event_Type.View)
                 .TumblingWindowLifetime(TimeSpan.FromSeconds(10).Ticks)
                 .Select(e => new ProjectedEvent { ad_id = e.ad_id, event_time = e.event_time, campaign_id = DataGenerator.Campaigns[e.ad_id] })
-                .GroupAggregate(e => e.campaign_id, o => o.Count(), o => o.Max(r => r.event_time), (key, count, max) => new Output { campaign_id = key.Key, count = count, lastUpdate = max });
+                .GroupAggregate(e => e.campaign_id, o => o.Count(), o => o.Max(r => r.event_time), (key, count, max) => new Output { campaign_id = key.Key, count = count, lastUpdate = max })
+            ;
 
         private static void PopulateArray(StreamEvent<Event>[] array)
         {
-            for (int i = 0; i < ArraySize; i++)
+            for (int i = 0; i < ArraySize - 1; i++)
             {
                 var ev = Event.CreateEvent(DataGenerator.Ads);
                 array[i] = StreamEvent.CreatePoint(ev.event_time.Ticks, ev);
@@ -34,14 +35,21 @@ namespace PerformanceTesting.YahooBenchmark
         [PerfTest("YahooBenchmark")]
         public static void YahooBenchmarkTest(IPerfTestState state)
         {
-            var count = 0UL;
+            var rowCount = 0UL;
+            var batchCount = 0UL;
 
             var eventArray = new StreamEvent<Event>[ArraySize];
             var segment = new ArraySegment<StreamEvent<Event>>(eventArray);
             var events = new Subject<ArraySegment<StreamEvent<Event>>>();
             var inputStream = events.ToStreamable();
-            var outputStream = BenchmarkQuery(inputStream);
-            outputStream.ToStreamEventObservable().ForEachAsync(o => count++);
+            var outputStream = inputStream
+                .Where(e => e.event_type == Event_Type.View)
+                .TumblingWindowLifetime(TimeSpan.FromSeconds(10).Ticks)
+                .Select(e => new ProjectedEvent { ad_id = e.ad_id, event_time = e.event_time, campaign_id = DataGenerator.Campaigns[e.ad_id] })
+                .GroupAggregate(e => e.campaign_id, o => o.Count(), o => o.Max(r => r.event_time), (key, count, max) => new Output { campaign_id = key.Key, count = count, lastUpdate = max })
+                ;
+            ;
+            outputStream.ToStreamEventObservable().ForEachAsync(o => rowCount++);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -49,8 +57,10 @@ namespace PerformanceTesting.YahooBenchmark
             while (true)
             {
                 PopulateArray(eventArray);
+                eventArray[ArraySize - 1] = StreamEvent.CreatePunctuation<Event>(DateTime.Now.Ticks);
                 events.OnNext(segment);
-                Console.WriteLine(new { count, time = stopwatch.ElapsedMilliseconds });
+                batchCount++;
+                if (batchCount % 100 == 0) Console.WriteLine(new { rowCount, batchCount, time = stopwatch.ElapsedMilliseconds });
             }
         }
     }
