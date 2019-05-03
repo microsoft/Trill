@@ -12,7 +12,7 @@ namespace PerformanceTesting.Streamables
 {
     public class EquiJoinStreamablePerfTest
     {
-        // [PerfTest("EquiJoinStreamable")]
+        [PerfTest("EquiJoinStreamable")]
         public static void EquiJoinStreamableTest(IPerfTestState state)
         {
             const int LeftSize = 1_000_000;
