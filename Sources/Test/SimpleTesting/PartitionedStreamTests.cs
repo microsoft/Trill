@@ -727,7 +727,7 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
-        public void AlterLifeTimeWithFlush_BorisBug()
+        public void AlterLifeTimeWithFlush()
         {
             var startDate = new DateTime(100);
             var data = new[] {
@@ -765,7 +765,7 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
-        public void AlterLifeTimeWithFlush_BorisBugDoubles()
+        public void AlterLifeTimeWithFlushDoubles()
         {
             var startDate = new DateTime(100);
             var data = new[] {
@@ -814,6 +814,68 @@ namespace SimpleTesting
             }
 
             Assert.IsTrue(res.Count > 0, "There should be some results.");
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PartitionedStitch()
+        {
+            var subject = new Subject<PartitionedStreamEvent<string, string>>();
+
+            var qc = new QueryContainer();
+            var input = qc.RegisterInput(subject);
+
+            var output = new List<PartitionedStreamEvent<string, string>>();
+            var egress = qc.RegisterOutput(input.Stitch()).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            var payload = new[] { "c1payload", "c2payload" };
+
+            // c1 - [1,7),[7,10),[11,12) => [1,10),[11,12)
+            subject.OnNext(PartitionedStreamEvent.CreateStart("c1", 1, payload: payload[0]));
+            subject.OnNext(PartitionedStreamEvent.CreateEnd("c1", 7, 1, payload: payload[0]));
+            subject.OnNext(PartitionedStreamEvent.CreateStart("c1", 7, payload: payload[0]));
+            subject.OnNext(PartitionedStreamEvent.CreateEnd("c1", 10, 7, payload: payload[0]));
+            subject.OnNext(PartitionedStreamEvent.CreateStart("c1", 11, payload: payload[0]));
+            subject.OnNext(PartitionedStreamEvent.CreateEnd("c1", 12, 11, payload: payload[0]));
+
+            // c2 - [2,3),[5,10),[10,12) => [2,3),[5,12)
+            subject.OnNext(PartitionedStreamEvent.CreateStart("c2", 2, payload: payload[1]));
+            subject.OnNext(PartitionedStreamEvent.CreateEnd("c2", 3, 2, payload: payload[1]));
+            subject.OnNext(PartitionedStreamEvent.CreateStart("c2", 5, payload: payload[1]));
+            subject.OnNext(PartitionedStreamEvent.CreateEnd("c2", 10, 5, payload: payload[1]));
+            subject.OnNext(PartitionedStreamEvent.CreateStart("c2", 10, payload: payload[1]));
+            subject.OnNext(PartitionedStreamEvent.CreateEnd("c2", 12, 10, payload: payload[1]));
+
+            subject.OnCompleted();
+
+            process.Flush();
+
+            var expected = new[]
+            {
+                new List<PartitionedStreamEvent<string, string>>
+                {
+                    PartitionedStreamEvent.CreateStart("c1", 1, payload: payload[0]),
+                    PartitionedStreamEvent.CreateEnd("c1", 10, 1, payload: payload[0]),
+                    PartitionedStreamEvent.CreateStart("c1", 11, payload: payload[0]),
+                    PartitionedStreamEvent.CreateEnd("c1", 12, 11, payload: payload[0]),
+                },
+                new List<PartitionedStreamEvent<string, string>>
+                {
+                    PartitionedStreamEvent.CreateStart("c2", 2, payload: payload[1]),
+                    PartitionedStreamEvent.CreateEnd("c2", 3, 2, payload: payload[1]),
+                    PartitionedStreamEvent.CreateStart("c2", 5, payload: payload[1]),
+                    PartitionedStreamEvent.CreateEnd("c2", 12, 5, payload: payload[1]),
+                },
+            };
+
+            var outputData = new[]
+            {
+                output.Where(o => o.IsData && o.PartitionKey == "c1").ToList(),
+                output.Where(o => o.IsData && o.PartitionKey == "c2").ToList(),
+            };
+
+            Assert.IsTrue(expected[0].SequenceEqual(outputData[0]));
+            Assert.IsTrue(expected[1].SequenceEqual(outputData[1]));
         }
     }
 }
