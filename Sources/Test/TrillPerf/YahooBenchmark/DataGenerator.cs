@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PerformanceTesting.YahooBenchmark
 {
@@ -49,19 +50,23 @@ namespace PerformanceTesting.YahooBenchmark
     public struct Output
     {
         public DateTime time_window;
-        public string campaign_id;
-        public long count;
+        public Guid campaign_id;
+        public ulong count;
         public DateTime lastUpdate;
     }
 
     public struct ProjectedEvent
     {
         public Guid ad_id;
+        public Guid campaign_id;
         public DateTime event_time;
     }
 
-    public sealed class DataGenerator
+    public static class DataGenerator
     {
+        public static readonly Dictionary<Guid, Guid> Campaigns = GenerateCampaigns();
+        public static readonly Guid[] Ads = Campaigns.Keys.ToArray();
+
         private const int CampaignCount = 100;
         private const int AdsPerCampaign = 10;
 
