@@ -6,7 +6,7 @@ using System;
 using Microsoft.StreamProcessing.Internal.Collections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace ComponentTesting.Collections
+namespace SimpleTesting
 {
     [TestClass]
     public static class FastLinkedListTest
@@ -25,15 +25,15 @@ namespace ComponentTesting.Collections
             Assert.AreEqual(0, list.Count);
 
             var iter = new FastLinkedList<string>.ListTraverser(list);
-            Assert.IsFalse(iter.Next(out int index));
+            Assert.IsFalse(iter.Next(out _));
 
             int indexA = list.Insert("a");
             Assert.IsFalse(list.IsEmpty);
             Assert.AreEqual(1, list.Count);
             iter.Reset();
-            Assert.IsTrue(iter.Next(out index));
+            Assert.IsTrue(iter.Next(out var index));
             Assert.AreEqual(indexA, index);
-            Assert.IsFalse(iter.Next(out index));
+            Assert.IsFalse(iter.Next(out _));
 
 
             int indexB = list.Insert("b");
@@ -56,7 +56,7 @@ namespace ComponentTesting.Collections
             Assert.AreEqual(indexB, index);
             Assert.IsTrue(iter2.Next(out index));
             Assert.AreEqual(indexA, index);
-            Assert.IsFalse(iter2.Next(out index));
+            Assert.IsFalse(iter2.Next(out _));
 
             list.Remove(indexA2);
             Assert.IsFalse(list.IsEmpty);
@@ -69,7 +69,7 @@ namespace ComponentTesting.Collections
             Assert.AreEqual(indexB, index);
             Assert.IsTrue(iter2.Next(out index));
             Assert.AreEqual(indexA, index);
-            Assert.IsFalse(iter2.Next(out index));
+            Assert.IsFalse(iter2.Next(out _));
 
             int indexC = list.Insert("C");
             Assert.IsFalse(list.IsEmpty);
@@ -86,7 +86,7 @@ namespace ComponentTesting.Collections
 
             Assert.IsTrue(iter2.Next(out index));
             Assert.AreEqual(indexA, index);
-            Assert.IsFalse(iter2.Next(out index));
+            Assert.IsFalse(iter2.Next(out _));
 
             list.Remove(indexA);
             list.Remove(indexC);
@@ -100,7 +100,7 @@ namespace ComponentTesting.Collections
 
         private static void BetterListTest()
         {
-            FastLinkedList<int> list = new FastLinkedList<int>(1);
+            var list = new FastLinkedList<int>(1);
 
             long sum = 0;
             for (int i = 1; i <= 10000; i++)
@@ -115,7 +115,7 @@ namespace ComponentTesting.Collections
                 sum -= i;
             }*/
 
-            Random r = new Random(0);
+            var r = new Random(0);
             int cnt = 1;
             while (cnt < 10000)
             {
@@ -125,7 +125,7 @@ namespace ComponentTesting.Collections
                 sum -= cnt;
             }
 
-            FastLinkedList<int>.ListTraverser iter = new FastLinkedList<int>.ListTraverser(list);
+            var iter = new FastLinkedList<int>.ListTraverser(list);
             iter.Reset();
 
             long check = 0;

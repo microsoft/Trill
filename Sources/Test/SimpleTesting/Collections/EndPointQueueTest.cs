@@ -6,7 +6,7 @@
 using Microsoft.StreamProcessing.Internal.Collections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace ComponentTesting.Collections
+namespace SimpleTesting
 {
     [TestClass]
     public class EndPointQueueTest : TestWithConfigSettingsAndMemoryLeakDetection

@@ -20,7 +20,7 @@ namespace SimpleTesting
 {
     public struct StructWithProperty
     {
-        public int P { set; get; }
+        public int P { get; set; }
     }
 
     public struct GameData

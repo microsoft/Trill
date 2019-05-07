@@ -6,7 +6,7 @@ using System;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace ComponentTesting.Aggregates
+namespace SimpleTesting
 {
     [TestClass]
     public class CompoundAggregate : TestWithConfigSettingsAndMemoryLeakDetection

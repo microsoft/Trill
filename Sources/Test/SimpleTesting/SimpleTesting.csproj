@@ -58,12 +58,34 @@
       <AutoGen>True</AutoGen>
     </Compile>
     <Compile Include="AfaTests.cs" />
+    <Compile Include="Aggregates\AverageAggregate.cs" />
+    <Compile Include="Aggregates\CompoundAggregate.cs" />
+    <Compile Include="Aggregates\CountAggregate.cs" />
+    <Compile Include="Aggregates\GroupAggregate.cs" />
+    <Compile Include="Aggregates\MaxAggregate.cs" />
+    <Compile Include="Aggregates\MinAggregate.cs" />
+    <Compile Include="Aggregates\PercentileAggregates.cs" />
+    <Compile Include="Aggregates\PerKeyAggregate.cs" />
+    <Compile Include="Aggregates\SumAggregate.cs" />
+    <Compile Include="Aggregates\TopKAggregate.cs" />
+    <Compile Include="Aggregates\WhereAggregate.cs" />
+    <Compile Include="Collections\AbstractEventBatch.cs" />
+    <Compile Include="Collections\EndPointHeapTest.cs" />
+    <Compile Include="Collections\EndPointQueueTest.cs" />
+    <Compile Include="Collections\FastListTest.cs" />
+    <Compile Include="Collections\FastMapTest.cs" />
+    <Compile Include="Collections\RemovableEndPointHeapTest.cs" />
+    <Compile Include="Serializer\SerializabilityTypeScan.cs" />
+    <Compile Include="Streamables\BeatStreamableTest.cs" />
     <Compile Include="CheckpointRestoreTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>CheckpointRestoreTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="GroupStreamableTests.cs">
+    <Compile Include="Streamables\ClipStreamableTest.cs" />
+    <Compile Include="Streamables\EquiJoinStreamableTest.cs" />
+    <Compile Include="Streamables\ExtendLifetimeTest.cs" />
+    <Compile Include="Streamables\GroupStreamableTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>GroupStreamableTests.tt</DependentUpon>
@@ -83,7 +105,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>JoinTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="QuantizeLifetimeTests.cs">
+    <Compile Include="Streamables\LeftAntiSemiJoinStreamableTest.cs" />
+    <Compile Include="Streamables\PointAtEndTest.cs" />
+    <Compile Include="Streamables\QuantizeLifetimeTests.cs">
       <DependentUpon>QuantizeLifetimeTests.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -126,7 +150,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ReorderPolicyTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="ShuffleStreamableTests.cs">
+    <Compile Include="Streamables\ShuffleStreamableTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ShuffleStreamableTests.tt</DependentUpon>
@@ -141,7 +165,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>SnapshotTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="SurrogateTests.cs" />
+    <Compile Include="Streamables\StitchTest.cs" />
+    <Compile Include="Serializer\SurrogateTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="DisorderedIngressAndEgressTests.tt">
@@ -171,7 +196,7 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>CheckpointRestoreTests.cs</LastGenOutput>
     </Content>
-    <Content Include="GroupStreamableTests.tt">
+    <Content Include="Streamables\GroupStreamableTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>GroupStreamableTests.cs</LastGenOutput>
     </Content>
@@ -183,7 +208,7 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JoinTests.cs</LastGenOutput>
     </Content>
-    <Content Include="QuantizeLifetimeTests.tt">
+    <Content Include="Streamables\QuantizeLifetimeTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>QuantizeLifetimeTests.cs</LastGenOutput>
     </Content>
@@ -207,7 +232,7 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReorderPolicyTests.cs</LastGenOutput>
     </Content>
-    <Content Include="ShuffleStreamableTests.tt">
+    <Content Include="Streamables\ShuffleStreamableTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ShuffleStreamableTests.cs</LastGenOutput>
     </Content>

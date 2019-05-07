@@ -28,6 +28,37 @@ namespace SimpleTesting
                 .ToStreamable();
         }
 
+        public static bool IsEquivalentTo<TPayload>(this IStreamable<Empty, TPayload> input, StreamEvent<TPayload>[] comparison)
+        {
+            Invariant.IsNotNull(input, "input");
+            Invariant.IsNotNull(comparison, "comparison");
+            var events = input.ToStreamEventArray();
+            var orderedEvents = events.OrderBy(e => e.SyncTime).ThenBy(e => e.OtherTime).ThenBy(e => e.Payload).ToArray();
+            var orderedComparison = comparison.OrderBy(e => e.SyncTime).ThenBy(e => e.OtherTime).ThenBy(e => e.Payload).ToArray();
+
+            return orderedEvents.SequenceEqual(orderedComparison);
+        }
+
+        public static StreamEvent<TPayload>[] ToStreamEventArray<TPayload>(this IStreamable<Empty, TPayload> input)
+        {
+            Invariant.IsNotNull(input, "input");
+            return input.ToStreamEventObservable().ToEnumerable().ToArray();
+        }
+
+        public static IStreamable<Empty, TPayload> ToCleanStreamable<TPayload>(this StreamEvent<TPayload>[] input)
+        {
+            Invariant.IsNotNull(input, "input");
+            return input.OrderBy(v => v.SyncTime).ToArray().ToStreamable();
+        }
+
+        public static IStreamable<Empty, TPayload> ToStreamable<TPayload>(this StreamEvent<TPayload>[] input)
+        {
+            Invariant.IsNotNull(input, "input");
+
+            return input.ToObservable()
+                .ToStreamable(null, FlushPolicy.FlushOnPunctuation);
+        }
+
         public static IEnumerable<T> TrillWhere<T>(IEnumerable<T> enumerable, Expression<Func<T, bool>> wherePredicate, bool disableFusion = true)
         {
             var temp = enumerable.ToStreamable();

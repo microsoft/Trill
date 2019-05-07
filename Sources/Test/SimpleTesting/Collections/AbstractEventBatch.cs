@@ -6,7 +6,7 @@ using System.Diagnostics;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace ComponentTesting.Collections
+namespace SimpleTesting
 {
     [TestClass]
     public class AbstractStreamMessage : TestWithConfigSettingsAndMemoryLeakDetection

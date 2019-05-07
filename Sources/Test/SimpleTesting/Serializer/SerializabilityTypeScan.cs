@@ -10,7 +10,7 @@ using System.Runtime.Serialization;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace ComponentTesting.Serializer
+namespace SimpleTesting
 {
     [TestClass]
     public class SerializabilityTypeScanTest : TestWithConfigSettingsAndMemoryLeakDetection
