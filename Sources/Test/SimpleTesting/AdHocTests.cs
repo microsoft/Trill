@@ -302,10 +302,9 @@ namespace SimpleTesting
             public Nested E;
 
             public override bool Equals(object obj)
-            {
-                if (!(obj is MyFieldsContainer other)) return false;
-                return other.A == this.A && other.B == this.B && other.C.Equals(this.C) && (other.D == null || other.D.Equals(this.D)) && (other.E == null || other.E.Equals(this.E));
-            }
+                => !(obj is MyFieldsContainer other)
+                    ? false
+                    : other.A == this.A && other.B == this.B && other.C.Equals(this.C) && (other.D == null || other.D.Equals(this.D)) && (other.E == null || other.E.Equals(this.E));
             public override int GetHashCode()
             {
                 uint hash = (uint)this.A.GetHashCode();
@@ -1615,10 +1614,7 @@ namespace SimpleTesting
             public int IntField;
             public int IntAutoProp { get; set; }
             public override bool Equals(object obj)
-            {
-                if (!(obj is ClassWithAutoProps other)) return false;
-                return this.IntAutoProp == other.IntAutoProp && this.IntField == other.IntField;
-            }
+                => !(obj is ClassWithAutoProps other) ? false : this.IntAutoProp == other.IntAutoProp && this.IntField == other.IntField;
             public override int GetHashCode() => this.IntAutoProp.GetHashCode() ^ this.IntField.GetHashCode();
 
             public Expression<Func<ClassWithAutoProps, ClassWithAutoProps, bool>> GetEqualsExpr()
@@ -1722,14 +1718,8 @@ namespace SimpleTesting
         {
             public int x;
 
-            public override bool Equals(object obj)
-            {
-                return obj is ClassOverridingEquals other && other.x == this.x;
-            }
-            public override int GetHashCode()
-            {
-                return this.x.GetHashCode();
-            }
+            public override bool Equals(object obj) => obj is ClassOverridingEquals other && other.x == this.x;
+            public override int GetHashCode() => this.x.GetHashCode();
         }
 
         /// <summary>
@@ -1836,11 +1826,7 @@ namespace SimpleTesting
         public class Basetype
         {
             public int x;
-            public override bool Equals(object obj)
-            {
-                if (!(obj is Basetype other)) return false;
-                return other.x == this.x;
-            }
+            public override bool Equals(object obj) => !(obj is Basetype other) ? false : other.x == this.x;
             public override int GetHashCode() => this.x.GetHashCode();
         }
 
@@ -1894,7 +1880,7 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }

@@ -25,18 +25,18 @@ namespace SimpleTesting
 
             Assert.IsTrue(heap.IsEmpty);
             Assert.AreEqual(0, heap.Count);
-            Assert.IsFalse(heap.TryPeekNext(out long time, out int value));
-            Assert.IsFalse(heap.TryGetNext(out time, out value));
-            Assert.IsFalse(heap.TryGetNextExclusive(100, out time, out value));
-            Assert.IsFalse(heap.TryGetNextInclusive(100, out time, out value));
+            Assert.IsFalse(heap.TryPeekNext(out _, out _));
+            Assert.IsFalse(heap.TryGetNext(out _, out _));
+            Assert.IsFalse(heap.TryGetNextExclusive(100, out _, out _));
+            Assert.IsFalse(heap.TryGetNextInclusive(100, out _, out _));
 
             heap.Insert(5, 1000);
 
             Assert.IsFalse(heap.IsEmpty);
             Assert.AreEqual(1, heap.Count);
-            Assert.IsFalse(heap.TryGetNextExclusive(1, out time, out value));
-            Assert.IsFalse(heap.TryGetNextInclusive(1, out time, out value));
-            Assert.IsTrue(heap.TryPeekNext(out time, out value));
+            Assert.IsFalse(heap.TryGetNextExclusive(1, out _, out _));
+            Assert.IsFalse(heap.TryGetNextInclusive(1, out _, out _));
+            Assert.IsTrue(heap.TryPeekNext(out var time, out var value));
             Assert.AreEqual(5, time);
             Assert.AreEqual(1000, value);
 
@@ -50,12 +50,12 @@ namespace SimpleTesting
             heap.Insert(5, 1002);
             heap.Insert(4, 1003);
 
-            Assert.IsFalse(heap.TryGetNextInclusive(2, out time, out value));
+            Assert.IsFalse(heap.TryGetNextInclusive(2, out _, out _));
             Assert.IsTrue(heap.TryGetNextInclusive(3, out time, out value));
             Assert.AreEqual(3, time);
             Assert.AreEqual(1001, value);
 
-            Assert.IsFalse(heap.TryGetNextExclusive(4, out time, out value));
+            Assert.IsFalse(heap.TryGetNextExclusive(4, out _, out _));
             Assert.IsTrue(heap.TryGetNextExclusive(5, out time, out value));
             Assert.AreEqual(4, time);
             Assert.AreEqual(1003, value);

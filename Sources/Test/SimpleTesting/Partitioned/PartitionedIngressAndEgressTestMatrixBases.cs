@@ -414,10 +414,8 @@ namespace SimpleTesting.PartitionedIngressAndEgress
         }
 
         private void AddDiagnostic(int key, long time, long? delta = default)
-        {
-            this.diagnostic[key].Add(OutOfOrderPartitionedStreamEvent.Create(
+            => this.diagnostic[key].Add(OutOfOrderPartitionedStreamEvent.Create(
                 PartitionedStreamEvent.CreateInterval(key, time, time + IntervalLength, key), delta));
-        }
 
         private const int IntervalLength = 20;
         private void AddEvent(int key, long time)

@@ -16,17 +16,13 @@ namespace SimpleTesting
             : base(new ConfigModifier().DataBatchSize(80000))
         { }
 
+        // Set bit at idx.
         private static void VacateAt<T>(StreamMessage<T, bool> tm, int idx)
-        {
-            // Set bit at idx.
-            tm.bitvector.col[idx >> 6] = tm.bitvector.col[idx >> 6] | (1L << (idx & 0x3f));
-        }
+            => tm.bitvector.col[idx >> 6] = tm.bitvector.col[idx >> 6] | (1L << (idx & 0x3f));
 
+        // Reset bit at idx.
         private static void OccupyAt<T>(StreamMessage<T, bool> tm, int idx)
-        {
-            // Reset bit at idx.
-            tm.bitvector.col[idx >> 6] = tm.bitvector.col[idx >> 6] & ~(1L << (idx & 0x3f));
-        }
+            => tm.bitvector.col[idx >> 6] = tm.bitvector.col[idx >> 6] & ~(1L << (idx & 0x3f));
 
         [TestMethod, TestCategory("Gated")]
         public void ComputeMinMax_Basic()

@@ -32,16 +32,15 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
     {
         case "Row": #>
             .ForceRowBasedExecution(true)
-            .DontFallBackToRowBasedExecution(true)
 <#          break;
         case "Columnar": #>
             .ForceRowBasedExecution(false)
-            .DontFallBackToRowBasedExecution(true)
 <#          break;
     } #>
 <# if (!string.IsNullOrEmpty(batch)) { #>
             .DataBatchSize(100)
-<# } #>) { }
+<# } #>
+            .DontFallBackToRowBasedExecution(true)) { }
 
         /// <summary>
         /// Tests sorter with multiple partitions
@@ -135,7 +134,7 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
@@ -164,7 +163,7 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))

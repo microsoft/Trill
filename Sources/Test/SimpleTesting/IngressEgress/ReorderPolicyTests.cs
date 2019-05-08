@@ -111,7 +111,7 @@ namespace SimpleTesting
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
@@ -140,7 +140,7 @@ namespace SimpleTesting
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
@@ -164,8 +164,8 @@ namespace SimpleTesting
         public ReorderPolicyTestsRowSmallBatch() : base(
             new ConfigModifier()
             .ForceRowBasedExecution(true)
-            .DontFallBackToRowBasedExecution(true)
-            .DataBatchSize(100)) { }
+            .DataBatchSize(100)
+            .DontFallBackToRowBasedExecution(true)) { }
 
         /// <summary>
         /// Tests sorter with multiple partitions
@@ -259,7 +259,7 @@ namespace SimpleTesting
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
@@ -288,7 +288,7 @@ namespace SimpleTesting
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
@@ -406,7 +406,7 @@ namespace SimpleTesting
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
@@ -435,7 +435,7 @@ namespace SimpleTesting
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
@@ -459,8 +459,8 @@ namespace SimpleTesting
         public ReorderPolicyTestsColumnarSmallBatch() : base(
             new ConfigModifier()
             .ForceRowBasedExecution(false)
-            .DontFallBackToRowBasedExecution(true)
-            .DataBatchSize(100)) { }
+            .DataBatchSize(100)
+            .DontFallBackToRowBasedExecution(true)) { }
 
         /// <summary>
         /// Tests sorter with multiple partitions
@@ -554,7 +554,7 @@ namespace SimpleTesting
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
@@ -583,7 +583,7 @@ namespace SimpleTesting
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
-            Random rand = new Random(2);
+            var rand = new Random(2);
             var disorderedData =
                 Enumerable.Range(disorderAmount, 500000).ToList()
                 .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))

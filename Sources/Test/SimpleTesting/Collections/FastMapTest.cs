@@ -24,17 +24,17 @@ namespace SimpleTesting
 
             Assert.IsTrue(map.IsEmpty);
             Assert.AreEqual(0, map.Count);
-            Assert.IsFalse(map.Find(5).Next(out int index));
-            Assert.IsFalse(map.Find(6).Next(out index));
-            Assert.IsFalse(map.Find(7).Next(out index));
+            Assert.IsFalse(map.Find(5).Next(out _));
+            Assert.IsFalse(map.Find(6).Next(out _));
+            Assert.IsFalse(map.Find(7).Next(out _));
 
             int indexA5 = map.Insert(5, "a");
             Assert.IsFalse(map.IsEmpty);
             Assert.AreEqual(1, map.Count);
-            Assert.IsTrue(map.Find(5).Next(out index));
+            Assert.IsTrue(map.Find(5).Next(out var index));
             Assert.AreEqual(indexA5, index);
-            Assert.IsFalse(map.Find(6).Next(out index));
-            Assert.IsFalse(map.Find(7).Next(out index));
+            Assert.IsFalse(map.Find(6).Next(out _));
+            Assert.IsFalse(map.Find(7).Next(out _));
 
             int indexB6 = map.Insert(6, "b");
             int indexA5Two = map.Insert(5, "a");
@@ -54,14 +54,14 @@ namespace SimpleTesting
             Assert.AreEqual(indexA5Two, index);
             Assert.IsTrue(traverser.Next(out index));
             Assert.AreEqual(indexA5, index);
-            Assert.IsFalse(traverser.Next(out index));
+            Assert.IsFalse(traverser.Next(out _));
 
             traverser = map.Find(6);
             Assert.IsTrue(traverser.Next(out index));
             Assert.AreEqual(indexB6, index);
-            Assert.IsFalse(traverser.Next(out index));
+            Assert.IsFalse(traverser.Next(out _));
 
-            Assert.IsFalse(map.Find(7).Next(out index));
+            Assert.IsFalse(map.Find(7).Next(out _));
 
             map.Remove(indexA5);
 
@@ -73,14 +73,14 @@ namespace SimpleTesting
             Assert.AreEqual(indexB5, index);
             Assert.IsTrue(traverser.Next(out index));
             Assert.AreEqual(indexA5Two, index);
-            Assert.IsFalse(traverser.Next(out index));
+            Assert.IsFalse(traverser.Next(out _));
 
             traverser = map.Find(6);
             Assert.IsTrue(traverser.Next(out index));
             Assert.AreEqual(indexB6, index);
-            Assert.IsFalse(traverser.Next(out index));
+            Assert.IsFalse(traverser.Next(out _));
 
-            Assert.IsFalse(map.Find(7).Next(out index));
+            Assert.IsFalse(map.Find(7).Next(out _));
 
             map.Remove(indexA5Two);
             map.Remove(indexB6);
@@ -91,17 +91,17 @@ namespace SimpleTesting
             traverser = map.Find(5);
             Assert.IsTrue(traverser.Next(out index));
             Assert.AreEqual(indexB5, index);
-            Assert.IsFalse(traverser.Next(out index));
-            Assert.IsFalse(map.Find(6).Next(out index));
-            Assert.IsFalse(map.Find(7).Next(out index));
+            Assert.IsFalse(traverser.Next(out _));
+            Assert.IsFalse(map.Find(6).Next(out _));
+            Assert.IsFalse(map.Find(7).Next(out _));
 
             map.Remove(indexB5);
 
             Assert.IsTrue(map.IsEmpty);
             Assert.AreEqual(0, map.Count);
-            Assert.IsFalse(map.Find(5).Next(out index));
-            Assert.IsFalse(map.Find(6).Next(out index));
-            Assert.IsFalse(map.Find(7).Next(out index));
+            Assert.IsFalse(map.Find(5).Next(out _));
+            Assert.IsFalse(map.Find(6).Next(out _));
+            Assert.IsFalse(map.Find(7).Next(out _));
         }
 
         private static void ReuseTest()
@@ -156,10 +156,9 @@ namespace SimpleTesting
                 bool hasOne = false;
                 bool hasTwo = false;
                 bool hasThree = false;
-                int index;
                 for (int j = 0; j < 3; j++)
                 {
-                    Assert.IsTrue(traverse.Next(out index));
+                    Assert.IsTrue(traverse.Next(out var index));
                     if (map.Values[index] == "one" + i)
                     {
                         hasOne = true;
@@ -178,7 +177,7 @@ namespace SimpleTesting
                     }
                 }
 
-                Assert.IsFalse(traverse.Next(out index));
+                Assert.IsFalse(traverse.Next(out _));
                 Assert.IsTrue(hasOne);
                 Assert.IsTrue(hasTwo);
                 Assert.IsTrue(hasThree);
@@ -205,10 +204,9 @@ namespace SimpleTesting
 
                 bool hasOne = false;
                 bool hasThree = false;
-                int index;
                 for (int j = 0; j < 2; j++)
                 {
-                    Assert.IsTrue(traverse.Next(out index));
+                    Assert.IsTrue(traverse.Next(out var index));
                     if (map.Values[index] == "one" + i)
                     {
                         hasOne = true;
@@ -223,7 +221,7 @@ namespace SimpleTesting
                     }
                 }
 
-                Assert.IsFalse(traverse.Next(out index));
+                Assert.IsFalse(traverse.Next(out _));
                 Assert.IsTrue(hasOne);
                 Assert.IsTrue(hasThree);
             }
@@ -249,7 +247,7 @@ namespace SimpleTesting
 
                 Assert.IsTrue(traverse.Next(out int index));
                 Assert.AreEqual("three" + i, map.Values[index]);
-                Assert.IsFalse(traverse.Next(out index));
+                Assert.IsFalse(traverse.Next(out _));
             }
 
             for (int i = 0; i < Size; i++)

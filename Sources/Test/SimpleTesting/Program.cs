@@ -21,12 +21,10 @@ namespace SimpleTesting
         public static IStreamable<Empty, T> ToStreamable<T>(
             this IEnumerable<T> enumerable,
             int startEdge = 0)
-        {
-            return enumerable
+            => enumerable
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(startEdge, e))
                 .ToStreamable();
-        }
 
         public static bool IsEquivalentTo<TPayload>(this IStreamable<Empty, TPayload> input, StreamEvent<TPayload>[] comparison)
         {
@@ -200,10 +198,7 @@ namespace SimpleTesting
     {
         public string mystring;
 
-        public MyString(string str)
-        {
-            this.mystring = str;
-        }
+        public MyString(string str) => this.mystring = str;
         public MyString()
         {
             // needed because the generated code calls the nullary ctor
@@ -282,10 +277,7 @@ namespace SimpleTesting
     public class NonColumnarClass
     {
         public int x;
-        public NonColumnarClass(int y, char c)
-        {
-            this.x = y;
-        }
+        public NonColumnarClass(int y, char c) => this.x = y;
         public override bool Equals(object obj)
         {
             //
@@ -316,7 +308,7 @@ namespace SimpleTesting
         public double doubleField;
         public char[] charArrayField;
         public override string ToString() => string.Format("MyStruct({0}, {1}, {2}, {3})", this.field1, this.field2.mystring, this.field3.nestedField, this.doubleField);
-        public StructWithCtor ReturnStructWithCtor(int x) { return new StructWithCtor(x); }
+        public StructWithCtor ReturnStructWithCtor(int x) => new StructWithCtor(x);
     }
 
     public struct StructWithCtor
@@ -328,7 +320,7 @@ namespace SimpleTesting
     public class ClassWithNoFieldsButWithPublicProperties
     {
         private int x;
-        public int X { get { return this.x; } set { this.x = value; } }
+        public int X { get => this.x; set => this.x = value; }
 
     }
 
@@ -339,10 +331,7 @@ namespace SimpleTesting
 
         internal TestWithConfigSettingsAndMemoryLeakDetection() : this(new ConfigModifier()) { }
 
-        internal TestWithConfigSettingsAndMemoryLeakDetection(ConfigModifier modifier)
-        {
-            this.modifier = modifier;
-        }
+        internal TestWithConfigSettingsAndMemoryLeakDetection(ConfigModifier modifier) => this.modifier = modifier;
 
         [TestInitialize]
         public virtual void Setup()
@@ -357,7 +346,6 @@ namespace SimpleTesting
             var cm = System.Threading.Interlocked.Exchange(ref this.confmod, null);
             if (cm != null) { cm.Dispose(); }
             var leaked = MemoryManager.Leaked().Any();
-            var leakedList = MemoryManager.Leaked().ToList();
             var msg = string.Empty;
             if (leaked)
             {
@@ -369,25 +357,6 @@ namespace SimpleTesting
 
     internal class Program
     {
-        // Total number of input events
-        private const int NumEvents = 320000;
-
-        private void Foo()
-        {
-
-            var inputStream = Observable.Range(0, NumEvents)
-                .Select(e =>
-                    new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } })
-                    .Select(e => StreamEvent.CreateStart(0, e))
-                                .ToStreamable();
-            var query1 = inputStream.Select(e => new { anonfield1 = e.field3.nestedField, anonfield2 = 3 });
-            var query = query1.Where(e => e.anonfield1 == 0);
-
-            var result = query.ToStreamEventObservable().Where(e => e.IsData)
-                              .Subscribe(e => Console.WriteLine("vsync={0}\tvother={1}\tpayload={2}", e.SyncTime, e.OtherTime, e.Payload));
-            Console.ReadLine();
-        }
-
         public static Expression EqualsExprForAnonymousType(Type t)
         {
             if (t == null || !t.IsAnonymousTypeName()) return null;
@@ -436,7 +405,6 @@ namespace SimpleTesting
             return Expression.Lambda(body, left, right);
         }
 
-
         public static bool TestEquality<T, U>(IEnumerable<T> enumerable, Expression<Func<T, U>> selectFunction)
         {
             var foo = enumerable.Select(selectFunction.Compile());
@@ -446,6 +414,7 @@ namespace SimpleTesting
             var result = expr.Compile()(a, b);
             return result;
         }
+
         public static int TestHash<T, U>(IEnumerable<T> enumerable, Expression<Func<T, U>> selectFunction)
         {
             var foo = enumerable.Select(selectFunction.Compile());
@@ -454,6 +423,7 @@ namespace SimpleTesting
             var result = expr.Compile()(a);
             return result;
         }
+
         public static int TestComparer<T, U>(IEnumerable<T> enumerable, Expression<Func<T, U>> selectFunction)
         {
             var foo = enumerable.Select(selectFunction.Compile());

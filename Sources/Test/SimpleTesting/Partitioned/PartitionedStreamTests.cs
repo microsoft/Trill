@@ -16,12 +16,10 @@ namespace SimpleTesting
     public static class Ex
     {
         public static IObserver<T> NotificationListObserver<T>(this List<Notification<T>> bucket)
-        {
-            return Observer.Create<T>(
+            => Observer.Create<T>(
                 e => bucket.Add(Notification.CreateOnNext(e)),
                 e => bucket.Add(Notification.CreateOnError<T>(e)),
                 () => bucket.Add(Notification.CreateOnCompleted<T>()));
-        }
     }
 
     [TestClass]
@@ -34,36 +32,30 @@ namespace SimpleTesting
 
         public static IEnumerable<PartitionedStreamEvent<T, U>> Passthrough<T, U>(
             IEnumerable<PartitionedStreamEvent<T, U>> input)
-        {
-            return input
+            => input
                 .ToObservable()
                 .ToStreamable()
                 .ToStreamEventObservable()
                 .ToEnumerable();
-        }
 
         public static IEnumerable<PartitionedStreamEvent<T, double>> AverageGeneral<T>(
             IEnumerable<PartitionedStreamEvent<T, double>> input)
-        {
-            return input
+            => input
                 .ToObservable()
                 .ToStreamable()
                 .Average(o => o)
                 .ToStreamEventObservable()
                 .ToEnumerable();
-        }
 
         public static IEnumerable<PartitionedStreamEvent<T, double>> AverageConstantDuration<T>(
             IEnumerable<PartitionedStreamEvent<T, double>> input)
-        {
-            return input
+            => input
                 .ToObservable()
                 .ToStreamable()
                 .AlterEventDuration(10)
                 .Average(o => o)
                 .ToStreamEventObservable()
                 .ToEnumerable();
-        }
 
         public static IEnumerable<PartitionedStreamEvent<T, double>> AverageStartEdgeOnly<T>(
             IEnumerable<PartitionedStreamEvent<T, double>> input)
@@ -81,39 +73,33 @@ namespace SimpleTesting
 
         public static IEnumerable<PartitionedStreamEvent<T, double>> TumblingWindow<T>(
             IEnumerable<PartitionedStreamEvent<T, double>> input)
-        {
-            return input
+            => input
                 .ToObservable()
                 .ToStreamable()
                 .TumblingWindowLifetime(1)
                 .Average(o => o)
                 .ToStreamEventObservable()
                 .ToEnumerable();
-        }
 
         public static IEnumerable<PartitionedStreamEvent<T, double>> SessionWindowAverage<T>(
             IEnumerable<PartitionedStreamEvent<T, double>> input, long timeout, long maxDuration)
-        {
-            return input
+            => input
                 .ToObservable()
                 .ToStreamable()
                 .SessionTimeoutWindow(timeout, maxDuration)
                 .Average(o => o)
                 .ToStreamEventObservable()
                 .ToEnumerable();
-        }
 
         public static IEnumerable<PartitionedStreamEvent<T, double>> SessionWindowSum<T>(
             IEnumerable<PartitionedStreamEvent<T, double>> input, long timeout, long maxDuration)
-        {
-            return input
+            => input
                 .ToObservable()
                 .ToStreamable()
                 .SessionTimeoutWindow(timeout, maxDuration)
                 .Sum(o => o)
                 .ToStreamEventObservable()
                 .ToEnumerable();
-        }
 
         public static IEnumerable<PartitionedStreamEvent<T, U>> Union<T, U>(
             IEnumerable<PartitionedStreamEvent<T, U>> input1,

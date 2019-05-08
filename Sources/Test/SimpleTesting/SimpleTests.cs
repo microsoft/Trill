@@ -39,14 +39,12 @@ namespace SimpleTesting
         public string StringAutoProp { get; set; }
         public int IntAutoProp { get; set; }
         public bool Equals(ClassWithAutoProps a, ClassWithAutoProps b)
-        {
-            return a.IntAutoProp == b.IntAutoProp &&
+            => a.IntAutoProp == b.IntAutoProp &&
                 a.IntField == b.IntField &&
                 (a.StringAutoProp != null || b.StringAutoProp == null) &&
                 (a.StringAutoProp == null || a.StringAutoProp.Equals(b.StringAutoProp)) &&
                 (a.StringField != null || b.StringField == null) &&
                 (a.StringField == null || a.StringField.Equals(b.StringField));
-        }
 
         public int GetHashCode(ClassWithAutoProps obj) => obj.IntField.GetHashCode();
         public override bool Equals(object obj) => obj is ClassWithAutoProps other ? Equals(this, other) : false;
@@ -58,11 +56,9 @@ namespace SimpleTesting
         public string StringAutoProp { get; set; }
         public int IntAutoProp { get; set; }
         public bool Equals(ClassWithOnlyAutoProps a, ClassWithOnlyAutoProps b)
-        {
-            return a.IntAutoProp == b.IntAutoProp &&
+            => a.IntAutoProp == b.IntAutoProp &&
                 (a.StringAutoProp != null || b.StringAutoProp == null) &&
                 (a.StringAutoProp == null || a.StringAutoProp.Equals(b.StringAutoProp));
-        }
 
         public int GetHashCode(ClassWithOnlyAutoProps obj) => obj.IntAutoProp.GetHashCode();
         public override bool Equals(object obj) => obj is ClassWithOnlyAutoProps other ? Equals(this, other) : false;
@@ -111,7 +107,7 @@ namespace SimpleTesting
             int ret = (int)(obj.SyncTime ^ obj.OtherTime);
             foreach (var l in obj.Payload)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
@@ -141,14 +137,10 @@ namespace SimpleTesting
         public ClassWithNestedType1<int>.NestedType<string> nt;
 
         public PayloadWithFieldOfNestedType1()
-        {
-            this.nt = new ClassWithNestedType1<int>.NestedType<string>();
-        }
+            => this.nt = new ClassWithNestedType1<int>.NestedType<string>();
 
         public PayloadWithFieldOfNestedType1(int i)
-        {
-            this.nt = new ClassWithNestedType1<int>.NestedType<string> { x = i };
-        }
+            => this.nt = new ClassWithNestedType1<int>.NestedType<string> { x = i };
     }
 
     public class PayloadWithFieldOfNestedType2
@@ -156,14 +148,10 @@ namespace SimpleTesting
         public ClassWithNestedType2<int, string>.NestedType nt;
 
         public PayloadWithFieldOfNestedType2()
-        {
-            this.nt = new ClassWithNestedType2<int, string>.NestedType();
-        }
+            => this.nt = new ClassWithNestedType2<int, string>.NestedType();
 
         public PayloadWithFieldOfNestedType2(int i)
-        {
-            this.nt = new ClassWithNestedType2<int, string>.NestedType { x = i };
-        }
+            => this.nt = new ClassWithNestedType2<int, string>.NestedType { x = i };
     }
 
     [TestClass]
@@ -182,10 +170,6 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
-
-        private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
-
         public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
         {
             if (a.Count != b.Count) return false;
@@ -203,73 +187,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1FusedRow()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where2FusedRow()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where3FusedRow()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where4FusedRow()
-        {
-            TestWhere(e => e.field3.nestedField == 0, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5FusedRow()
-        {
-            TestWhere(e => true, false);
-        }
+            => TestWhere(e => true, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6FusedRow()
-        {
-            TestWhere(e => false, false);
-        }
+            => TestWhere(e => false, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7FusedRow()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8FusedRow()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9FusedRow()
@@ -287,62 +249,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationFusedRow() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3, false);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1FusedRow()
-        {
-            TestSelect(e => e.field1, false);
-        }
+            => TestSelect(e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2FusedRow()
-        {
-            TestSelect(e => e.field2, false);
-        }
+            => TestSelect(e => e.field2, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3FusedRow()
-        {
-            TestSelect(e => e.field3, false);
-        }
+            => TestSelect(e => e.field3, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4FusedRow()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select5FusedRow()
-        {
-            TestSelect(e => e.doubleField, false);
-        }
+            => TestSelect(e => e.doubleField, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6FusedRow()
-        {
-            TestSelect(e => ((ulong)e.field1), false);
-        }
+            => TestSelect(e => ((ulong)e.field1), false);
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7FusedRow()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, }, false);
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, }, false);
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8FusedRow()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null, false);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongFusedRow()
@@ -360,9 +304,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeFusedRow()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedFusedRow()
@@ -394,13 +336,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldFusedRow()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeFusedRow()
@@ -515,9 +455,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallFusedRow()
-        {
-            TestSelect(e => new StructWithCtor(e.field1), false);
-        }
+            => TestSelect(e => new StructWithCtor(e.field1), false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01FusedRow()
@@ -611,6 +549,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02FusedRow()
         {
@@ -635,6 +574,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01FusedRow()
         {
@@ -658,6 +598,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02FusedRow()
         {
@@ -681,6 +622,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03FusedRow()
         {
@@ -704,6 +646,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04FusedRow()
         {
@@ -761,6 +704,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01FusedRow()
         {
@@ -786,6 +730,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01FusedRow()
         {
@@ -814,9 +759,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1FusedRow()
-        {
-            TestWhereSelect(e => true, e => e.field1, false);
-        }
+            => TestWhereSelect(e => true, e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedRow()
@@ -859,10 +802,6 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
-
-        private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
-
         public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
         {
             if (a.Count != b.Count) return false;
@@ -880,73 +819,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1FusedRowFloating()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where2FusedRowFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where3FusedRowFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where4FusedRowFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5FusedRowFloating()
-        {
-            TestWhere(e => true, false);
-        }
+            => TestWhere(e => true, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6FusedRowFloating()
-        {
-            TestWhere(e => false, false);
-        }
+            => TestWhere(e => false, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7FusedRowFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8FusedRowFloating()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9FusedRowFloating()
@@ -964,62 +881,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationFusedRowFloating() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3, false);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1FusedRowFloating()
-        {
-            TestSelect(e => e.field1, false);
-        }
+            => TestSelect(e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2FusedRowFloating()
-        {
-            TestSelect(e => e.field2, false);
-        }
+            => TestSelect(e => e.field2, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3FusedRowFloating()
-        {
-            TestSelect(e => e.field3, false);
-        }
+            => TestSelect(e => e.field3, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4FusedRowFloating()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select5FusedRowFloating()
-        {
-            TestSelect(e => e.doubleField, false);
-        }
+            => TestSelect(e => e.doubleField, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6FusedRowFloating()
-        {
-            TestSelect(e => ((ulong)e.field1), false);
-        }
+            => TestSelect(e => ((ulong)e.field1), false);
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7FusedRowFloating()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, }, false);
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, }, false);
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8FusedRowFloating()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null, false);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongFusedRowFloating()
@@ -1037,9 +936,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeFusedRowFloating()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedFusedRowFloating()
@@ -1071,13 +968,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldFusedRowFloating()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeFusedRowFloating()
@@ -1192,9 +1087,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallFusedRowFloating()
-        {
-            TestSelect(e => new StructWithCtor(e.field1), false);
-        }
+            => TestSelect(e => new StructWithCtor(e.field1), false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01FusedRowFloating()
@@ -1288,6 +1181,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02FusedRowFloating()
         {
@@ -1312,6 +1206,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01FusedRowFloating()
         {
@@ -1335,6 +1230,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02FusedRowFloating()
         {
@@ -1358,6 +1254,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03FusedRowFloating()
         {
@@ -1381,6 +1278,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04FusedRowFloating()
         {
@@ -1438,6 +1336,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01FusedRowFloating()
         {
@@ -1463,6 +1362,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01FusedRowFloating()
         {
@@ -1491,9 +1391,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1FusedRowFloating()
-        {
-            TestWhereSelect(e => true, e => e.field1, false);
-        }
+            => TestWhereSelect(e => true, e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedRowFloating()
@@ -1536,10 +1434,6 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
-
-        private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
-
         public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
         {
             if (a.Count != b.Count) return false;
@@ -1557,73 +1451,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1FusedRowSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where2FusedRowSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where3FusedRowSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where4FusedRowSmallBatch()
-        {
-            TestWhere(e => e.field3.nestedField == 0, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5FusedRowSmallBatch()
-        {
-            TestWhere(e => true, false);
-        }
+            => TestWhere(e => true, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6FusedRowSmallBatch()
-        {
-            TestWhere(e => false, false);
-        }
+            => TestWhere(e => false, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7FusedRowSmallBatch()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8FusedRowSmallBatch()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9FusedRowSmallBatch()
@@ -1641,62 +1513,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationFusedRowSmallBatch() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3, false);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1FusedRowSmallBatch()
-        {
-            TestSelect(e => e.field1, false);
-        }
+            => TestSelect(e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2FusedRowSmallBatch()
-        {
-            TestSelect(e => e.field2, false);
-        }
+            => TestSelect(e => e.field2, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3FusedRowSmallBatch()
-        {
-            TestSelect(e => e.field3, false);
-        }
+            => TestSelect(e => e.field3, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4FusedRowSmallBatch()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select5FusedRowSmallBatch()
-        {
-            TestSelect(e => e.doubleField, false);
-        }
+            => TestSelect(e => e.doubleField, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6FusedRowSmallBatch()
-        {
-            TestSelect(e => ((ulong)e.field1), false);
-        }
+            => TestSelect(e => ((ulong)e.field1), false);
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7FusedRowSmallBatch()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, }, false);
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, }, false);
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8FusedRowSmallBatch()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null, false);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongFusedRowSmallBatch()
@@ -1714,9 +1568,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeFusedRowSmallBatch()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedFusedRowSmallBatch()
@@ -1748,13 +1600,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldFusedRowSmallBatch()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeFusedRowSmallBatch()
@@ -1869,9 +1719,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallFusedRowSmallBatch()
-        {
-            TestSelect(e => new StructWithCtor(e.field1), false);
-        }
+            => TestSelect(e => new StructWithCtor(e.field1), false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01FusedRowSmallBatch()
@@ -1965,6 +1813,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02FusedRowSmallBatch()
         {
@@ -1989,6 +1838,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01FusedRowSmallBatch()
         {
@@ -2012,6 +1862,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02FusedRowSmallBatch()
         {
@@ -2035,6 +1886,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03FusedRowSmallBatch()
         {
@@ -2058,6 +1910,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04FusedRowSmallBatch()
         {
@@ -2115,6 +1968,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01FusedRowSmallBatch()
         {
@@ -2140,6 +1994,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01FusedRowSmallBatch()
         {
@@ -2168,9 +2023,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1FusedRowSmallBatch()
-        {
-            TestWhereSelect(e => true, e => e.field1, false);
-        }
+            => TestWhereSelect(e => true, e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedRowSmallBatch()
@@ -2214,10 +2067,6 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
-
-        private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
-
         public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
         {
             if (a.Count != b.Count) return false;
@@ -2235,73 +2084,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1FusedRowSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where2FusedRowSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where3FusedRowSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where4FusedRowSmallBatchFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5FusedRowSmallBatchFloating()
-        {
-            TestWhere(e => true, false);
-        }
+            => TestWhere(e => true, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6FusedRowSmallBatchFloating()
-        {
-            TestWhere(e => false, false);
-        }
+            => TestWhere(e => false, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7FusedRowSmallBatchFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8FusedRowSmallBatchFloating()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9FusedRowSmallBatchFloating()
@@ -2319,62 +2146,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationFusedRowSmallBatchFloating() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3, false);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1FusedRowSmallBatchFloating()
-        {
-            TestSelect(e => e.field1, false);
-        }
+            => TestSelect(e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2FusedRowSmallBatchFloating()
-        {
-            TestSelect(e => e.field2, false);
-        }
+            => TestSelect(e => e.field2, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3FusedRowSmallBatchFloating()
-        {
-            TestSelect(e => e.field3, false);
-        }
+            => TestSelect(e => e.field3, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4FusedRowSmallBatchFloating()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select5FusedRowSmallBatchFloating()
-        {
-            TestSelect(e => e.doubleField, false);
-        }
+            => TestSelect(e => e.doubleField, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6FusedRowSmallBatchFloating()
-        {
-            TestSelect(e => ((ulong)e.field1), false);
-        }
+            => TestSelect(e => ((ulong)e.field1), false);
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7FusedRowSmallBatchFloating()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, }, false);
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, }, false);
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8FusedRowSmallBatchFloating()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null, false);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongFusedRowSmallBatchFloating()
@@ -2392,9 +2201,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeFusedRowSmallBatchFloating()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedFusedRowSmallBatchFloating()
@@ -2426,13 +2233,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldFusedRowSmallBatchFloating()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeFusedRowSmallBatchFloating()
@@ -2547,9 +2352,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallFusedRowSmallBatchFloating()
-        {
-            TestSelect(e => new StructWithCtor(e.field1), false);
-        }
+            => TestSelect(e => new StructWithCtor(e.field1), false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01FusedRowSmallBatchFloating()
@@ -2643,6 +2446,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02FusedRowSmallBatchFloating()
         {
@@ -2667,6 +2471,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01FusedRowSmallBatchFloating()
         {
@@ -2690,6 +2495,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02FusedRowSmallBatchFloating()
         {
@@ -2713,6 +2519,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03FusedRowSmallBatchFloating()
         {
@@ -2736,6 +2543,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04FusedRowSmallBatchFloating()
         {
@@ -2793,6 +2601,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01FusedRowSmallBatchFloating()
         {
@@ -2818,6 +2627,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01FusedRowSmallBatchFloating()
         {
@@ -2846,9 +2656,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1FusedRowSmallBatchFloating()
-        {
-            TestWhereSelect(e => true, e => e.field1, false);
-        }
+            => TestWhereSelect(e => true, e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedRowSmallBatchFloating()
@@ -2890,10 +2698,6 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
-
-        private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
-
         public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
         {
             if (a.Count != b.Count) return false;
@@ -2911,73 +2715,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1FusedColumnar()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where2FusedColumnar()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where3FusedColumnar()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where4FusedColumnar()
-        {
-            TestWhere(e => e.field3.nestedField == 0, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5FusedColumnar()
-        {
-            TestWhere(e => true, false);
-        }
+            => TestWhere(e => true, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6FusedColumnar()
-        {
-            TestWhere(e => false, false);
-        }
+            => TestWhere(e => false, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7FusedColumnar()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8FusedColumnar()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9FusedColumnar()
@@ -2995,62 +2777,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationFusedColumnar() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3, false);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1FusedColumnar()
-        {
-            TestSelect(e => e.field1, false);
-        }
+            => TestSelect(e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2FusedColumnar()
-        {
-            TestSelect(e => e.field2, false);
-        }
+            => TestSelect(e => e.field2, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3FusedColumnar()
-        {
-            TestSelect(e => e.field3, false);
-        }
+            => TestSelect(e => e.field3, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4FusedColumnar()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select5FusedColumnar()
-        {
-            TestSelect(e => e.doubleField, false);
-        }
+            => TestSelect(e => e.doubleField, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6FusedColumnar()
-        {
-            TestSelect(e => ((ulong)e.field1), false);
-        }
+            => TestSelect(e => ((ulong)e.field1), false);
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7FusedColumnar()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, }, false);
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, }, false);
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8FusedColumnar()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null, false);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongFusedColumnar()
@@ -3068,9 +2832,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeFusedColumnar()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedFusedColumnar()
@@ -3102,13 +2864,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldFusedColumnar()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeFusedColumnar()
@@ -3223,9 +2983,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallFusedColumnar()
-        {
-            TestSelect(e => new StructWithCtor(e.field1), false);
-        }
+            => TestSelect(e => new StructWithCtor(e.field1), false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01FusedColumnar()
@@ -3319,6 +3077,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02FusedColumnar()
         {
@@ -3343,6 +3102,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01FusedColumnar()
         {
@@ -3366,6 +3126,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02FusedColumnar()
         {
@@ -3389,6 +3150,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03FusedColumnar()
         {
@@ -3412,6 +3174,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04FusedColumnar()
         {
@@ -3469,6 +3232,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01FusedColumnar()
         {
@@ -3494,6 +3258,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01FusedColumnar()
         {
@@ -3522,9 +3287,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1FusedColumnar()
-        {
-            TestWhereSelect(e => true, e => e.field1, false);
-        }
+            => TestWhereSelect(e => true, e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedColumnar()
@@ -3567,10 +3330,6 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
-
-        private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
-
         public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
         {
             if (a.Count != b.Count) return false;
@@ -3588,73 +3347,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1FusedColumnarFloating()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where2FusedColumnarFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where3FusedColumnarFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where4FusedColumnarFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5FusedColumnarFloating()
-        {
-            TestWhere(e => true, false);
-        }
+            => TestWhere(e => true, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6FusedColumnarFloating()
-        {
-            TestWhere(e => false, false);
-        }
+            => TestWhere(e => false, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7FusedColumnarFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8FusedColumnarFloating()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9FusedColumnarFloating()
@@ -3672,62 +3409,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationFusedColumnarFloating() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3, false);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1FusedColumnarFloating()
-        {
-            TestSelect(e => e.field1, false);
-        }
+            => TestSelect(e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2FusedColumnarFloating()
-        {
-            TestSelect(e => e.field2, false);
-        }
+            => TestSelect(e => e.field2, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3FusedColumnarFloating()
-        {
-            TestSelect(e => e.field3, false);
-        }
+            => TestSelect(e => e.field3, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4FusedColumnarFloating()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select5FusedColumnarFloating()
-        {
-            TestSelect(e => e.doubleField, false);
-        }
+            => TestSelect(e => e.doubleField, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6FusedColumnarFloating()
-        {
-            TestSelect(e => ((ulong)e.field1), false);
-        }
+            => TestSelect(e => ((ulong)e.field1), false);
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7FusedColumnarFloating()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, }, false);
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, }, false);
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8FusedColumnarFloating()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null, false);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongFusedColumnarFloating()
@@ -3745,9 +3464,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeFusedColumnarFloating()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedFusedColumnarFloating()
@@ -3779,13 +3496,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldFusedColumnarFloating()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeFusedColumnarFloating()
@@ -3900,9 +3615,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallFusedColumnarFloating()
-        {
-            TestSelect(e => new StructWithCtor(e.field1), false);
-        }
+            => TestSelect(e => new StructWithCtor(e.field1), false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01FusedColumnarFloating()
@@ -3996,6 +3709,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02FusedColumnarFloating()
         {
@@ -4020,6 +3734,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01FusedColumnarFloating()
         {
@@ -4043,6 +3758,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02FusedColumnarFloating()
         {
@@ -4066,6 +3782,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03FusedColumnarFloating()
         {
@@ -4089,6 +3806,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04FusedColumnarFloating()
         {
@@ -4146,6 +3864,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01FusedColumnarFloating()
         {
@@ -4171,6 +3890,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01FusedColumnarFloating()
         {
@@ -4199,9 +3919,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1FusedColumnarFloating()
-        {
-            TestWhereSelect(e => true, e => e.field1, false);
-        }
+            => TestWhereSelect(e => true, e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedColumnarFloating()
@@ -4244,10 +3962,6 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
-
-        private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
-
         public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
         {
             if (a.Count != b.Count) return false;
@@ -4265,73 +3979,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1FusedColumnarSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where2FusedColumnarSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where3FusedColumnarSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where4FusedColumnarSmallBatch()
-        {
-            TestWhere(e => e.field3.nestedField == 0, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5FusedColumnarSmallBatch()
-        {
-            TestWhere(e => true, false);
-        }
+            => TestWhere(e => true, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6FusedColumnarSmallBatch()
-        {
-            TestWhere(e => false, false);
-        }
+            => TestWhere(e => false, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7FusedColumnarSmallBatch()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8FusedColumnarSmallBatch()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9FusedColumnarSmallBatch()
@@ -4349,62 +4041,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationFusedColumnarSmallBatch() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3, false);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1FusedColumnarSmallBatch()
-        {
-            TestSelect(e => e.field1, false);
-        }
+            => TestSelect(e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2FusedColumnarSmallBatch()
-        {
-            TestSelect(e => e.field2, false);
-        }
+            => TestSelect(e => e.field2, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3FusedColumnarSmallBatch()
-        {
-            TestSelect(e => e.field3, false);
-        }
+            => TestSelect(e => e.field3, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4FusedColumnarSmallBatch()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select5FusedColumnarSmallBatch()
-        {
-            TestSelect(e => e.doubleField, false);
-        }
+            => TestSelect(e => e.doubleField, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6FusedColumnarSmallBatch()
-        {
-            TestSelect(e => ((ulong)e.field1), false);
-        }
+            => TestSelect(e => ((ulong)e.field1), false);
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7FusedColumnarSmallBatch()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, }, false);
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, }, false);
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8FusedColumnarSmallBatch()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null, false);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongFusedColumnarSmallBatch()
@@ -4422,9 +4096,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeFusedColumnarSmallBatch()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedFusedColumnarSmallBatch()
@@ -4456,13 +4128,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldFusedColumnarSmallBatch()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeFusedColumnarSmallBatch()
@@ -4577,9 +4247,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallFusedColumnarSmallBatch()
-        {
-            TestSelect(e => new StructWithCtor(e.field1), false);
-        }
+            => TestSelect(e => new StructWithCtor(e.field1), false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01FusedColumnarSmallBatch()
@@ -4673,6 +4341,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02FusedColumnarSmallBatch()
         {
@@ -4697,6 +4366,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01FusedColumnarSmallBatch()
         {
@@ -4720,6 +4390,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02FusedColumnarSmallBatch()
         {
@@ -4743,6 +4414,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03FusedColumnarSmallBatch()
         {
@@ -4766,6 +4438,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04FusedColumnarSmallBatch()
         {
@@ -4823,6 +4496,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01FusedColumnarSmallBatch()
         {
@@ -4848,6 +4522,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01FusedColumnarSmallBatch()
         {
@@ -4876,9 +4551,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1FusedColumnarSmallBatch()
-        {
-            TestWhereSelect(e => true, e => e.field1, false);
-        }
+            => TestWhereSelect(e => true, e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedColumnarSmallBatch()
@@ -4922,10 +4595,6 @@ namespace SimpleTesting
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
-        private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
-
-        private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
-
         public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
         {
             if (a.Count != b.Count) return false;
@@ -4943,73 +4612,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1FusedColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where2FusedColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where3FusedColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"), false);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"), false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where4FusedColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5FusedColumnarSmallBatchFloating()
-        {
-            TestWhere(e => true, false);
-        }
+            => TestWhere(e => true, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6FusedColumnarSmallBatchFloating()
-        {
-            TestWhere(e => false, false);
-        }
+            => TestWhere(e => false, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7FusedColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8FusedColumnarSmallBatchFloating()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9FusedColumnarSmallBatchFloating()
@@ -5027,62 +4674,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationFusedColumnarSmallBatchFloating() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3, false);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1FusedColumnarSmallBatchFloating()
-        {
-            TestSelect(e => e.field1, false);
-        }
+            => TestSelect(e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2FusedColumnarSmallBatchFloating()
-        {
-            TestSelect(e => e.field2, false);
-        }
+            => TestSelect(e => e.field2, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3FusedColumnarSmallBatchFloating()
-        {
-            TestSelect(e => e.field3, false);
-        }
+            => TestSelect(e => e.field3, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4FusedColumnarSmallBatchFloating()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select5FusedColumnarSmallBatchFloating()
-        {
-            TestSelect(e => e.doubleField, false);
-        }
+            => TestSelect(e => e.doubleField, false);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6FusedColumnarSmallBatchFloating()
-        {
-            TestSelect(e => ((ulong)e.field1), false);
-        }
+            => TestSelect(e => ((ulong)e.field1), false);
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7FusedColumnarSmallBatchFloating()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, }, false);
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, }, false);
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8FusedColumnarSmallBatchFloating()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null, false);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongFusedColumnarSmallBatchFloating()
@@ -5100,9 +4729,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeFusedColumnarSmallBatchFloating()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedFusedColumnarSmallBatchFloating()
@@ -5134,13 +4761,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldFusedColumnarSmallBatchFloating()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, }, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeFusedColumnarSmallBatchFloating()
@@ -5255,9 +4880,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallFusedColumnarSmallBatchFloating()
-        {
-            TestSelect(e => new StructWithCtor(e.field1), false);
-        }
+            => TestSelect(e => new StructWithCtor(e.field1), false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01FusedColumnarSmallBatchFloating()
@@ -5351,6 +4974,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02FusedColumnarSmallBatchFloating()
         {
@@ -5375,6 +4999,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01FusedColumnarSmallBatchFloating()
         {
@@ -5398,6 +5023,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02FusedColumnarSmallBatchFloating()
         {
@@ -5421,6 +5047,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03FusedColumnarSmallBatchFloating()
         {
@@ -5444,6 +5071,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04FusedColumnarSmallBatchFloating()
         {
@@ -5501,6 +5129,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01FusedColumnarSmallBatchFloating()
         {
@@ -5526,6 +5155,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01FusedColumnarSmallBatchFloating()
         {
@@ -5554,9 +5184,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1FusedColumnarSmallBatchFloating()
-        {
-            TestWhereSelect(e => true, e => e.field1, false);
-        }
+            => TestWhereSelect(e => true, e => e.field1, false);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedColumnarSmallBatchFloating()
@@ -5619,73 +5247,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1Row()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"));
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where2Row()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where3Row()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where4Row()
-        {
-            TestWhere(e => e.field3.nestedField == 0);
-        }
+            => TestWhere(e => e.field3.nestedField == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5Row()
-        {
-            TestWhere(e => true);
-        }
+            => TestWhere(e => true);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6Row()
-        {
-            TestWhere(e => false);
-        }
+            => TestWhere(e => false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7Row()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8Row()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9Row()
@@ -5704,62 +5310,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationRow() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1Row()
-        {
-            TestSelect(e => e.field1);
-        }
+            => TestSelect(e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2Row()
-        {
-            TestSelect(e => e.field2);
-        }
+            => TestSelect(e => e.field2);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3Row()
-        {
-            TestSelect(e => e.field3);
-        }
+            => TestSelect(e => e.field3);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4Row()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 });
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 });
 
         [TestMethod, TestCategory("Gated")]
         public void Select5Row()
-        {
-            TestSelect(e => e.doubleField);
-        }
+            => TestSelect(e => e.doubleField);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6Row()
-        {
-            TestSelect(e => ((ulong)e.field1));
-        }
+            => TestSelect(e => ((ulong)e.field1));
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7Row()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, });
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, });
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8Row()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongRow()
@@ -5778,9 +5366,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeRow()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 });
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedRow()
@@ -5814,13 +5400,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldRow()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, });
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeRow()
@@ -5942,9 +5526,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallRow()
-        {
-            TestSelect(e => new StructWithCtor(e.field1));
-        }
+            => TestSelect(e => new StructWithCtor(e.field1));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01Row()
@@ -6043,6 +5625,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02Row()
         {
@@ -6068,6 +5651,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01Row()
         {
@@ -6092,6 +5676,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02Row()
         {
@@ -6116,6 +5701,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03Row()
         {
@@ -6140,6 +5726,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04Row()
         {
@@ -6199,6 +5786,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01Row()
         {
@@ -6225,6 +5813,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01Row()
         {
@@ -6254,9 +5843,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1Row()
-        {
-            TestWhereSelect(e => true, e => e.field1);
-        }
+            => TestWhereSelect(e => true, e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructRow()
@@ -6535,7 +6122,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -6555,7 +6141,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
             var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -6590,7 +6175,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -6889,7 +6473,6 @@ namespace SimpleTesting
             var str = reversedInput.ToStatStreamable();
             var sortedStream = str.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(input.SequenceEqual(result));
             sortedStream.Dispose();
         }
@@ -7611,73 +7194,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1RowFloating()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"));
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where2RowFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where3RowFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where4RowFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0);
-        }
+            => TestWhere(e => e.field3.nestedField == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5RowFloating()
-        {
-            TestWhere(e => true);
-        }
+            => TestWhere(e => true);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6RowFloating()
-        {
-            TestWhere(e => false);
-        }
+            => TestWhere(e => false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7RowFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8RowFloating()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9RowFloating()
@@ -7696,62 +7257,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationRowFloating() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1RowFloating()
-        {
-            TestSelect(e => e.field1);
-        }
+            => TestSelect(e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2RowFloating()
-        {
-            TestSelect(e => e.field2);
-        }
+            => TestSelect(e => e.field2);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3RowFloating()
-        {
-            TestSelect(e => e.field3);
-        }
+            => TestSelect(e => e.field3);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4RowFloating()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 });
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 });
 
         [TestMethod, TestCategory("Gated")]
         public void Select5RowFloating()
-        {
-            TestSelect(e => e.doubleField);
-        }
+            => TestSelect(e => e.doubleField);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6RowFloating()
-        {
-            TestSelect(e => ((ulong)e.field1));
-        }
+            => TestSelect(e => ((ulong)e.field1));
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7RowFloating()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, });
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, });
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8RowFloating()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongRowFloating()
@@ -7770,9 +7313,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeRowFloating()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 });
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedRowFloating()
@@ -7806,13 +7347,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldRowFloating()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, });
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeRowFloating()
@@ -7934,9 +7473,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallRowFloating()
-        {
-            TestSelect(e => new StructWithCtor(e.field1));
-        }
+            => TestSelect(e => new StructWithCtor(e.field1));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01RowFloating()
@@ -8035,6 +7572,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02RowFloating()
         {
@@ -8060,6 +7598,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01RowFloating()
         {
@@ -8084,6 +7623,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02RowFloating()
         {
@@ -8108,6 +7648,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03RowFloating()
         {
@@ -8132,6 +7673,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04RowFloating()
         {
@@ -8191,6 +7733,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01RowFloating()
         {
@@ -8217,6 +7760,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01RowFloating()
         {
@@ -8246,9 +7790,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1RowFloating()
-        {
-            TestWhereSelect(e => true, e => e.field1);
-        }
+            => TestWhereSelect(e => true, e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructRowFloating()
@@ -8414,7 +7956,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -8434,7 +7975,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
             var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -8467,7 +8007,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -8766,7 +8305,6 @@ namespace SimpleTesting
             var str = reversedInput.ToStatStreamable();
             var sortedStream = str.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(input.SequenceEqual(result));
             sortedStream.Dispose();
         }
@@ -9488,73 +9026,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1RowSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"));
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where2RowSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where3RowSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where4RowSmallBatch()
-        {
-            TestWhere(e => e.field3.nestedField == 0);
-        }
+            => TestWhere(e => e.field3.nestedField == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5RowSmallBatch()
-        {
-            TestWhere(e => true);
-        }
+            => TestWhere(e => true);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6RowSmallBatch()
-        {
-            TestWhere(e => false);
-        }
+            => TestWhere(e => false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7RowSmallBatch()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8RowSmallBatch()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9RowSmallBatch()
@@ -9573,62 +9089,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationRowSmallBatch() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1RowSmallBatch()
-        {
-            TestSelect(e => e.field1);
-        }
+            => TestSelect(e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2RowSmallBatch()
-        {
-            TestSelect(e => e.field2);
-        }
+            => TestSelect(e => e.field2);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3RowSmallBatch()
-        {
-            TestSelect(e => e.field3);
-        }
+            => TestSelect(e => e.field3);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4RowSmallBatch()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 });
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 });
 
         [TestMethod, TestCategory("Gated")]
         public void Select5RowSmallBatch()
-        {
-            TestSelect(e => e.doubleField);
-        }
+            => TestSelect(e => e.doubleField);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6RowSmallBatch()
-        {
-            TestSelect(e => ((ulong)e.field1));
-        }
+            => TestSelect(e => ((ulong)e.field1));
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7RowSmallBatch()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, });
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, });
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8RowSmallBatch()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongRowSmallBatch()
@@ -9647,9 +9145,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeRowSmallBatch()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 });
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedRowSmallBatch()
@@ -9683,13 +9179,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldRowSmallBatch()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, });
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeRowSmallBatch()
@@ -9811,9 +9305,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallRowSmallBatch()
-        {
-            TestSelect(e => new StructWithCtor(e.field1));
-        }
+            => TestSelect(e => new StructWithCtor(e.field1));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01RowSmallBatch()
@@ -9912,6 +9404,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02RowSmallBatch()
         {
@@ -9937,6 +9430,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01RowSmallBatch()
         {
@@ -9961,6 +9455,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02RowSmallBatch()
         {
@@ -9985,6 +9480,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03RowSmallBatch()
         {
@@ -10009,6 +9505,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04RowSmallBatch()
         {
@@ -10068,6 +9565,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01RowSmallBatch()
         {
@@ -10094,6 +9592,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01RowSmallBatch()
         {
@@ -10123,9 +9622,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1RowSmallBatch()
-        {
-            TestWhereSelect(e => true, e => e.field1);
-        }
+            => TestWhereSelect(e => true, e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructRowSmallBatch()
@@ -10404,7 +9901,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -10424,7 +9920,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
             var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -10459,7 +9954,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -10758,7 +10252,6 @@ namespace SimpleTesting
             var str = reversedInput.ToStatStreamable();
             var sortedStream = str.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(input.SequenceEqual(result));
             sortedStream.Dispose();
         }
@@ -11481,73 +10974,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1RowSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"));
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where2RowSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where3RowSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where4RowSmallBatchFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0);
-        }
+            => TestWhere(e => e.field3.nestedField == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5RowSmallBatchFloating()
-        {
-            TestWhere(e => true);
-        }
+            => TestWhere(e => true);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6RowSmallBatchFloating()
-        {
-            TestWhere(e => false);
-        }
+            => TestWhere(e => false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7RowSmallBatchFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8RowSmallBatchFloating()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9RowSmallBatchFloating()
@@ -11566,62 +11037,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationRowSmallBatchFloating() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1RowSmallBatchFloating()
-        {
-            TestSelect(e => e.field1);
-        }
+            => TestSelect(e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2RowSmallBatchFloating()
-        {
-            TestSelect(e => e.field2);
-        }
+            => TestSelect(e => e.field2);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3RowSmallBatchFloating()
-        {
-            TestSelect(e => e.field3);
-        }
+            => TestSelect(e => e.field3);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4RowSmallBatchFloating()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 });
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 });
 
         [TestMethod, TestCategory("Gated")]
         public void Select5RowSmallBatchFloating()
-        {
-            TestSelect(e => e.doubleField);
-        }
+            => TestSelect(e => e.doubleField);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6RowSmallBatchFloating()
-        {
-            TestSelect(e => ((ulong)e.field1));
-        }
+            => TestSelect(e => ((ulong)e.field1));
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7RowSmallBatchFloating()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, });
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, });
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8RowSmallBatchFloating()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongRowSmallBatchFloating()
@@ -11640,9 +11093,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeRowSmallBatchFloating()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 });
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedRowSmallBatchFloating()
@@ -11676,13 +11127,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldRowSmallBatchFloating()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, });
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeRowSmallBatchFloating()
@@ -11804,9 +11253,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallRowSmallBatchFloating()
-        {
-            TestSelect(e => new StructWithCtor(e.field1));
-        }
+            => TestSelect(e => new StructWithCtor(e.field1));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01RowSmallBatchFloating()
@@ -11905,6 +11352,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02RowSmallBatchFloating()
         {
@@ -11930,6 +11378,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01RowSmallBatchFloating()
         {
@@ -11954,6 +11403,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02RowSmallBatchFloating()
         {
@@ -11978,6 +11428,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03RowSmallBatchFloating()
         {
@@ -12002,6 +11453,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04RowSmallBatchFloating()
         {
@@ -12061,6 +11513,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01RowSmallBatchFloating()
         {
@@ -12087,6 +11540,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01RowSmallBatchFloating()
         {
@@ -12116,9 +11570,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1RowSmallBatchFloating()
-        {
-            TestWhereSelect(e => true, e => e.field1);
-        }
+            => TestWhereSelect(e => true, e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructRowSmallBatchFloating()
@@ -12284,7 +11736,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -12304,7 +11755,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
             var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -12337,7 +11787,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -12636,7 +12085,6 @@ namespace SimpleTesting
             var str = reversedInput.ToStatStreamable();
             var sortedStream = str.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(input.SequenceEqual(result));
             sortedStream.Dispose();
         }
@@ -13357,73 +12805,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1Columnar()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"));
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where2Columnar()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where3Columnar()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where4Columnar()
-        {
-            TestWhere(e => e.field3.nestedField == 0);
-        }
+            => TestWhere(e => e.field3.nestedField == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5Columnar()
-        {
-            TestWhere(e => true);
-        }
+            => TestWhere(e => true);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6Columnar()
-        {
-            TestWhere(e => false);
-        }
+            => TestWhere(e => false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7Columnar()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8Columnar()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9Columnar()
@@ -13442,62 +12868,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationColumnar() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1Columnar()
-        {
-            TestSelect(e => e.field1);
-        }
+            => TestSelect(e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2Columnar()
-        {
-            TestSelect(e => e.field2);
-        }
+            => TestSelect(e => e.field2);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3Columnar()
-        {
-            TestSelect(e => e.field3);
-        }
+            => TestSelect(e => e.field3);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4Columnar()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 });
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 });
 
         [TestMethod, TestCategory("Gated")]
         public void Select5Columnar()
-        {
-            TestSelect(e => e.doubleField);
-        }
+            => TestSelect(e => e.doubleField);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6Columnar()
-        {
-            TestSelect(e => ((ulong)e.field1));
-        }
+            => TestSelect(e => ((ulong)e.field1));
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7Columnar()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, });
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, });
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8Columnar()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongColumnar()
@@ -13516,9 +12924,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeColumnar()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 });
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedColumnar()
@@ -13552,13 +12958,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldColumnar()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, });
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeColumnar()
@@ -13680,9 +13084,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallColumnar()
-        {
-            TestSelect(e => new StructWithCtor(e.field1));
-        }
+            => TestSelect(e => new StructWithCtor(e.field1));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01Columnar()
@@ -13781,6 +13183,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02Columnar()
         {
@@ -13806,6 +13209,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01Columnar()
         {
@@ -13830,6 +13234,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02Columnar()
         {
@@ -13854,6 +13259,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03Columnar()
         {
@@ -13878,6 +13284,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04Columnar()
         {
@@ -13937,6 +13344,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01Columnar()
         {
@@ -13963,6 +13371,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01Columnar()
         {
@@ -13992,9 +13401,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1Columnar()
-        {
-            TestWhereSelect(e => true, e => e.field1);
-        }
+            => TestWhereSelect(e => true, e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructColumnar()
@@ -14273,7 +13680,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -14293,7 +13699,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
             var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -14328,7 +13733,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -14627,7 +14031,6 @@ namespace SimpleTesting
             var str = reversedInput.ToStatStreamable();
             var sortedStream = str.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(input.SequenceEqual(result));
             sortedStream.Dispose();
         }
@@ -15349,73 +14752,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1ColumnarFloating()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"));
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where2ColumnarFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where3ColumnarFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where4ColumnarFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0);
-        }
+            => TestWhere(e => e.field3.nestedField == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5ColumnarFloating()
-        {
-            TestWhere(e => true);
-        }
+            => TestWhere(e => true);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6ColumnarFloating()
-        {
-            TestWhere(e => false);
-        }
+            => TestWhere(e => false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7ColumnarFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8ColumnarFloating()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9ColumnarFloating()
@@ -15434,62 +14815,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationColumnarFloating() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1ColumnarFloating()
-        {
-            TestSelect(e => e.field1);
-        }
+            => TestSelect(e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2ColumnarFloating()
-        {
-            TestSelect(e => e.field2);
-        }
+            => TestSelect(e => e.field2);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3ColumnarFloating()
-        {
-            TestSelect(e => e.field3);
-        }
+            => TestSelect(e => e.field3);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4ColumnarFloating()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 });
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 });
 
         [TestMethod, TestCategory("Gated")]
         public void Select5ColumnarFloating()
-        {
-            TestSelect(e => e.doubleField);
-        }
+            => TestSelect(e => e.doubleField);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6ColumnarFloating()
-        {
-            TestSelect(e => ((ulong)e.field1));
-        }
+            => TestSelect(e => ((ulong)e.field1));
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7ColumnarFloating()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, });
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, });
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8ColumnarFloating()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongColumnarFloating()
@@ -15508,9 +14871,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeColumnarFloating()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 });
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedColumnarFloating()
@@ -15544,13 +14905,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldColumnarFloating()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, });
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeColumnarFloating()
@@ -15672,9 +15031,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallColumnarFloating()
-        {
-            TestSelect(e => new StructWithCtor(e.field1));
-        }
+            => TestSelect(e => new StructWithCtor(e.field1));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01ColumnarFloating()
@@ -15773,6 +15130,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02ColumnarFloating()
         {
@@ -15798,6 +15156,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01ColumnarFloating()
         {
@@ -15822,6 +15181,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02ColumnarFloating()
         {
@@ -15846,6 +15206,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03ColumnarFloating()
         {
@@ -15870,6 +15231,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04ColumnarFloating()
         {
@@ -15929,6 +15291,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01ColumnarFloating()
         {
@@ -15955,6 +15318,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01ColumnarFloating()
         {
@@ -15984,9 +15348,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1ColumnarFloating()
-        {
-            TestWhereSelect(e => true, e => e.field1);
-        }
+            => TestWhereSelect(e => true, e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructColumnarFloating()
@@ -16152,7 +15514,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -16172,7 +15533,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
             var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -16205,7 +15565,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -16504,7 +15863,6 @@ namespace SimpleTesting
             var str = reversedInput.ToStatStreamable();
             var sortedStream = str.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(input.SequenceEqual(result));
             sortedStream.Dispose();
         }
@@ -17226,73 +16584,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1ColumnarSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"));
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where2ColumnarSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where3ColumnarSmallBatch()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where4ColumnarSmallBatch()
-        {
-            TestWhere(e => e.field3.nestedField == 0);
-        }
+            => TestWhere(e => e.field3.nestedField == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5ColumnarSmallBatch()
-        {
-            TestWhere(e => true);
-        }
+            => TestWhere(e => true);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6ColumnarSmallBatch()
-        {
-            TestWhere(e => false);
-        }
+            => TestWhere(e => false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7ColumnarSmallBatch()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8ColumnarSmallBatch()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9ColumnarSmallBatch()
@@ -17311,62 +16647,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationColumnarSmallBatch() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1ColumnarSmallBatch()
-        {
-            TestSelect(e => e.field1);
-        }
+            => TestSelect(e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2ColumnarSmallBatch()
-        {
-            TestSelect(e => e.field2);
-        }
+            => TestSelect(e => e.field2);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3ColumnarSmallBatch()
-        {
-            TestSelect(e => e.field3);
-        }
+            => TestSelect(e => e.field3);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4ColumnarSmallBatch()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 });
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 });
 
         [TestMethod, TestCategory("Gated")]
         public void Select5ColumnarSmallBatch()
-        {
-            TestSelect(e => e.doubleField);
-        }
+            => TestSelect(e => e.doubleField);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6ColumnarSmallBatch()
-        {
-            TestSelect(e => ((ulong)e.field1));
-        }
+            => TestSelect(e => ((ulong)e.field1));
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7ColumnarSmallBatch()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, });
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, });
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8ColumnarSmallBatch()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongColumnarSmallBatch()
@@ -17385,9 +16703,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeColumnarSmallBatch()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 });
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedColumnarSmallBatch()
@@ -17421,13 +16737,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldColumnarSmallBatch()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, });
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeColumnarSmallBatch()
@@ -17549,9 +16863,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallColumnarSmallBatch()
-        {
-            TestSelect(e => new StructWithCtor(e.field1));
-        }
+            => TestSelect(e => new StructWithCtor(e.field1));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01ColumnarSmallBatch()
@@ -17650,6 +16962,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02ColumnarSmallBatch()
         {
@@ -17675,6 +16988,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01ColumnarSmallBatch()
         {
@@ -17699,6 +17013,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02ColumnarSmallBatch()
         {
@@ -17723,6 +17038,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03ColumnarSmallBatch()
         {
@@ -17747,6 +17063,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04ColumnarSmallBatch()
         {
@@ -17806,6 +17123,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01ColumnarSmallBatch()
         {
@@ -17832,6 +17150,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01ColumnarSmallBatch()
         {
@@ -17861,9 +17180,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1ColumnarSmallBatch()
-        {
-            TestWhereSelect(e => true, e => e.field1);
-        }
+            => TestWhereSelect(e => true, e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructColumnarSmallBatch()
@@ -18142,7 +17459,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -18162,7 +17478,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
             var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -18197,7 +17512,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -18496,7 +17810,6 @@ namespace SimpleTesting
             var str = reversedInput.ToStatStreamable();
             var sortedStream = str.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(input.SequenceEqual(result));
             sortedStream.Dispose();
         }
@@ -19219,73 +18532,51 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1ColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string"));
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where2ColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where3ColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0"));
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0"));
 
         [TestMethod, TestCategory("Gated")]
         public void Where4ColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0);
-        }
+            => TestWhere(e => e.field3.nestedField == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5ColumnarSmallBatchFloating()
-        {
-            TestWhere(e => true);
-        }
+            => TestWhere(e => true);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6ColumnarSmallBatchFloating()
-        {
-            TestWhere(e => false);
-        }
+            => TestWhere(e => false);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7ColumnarSmallBatchFloating()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8ColumnarSmallBatchFloating()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9ColumnarSmallBatchFloating()
@@ -19304,62 +18595,44 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformationColumnarSmallBatchFloating() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1ColumnarSmallBatchFloating()
-        {
-            TestSelect(e => e.field1);
-        }
+            => TestSelect(e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2ColumnarSmallBatchFloating()
-        {
-            TestSelect(e => e.field2);
-        }
+            => TestSelect(e => e.field2);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3ColumnarSmallBatchFloating()
-        {
-            TestSelect(e => e.field3);
-        }
+            => TestSelect(e => e.field3);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4ColumnarSmallBatchFloating()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 });
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 });
 
         [TestMethod, TestCategory("Gated")]
         public void Select5ColumnarSmallBatchFloating()
-        {
-            TestSelect(e => e.doubleField);
-        }
+            => TestSelect(e => e.doubleField);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6ColumnarSmallBatchFloating()
-        {
-            TestSelect(e => ((ulong)e.field1));
-        }
+            => TestSelect(e => ((ulong)e.field1));
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7ColumnarSmallBatchFloating()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, });
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, });
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8ColumnarSmallBatchFloating()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLongColumnarSmallBatchFloating()
@@ -19378,9 +18651,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeColumnarSmallBatchFloating()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 });
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChainedColumnarSmallBatchFloating()
@@ -19414,13 +18685,11 @@ namespace SimpleTesting
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatFieldColumnarSmallBatchFloating()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, });
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, });
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousTypeColumnarSmallBatchFloating()
@@ -19542,9 +18811,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCallColumnarSmallBatchFloating()
-        {
-            TestSelect(e => new StructWithCtor(e.field1));
-        }
+            => TestSelect(e => new StructWithCtor(e.field1));
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01ColumnarSmallBatchFloating()
@@ -19643,6 +18910,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02ColumnarSmallBatchFloating()
         {
@@ -19668,6 +18936,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01ColumnarSmallBatchFloating()
         {
@@ -19692,6 +18961,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02ColumnarSmallBatchFloating()
         {
@@ -19716,6 +18986,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03ColumnarSmallBatchFloating()
         {
@@ -19740,6 +19011,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04ColumnarSmallBatchFloating()
         {
@@ -19799,6 +19071,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01ColumnarSmallBatchFloating()
         {
@@ -19825,6 +19098,7 @@ namespace SimpleTesting
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01ColumnarSmallBatchFloating()
         {
@@ -19854,9 +19128,7 @@ namespace SimpleTesting
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1ColumnarSmallBatchFloating()
-        {
-            TestWhereSelect(e => true, e => e.field1);
-        }
+            => TestWhereSelect(e => true, e => e.field1);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStructColumnarSmallBatchFloating()
@@ -20022,7 +19294,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -20042,7 +19313,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
             var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -20075,7 +19345,6 @@ namespace SimpleTesting
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -20374,7 +19643,6 @@ namespace SimpleTesting
             var str = reversedInput.ToStatStreamable();
             var sortedStream = str.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(input.SequenceEqual(result));
             sortedStream.Dispose();
         }

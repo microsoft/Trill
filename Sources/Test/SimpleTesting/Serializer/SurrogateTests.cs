@@ -1,4 +1,8 @@
-﻿using System;
+﻿// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Linq;
@@ -49,14 +53,7 @@ namespace SimpleTesting
             using (var w = new BinaryReader(stream, System.Text.Encoding.UTF8, true))
             {
                 var isNotNull = w.ReadByte();
-                if (isNotNull == 1)
-                {
-                    return new MyType(w.ReadSingle());
-                }
-                else
-                {
-                    return null;
-                }
+                return isNotNull == 1 ? new MyType(w.ReadSingle()) : null;
             }
         }
     }
@@ -69,15 +66,9 @@ namespace SimpleTesting
     public class MyType : IMyInterface
     {
         private readonly float value = 0;
-        public MyType(float value)
-        {
-            this.value = value;
-        }
+        public MyType(float value) => this.value = value;
 
-        public float GetValue()
-        {
-            return this.value;
-        }
+        public float GetValue() => this.value;
     }
 
 
