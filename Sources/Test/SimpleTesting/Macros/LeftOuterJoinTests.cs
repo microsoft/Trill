@@ -15,10 +15,7 @@ namespace SimpleTesting
         public int field1;
         public string field2;
 
-        public override string ToString()
-        {
-            return string.Format("field1 = {0}, field2 = \"{1}\"", this.field1, this.field2);
-        }
+        public override string ToString() => $"field1 = {this.field1}, field2 = \"{this.field2}\"";
     }
 
     internal struct MyData2
@@ -43,12 +40,12 @@ namespace SimpleTesting
             .DontFallBackToRowBasedExecution(true)
             .MapArity(1)
             .ReduceArity(1))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void LOJ1Row()
         {
-            QueryContainer container = new QueryContainer(null);
+            var container = new QueryContainer(null);
 
             var left = new StreamEvent<MyData>[] {
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }),
@@ -102,12 +99,12 @@ namespace SimpleTesting
             .DataBatchSize(100)
             .MapArity(1)
             .ReduceArity(1))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void LOJ1RowSmallBatch()
         {
-            QueryContainer container = new QueryContainer(null);
+            var container = new QueryContainer(null);
 
             var left = new StreamEvent<MyData>[] {
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }),
@@ -160,12 +157,12 @@ namespace SimpleTesting
             .DontFallBackToRowBasedExecution(true)
             .MapArity(1)
             .ReduceArity(1))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void LOJ1Columnar()
         {
-            QueryContainer container = new QueryContainer(null);
+            var container = new QueryContainer(null);
 
             var left = new StreamEvent<MyData>[] {
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }),
@@ -219,12 +216,12 @@ namespace SimpleTesting
             .DataBatchSize(100)
             .MapArity(1)
             .ReduceArity(1))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void LOJ1ColumnarSmallBatch()
         {
-            QueryContainer container = new QueryContainer(null);
+            var container = new QueryContainer(null);
 
             var left = new StreamEvent<MyData>[] {
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }),

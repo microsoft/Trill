@@ -115,7 +115,7 @@ namespace SimpleTesting
             .DontFallBackToRowBasedExecution(true)
             .UseMultiString(false)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void Pivot1AllRow()
@@ -251,7 +251,7 @@ namespace SimpleTesting
             .DataBatchSize(100)
             .UseMultiString(false)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void Pivot1AllRowSmallBatch()
@@ -385,7 +385,7 @@ namespace SimpleTesting
             .DontFallBackToRowBasedExecution(true)
             .UseMultiString(false)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void Pivot1AllColumnar()
@@ -521,7 +521,7 @@ namespace SimpleTesting
             .DataBatchSize(100)
             .UseMultiString(false)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void Pivot1AllColumnarSmallBatch()

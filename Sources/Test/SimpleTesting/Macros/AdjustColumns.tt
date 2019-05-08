@@ -45,7 +45,7 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
 <# } #>
             .UseMultiString(false)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void AdjustColumnsTrivial<#= suffix #>()

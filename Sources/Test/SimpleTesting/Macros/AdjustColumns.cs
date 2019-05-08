@@ -21,7 +21,7 @@ namespace SimpleTesting
             .DontFallBackToRowBasedExecution(true)
             .UseMultiString(false)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void AdjustColumnsTrivialRow()
@@ -92,7 +92,7 @@ namespace SimpleTesting
             .DataBatchSize(100)
             .UseMultiString(false)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void AdjustColumnsTrivialRowSmallBatch()
@@ -162,7 +162,7 @@ namespace SimpleTesting
             .DontFallBackToRowBasedExecution(true)
             .UseMultiString(false)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void AdjustColumnsTrivialColumnar()
@@ -233,7 +233,7 @@ namespace SimpleTesting
             .DataBatchSize(100)
             .UseMultiString(false)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
-       { }
+        { }
 
         [TestMethod, TestCategory("Gated")]
         public void AdjustColumnsTrivialColumnarSmallBatch()
