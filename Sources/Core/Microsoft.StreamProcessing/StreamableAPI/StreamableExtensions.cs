@@ -970,6 +970,43 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
+        /// Macro to perform a left-outer-join operation.
+        /// </summary>
+        /// <typeparam name="TKey">Type of (mapping) key in the stream</typeparam>
+        /// <typeparam name="TLeft">Type of left input payload in the stream</typeparam>
+        /// <typeparam name="TRight">Type of right input payload in the stream</typeparam>
+        /// <typeparam name="TJoinKey">Type of join key for the join</typeparam>
+        /// <typeparam name="TResult">Type of result payload in the stream</typeparam>
+        /// <param name="left">Left input stream</param>
+        /// <param name="right">Right input stream</param>
+        /// <param name="leftKeySelector">Selector for the left-side join key</param>
+        /// <param name="rightKeySelector">Selector for the right-side join key</param>
+        /// <param name="leftResultSelector">Selector for the result for non-joining tuples</param>
+        /// <param name="rightResultSelector">Selector for the result for non-joining tuples</param>
+        /// <param name="innerResultSelector">Selector for the result for joining tuples</param>
+        /// <returns>Result (output) stream</returns>
+        public static IStreamable<TKey, TResult> FullOuterJoin<TKey, TLeft, TRight, TJoinKey, TResult>(
+            this IStreamable<TKey, TLeft> left,
+            IStreamable<TKey, TRight> right,
+            Expression<Func<TLeft, TJoinKey>> leftKeySelector,
+            Expression<Func<TRight, TJoinKey>> rightKeySelector,
+            Expression<Func<TLeft, TResult>> leftResultSelector,
+            Expression<Func<TRight, TResult>> rightResultSelector,
+            Expression<Func<TLeft, TRight, TResult>> innerResultSelector)
+        {
+            Invariant.IsNotNull(left, nameof(left));
+            Invariant.IsNotNull(right, nameof(right));
+
+            return left.Multicast(right, (l_mc, r_mc) =>
+            {
+                var outerLeft = l_mc.WhereNotExists(r_mc, leftKeySelector, rightKeySelector).Select(leftResultSelector);
+                var outerRight = r_mc.WhereNotExists(l_mc, rightKeySelector, leftKeySelector).Select(rightResultSelector);
+                var innerJoin = l_mc.Join(r_mc, leftKeySelector, rightKeySelector, innerResultSelector);
+                return outerLeft.Union(innerJoin).Union(outerRight);
+            });
+        }
+
+        /// <summary>
         ///
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
