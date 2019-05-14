@@ -156,7 +156,9 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                     int c = this.batch.Count;
                     this.batch.vsync.col[c] = col_vsync[i];
                     this.batch.vother.col[c] = StreamEvent.PunctuationOtherTime;
+<# if (!this.isUngrouped) { #>
                     this.batch.key.col[c] = default;
+<# } #>
                     this.batch[c] = default;
                     this.batch.hash.col[c] = 0;
                     this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
