@@ -130,7 +130,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.Properties.IsColumnar)
                 {
-                    var tuple = GetPipe(observer);
+                    var tuple = GetPipe();
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                         p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate);
@@ -178,7 +178,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.Properties.IsColumnar)
                 {
-                    var tuple = GetPipe(observer);
+                    var tuple = GetPipe();
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                         p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate, this.sourceProps.ConstantDurationLength.Value);
@@ -226,7 +226,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.Properties.IsColumnar)
                 {
-                    var tuple = GetPipe(observer);
+                    var tuple = GetPipe();
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                         p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate);
@@ -274,7 +274,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.Properties.IsColumnar)
                 {
-                    var tuple = GetPipe(observer);
+                    var tuple = GetPipe();
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                         p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate);
@@ -322,7 +322,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.Properties.IsColumnar)
                 {
-                    var tuple = GetPipe(observer);
+                    var tuple = GetPipe();
                     Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SnapshotWindowPlanNode<TInput, TState, TOutput>(
                         p, o, typeof(TKey), typeof(TInput), typeof(TOutput), this.apt, this.Aggregate, true, tuple.Item2));
                     var instance = Activator.CreateInstance(tuple.Item1, this, observer, planNode, this.Aggregate);
@@ -382,7 +382,7 @@ namespace Microsoft.StreamProcessing
             return generatedPipeType != null;
         }
 
-        private Tuple<Type, string> GetPipe(IStreamObserver<TKey, TOutput> observer)
+        private Tuple<Type, string> GetPipe()
         {
             var lookupKey = CacheKey.Create(this.apt, GetAggregateFunctionsHashCode(this.Aggregate));
 

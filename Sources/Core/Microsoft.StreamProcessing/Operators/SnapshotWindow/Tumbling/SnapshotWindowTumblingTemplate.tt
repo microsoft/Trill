@@ -20,36 +20,33 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
 
     private long hop;
 
-    <# if (this.useCompiledInitialState) { #>
+<# if (this.useCompiledInitialState) { #>
 
     private readonly Func<<#= TState #>> initialState;
-    <# } #>
-    <# if (this.useCompiledAccumulate) { #>
+<# } #>
+<# if (this.useCompiledAccumulate) { #>
 
     private readonly Func<<#= TState #>, long, <#= TInput #>, <#= TState #>> accumulate;
-    <# } #>
-    <# if (this.useCompiledComputeResult) { #>
+<# } #>
+<# if (this.useCompiledComputeResult) { #>
 
     private readonly Func<<#= TState #>, <#= TOutput #>> computeResult;
-    <# } #>
+<# } #>
 
     private readonly IEqualityComparerExpression<<#= TKey #>> keyComparer;
     private readonly Func<<#= TKey #>, <#= TKey #>, bool> keyComparerEquals;
     private readonly Func<<#= TKey #>, int> keyComparerGetHashCode;
 
-    <# if (!this.isUngrouped) { #>
-
+<# if (!this.isUngrouped) { #>
     [DataMember]
-    private FastDictionary<<#= TKey #>, HeldState> heldAggregates;
-    <# } else { #>
-
+    private FastDictionary<<#= TKey #>, <#= TState #>> heldAggregates;
+<# } else { #>
     [DataMember]
     private HeldState currentState;
-    <# } #>
+<# } #>
 
     [DataMember]
     private long lastSyncTime = long.MinValue;
-    private <#= TKey #> currentKey;
 
     <#= staticCtor #>
 
@@ -67,18 +64,18 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
         this.queryPlanGenerator = queryPlanGenerator;
         this.hop = hop;
 
-        <# if (this.useCompiledInitialState) { #>
+<# if (this.useCompiledInitialState) { #>
 
         initialState = aggregate.InitialState().Compile();
-        <# } #>
-        <# if (this.useCompiledAccumulate) { #>
+<# } #>
+<# if (this.useCompiledAccumulate) { #>
 
         accumulate = aggregate.Accumulate().Compile();
-        <# } #>
-        <# if (this.useCompiledComputeResult) { #>
+<# } #>
+<# if (this.useCompiledComputeResult) { #>
 
         computeResult = aggregate.ComputeResult().Compile();
-        <# } #>
+<# } #>
 
         this.keyComparer = stream.Properties.KeyEqualityComparer;
         this.keyComparerEquals =  this.keyComparer.GetEqualsExpr().Compile();
@@ -88,16 +85,14 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
         <#= getOutputBatch #>
         this.batch.Allocate();
 
-        <# if (!this.isUngrouped) { #>
-        var generator = this.keyComparer.CreateFastDictionaryGenerator<<#= TKey #>, HeldState>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer);
+<# if (!this.isUngrouped) { #>
+        var generator = this.keyComparer.CreateFastDictionaryGenerator<<#= TKey #>, <#= TState #>>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer);
         this.heldAggregates = generator.Invoke();
-        <# } #>
+<# } #>
     }
 
     public override void ProduceQueryPlan(PlanNode previous)
-    {
-        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
-    }
+        => Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
 
     protected override void FlushContents()
     {
@@ -116,47 +111,31 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
 
     public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TInput #>> inputBatch)
     {
-        <# if (!this.isUngrouped) { #>
-
-        HeldState currentState = null;
-        <#= TKey #> currentKey = default;
-        int currentHash = 0;
-        <# } #>
-
         <#= BatchGeneratedFrom_TKey_TInput #><#= TKeyTInputGenericParameters #> generatedBatch = inputBatch as <#= BatchGeneratedFrom_TKey_TInput #><#= TKeyTInputGenericParameters #>;
 
         var count = generatedBatch.Count;
 
-        <# if (this.outputFields.Count() > 1) { #>
-
+<# if (this.outputFields.Count() > 1) { #>
         <#= TOutput #> temporaryOutput;
-        <# } #>
+<# } #>
 
         // Create locals that point directly to the arrays within the columns in the input batch.
 <# foreach (var f in this.inputFields) { #>
-
 <# if (f.canBeFixed) { #>
-
         fixed (<#= f.TypeName #>* <#= f.Name #>_col = generatedBatch.<#= f.Name #>.col)
         {
 <# } else { #>
-
         var <#= f.Name #>_col = generatedBatch.<#= f.Name #>.col;
-
 <# } #>
 <# } #>
 
         // Create locals that point directly to the arrays within the columns in the output batch.
 <# foreach (var f in this.outputFields) { #>
-
 <# if (f.canBeFixed) { #>
-
         fixed (<#= f.TypeName #>* dest_<#= f.Name #> = this.batch.<#= f.Name #>.col)
         {
 <# } else { #>
-
         var dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
-
 <# } #>
 <# } #>
         var col_key = generatedBatch.key.col;
@@ -192,8 +171,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
             // Handle time moving forward
             if (syncTime > this.lastSyncTime)
             {
-                <# if (this.isUngrouped) { #>
-
+<# if (this.isUngrouped) { #>
                 if (currentState != null)   // there exists earlier state
                 {
                     int c = this.batch.Count;
@@ -205,116 +183,77 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     currentState = null;
                 }
-                <# } else { #>
+<# } else { #>
+                int iter1 = FastDictionary<<#= TKey #>, HeldState>.IteratorStart;
+                while (this.heldAggregates.Iterate(ref iter1))
+                {
+                    var iter1entry = this.heldAggregates.entries[iter1];
 
-                    int iter1 = FastDictionary<<#= TKey #>, HeldState>.IteratorStart;
-                    while (this.heldAggregates.Iterate(ref iter1))
-                    {
-                        var iter1entry = this.heldAggregates.entries[iter1];
+                    int c = this.batch.Count;
+                    this.batch.vsync.col[c] = this.lastSyncTime;
+                    this.batch.vother.col[c] = this.lastSyncTime + this.hop;
+                    <#= assignToOutput(computeResult("iter1entry.value")) #>
+                    this.batch.key.col[c] = iter1entry.key;
+                    this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
+                    this.batch.Count++;
+                    if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                }
 
-                        int c = this.batch.Count;
-                        this.batch.vsync.col[c] = iter1entry.value.timestamp;
-                        this.batch.vother.col[c] = iter1entry.value.timestamp + this.hop;
-                        <#= assignToOutput(computeResult("iter1entry.value.state.state")) #>
-                        this.batch.key.col[c] = iter1entry.key;
-                        this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
-                        this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                    }
-
-                    // Time has moved forward, clean the held aggregates
-                    this.heldAggregates.Clear();
-
-                    // reset currentState so that we can later force a re-get
-                    currentState = null;
-                <# } #>
+                // Time has moved forward, clean the held aggregates
+                this.heldAggregates.Clear();
+<# } #>
 
                 // Since sync time changed, set this.lastSyncTime
                 this.lastSyncTime = syncTime;
             }
 
-            <# if (this.isUngrouped) { #>
-
+<# if (this.isUngrouped) { #>
             if (currentState == null)
             {
                 currentState = new HeldState();
                 currentState.state.state = <#= initialState #>;
-                currentState.state.active = 1; // start edge only
                 currentState.timestamp = syncTime;
             }
-            <# } else { #>
-
-            if (currentState == null || currentHash != col_hash[i] || !<#= inlinedKeyComparerEquals("currentKey", "col_key[i]") #>)
-            {
-                // Need to retrieve the key from the dictionary
-                currentKey = col_key[i];
-                currentHash = col_hash[i];
-
-                int index;
-
-                if (!this.heldAggregates.Lookup(currentKey, currentHash, out index))
-                {
-                    // New group. Create new state
-                    currentState = new HeldState();
-                    currentState.state.state = <#= initialState #>;
-                    currentState.timestamp = syncTime;
-                    // No output because initial state is empty
-
-                    this.heldAggregates.Insert(ref index, currentKey, currentState);
-                }
-                else
-                {
-                    // read new currentState from _heldAgg index
-                    currentState = this.heldAggregates.entries[index].value;
-                }
-            }
-            else
-            {
-                if (syncTime > currentState.timestamp)
-                {
-                    // Reset currentState
-                    currentState.state.state = <#= initialState #>;
-                    currentState.timestamp = syncTime;
-                }
-            }
-            <# } #>
 
             currentState.state.state = <#= accumulate("currentState.state.state", "col_vsync[i]") #>;
-            currentState.state.active++;
+<# } else { #>
+            // Need to retrieve the key from the dictionary
+            var currentKey = col_key[i];
+            var currentHash = col_hash[i];
+
+            if (!this.heldAggregates.Lookup(currentKey, currentHash, out int index))
+                this.heldAggregates.Insert(ref index, currentKey, <#= initialState #>);
+
+            ref var entry = ref this.heldAggregates.entries[index];
+            entry.value = <#= accumulate("entry.value", "col_vsync[i]") #>;
+<# } #>
         }
 
-        <# foreach (var f in this.inputFields.Where(fld => fld.canBeFixed)) { #>
-
+<# foreach (var f in this.inputFields.Where(fld => fld.canBeFixed)) { #>
         }
-        <# } #>
-        <# foreach (var f in this.outputFields.Where(fld => fld.canBeFixed)) { #>
-
+<# } #>
+<# foreach (var f in this.outputFields.Where(fld => fld.canBeFixed)) { #>
         }
-        <# } #>
+<# } #>
 
         generatedBatch.Release();
         generatedBatch.Return();
     }
 
-
-
     public void OnPunctuation(long syncTime)
     {
-
-        <# if (this.outputFields.Count() > 1) { #>
-
+<# if (this.outputFields.Count() > 1) { #>
         <#= TOutput #> temporaryOutput;
-        <# foreach (var f in this.outputFields) { #>
 
+<# foreach (var f in this.outputFields) { #>
         var dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
-        <# } #>
-        <# } #>
+<# } #>
+<# } #>
 
         // Handle time moving forward
         if (syncTime > this.lastSyncTime)
         {
-            <# if (this.isUngrouped) { #>
-
+<# if (this.isUngrouped) { #>
             if (currentState != null) // need to send interval event
             {
                 int c = this.batch.Count;
@@ -327,17 +266,16 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                 if (this.batch.Count == Config.DataBatchSize) FlushContents();
                 currentState = null;
             }
-            <# } else { #>
-
+<# } else { #>
             int iter1 = FastDictionary<<#= TKey #>, HeldState>.IteratorStart;
             while (this.heldAggregates.Iterate(ref iter1))
             {
                 var iter1entry = this.heldAggregates.entries[iter1];
 
                 int c = this.batch.Count;
-                this.batch.vsync.col[c] = iter1entry.value.timestamp;
-                this.batch.vother.col[c] = iter1entry.value.timestamp + this.hop;
-                <#= assignToOutput(computeResult("iter1entry.value.state.state")) #>
+                this.batch.vsync.col[c] = this.lastSyncTime;
+                this.batch.vother.col[c] = this.lastSyncTime + this.hop;
+                <#= assignToOutput(computeResult("iter1entry.value")) #>
 
                 this.batch.key.col[c] = iter1entry.key;
                 this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
@@ -347,10 +285,10 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
 
             // Time has moved forward, clean the held aggregates
             this.heldAggregates.Clear();
-            <# } #>
+<# } #>
 
             // Since sync time changed, set this.lastSyncTime
             this.lastSyncTime = syncTime;
         }
     }
-}//
+}

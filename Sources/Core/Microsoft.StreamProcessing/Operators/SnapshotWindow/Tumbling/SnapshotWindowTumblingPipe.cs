@@ -145,8 +145,8 @@ namespace Microsoft.StreamProcessing
                     // Need to retrieve the key from the dictionary
                     if (!this.heldAggregates.Lookup(colkey[i], col_hash[i], out int index)) this.heldAggregates.Insert(ref index, colkey[i], this.initialState());
 
-                    var entries = this.heldAggregates.entries;
-                    entries[index].value = this.accumulate(entries[index].value, col_vsync[i], colpayload[i]);
+                    ref var entry = ref this.heldAggregates.entries[index];
+                    entry.value = this.accumulate(entry.value, col_vsync[i], colpayload[i]);
                 }
             }
 
@@ -206,7 +206,7 @@ namespace Microsoft.StreamProcessing
         protected override void DisposeState()
         {
             this.batch.Free();
-            if (hasDisposableState) DisposeState();
+            if (hasDisposableState) DisposeStateLocal();
         }
     }
 }

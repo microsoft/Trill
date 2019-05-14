@@ -150,7 +150,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledAccumulate = true;
-                        template.accumulate = (s1, s2) => string.Format("accumulate({0}, {1}, inputBatch[i]);", s1, s2);
+                        template.accumulate = (s1, s2) => $"accumulate({s1}, {s2}, inputBatch[i]);";
                     }
                 }
 
@@ -171,7 +171,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledDeaccumulate = true;
-                        template.deaccumulate = (s1, s2) => string.Format("deaccumulate({0}, {1}, inputBatch[i]);", s1, s2);
+                        template.deaccumulate = (s1, s2) => $"deaccumulate({s1}, {s2}, inputBatch[i]);";
                     }
                 }
 
@@ -191,7 +191,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledDifference = true;
-                        template.difference = (s1, s2) => string.Format("difference({0}, {1});", s1, s2);
+                        template.difference = (s1, s2) => $"difference({s1}, {s2});";
                     }
                 }
 
@@ -232,7 +232,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         template.useCompiledComputeResult = true;
-                        template.computeResult = (stateArg) => "computeResult(" + stateArg + ");";
+                        template.computeResult = (stateArg) => $"computeResult({stateArg});";
                     }
                 }
                 #endregion
