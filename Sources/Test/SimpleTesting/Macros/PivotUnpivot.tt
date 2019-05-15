@@ -1,0 +1,213 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
+using Microsoft.StreamProcessing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace SimpleTesting
+{
+    internal struct UnpivotStruct1
+    {
+        public string Key1;
+        public string Attribute;
+        public int Value;
+    }
+
+    internal struct UnpivotStruct1N
+    {
+        public string Key1;
+        public string Attribute;
+        public int? Value;
+    }
+
+    internal struct UnpivotStruct2
+    {
+        public string Key1;
+        public string Key2;
+        public string Attribute;
+        public int Value;
+    }
+
+    internal struct UnpivotStruct2N
+    {
+        public string Key1;
+        public string Key2;
+        public string Attribute;
+        public int? Value;
+    }
+<#
+foreach (var orientation in new [] { "Row", "Columnar" })
+foreach (var batch in new [] { string.Empty, "SmallBatch" })
+{
+    var suffix = orientation + batch;
+#>
+
+    [TestClass]
+    public class UnpivotTests<#= suffix #> : TestWithConfigSettingsAndMemoryLeakDetection
+    {
+        public UnpivotTests<#= suffix #>() : base(new ConfigModifier()
+<#  switch (orientation)
+    {
+        case "Row": #>
+            .ForceRowBasedExecution(true)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+        case "Columnar": #>
+            .ForceRowBasedExecution(false)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+    } #>
+<# if (!string.IsNullOrEmpty(batch)) { #>
+            .DataBatchSize(100)
+<# } #>
+            .UseMultiString(false)
+            .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
+        { }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Unpivot1All<#= suffix #>()
+        {
+            var input = WideStruct1.GetTestData()
+                .ToStreamable()
+                .Unpivot(
+                    () => new UnpivotStruct1(),
+                    e => e.Key1,
+                    e => e.Attribute,
+                    e => e.Value)
+                .ToAtemporalObservable()
+                .ToEnumerable()
+                .ToList();
+
+            var expected = new List<UnpivotStruct1>
+            {
+                new UnpivotStruct1 { Key1 = "a", Attribute = "i5", Value = 5 },
+                new UnpivotStruct1 { Key1 = "a", Attribute = "i9", Value = 9 },
+                new UnpivotStruct1 { Key1 = "b", Attribute = "i1", Value = 11 },
+                new UnpivotStruct1 { Key1 = "b", Attribute = "i14", Value = 100 },
+                new UnpivotStruct1 { Key1 = "b", Attribute = "i2", Value = 9 },
+                new UnpivotStruct1 { Key1 = "c", Attribute = "i15", Value = 0 },
+                new UnpivotStruct1 { Key1 = "c", Attribute = "o", Value = 9 },
+            };
+
+            Assert.IsTrue(input.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Unpivot2All<#= suffix #>()
+        {
+            var input = WideStruct2.GetTestData()
+                .ToStreamable()
+                .Unpivot(
+                    () => new UnpivotStruct2(),
+                    e => new { e.Key1, e.Key2 },
+                    e => e.Attribute,
+                    e => e.Value)
+                .ToAtemporalObservable()
+                .ToEnumerable()
+                .ToList();
+
+            var expected = new List<UnpivotStruct2>
+            {
+                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+            };
+
+            Assert.IsTrue(input.SequenceEqual(expected));
+        }
+    }
+
+    [TestClass]
+    public class PivotTests<#= suffix #> : TestWithConfigSettingsAndMemoryLeakDetection
+    {
+        public PivotTests<#= suffix #>() : base(new ConfigModifier()
+<#  switch (orientation)
+    {
+        case "Row": #>
+            .ForceRowBasedExecution(true)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+        case "Columnar": #>
+            .ForceRowBasedExecution(false)
+            .DontFallBackToRowBasedExecution(true)
+<#          break;
+    } #>
+<# if (!string.IsNullOrEmpty(batch)) { #>
+            .DataBatchSize(100)
+<# } #>
+            .UseMultiString(false)
+            .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.None))
+        { }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Pivot1All<#= suffix #>()
+        {
+            var input = new List<UnpivotStruct1N>
+            {
+                new UnpivotStruct1N { Key1 = "a", Attribute = "i5", Value = 5 },
+                new UnpivotStruct1N { Key1 = "a", Attribute = "i9", Value = 9 },
+                new UnpivotStruct1N { Key1 = "b", Attribute = "i1", Value = 11 },
+                new UnpivotStruct1N { Key1 = "b", Attribute = "i2", Value = 9 },
+                new UnpivotStruct1N { Key1 = "b", Attribute = "i14", Value = 100 },
+                new UnpivotStruct1N { Key1 = "c", Attribute = "i15", Value = 0 },
+                new UnpivotStruct1N { Key1 = "c", Attribute = "o", Value = 9 },
+            }.ToStreamable()
+            .Pivot(
+                () => new WideStruct1(),
+                o => o.Key1,
+                o => o.Attribute,
+                o => o.Value,
+                o => o.SingleOrDefault())
+            .ToAtemporalObservable()
+            .ToEnumerable()
+            .ToList();
+
+            var expected = WideStruct1.GetTestData();
+
+            Assert.IsTrue(input.OrderBy(o => o.Key1).SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Pivot2All<#= suffix #>()
+        {
+            var input = new List<UnpivotStruct2N>
+            {
+                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+            }.ToStreamable()
+            .Pivot(
+                () => new WideStruct2(),
+                o => new { o.Key1, o.Key2 },
+                o => o.Attribute,
+                o => o.Value,
+                o => o.SingleOrDefault())
+            .ToAtemporalObservable()
+            .ToEnumerable()
+            .ToList();
+
+            var expected = WideStruct2.GetTestData();
+
+            Assert.IsTrue(input.OrderBy(o => o.Key1).SequenceEqual(expected));
+        }
+    }
+<# } #>
+}

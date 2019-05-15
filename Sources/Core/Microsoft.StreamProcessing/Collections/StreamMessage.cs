@@ -193,7 +193,7 @@ namespace Microsoft.StreamProcessing
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public virtual void Allocate()
+        public void Allocate()
         {
             this.memPool.Get(out this.vsync);
             this.memPool.Get(out this.vother);

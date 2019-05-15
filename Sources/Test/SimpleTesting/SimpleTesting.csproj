@@ -52,81 +52,105 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdHocTests.cs" />
-    <Compile Include="AdjustColumns.cs">
+    <Compile Include="Macros\AdjustColumns.cs">
       <DependentUpon>AdjustColumns.tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
-    <Compile Include="AfaTests.cs" />
+    <Compile Include="Streamables\AfaTests.cs" />
+    <Compile Include="Aggregates\AverageAggregate.cs" />
+    <Compile Include="Aggregates\CompoundAggregate.cs" />
+    <Compile Include="Aggregates\CountAggregate.cs" />
+    <Compile Include="Aggregates\GroupAggregate.cs" />
+    <Compile Include="Aggregates\MaxAggregate.cs" />
+    <Compile Include="Aggregates\MinAggregate.cs" />
+    <Compile Include="Aggregates\PercentileAggregates.cs" />
+    <Compile Include="Aggregates\PerKeyAggregate.cs" />
+    <Compile Include="Aggregates\SumAggregate.cs" />
+    <Compile Include="Aggregates\TopKAggregate.cs" />
+    <Compile Include="Aggregates\WhereAggregate.cs" />
+    <Compile Include="Collections\AbstractEventBatch.cs" />
+    <Compile Include="Collections\EndPointHeapTest.cs" />
+    <Compile Include="Collections\EndPointQueueTest.cs" />
+    <Compile Include="Collections\FastListTest.cs" />
+    <Compile Include="Collections\FastMapTest.cs" />
+    <Compile Include="Collections\RemovableEndPointHeapTest.cs" />
+    <Compile Include="Serializer\SerializabilityTypeScan.cs" />
+    <Compile Include="Streamables\BeatStreamableTest.cs" />
     <Compile Include="CheckpointRestoreTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>CheckpointRestoreTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="GroupStreamableTests.cs">
+    <Compile Include="Streamables\ClipStreamableTest.cs" />
+    <Compile Include="Streamables\EquiJoinStreamableTest.cs" />
+    <Compile Include="Streamables\ExtendLifetimeTest.cs" />
+    <Compile Include="Streamables\GroupStreamableTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>GroupStreamableTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="DisorderedIngressAndEgressTests.cs">
+    <Compile Include="IngressEgress\DisorderedIngressAndEgressTests.cs">
       <DependentUpon>DisorderedIngressAndEgressTests.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="IngressAndEgressTests.cs">
+    <Compile Include="IngressEgress\IngressAndEgressTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>IngressAndEgressTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="JoinTests.cs">
+    <Compile Include="Streamables\JoinTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>JoinTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="QuantizeLifetimeTests.cs">
+    <Compile Include="Streamables\LeftAntiSemiJoinStreamableTest.cs" />
+    <Compile Include="Streamables\PointAtEndTest.cs" />
+    <Compile Include="Streamables\QuantizeLifetimeTests.cs">
       <DependentUpon>QuantizeLifetimeTests.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="LeftOuterJoinTests.cs">
+    <Compile Include="Macros\LeftOuterJoinTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>LeftOuterJoinTests.tt</DependentUpon>
     </Compile>
     <Compile Include="MultiStringTests.cs" />
-    <Compile Include="PartitionedIngressAndEgressConceptDemos.cs" />
-    <Compile Include="FlushPolicyTestMatrixBase.cs" />
-    <Compile Include="PartitionedIngressAndEgressTestMatrixBases.cs" />
-    <Compile Include="FlushPolicyTests.cs">
+    <Compile Include="Partitioned\PartitionedIngressAndEgressConceptDemos.cs" />
+    <Compile Include="IngressEgress\FlushPolicyTestMatrixBase.cs" />
+    <Compile Include="Partitioned\PartitionedIngressAndEgressTestMatrixBases.cs" />
+    <Compile Include="IngressEgress\FlushPolicyTests.cs">
       <DependentUpon>FlushPolicyTests.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="PartitionedIngressAndEgressTestsDisordered.cs">
+    <Compile Include="Partitioned\PartitionedIngressAndEgressTestsDisordered.cs">
       <DependentUpon>PartitionedIngressAndEgressTestsDisordered.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="PartitionedIngressAndEgressTestsOrdered.cs">
+    <Compile Include="Partitioned\PartitionedIngressAndEgressTestsOrdered.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>PartitionedIngressAndEgressTestsOrdered.tt</DependentUpon>
     </Compile>
-    <Compile Include="PartitionedLaggingCleanupTests.cs" />
-    <Compile Include="PartitionedStreamTests.cs" />
-    <Compile Include="PivotUnpivot.cs">
+    <Compile Include="Partitioned\PartitionedLaggingCleanupTests.cs" />
+    <Compile Include="Partitioned\PartitionedStreamTests.cs" />
+    <Compile Include="Macros\PivotUnpivot.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>PivotUnpivot.tt</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="ReorderPolicyTests.cs">
+    <Compile Include="IngressEgress\ReorderPolicyTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ReorderPolicyTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="ShuffleStreamableTests.cs">
+    <Compile Include="Streamables\ShuffleStreamableTests.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ShuffleStreamableTests.tt</DependentUpon>
@@ -141,17 +165,18 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>SnapshotTests.tt</DependentUpon>
     </Compile>
-    <Compile Include="SurrogateTests.cs" />
+    <Compile Include="Streamables\StitchTest.cs" />
+    <Compile Include="Serializer\SurrogateTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DisorderedIngressAndEgressTests.tt">
+    <Content Include="IngressEgress\DisorderedIngressAndEgressTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>DisorderedIngressAndEgressTests.cs</LastGenOutput>
     </Content>
     <None Include="..\app.config">
       <Link>app.config</Link>
     </None>
-    <None Include="PartitionedIngressAndEgressTestsOrdered.tt">
+    <None Include="Partitioned\PartitionedIngressAndEgressTestsOrdered.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>PartitionedIngressAndEgressTestsOrdered.cs</LastGenOutput>
     </None>
@@ -163,7 +188,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="AdjustColumns.tt">
+    <Content Include="Macros\AdjustColumns.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>AdjustColumns.cs</LastGenOutput>
     </Content>
@@ -171,43 +196,43 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>CheckpointRestoreTests.cs</LastGenOutput>
     </Content>
-    <Content Include="GroupStreamableTests.tt">
+    <Content Include="Streamables\GroupStreamableTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>GroupStreamableTests.cs</LastGenOutput>
     </Content>
-    <Content Include="IngressAndEgressTests.tt">
+    <Content Include="IngressEgress\IngressAndEgressTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>IngressAndEgressTests.cs</LastGenOutput>
     </Content>
-    <Content Include="JoinTests.tt">
+    <Content Include="Streamables\JoinTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JoinTests.cs</LastGenOutput>
     </Content>
-    <Content Include="QuantizeLifetimeTests.tt">
+    <Content Include="Streamables\QuantizeLifetimeTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>QuantizeLifetimeTests.cs</LastGenOutput>
     </Content>
-    <Content Include="LeftOuterJoinTests.tt">
+    <Content Include="Macros\LeftOuterJoinTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>LeftOuterJoinTests.cs</LastGenOutput>
     </Content>
-    <None Include="FlushPolicyTests.tt">
+    <None Include="IngressEgress\FlushPolicyTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FlushPolicyTests.cs</LastGenOutput>
     </None>
-    <None Include="PartitionedIngressAndEgressTestsDisordered.tt">
+    <None Include="Partitioned\PartitionedIngressAndEgressTestsDisordered.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>PartitionedIngressAndEgressTestsDisordered.cs</LastGenOutput>
     </None>
-    <Content Include="PivotUnpivot.tt">
+    <Content Include="Macros\PivotUnpivot.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>PivotUnpivot.cs</LastGenOutput>
     </Content>
-    <Content Include="ReorderPolicyTests.tt">
+    <Content Include="IngressEgress\ReorderPolicyTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ReorderPolicyTests.cs</LastGenOutput>
     </Content>
-    <Content Include="ShuffleStreamableTests.tt">
+    <Content Include="Streamables\ShuffleStreamableTests.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ShuffleStreamableTests.cs</LastGenOutput>
     </Content>

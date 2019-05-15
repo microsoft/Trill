@@ -54,31 +54,6 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Aggregates\AverageAggregate.cs" />
-    <Compile Include="Aggregates\CompoundAggregate.cs" />
-    <Compile Include="Aggregates\PercentileAggregates.cs" />
-    <Compile Include="Aggregates\PerKeyAggregate.cs" />
-    <Compile Include="Aggregates\CountAggregate.cs" />
-    <Compile Include="Aggregates\GroupAggregate.cs" />
-    <Compile Include="Aggregates\MaxAggregate.cs" />
-    <Compile Include="Aggregates\MinAggregate.cs" />
-    <Compile Include="Aggregates\SumAggregate.cs" />
-    <Compile Include="Aggregates\TopKAggregate.cs" />
-    <Compile Include="Aggregates\WhereAggregate.cs" />
-    <Compile Include="Collections\EndPointQueueTest.cs" />
-    <Compile Include="Collections\FastListTest.cs" />
-    <Compile Include="Collections\FastMapTest.cs" />
-    <Compile Include="Collections\AbstractEventBatch.cs" />
-    <Compile Include="Collections\RemovableEndPointHeapTest.cs" />
-    <Compile Include="Serializer\SerializabilityTypeScan.cs" />
-    <Compile Include="Streamables\BeatStreamableTest.cs" />
-    <Compile Include="Collections\EndPointHeapTest.cs" />
-    <Compile Include="Streamables\ClipStreamableTest.cs" />
-    <Compile Include="Streamables\EquiJoinStreamableTest.cs" />
-    <Compile Include="Streamables\LeftAntiSemiJoinStreamableTest.cs" />
-    <Compile Include="Streamables\ExtendLifetimeTest.cs" />
-    <Compile Include="Streamables\PointAtEndTest.cs" />
-    <Compile Include="Streamables\StitchTest.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="AssemblyInfo.cs" />
   </ItemGroup>
@@ -100,6 +75,10 @@
     <PackageReference Include="System.Reactive.Linq">
       <Version>4.1.3</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Aggregates\" />
+    <Folder Include="Serializer\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
