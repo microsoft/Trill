@@ -981,8 +981,8 @@ namespace Microsoft.StreamProcessing
         /// <param name="right">Right input stream</param>
         /// <param name="leftKeySelector">Selector for the left-side join key</param>
         /// <param name="rightKeySelector">Selector for the right-side join key</param>
-        /// <param name="leftResultSelector">Selector for the result for non-joining tuples from the left join input</param>
-        /// <param name="rightResultSelector">Selector for the result for non-joining tuples from the right join input</param>
+        /// <param name="leftResultSelector">Selector for the result for the left non-joining tuples</param>
+        /// <param name="rightResultSelector">Selector for the result for the right non-joining tuples</param>
         /// <param name="innerResultSelector">Selector for the result for joining tuples</param>
         /// <returns>Result (output) stream</returns>
         public static IStreamable<TKey, TResult> FullOuterJoin<TKey, TLeft, TRight, TJoinKey, TResult>(
