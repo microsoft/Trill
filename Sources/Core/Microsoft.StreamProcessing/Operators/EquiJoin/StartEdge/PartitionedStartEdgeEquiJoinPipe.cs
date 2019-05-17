@@ -590,20 +590,36 @@ namespace Microsoft.StreamProcessing
         {
             [DataMember]
             public TPartitionKey key;
+
+            /// <summary>
+            /// Currently active left start edges
+            /// </summary>
             [DataMember]
             public FastMap<ActiveEvent<TLeft>> leftEdgeMap = new FastMap<ActiveEvent<TLeft>>();
+
+            /// <summary>
+            /// Currently active right start edges
+            /// </summary>
             [DataMember]
             public FastMap<ActiveEvent<TRight>> rightEdgeMap = new FastMap<ActiveEvent<TRight>>();
+
             [DataMember]
             public long nextLeftTime = long.MinValue;
+
+            /// <summary>
+            /// True if left has reached StreamEvent.InfinitySyncTime
+            /// </summary>
             [DataMember]
             public bool isLeftComplete = false;
+
             [DataMember]
             public long nextRightTime = long.MinValue;
+
+            /// <summary>
+            /// True if right has reached StreamEvent.InfinitySyncTime
+            /// </summary>
             [DataMember]
             public bool isRightComplete = false;
-            [DataMember]
-            public long currTime = long.MinValue;
         }
     }
 }

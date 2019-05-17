@@ -31,16 +31,46 @@ namespace Microsoft.StreamProcessing
 
         [DataMember]
         private StreamMessage<TKey, TResult> output;
+
+        /// <summary>
+        /// Stores left intervals starting at <see cref="currTime"/>.
+        /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the left edge time and the
+        /// left edge is processable.
+        /// </summary>
         [DataMember]
         private FastMap<ActiveInterval<TLeft>> leftIntervalMap = new FastMap<ActiveInterval<TLeft>>();
+
+        /// <summary>
+        /// Stores left start edges at <see cref="currTime"/>
+        /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the left edge time and the
+        /// left edge is processable.
+        /// </summary>
         [DataMember]
         private FastMap<ActiveEdge<TLeft>> leftEdgeMap = new FastMap<ActiveEdge<TLeft>>();
+
+        /// <summary>
+        /// Stores end edges for the current join at some point in the future, i.e. after <see cref="currTime"/>.
+        /// These can originate from edge end events or interval events.
+        /// </summary>
         [DataMember]
         private IEndPointOrderer endPointHeap;
+
+        /// <summary>
+        /// Stores right intervals starting at <see cref="currTime"/>.
+        /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the right edge time and the
+        /// right edge is processable.
+        /// </summary>
         [DataMember]
         private FastMap<ActiveInterval<TRight>> rightIntervalMap = new FastMap<ActiveInterval<TRight>>();
+
+        /// <summary>
+        /// Stores right start edges at <see cref="currTime"/>
+        /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the right edge time and the
+        /// right edge is processable.
+        /// </summary>
         [DataMember]
         private FastMap<ActiveEdge<TRight>> rightEdgeMap = new FastMap<ActiveEdge<TRight>>();
+
         [DataMember]
         private long nextLeftTime = long.MinValue;
         [DataMember]
@@ -406,7 +436,7 @@ namespace Microsoft.StreamProcessing
             {
                 // Row is an end edge.
 
-                // Remove from leftEdgeMap.
+                // Remove from rightEdgeMap.
                 if (!this.isLeftComplete)
                 {
                     var edges = this.rightEdgeMap.Find(hash);
@@ -843,6 +873,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AddToBatch(long start, long end, ref TKey key, ref TLeft leftPayload, ref TRight rightPayload, int hash)
         {
+            if (start < this.lastCTI)
+            {
+                throw new InvalidOperationException("Outputting an event out of order!");
+            }
+
             int index = this.output.Count++;
             this.output.vsync.col[index] = start;
             this.output.vother.col[index] = end;

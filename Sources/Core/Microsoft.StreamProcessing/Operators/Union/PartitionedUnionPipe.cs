@@ -322,6 +322,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OutputCurrentTuple(Entry current)
         {
+            if (current.Sync < this.lastCTI)
+            {
+                throw new InvalidOperationException("Outputting an event out of order!");
+            }
+
             int index = this.output.Count++;
             this.output.vsync.col[index] = current.Sync;
             this.output.vother.col[index] = current.Other;

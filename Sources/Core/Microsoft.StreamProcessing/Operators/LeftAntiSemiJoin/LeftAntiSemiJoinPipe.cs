@@ -29,18 +29,48 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private StreamMessage<TKey, TLeft> output;
 
+        /// <summary>
+        /// Stores left intervals starting at <see cref="currTime"/>.
+        /// FastMap visibility means that the interval is currently joined by at least one event on the right.
+        /// When the interval is not joined, it is "invisible".
+        /// </summary>
         [DataMember]
         private FastMap<LeftEvent> leftIntervalMap = new FastMap<LeftEvent>();
+
+        /// <summary>
+        /// Stores left start edges at <see cref="currTime"/>
+        /// FastMap visibility means that the interval is currently joined by at least one event on the right.
+        /// When the interval is not joined, it is "invisible".
+        /// </summary>
         [DataMember]
         private FastMap<LeftEvent> leftEdgeMap = new FastMap<LeftEvent>();
+
+        /// <summary>
+        /// Stores left end edges at some point in the future, i.e. after <see cref="currTime"/>.
+        /// These can originate from edge end events or interval events.
+        /// </summary>
         [DataMember]
         private IEndPointOrderer leftEndPointHeap;
+
+        /// <summary>
+        /// Stores the right events present at <see cref="currTime"/>
+        /// </summary>
         [DataMember]
         private FastMap<RightEvent> rightMap = new FastMap<RightEvent>();
+
+        /// <summary>
+        /// Stores right end edges for <see cref="currTime"/>, excluding interval endpoints
+        /// </summary>
         [DataMember]
         private FastStack<QueuedEndEdge> rightEndEdges = new FastStack<QueuedEndEdge>();
+
+        /// <summary>
+        /// Stores right endpoints at some point in the future, i.e. after <see cref="currTime"/>, originating
+        /// from intervals.
+        /// </summary>
         [DataMember]
         private IEndPointOrderer rightEndPointHeap;
+
         [DataMember]
         private long nextLeftTime = long.MinValue;
         [DataMember]
@@ -674,6 +704,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AddToBatch(long start, long end, ref TKey key, ref TLeft payload, int hash)
         {
+            if (start < this.lastCTI)
+            {
+                throw new InvalidOperationException("Outputting an event out of order!");
+            }
+
             int index = this.output.Count++;
             this.output.vsync.col[index] = start;
             this.output.vother.col[index] = end;
