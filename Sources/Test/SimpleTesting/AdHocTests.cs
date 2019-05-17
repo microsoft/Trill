@@ -820,6 +820,194 @@ namespace SimpleTesting
                         });
             }
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AggressivePartitionCleanup_LASJ()
+        {
+            using (new ConfigModifier().DataBatchSize(4).Modify())
+            {
+                const long duration = 5;
+                PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
+                PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
+                PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+
+                var left = new Subject<PartitionedStreamEvent<int, int>>();
+                var right = new Subject<PartitionedStreamEvent<int, int>>();
+
+                var qc = new QueryContainer();
+                var leftInput = qc.RegisterInput(left, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+                var rightInput = qc.RegisterInput(right, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+
+                var query = leftInput.WhereNotExists(
+                    rightInput,
+                    e => e,
+                    e => e);
+
+                var output = new List<PartitionedStreamEvent<int, int>>();
+                qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+                var process = qc.Restore();
+
+                // Set up state so that the left has an "invisible" (i.e. unmatched on the right) interval.
+                right.OnNext(CreateStart(0, 85));
+                right.OnNext(CreateEnd(0, 90));
+                right.OnNext(CreateLowWatermark(50));
+
+                left.OnNext(CreateInterval(0, 90));
+                left.OnNext(CreateLowWatermark(50));
+
+                // Ingress batches without key 0, trying to evict partition 0
+                for (int i = 0; i < 10; i++)
+                {
+                    left.OnNext(CreateInterval(1, 100 + i));
+                    right.OnNext(CreateInterval(1, 100 + i));
+                }
+
+                // Ingress two LWMs after the original interval
+                left.OnNext(CreateLowWatermark(100));
+                right.OnNext(CreateLowWatermark(100));
+
+                left.OnNext(CreateInterval(0, 105));
+
+                left.OnCompleted();
+                right.OnCompleted();
+
+                var expected = new PartitionedStreamEvent<int, int>[]
+                {
+                    CreateLowWatermark(50),
+                    CreateInterval(0, 90),
+                    CreateLowWatermark(100),
+                    CreateInterval(0, 105),
+                    CreateLowWatermark(StreamEvent.InfinitySyncTime),
+                };
+                Assert.IsTrue(expected.SequenceEqual(output));
+            }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AggressivePartitionCleanup_EquiJoin()
+        {
+            using (new ConfigModifier().DataBatchSize(4).Modify())
+            {
+                const long duration = 5;
+                PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
+                PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
+                PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+
+                var left = new Subject<PartitionedStreamEvent<int, int>>();
+                var right = new Subject<PartitionedStreamEvent<int, int>>();
+
+                var qc = new QueryContainer();
+                var leftInput = qc.RegisterInput(left, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+                var rightInput = qc.RegisterInput(right, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+
+                var query = leftInput.Join(
+                    rightInput,
+                    e => e,
+                    e => e,
+                    (l, r) => l);
+
+                var output = new List<PartitionedStreamEvent<int, int>>();
+                qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+                var process = qc.Restore();
+
+                // Set up state so that there is outstanding start edges/intervals
+                right.OnNext(CreateStart(0, 90));
+                right.OnNext(CreateLowWatermark(50));
+
+                left.OnNext(CreateInterval(0, 90));
+                left.OnNext(CreateLowWatermark(50));
+
+                // Ingress batches without key 0, trying to evict partition 0
+                for (int i = 0; i < 10; i++)
+                {
+                    left.OnNext(CreateInterval(1, 100 + i));
+                    right.OnNext(CreateInterval(1, 100 + i));
+                }
+
+                // Ingress two LWMs after the original interval. This should force partition 0 to output its interval
+                left.OnNext(CreateLowWatermark(100));
+                right.OnNext(CreateLowWatermark(100));
+
+                left.OnCompleted();
+                right.OnCompleted();
+
+                var expected = new PartitionedStreamEvent<int, int>[]
+                {
+                    CreateLowWatermark(50),
+                    CreateStart(0, 90),
+                    CreateEnd(0, 90 + duration),
+                    CreateLowWatermark(100),
+                    CreateLowWatermark(StreamEvent.InfinitySyncTime),
+                };
+
+                var key0Output = output.Where(e => !e.IsData || e.PartitionKey == 0).ToList();
+                Assert.IsTrue(expected.SequenceEqual(key0Output));
+            }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AggressivePartitionCleanup_Clip()
+        {
+            using (new ConfigModifier().DataBatchSize(4).Modify())
+            {
+                const long duration = 5;
+                PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
+                PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
+                PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+
+                var left = new Subject<PartitionedStreamEvent<int, int>>();
+                var right = new Subject<PartitionedStreamEvent<int, int>>();
+
+                var qc = new QueryContainer();
+                var leftInput = qc.RegisterInput(left, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+                var rightInput = qc.RegisterInput(right, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+
+                var query = leftInput.ClipEventDuration(
+                    rightInput,
+                    e => e,
+                    e => e);
+
+                var output = new List<PartitionedStreamEvent<int, int>>();
+                qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+                var process = qc.Restore();
+
+                // Set up state so that there is outstanding start edges/intervals
+                left.OnNext(CreateInterval(0, 90));
+                left.OnNext(CreateLowWatermark(50));
+
+                right.OnNext(CreateInterval(0, 90));
+                right.OnNext(CreateLowWatermark(50));
+
+                // Ingress batches without key 0, trying to evict partition 0
+                for (int i = 0; i < 10; i++)
+                {
+                    left.OnNext(CreateInterval(1, 100 + i));
+                    right.OnNext(CreateInterval(1, 100 + i));
+                }
+
+                // Ingress two LWMs after the original interval. This should force partition 0 to output its end edge
+                left.OnNext(CreateLowWatermark(100));
+                right.OnNext(CreateLowWatermark(100));
+
+                left.OnCompleted();
+                right.OnCompleted();
+
+                var expected = new PartitionedStreamEvent<int, int>[]
+                {
+                    CreateStart(0, 90),
+                    CreateLowWatermark(50),
+                    CreateEnd(0, 90 + duration),
+                    CreateLowWatermark(100),
+                    CreateLowWatermark(StreamEvent.InfinitySyncTime),
+                };
+
+                var key0Output = output.Where(e => !e.IsData || e.PartitionKey == 0).ToList();
+                Assert.IsTrue(expected.SequenceEqual(key0Output));
+            }
+        }
     }
 
     [TestClass]
@@ -1161,14 +1349,14 @@ namespace SimpleTesting
             {
                 return new
                 {
-                    Ts,
-                    VmId,
-                    Status,
-                    IncId,
-                    Ts1,
-                    VmId2,
-                    Status3,
-                    IncId4,
+                    this.Ts,
+                    this.VmId,
+                    this.Status,
+                    this.IncId,
+                    this.Ts1,
+                    this.VmId2,
+                    this.Status3,
+                    this.IncId4,
                 }.ToString();
             }
         }

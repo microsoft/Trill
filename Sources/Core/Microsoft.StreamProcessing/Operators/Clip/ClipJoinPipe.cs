@@ -25,12 +25,26 @@ namespace Microsoft.StreamProcessing
 
         [DataMember]
         private StreamMessage<TKey, TLeft> output;
+
+        /// <summary>
+        /// Stores intervals for active left events.
+        /// </summary>
         [DataMember]
         private FastMap<LeftInterval> leftIntervalMap = new FastMap<LeftInterval>();
+
+        /// <summary>
+        /// Stores left start edges at <see cref="currTime"/>
+        /// </summary>
         [DataMember]
         private FastMap<LeftEdge> leftEdgeMap = new FastMap<LeftEdge>();
+
+        /// <summary>
+        /// Stores left end edges at some point in the future, i.e. after <see cref="currTime"/>.
+        /// These can originate from edge end events or interval events.
+        /// </summary>
         [DataMember]
         private RemovableEndPointHeap leftEndPointHeap;
+
         [DataMember]
         private long nextLeftTime = long.MinValue;
         [DataMember]
@@ -379,6 +393,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AddToBatch(long start, long end, ref TKey key, ref TLeft payload, int hash)
         {
+            if (start < this.lastCTI)
+            {
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
+            }
+
             int index = this.output.Count++;
             this.output.vsync.col[index] = start;
             this.output.vother.col[index] = end;

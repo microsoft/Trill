@@ -51,4 +51,28 @@ namespace Microsoft.StreamProcessing
         /// <param name="innerException">The additional exception being bundled with this exception.</param>
         public StreamProcessingException(string message, Exception innerException) : base(message, innerException) { }
     }
+
+    /// <summary>
+    /// Exception when Trill detects an out of order event outside of ingress
+    /// </summary>
+    public sealed class StreamProcessingOutOfOrderException : Exception
+    {
+        /// <summary>
+        /// Create ann out-of-order exception with no underlying message.
+        /// </summary>
+        public StreamProcessingOutOfOrderException() : base() { }
+
+        /// <summary>
+        /// Create an out-of-order exception with the given message.
+        /// </summary>
+        /// <param name="message">The error message associated with the exception.</param>
+        public StreamProcessingOutOfOrderException(string message) : base(message) { }
+
+        /// <summary>
+        /// Create an out-of-order exception with the given message and given inner exception.
+        /// </summary>
+        /// <param name="message">The error message associated with the exception.</param>
+        /// <param name="innerException">The additional exception being bundled with this exception.</param>
+        public StreamProcessingOutOfOrderException(string message, Exception innerException) : base(message, innerException) { }
+    }
 }

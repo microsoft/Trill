@@ -347,7 +347,8 @@ namespace Microsoft.StreamProcessing
                             partition.nextRightTime = this.lastRightCTI;
 
                         UpdateTime(partition, Math.Min(this.lastLeftCTI, this.lastRightCTI));
-                        this.cleanKeys.Add(pKey);
+                        if (partition.IsClean()) this.cleanKeys.Add(pKey);
+
                         break;
                     }
                 }
@@ -360,15 +361,9 @@ namespace Microsoft.StreamProcessing
                 this.emitCTI = false;
                 foreach (var p in this.cleanKeys)
                 {
-                    this.leftQueue.Lookup(p, out int index);
-                    var l = this.leftQueue.entries[index];
-                    var r = this.rightQueue.entries[index];
-                    if (l.value.Count == 0 && r.value.Count == 0)
-                    {
-                        this.seenKeys.Remove(p);
-                        this.leftQueue.Remove(p);
-                        this.rightQueue.Remove(p);
-                    }
+                    this.seenKeys.Remove(p);
+                    this.leftQueue.Remove(p);
+                    this.rightQueue.Remove(p);
                 }
 
                 this.cleanKeys.Clear();
@@ -546,6 +541,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AddToBatch(long start, long end, ref TKey key, ref TLeft payload, int hash)
         {
+            if (start < this.lastCTI)
+            {
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
+            }
+
             int index = this.output.Count++;
             this.output.vsync.col[index] = start;
             this.output.vother.col[index] = end;
@@ -731,18 +731,33 @@ namespace Microsoft.StreamProcessing
 
         private sealed class PartitionEntry
         {
+            /// <summary>
+            /// Stores intervals for active left events.
+            /// </summary>
             [DataMember]
             public FastMap<LeftInterval> leftIntervalMap = new FastMap<LeftInterval>();
+
+            /// <summary>
+            /// Stores left start edges at <see cref="currTime"/>
+            /// </summary>
             [DataMember]
             public FastMap<LeftEdge> leftEdgeMap = new FastMap<LeftEdge>();
+
+            /// <summary>
+            /// Stores left end edges at some point in the future, i.e. after <see cref="currTime"/>.
+            /// These can originate from edge end events or interval events.
+            /// </summary>
             [DataMember]
             public RemovableEndPointHeap leftEndPointHeap = new RemovableEndPointHeap();
+
             [DataMember]
             public long nextLeftTime = long.MinValue;
             [DataMember]
             public long nextRightTime = long.MinValue;
             [DataMember]
             public long currTime = long.MinValue;
+
+            public bool IsClean() => this.leftIntervalMap.IsEmpty && this.leftEdgeMap.IsEmpty && this.leftEndPointHeap.IsEmpty;
         }
     }
 }
