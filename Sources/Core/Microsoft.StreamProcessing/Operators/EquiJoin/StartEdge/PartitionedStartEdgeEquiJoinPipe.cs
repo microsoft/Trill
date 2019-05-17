@@ -274,6 +274,8 @@ namespace Microsoft.StreamProcessing
                             {
                                 OutputPunctuation(leftEntry.Sync, ref leftEntry.Key, leftEntry.Hash);
                             }
+
+                            leftWorking.Dequeue();
                         }
                         else
                         {
@@ -304,6 +306,8 @@ namespace Microsoft.StreamProcessing
                             {
                                 OutputPunctuation(rightEntry.Sync, ref rightEntry.Key, rightEntry.Hash);
                             }
+
+                            rightWorking.Dequeue();
                         }
                     }
                     else if (hasLeftBatch)
@@ -338,6 +342,8 @@ namespace Microsoft.StreamProcessing
                             OutputPunctuation(leftEntry.Sync, ref leftEntry.Key, leftEntry.Hash);
                             return;
                         }
+
+                        leftWorking.Dequeue();
                     }
                     else if (hasRightBatch)
                     {
@@ -370,6 +376,8 @@ namespace Microsoft.StreamProcessing
                         {
                             OutputPunctuation(rightEntry.Sync, ref rightEntry.Key, rightEntry.Hash);
                         }
+
+                        rightWorking.Dequeue();
                     }
                     else
                     {
@@ -390,17 +398,13 @@ namespace Microsoft.StreamProcessing
                 this.emitCTI = false;
                 foreach (var p in this.cleanKeys)
                 {
+                    this.seenKeys.Remove(p);
+
                     this.leftQueue.Lookup(p, out int index);
-                    var l = this.leftQueue.entries[index];
-                    var r = this.rightQueue.entries[index];
-                    if (l.value.Count == 0 && r.value.Count == 0)
-                    {
-                        this.seenKeys.Remove(p);
-                        l.value.Dispose();
-                        this.leftQueue.Remove(p);
-                        r.value.Dispose();
-                        this.rightQueue.Remove(p);
-                    }
+                    this.leftQueue.entries[index].value.Dispose();
+                    this.leftQueue.Remove(p);
+                    this.rightQueue.entries[index].value.Dispose();
+                    this.rightQueue.Remove(p);
                 }
 
                 this.cleanKeys.Clear();
@@ -431,6 +435,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OutputStartEdge(long start, ref TKey key, ref TLeft leftPayload, ref TRight rightPayload, int hash)
         {
+            if (start < this.lastCTI)
+            {
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
+            }
+
             int index = this.output.Count++;
             this.output.vsync.col[index] = start;
             this.output.vother.col[index] = StreamEvent.InfinitySyncTime;
@@ -444,6 +453,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OutputPunctuation(long start, ref TKey key, int hash)
         {
+            if (start < this.lastCTI)
+            {
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
+            }
+
             int index = this.output.Count++;
             this.output.vsync.col[index] = start;
             this.output.vother.col[index] = long.MinValue;
