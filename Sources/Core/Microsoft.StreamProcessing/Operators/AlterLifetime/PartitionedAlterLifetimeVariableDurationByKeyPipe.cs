@@ -128,7 +128,7 @@ namespace Microsoft.StreamProcessing
                 }
                 else if (vsync[i] < this.lastSync.entries[index].value)
                 {
-                    throw new InvalidOperationException(
+                    throw new StreamProcessingOutOfOrderException(
                         "The operator AlterLifetime produced output out of sync-time order on an input event. The current internal sync time is " + this.lastSync.entries[index].value
                         + ". The event's sync time is " + vsync[i].ToString(CultureInfo.InvariantCulture)
                         + ". The event's partition key is " + partition.ToString()

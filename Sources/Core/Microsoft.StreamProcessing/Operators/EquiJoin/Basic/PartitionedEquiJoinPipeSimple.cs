@@ -397,7 +397,8 @@ namespace Microsoft.StreamProcessing
                             UpdateNextRightTime(partition, this.lastRightCTI);
 
                         UpdateTime(partition, Math.Min(this.lastLeftCTI, this.lastRightCTI));
-                        this.cleanKeys.Add(pKey);
+                        if (partition.IsClean()) this.cleanKeys.Add(pKey);
+
                         break;
                     }
                 }
@@ -410,15 +411,9 @@ namespace Microsoft.StreamProcessing
                 this.emitCTI = false;
                 foreach (var p in this.cleanKeys)
                 {
-                    this.leftQueue.Lookup(p, out int index);
-                    var l = this.leftQueue.entries[index];
-                    var r = this.rightQueue.entries[index];
-                    if (l.value.Count == 0 && r.value.Count == 0)
-                    {
-                        this.seenKeys.Remove(p);
-                        this.leftQueue.Remove(p);
-                        this.rightQueue.Remove(p);
-                    }
+                    this.seenKeys.Remove(p);
+                    this.leftQueue.Remove(p);
+                    this.rightQueue.Remove(p);
                 }
 
                 this.cleanKeys.Clear();
@@ -891,6 +886,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AddToBatch(long start, long end, PartitionEntry partition, ref TLeft leftPayload, ref TRight rightPayload)
         {
+            if (start < this.lastCTI)
+            {
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
+            }
+
             int index = this.output.Count++;
             this.output.vsync.col[index] = start;
             this.output.vother.col[index] = end;
@@ -1077,26 +1077,72 @@ namespace Microsoft.StreamProcessing
             public TPartitionKey key;
             [DataMember]
             public int hash;
+
+            /// <summary>
+            /// Stores left intervals starting at <see cref="currTime"/>.
+            /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the left edge time and the
+            /// left edge is processable.
+            /// </summary>
             [DataMember]
             public FastMap<ActiveInterval<TLeft>> leftIntervalMap = new FastMap<ActiveInterval<TLeft>>();
+
+            /// <summary>
+            /// Stores left start edges at <see cref="currTime"/>
+            /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the left edge time and the
+            /// left edge is processable.
+            /// </summary>
             [DataMember]
             public FastMap<ActiveEdge<TLeft>> leftEdgeMap = new FastMap<ActiveEdge<TLeft>>();
+
+            /// <summary>
+            /// Stores end edges for the current join at some point in the future, i.e. after <see cref="currTime"/>.
+            /// These can originate from edge end events or interval events.
+            /// </summary>
             [DataMember]
             public IEndPointOrderer endPointHeap;
+
+            /// <summary>
+            /// Stores right intervals starting at <see cref="currTime"/>.
+            /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the right edge time and the
+            /// right edge is processable.
+            /// </summary>
             [DataMember]
             public FastMap<ActiveInterval<TRight>> rightIntervalMap = new FastMap<ActiveInterval<TRight>>();
+
+            /// <summary>
+            /// Stores right start edges at <see cref="currTime"/>
+            /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the right edge time and the
+            /// right edge is processable.
+            /// </summary>
             [DataMember]
             public FastMap<ActiveEdge<TRight>> rightEdgeMap = new FastMap<ActiveEdge<TRight>>();
+
             [DataMember]
             public long nextLeftTime = long.MinValue;
+
+            /// <summary>
+            /// True if left has reached StreamEvent.InfinitySyncTime
+            /// </summary>
             [DataMember]
             public bool isLeftComplete = false;
+
             [DataMember]
             public long nextRightTime = long.MinValue;
+
+            /// <summary>
+            /// True if right has reached StreamEvent.InfinitySyncTime
+            /// </summary>
             [DataMember]
             public bool isRightComplete = false;
+
             [DataMember]
             public long currTime = long.MinValue;
+
+            public bool IsClean() => this.leftIntervalMap.IsEmpty &&
+                                     this.leftEdgeMap.IsEmpty &&
+                                     this.endPointHeap.IsEmpty &&
+                                     this.rightIntervalMap.IsEmpty &&
+                                     this.rightEdgeMap.IsEmpty;
         }
     }
 }

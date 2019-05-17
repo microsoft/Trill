@@ -125,6 +125,11 @@ namespace Microsoft.StreamProcessing
         public bool IsStartEdgeOnly => this.IsConstantDuration && this.ConstantDurationLength == StreamEvent.InfinitySyncTime;
 
         /// <summary>
+        /// Indicates whether the stream consists only of events with tumbling lifetimes.
+        /// </summary>
+        public bool IsTumbling => this.IsConstantDuration && this.ConstantDurationLength.HasValue
+            && (this.ConstantDurationLength.Value == 1 || (this.IsConstantHop && this.ConstantHopLength.HasValue && this.ConstantHopLength.Value >= this.ConstantDurationLength.Value));
+        /// <summary>
         /// Indicates that sync-times of events either stay the same or increment (hop) by a fixed amount.
         /// </summary>
         public bool IsConstantHop;
@@ -182,7 +187,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// Equality comparers for possible key selectors (selector -> IECE)
         /// </summary>
-        private Dictionary<Expression, object> EqualityComparerSelectorMap;
+        private readonly Dictionary<Expression, object> EqualityComparerSelectorMap;
 
         /// <summary>
         /// Selectors that identify what the data is sorted by (could be more than one)
@@ -506,19 +511,15 @@ namespace Microsoft.StreamProcessing
         /// Clone
         /// </summary>
         internal StreamProperties<TKey, TPayload> Clone()
-        {
-            return new StreamProperties<TKey, TPayload>
+            => new StreamProperties<TKey, TPayload>
                 (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer, this.PayloadEqualityComparer, this.KeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
-        }
 
         /// <summary>
         /// Clone
         /// </summary>
         internal StreamProperties<TKey, TPayload> CloneDelayed()
-        {
-            return new StreamProperties<TKey, TPayload>
+            => new StreamProperties<TKey, TPayload>
                 (this.isColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer, this.PayloadEqualityComparer, this.KeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
-        }
 
         /// <summary>
         /// Clone
@@ -526,12 +527,10 @@ namespace Microsoft.StreamProcessing
         internal StreamProperties<TNewKey, TPayload> CloneToNewKeyType<TNewKey>(
             IEqualityComparerExpression<TNewKey> newKeyEqualityComparer,
             IComparerExpression<TNewKey> newKeyComparer)
-        {
-            return new StreamProperties<TNewKey, TPayload>
+            => new StreamProperties<TNewKey, TPayload>
                 (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree,
                     newKeyEqualityComparer, this.PayloadEqualityComparer,
                     newKeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
-        }
 
         /// <summary>
         /// Clone
@@ -539,12 +538,10 @@ namespace Microsoft.StreamProcessing
         internal StreamProperties<TKey, TNewPayload> CloneToNewPayloadType<TNewPayload>(
             IEqualityComparerExpression<TNewPayload> newPayloadEqualityComparer = null,
             IComparerExpression<TNewPayload> newPayloadComparer = null)
-        {
-            return new StreamProperties<TKey, TNewPayload>
+            => new StreamProperties<TKey, TNewPayload>
                 (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer,
                     newPayloadEqualityComparer ?? EqualityComparerExpression<TNewPayload>.Default, this.KeyComparer,
                     newPayloadComparer ?? ComparerExpression<TNewPayload>.Default, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
-        }
 
         /// <summary>
         /// Where
@@ -872,9 +869,7 @@ namespace Microsoft.StreamProcessing
         public NullStreamable(StreamProperties<TKey, TPayload> properties) : base(properties) { }
 
         public override IDisposable Subscribe(IStreamObserver<TKey, TPayload> observer)
-        {
-            throw new InvalidOperationException("Only for use in property derivation");
-        }
+            => throw new InvalidOperationException("Only for use in property derivation");
     }
 
     internal sealed class VerifyPropertiesStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
@@ -882,9 +877,7 @@ namespace Microsoft.StreamProcessing
         public VerifyPropertiesStreamable(IStreamable<TKey, TPayload> source) : base(source, source.Properties) { }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
-        {
-            return new VerifyPropertiesPipe<TKey, TPayload>(this.properties, observer);
-        }
+            => new VerifyPropertiesPipe<TKey, TPayload>(this.properties, observer);
 
         protected override bool CanGenerateColumnar() => true;
     }
@@ -964,6 +957,7 @@ namespace Microsoft.StreamProcessing
                 this.ConstantDurationValidator(s, o);
                 this.ConstantHopValidator(s, o);
                 this.IntervalFreeValidator(s, o);
+                this.SyncTimeValidator(s, k);
                 this.SyncTimeSimultaneityFreeValidator(s, o, k);
             }
 
@@ -1055,10 +1049,7 @@ namespace Microsoft.StreamProcessing
                 key.ToString()));
         }
 
-        public override void ProduceQueryPlan(PlanNode previous)
-        {
-            throw new NotImplementedException();
-        }
+        public override void ProduceQueryPlan(PlanNode previous) => throw new NotImplementedException();
 
         public override int CurrentlyBufferedOutputCount => 0;
 

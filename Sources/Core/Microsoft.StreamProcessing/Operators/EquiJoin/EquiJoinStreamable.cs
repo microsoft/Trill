@@ -29,17 +29,6 @@ namespace Microsoft.StreamProcessing
 
             this.Selector = selector;
 
-            // This operator uses the equality method on payloads
-            if (left.Properties.IsColumnar && !left.Properties.IsStartEdgeOnly && !left.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
-            {
-                throw new InvalidOperationException($"Type of left side of join, '{typeof(TLeft).FullName}', does not have a valid equality operator for columnar mode.");
-            }
-            // This operator uses the equality method on payloads
-            if (right.Properties.IsColumnar && !right.Properties.IsStartEdgeOnly && !right.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
-            {
-                throw new InvalidOperationException($"Type of right side of join, '{typeof(TRight).FullName}', does not have a valid equality operator for columnar mode.");
-            }
-
             if (left.Properties.IsStartEdgeOnly && right.Properties.IsStartEdgeOnly)
             {
                 if ((left.Properties.KeyComparer != null) && (right.Properties.KeyComparer != null) &&
@@ -138,18 +127,31 @@ namespace Microsoft.StreamProcessing
         }
 
         protected override IBinaryObserver<TKey, TLeft, TRight, TResult> CreatePipe(IStreamObserver<TKey, TResult> observer)
-        {
-            if (typeof(TKey).GetPartitionType() == null)
-            {
-                return this.properties.IsColumnar
+            => typeof(TKey).GetPartitionType() != null
+                ? this.partitionedGenerator(this, this.Selector, observer)
+                : this.properties.IsColumnar
                     ? GetPipe(observer)
                     : this.fallbackGenerator(this, this.Selector, observer);
-            }
-            return this.partitionedGenerator(this, this.Selector, observer);
-        }
 
         protected override bool CanGenerateColumnar()
         {
+            // This operator uses the equality method on payloads
+            if (this.Left.Properties.IsColumnar && !this.Left.Properties.IsStartEdgeOnly && !this.Left.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
+            {
+                this.errorMessages = $"The left input payload type, '{typeof(TLeft).FullName}', to Equijoin does not implement the interface {nameof(IEqualityComparerExpression<TLeft>)}. This interface is needed for code generation of this operator for columnar mode. Furthermore, the equality expression in the interface can only refer to input variables if used in field or property references.";
+                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
+                    throw new StreamProcessingException(this.errorMessages);
+                return false;
+            }
+            // This operator uses the equality method on payloads
+            if (this.Right.Properties.IsColumnar && !this.Right.Properties.IsStartEdgeOnly && !this.Right.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
+            {
+                this.errorMessages = $"The right input payload type, '{typeof(TRight).FullName}', to Equijoin does not implement the interface {nameof(IEqualityComparerExpression<TRight>)}. This interface is needed for code generation of this operator for columnar mode. Furthermore, the equality expression in the interface can only refer to input variables if used in field or property references.";
+                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
+                    throw new StreamProcessingException(this.errorMessages);
+                return false;
+            }
+
             if (!typeof(TResult).CanRepresentAsColumnar()) return false;
 
             var lookupKey = CacheKey.Create(this.joinKind, this.Properties.KeyEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Left.Properties.PayloadEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Right.Properties.PayloadEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Selector.ExpressionToCSharp());

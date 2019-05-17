@@ -531,8 +531,6 @@ namespace SimpleTesting
             Assert.IsTrue(expected.SequenceEqual(a));
         }
 
-        private static void TestSelect<TSource, TResult>(IEnumerable<TSource> enumerable, Expression<Func<TSource, TResult>> function) => Assert.IsTrue(enumerable.TestSelect(function));
-
         [TestMethod, TestCategory("Gated")]
         public void MultiString_Select_AnonymousType_Result_01()
         {
@@ -595,7 +593,7 @@ namespace SimpleTesting
                         string s = string.Empty;
                         for (int j = 0; j <= rand.Next(maxStringLen); j++)
                         {
-                            s = s + (rand.NextDouble() < 0.75 ? "a" : "b");
+                            s += (rand.NextDouble() < 0.75 ? "a" : "b");
                         }
                         input[i] = s;
                         ms.AddString(s);

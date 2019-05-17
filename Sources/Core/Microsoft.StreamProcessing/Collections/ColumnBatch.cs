@@ -38,25 +38,12 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int UsedLength;
 
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public ColumnPool<T> pool;
+        internal ColumnPool<T> pool;
         internal int RefCount;
 
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public ColumnBatch() => this.RefCount = 1;
+        internal ColumnBatch() => this.RefCount = 1;
 
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        /// <param name="size"></param>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public ColumnBatch(int size)
+        internal ColumnBatch(int size)
         {
             this.pool = null;
             this.col = new T[size];
@@ -64,26 +51,15 @@ namespace Microsoft.StreamProcessing.Internal
             this.RefCount = 1;
         }
 
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        /// <param name="pool"></param>
-        /// <param name="size"></param>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public ColumnBatch(ColumnPool<T> pool, int size)
+        internal ColumnBatch(ColumnPool<T> pool, int size)
         {
             this.pool = pool;
             this.col = new T[size];
             this.RefCount = 1;
         }
 
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        /// <param name="cnt"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void IncrementRefCount(int cnt)
+        internal void IncrementRefCount(int cnt)
         {
             lock (this.columnBatchLock)
             {
@@ -117,12 +93,8 @@ namespace Microsoft.StreamProcessing.Internal
             }
         }
 
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Return()
+        internal void Return()
         {
             lock (this.columnBatchLock)
             {
@@ -141,12 +113,8 @@ namespace Microsoft.StreamProcessing.Internal
             }
         }
 
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void ReturnClear()
+        internal void ReturnClear()
         {
             lock (this.columnBatchLock)
             {

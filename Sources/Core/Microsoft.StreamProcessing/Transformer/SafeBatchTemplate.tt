@@ -116,13 +116,6 @@ includeDebugInfo = true;
     : base(pool) {
   }
 
-  /*
-  public override void Allocate() {
-    AllocatePayload();
-    base.Allocate();
-  }
-  */
-
   public override void AllocatePayload() {
 <#
    if (this.keyType.KeyTypeNeedsGeneratedMemoryPool() || !this.payloadType.MemoryPoolHasGetMethodFor()) {

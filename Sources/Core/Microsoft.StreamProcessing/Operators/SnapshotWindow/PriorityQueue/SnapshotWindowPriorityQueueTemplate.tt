@@ -29,25 +29,21 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
     [DataMember]
     private <#= Transformer.GetBatchClassName(keyType, outputType) #><#= TKeyTOutputGenericParameters #> batch;
 
-    <# if (this.useCompiledInitialState) { #>
+<# if (this.useCompiledInitialState) { #>
     private readonly Func<<#= TState #>> initialState;
-    <# } #>
-
-    <# if (this.useCompiledAccumulate) { #>
+<# } #>
+<# if (this.useCompiledAccumulate) { #>
     private readonly Func<<#= TState #>, long, <#= TInput #>, <#= TState #>> accumulate;
-    <# } #>
-
-    <# if (this.useCompiledDeaccumulate) { #>
+<# } #>
+<# if (this.useCompiledDeaccumulate) { #>
     private readonly Func<<#= TState #>, long, <#= TInput #>, <#= TState #>> deaccumulate;
-    <# } #>
-
-    <# if (this.useCompiledDifference) { #>
+<# } #>
+<# if (this.useCompiledDifference) { #>
     private readonly Func<<#= TState #>, <#= TState #>, <#= TState #>> difference;
-    <# } #>
-
-    <# if (this.useCompiledComputeResult) { #>
+<# } #>
+<# if (this.useCompiledComputeResult) { #>
     private readonly Func<<#= TState #>, <#= TOutput #>> computeResult;
-    <# } #>
+<# } #>
 
     private readonly IEqualityComparerExpression<<#= TKey #>> keyComparer;
     private readonly Func<<#= TKey #>, <#= TKey #>, bool> keyComparerEquals;
@@ -81,21 +77,21 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
     {
         this.aggregate = aggregate;
         this.queryPlanGenerator = queryPlanGenerator;
-        <# if (this.useCompiledInitialState) { #>
+<# if (this.useCompiledInitialState) { #>
         initialState = aggregate.InitialState().Compile();
-        <# } #>
-        <# if (this.useCompiledAccumulate) { #>
+<# } #>
+<# if (this.useCompiledAccumulate) { #>
         accumulate = aggregate.Accumulate().Compile();
-        <# } #>
-        <# if (this.useCompiledDeaccumulate) { #>
+<# } #>
+<# if (this.useCompiledDeaccumulate) { #>
         deaccumulate = aggregate.Deaccumulate().Compile();
-        <# } #>
-        <# if (this.useCompiledDifference) { #>
+<# } #>
+<# if (this.useCompiledDifference) { #>
         difference = aggregate.Difference().Compile();
-        <# } #>
-        <# if (this.useCompiledComputeResult) { #>
+<# } #>
+<# if (this.useCompiledComputeResult) { #>
         computeResult = aggregate.ComputeResult().Compile();
-        <# } #>
+<# } #>
 
         this.keyComparer = stream.Properties.KeyEqualityComparer;
         this.keyComparerEquals = this.keyComparer.GetEqualsExpr().Compile();
@@ -114,9 +110,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
     }
 
     public override void ProduceQueryPlan(PlanNode previous)
-    {
-        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
-    }
+        => Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
 
     protected override void FlushContents()
     {
@@ -141,27 +135,22 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
 
         var count = generatedBatch.Count;
 
-        <# if (this.outputFields.Count() > 1) { #>
+<# if (this.outputFields.Count() > 1) { #>
         <#= TOutput #> temporaryOutput;
-        <# } #>
+<# } #>
 
         // Create locals that point directly to the arrays within the columns in the input batch.
 <# foreach (var f in this.inputFields) { #>
-
 <# if (f.canBeFixed) { #>
-
         fixed (<#= f.TypeName #>* <#= f.Name #>_col = generatedBatch.<#= f.Name #>.col)
         {
 <# } else { #>
-
         var <#= f.Name #>_col = generatedBatch.<#= f.Name #>.col;
-
 <# } #>
 <# } #>
 
         // Create locals that point directly to the arrays within the columns in the output batch.
 <# foreach (var f in this.outputFields) { #>
-
 <# if (f.canBeFixed) { #>
         fixed (<#= f.TypeName #>* dest_<#= f.Name #> = this.batch.<#= f.Name #>.col)
         {
@@ -250,12 +239,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                             this.batch.key.col[c] = iter1entry.key;
                             this.batch.hash.col[c] = <#= inlinedKeyComparerGetHashCode("iter1entry.key") #>;
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize)
-                            {
-                                this.batch.iter = generatedBatch.iter;
-                                FlushContents();
-                                this.batch.iter = generatedBatch.iter;
-                            }
+                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
                         else
                         {
@@ -397,12 +381,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                                 this.batch.key.col[c] = currentKey;
                                 this.batch.hash.col[c] = <#= inlinedKeyComparerGetHashCode("currentKey") #>;
                                 this.batch.Count++;
-                                if (this.batch.Count == Config.DataBatchSize)
-                                {
-                                    this.batch.iter = generatedBatch.iter;
-                                    FlushContents();
-                                    this.batch.iter = generatedBatch.iter;
-                                }
+                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
                             }
                             currentState.timestamp = syncTime;
                         }
@@ -429,12 +408,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                         this.batch.key.col[c] = currentKey;
                         this.batch.hash.col[c] = <#= inlinedKeyComparerGetHashCode("currentKey") #>;
                         this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize)
-                        {
-                            this.batch.iter = generatedBatch.iter;
-                            FlushContents();
-                            this.batch.iter = generatedBatch.iter;
-                        }
+                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     }
                     currentState.timestamp = syncTime;
                 }
@@ -490,14 +464,12 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
             }
         }
 
-        <# foreach (var f in this.inputFields.Where(fld => fld.canBeFixed)) { #>
-
+<# foreach (var f in this.inputFields.Where(fld => fld.canBeFixed)) { #>
         }
-        <# } #>
-        <# foreach (var f in this.outputFields.Where(fld => fld.canBeFixed)) { #>
-
+<# } #>
+<# foreach (var f in this.outputFields.Where(fld => fld.canBeFixed)) { #>
         }
-        <# } #>
+<# } #>
 
         generatedBatch.Release();
         generatedBatch.Return();
@@ -509,13 +481,12 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
     {
         HeldState heldState;
 
-        <# if (this.outputFields.Count() > 1) { #>
+<# if (this.outputFields.Count() > 1) { #>
         <#= TOutput #> temporaryOutput;
-        <# foreach (var f in this.outputFields) { #>
-
+<# foreach (var f in this.outputFields) { #>
         var dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
-        <# } #>
-        <# } #>
+<# } #>
+<# } #>
 
         // Handle time moving forward
         if (syncTime > this.lastSyncTime)
@@ -582,7 +553,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
 
                 while (ecqState.states.Iterate(ref iter))
                 {
-
                     if (currentState == null || !<#= inlinedKeyComparerEquals("currentKey", "ecqState.states.entries[iter].key") #>)
                     {
                         int index;
@@ -650,7 +620,8 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
     protected override void UpdatePointers()
     {
         int iter1 = FastDictionary<<#= TKey #>, HeldState>.IteratorStart;
-        while (this.heldAggregates.Iterate(ref iter1)) {
+        while (this.heldAggregates.Iterate(ref iter1))
+        {
             int iter2;
             <#= TKey #> key = this.heldAggregates.entries[iter1].key;
             bool found = this.aggregateByKey.Lookup(key, out iter2);

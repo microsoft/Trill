@@ -302,10 +302,9 @@ namespace SimpleTesting
             public Nested E;
 
             public override bool Equals(object obj)
-            {
-                if (!(obj is MyFieldsContainer other)) return false;
-                return other.A == this.A && other.B == this.B && other.C.Equals(this.C) && (other.D == null || other.D.Equals(this.D)) && (other.E == null || other.E.Equals(this.E));
-            }
+                => !(obj is MyFieldsContainer other)
+                    ? false
+                    : other.A == this.A && other.B == this.B && other.C.Equals(this.C) && (other.D == null || other.D.Equals(this.D)) && (other.E == null || other.E.Equals(this.E));
             public override int GetHashCode()
             {
                 uint hash = (uint)this.A.GetHashCode();
@@ -792,6 +791,223 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.SequenceEqual(input));
         }
+
+        // Tests single-punctuation batches to make sure MinTimestamp/MaxTimestamp are computed correctly.
+        [TestMethod, TestCategory("Gated")]
+        public void SinglePunctuationBatchTimestamps()
+        {
+            using (new ConfigModifier().DataBatchSize(5).Modify())
+            {
+                var qc = new QueryContainer();
+                long currentMin = 0;
+                long currentMax = 0;
+                Observable.Range(0, Config.DataBatchSize * 10)
+                    .Select(e => e % (Config.DataBatchSize + 1) == 0 ? StreamEvent.CreatePunctuation<int>(e) : StreamEvent.CreatePoint(e, e))
+                    .ToStreamable()
+                    .ToStreamMessageObservable()
+                    .ForEachAsync(
+                        batch =>
+                        {
+                            var min = batch.MinTimestamp;
+                            Assert.IsTrue(min >= currentMin);
+                            currentMin = min;
+
+                            var max = batch.MaxTimestamp;
+                            Assert.IsTrue(max >= currentMax);
+                            currentMax = max;
+
+                            batch.Free();
+                        });
+            }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AggressivePartitionCleanup_LASJ()
+        {
+            using (new ConfigModifier().DataBatchSize(4).Modify())
+            {
+                const long duration = 5;
+                PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
+                PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
+                PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+
+                var left = new Subject<PartitionedStreamEvent<int, int>>();
+                var right = new Subject<PartitionedStreamEvent<int, int>>();
+
+                var qc = new QueryContainer();
+                var leftInput = qc.RegisterInput(left, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+                var rightInput = qc.RegisterInput(right, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+
+                var query = leftInput.WhereNotExists(
+                    rightInput,
+                    e => e,
+                    e => e);
+
+                var output = new List<PartitionedStreamEvent<int, int>>();
+                qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+                var process = qc.Restore();
+
+                // Set up state so that the left has an "invisible" (i.e. unmatched on the right) interval.
+                right.OnNext(CreateStart(0, 85));
+                right.OnNext(CreateEnd(0, 90));
+                right.OnNext(CreateLowWatermark(50));
+
+                left.OnNext(CreateInterval(0, 90));
+                left.OnNext(CreateLowWatermark(50));
+
+                // Ingress batches without key 0, trying to evict partition 0
+                for (int i = 0; i < 10; i++)
+                {
+                    left.OnNext(CreateInterval(1, 100 + i));
+                    right.OnNext(CreateInterval(1, 100 + i));
+                }
+
+                // Ingress two LWMs after the original interval
+                left.OnNext(CreateLowWatermark(100));
+                right.OnNext(CreateLowWatermark(100));
+
+                left.OnNext(CreateInterval(0, 105));
+
+                left.OnCompleted();
+                right.OnCompleted();
+
+                var expected = new PartitionedStreamEvent<int, int>[]
+                {
+                    CreateLowWatermark(50),
+                    CreateInterval(0, 90),
+                    CreateLowWatermark(100),
+                    CreateInterval(0, 105),
+                    CreateLowWatermark(StreamEvent.InfinitySyncTime),
+                };
+                Assert.IsTrue(expected.SequenceEqual(output));
+            }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AggressivePartitionCleanup_EquiJoin()
+        {
+            using (new ConfigModifier().DataBatchSize(4).Modify())
+            {
+                const long duration = 5;
+                PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
+                PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
+                PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+
+                var left = new Subject<PartitionedStreamEvent<int, int>>();
+                var right = new Subject<PartitionedStreamEvent<int, int>>();
+
+                var qc = new QueryContainer();
+                var leftInput = qc.RegisterInput(left, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+                var rightInput = qc.RegisterInput(right, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+
+                var query = leftInput.Join(
+                    rightInput,
+                    e => e,
+                    e => e,
+                    (l, r) => l);
+
+                var output = new List<PartitionedStreamEvent<int, int>>();
+                qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+                var process = qc.Restore();
+
+                // Set up state so that there is outstanding start edges/intervals
+                right.OnNext(CreateStart(0, 90));
+                right.OnNext(CreateLowWatermark(50));
+
+                left.OnNext(CreateInterval(0, 90));
+                left.OnNext(CreateLowWatermark(50));
+
+                // Ingress batches without key 0, trying to evict partition 0
+                for (int i = 0; i < 10; i++)
+                {
+                    left.OnNext(CreateInterval(1, 100 + i));
+                    right.OnNext(CreateInterval(1, 100 + i));
+                }
+
+                // Ingress two LWMs after the original interval. This should force partition 0 to output its interval
+                left.OnNext(CreateLowWatermark(100));
+                right.OnNext(CreateLowWatermark(100));
+
+                left.OnCompleted();
+                right.OnCompleted();
+
+                var expected = new PartitionedStreamEvent<int, int>[]
+                {
+                    CreateLowWatermark(50),
+                    CreateStart(0, 90),
+                    CreateEnd(0, 90 + duration),
+                    CreateLowWatermark(100),
+                    CreateLowWatermark(StreamEvent.InfinitySyncTime),
+                };
+
+                var key0Output = output.Where(e => !e.IsData || e.PartitionKey == 0).ToList();
+                Assert.IsTrue(expected.SequenceEqual(key0Output));
+            }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AggressivePartitionCleanup_Clip()
+        {
+            using (new ConfigModifier().DataBatchSize(4).Modify())
+            {
+                const long duration = 5;
+                PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
+                PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
+                PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+
+                var left = new Subject<PartitionedStreamEvent<int, int>>();
+                var right = new Subject<PartitionedStreamEvent<int, int>>();
+
+                var qc = new QueryContainer();
+                var leftInput = qc.RegisterInput(left, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+                var rightInput = qc.RegisterInput(right, flushPolicy: PartitionedFlushPolicy.FlushOnLowWatermark);
+
+                var query = leftInput.ClipEventDuration(
+                    rightInput,
+                    e => e,
+                    e => e);
+
+                var output = new List<PartitionedStreamEvent<int, int>>();
+                qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+                var process = qc.Restore();
+
+                // Set up state so that there is outstanding start edges/intervals
+                left.OnNext(CreateInterval(0, 90));
+                left.OnNext(CreateLowWatermark(50));
+
+                right.OnNext(CreateInterval(0, 90));
+                right.OnNext(CreateLowWatermark(50));
+
+                // Ingress batches without key 0, trying to evict partition 0
+                for (int i = 0; i < 10; i++)
+                {
+                    left.OnNext(CreateInterval(1, 100 + i));
+                    right.OnNext(CreateInterval(1, 100 + i));
+                }
+
+                // Ingress two LWMs after the original interval. This should force partition 0 to output its end edge
+                left.OnNext(CreateLowWatermark(100));
+                right.OnNext(CreateLowWatermark(100));
+
+                left.OnCompleted();
+                right.OnCompleted();
+
+                var expected = new PartitionedStreamEvent<int, int>[]
+                {
+                    CreateStart(0, 90),
+                    CreateLowWatermark(50),
+                    CreateEnd(0, 90 + duration),
+                    CreateLowWatermark(100),
+                    CreateLowWatermark(StreamEvent.InfinitySyncTime),
+                };
+
+                var key0Output = output.Where(e => !e.IsData || e.PartitionKey == 0).ToList();
+                Assert.IsTrue(expected.SequenceEqual(key0Output));
+            }
+        }
     }
 
     [TestClass]
@@ -1071,6 +1287,168 @@ namespace SimpleTesting
             }
         }
 
+    }
+
+    [TestClass]
+    public class FullOuterJoinMacro : TestWithConfigSettingsAndMemoryLeakDetection
+    {
+        public FullOuterJoinMacro() : base(new ConfigModifier()
+            .ForceRowBasedExecution(false)
+            .DontFallBackToRowBasedExecution(true))
+        { }
+
+        [DataContract]
+        public struct InputEvent0
+        {
+            [DataMember]
+            public DateTime Ts;
+            [DataMember]
+            public string VmId;
+            [DataMember]
+            public int Status;
+            [DataMember]
+            public string IncId;
+        }
+
+        [DataContract]
+        public struct InputEvent1
+        {
+            [DataMember]
+            public DateTime? Ts1;
+            [DataMember]
+            public string VmId2;
+            [DataMember]
+            public int? Status3;
+            [DataMember]
+            public string IncId4;
+        }
+
+        [DataContract]
+        public struct OutputEvent0
+        {
+            // Left
+            [DataMember]
+            public DateTime? Ts;
+            [DataMember]
+            public string VmId;
+            [DataMember]
+            public int? Status;
+            [DataMember]
+            public string IncId;
+            // Right
+            [DataMember]
+            public DateTime? Ts1;
+            [DataMember]
+            public string VmId2;
+            [DataMember]
+            public int? Status3;
+            [DataMember]
+            public string IncId4;
+
+            public override string ToString()
+            {
+                return new
+                {
+                    this.Ts,
+                    this.VmId,
+                    this.Status,
+                    this.IncId,
+                    this.Ts1,
+                    this.VmId2,
+                    this.Status3,
+                    this.IncId4,
+                }.ToString();
+            }
+        }
+        [TestMethod, TestCategory("Gated")]
+        public void FullOuterJoinScenario()
+        {
+            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+            try
+            {
+                Config.ForceRowBasedExecution = true;
+
+                var input1Enum = new StreamEvent<InputEvent0>[]
+                {
+                    StreamEvent.CreateInterval(10, 20, new InputEvent0()
+                    {
+                        Ts = DateTime.UtcNow,
+                        VmId = "vm1",
+                        Status = 0,
+                        IncId = "000"
+                    }),
+                };
+                var input2Enum = new StreamEvent<InputEvent1>[]
+                {
+                    StreamEvent.CreateInterval(15, 25, new InputEvent1()
+                    {
+                        Ts1 = DateTime.UtcNow,
+                        VmId2 = "vm1",
+                        Status3 = 1,
+                        IncId4 = "100"
+                    }),
+                };
+
+                var input1 = input1Enum.ToObservable().ToStreamable();
+                var input2 = input2Enum.ToObservable().ToStreamable();
+
+                var result = input1
+                    .FullOuterJoin(
+                        right: input2,
+                        leftKeySelector: s => s.VmId,
+                        rightKeySelector: s => s.VmId2,
+                        leftResultSelector: l => new OutputEvent0()
+                        {
+                            Ts = l.Ts,
+                            VmId = l.VmId,
+                            Status = l.Status,
+                            IncId = l.IncId,
+                            Ts1 = null,
+                            VmId2 = null,
+                            Status3 = null,
+                            IncId4 = null,
+                        },
+                        rightResultSelector: r => new OutputEvent0()
+                        {
+                            Ts = null,
+                            VmId = null,
+                            Status = null,
+                            IncId = null,
+                            Ts1 = r.Ts1,
+                            VmId2 = r.VmId2,
+                            Status3 = r.Status3,
+                            IncId4 = r.IncId4,
+                        },
+                        innerResultSelector: (l, r) => new OutputEvent0()
+                        {
+                            Ts = l.Ts,
+                            VmId = l.VmId,
+                            Status = l.Status,
+                            IncId = l.IncId,
+                            Ts1 = r.Ts1,
+                            VmId2 = r.VmId2,
+                            Status3 = r.Status3,
+                            IncId4 = r.IncId4,
+                        });
+
+                var resultObs = result.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges);
+
+                foreach (var x in resultObs.ToEnumerable())
+                {
+                    System.Diagnostics.Debug.Print("{0}, {1}, {2}, {3}", x.Kind, x.StartTime, x.EndTime, x.Payload);
+                }
+                /*
+                    Interval, 10, 15, { Ts = 5/14/2019 1:39:20 AM, VmId = vm1, Status = 0, IncId = 000, Ts1 = , VmId2 = , Status3 = , IncId4 =  }                                   LEFT
+                    Interval, 15, 20, { Ts = 5/14/2019 1:39:20 AM, VmId = vm1, Status = 0, IncId = 000, Ts1 = 5/14/2019 1:39:20 AM, VmId2 = vm1, Status3 = 1, IncId4 = 100 }        INNER
+                    Interval, 20, 25, { Ts = , VmId = , Status = , IncId = , Ts1 = 5/14/2019 1:39:20 AM, VmId2 = vm1, Status3 = 1, IncId4 = 100 }                                   RIGHT
+                    Punctuation, 3155378975999999999, -9223372036854775808, { Ts = , VmId = , Status = , IncId = , Ts1 = , VmId2 = , Status3 = , IncId4 =  }
+                */
+            }
+            finally
+            {
+                Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+            }
+        }
     }
 
     [TestClass]
@@ -1586,10 +1964,7 @@ namespace SimpleTesting
             public int IntField;
             public int IntAutoProp { get; set; }
             public override bool Equals(object obj)
-            {
-                if (!(obj is ClassWithAutoProps other)) return false;
-                return this.IntAutoProp == other.IntAutoProp && this.IntField == other.IntField;
-            }
+                => !(obj is ClassWithAutoProps other) ? false : this.IntAutoProp == other.IntAutoProp && this.IntField == other.IntField;
             public override int GetHashCode() => this.IntAutoProp.GetHashCode() ^ this.IntField.GetHashCode();
 
             public Expression<Func<ClassWithAutoProps, ClassWithAutoProps, bool>> GetEqualsExpr()
@@ -1686,18 +2061,15 @@ namespace SimpleTesting
     [TestClass]
     public class LeftComparerPayload_WithCodegen : TestWithConfigSettingsAndMemoryLeakDetection
     {
+        public LeftComparerPayload_WithCodegen()
+            : base(new ConfigModifier().DontFallBackToRowBasedExecution(true)) { }
+
         public class ClassOverridingEquals
         {
             public int x;
 
-            public override bool Equals(object obj)
-            {
-                return obj is ClassOverridingEquals other && other.x == this.x;
-            }
-            public override int GetHashCode()
-            {
-                return this.x.GetHashCode();
-            }
+            public override bool Equals(object obj) => obj is ClassOverridingEquals other && other.x == this.x;
+            public override int GetHashCode() => this.x.GetHashCode();
         }
 
         /// <summary>
@@ -1729,7 +2101,7 @@ namespace SimpleTesting
                        .ToEnumerable()
                        .ToArray();
             }
-            catch (Exception)
+            catch (StreamProcessingException)
             {
                 exceptionHappened = true;
             }
@@ -1804,11 +2176,7 @@ namespace SimpleTesting
         public class Basetype
         {
             public int x;
-            public override bool Equals(object obj)
-            {
-                if (!(obj is Basetype other)) return false;
-                return other.x == this.x;
-            }
+            public override bool Equals(object obj) => !(obj is Basetype other) ? false : other.x == this.x;
             public override int GetHashCode() => this.x.GetHashCode();
         }
 
@@ -1862,7 +2230,7 @@ namespace SimpleTesting
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }

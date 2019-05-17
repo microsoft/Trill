@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing
@@ -26,12 +25,6 @@ namespace Microsoft.StreamProcessing
             this.LeftComparer = left.Properties.PayloadEqualityComparer;
 
             Initialize();
-
-            // This operator uses the equality method on payloads
-            if (this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
-            {
-                throw new InvalidOperationException($"Type of payload, '{typeof(TLeft).FullName}', to LASJ does not have a valid equality operator for columnar mode.");
-            }
         }
 
         protected override IBinaryObserver<TKey, TLeft, TRight, TLeft> CreatePipe(IStreamObserver<TKey, TLeft> observer)
@@ -54,6 +47,15 @@ namespace Microsoft.StreamProcessing
 
         protected override bool CanGenerateColumnar()
         {
+            // This operator uses the equality method on payloads
+            if (this.Properties.IsColumnar && !this.LeftComparer.CanUsePayloadEquality())
+            {
+                this.errorMessages = $"The payload type, '{typeof(TLeft).FullName}', to Left Antisemijoin does not implement the interface {nameof(IEqualityComparerExpression<TLeft>)}. This interface is needed for code generation of this operator for columnar mode. Furthermore, the equality expression in the interface can only refer to input variables if used in field or property references.";
+                if (Config.CodegenOptions.DontFallBackToRowBasedExecution)
+                    throw new StreamProcessingException(this.errorMessages);
+                return false;
+            }
+
             var typeOfTKey = typeof(TKey);
             var typeOfTLeft = typeof(TLeft);
             var typeOfTRight = typeof(TRight);

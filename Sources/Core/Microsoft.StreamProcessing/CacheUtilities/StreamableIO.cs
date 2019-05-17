@@ -42,7 +42,7 @@ namespace Microsoft.StreamProcessing
                     if (t.Kind == MessageKind.DataBatch)
                     {
                         var mt = t.Message.MinTimestamp;
-                        if (mt < lastSync) throw new StreamProcessingException("Out-of-order event received during Cache() call");
+                        if (mt < lastSync) throw new StreamProcessingOutOfOrderException("Out-of-order event received during Cache() call");
 
                         lastSync = mt;
 

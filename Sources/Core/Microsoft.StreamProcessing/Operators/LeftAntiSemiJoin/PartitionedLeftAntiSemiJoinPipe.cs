@@ -363,7 +363,8 @@ namespace Microsoft.StreamProcessing
                             partition.nextRightTime = this.lastRightCTI;
 
                         UpdateTime(partition, Math.Min(this.lastLeftCTI, this.lastRightCTI));
-                        if (partition.leftEndPointHeap.Count == 0 && partition.rightEndPointHeap.Count == 0) this.cleanKeys.Add(pKey);
+                        if (partition.IsClean()) this.cleanKeys.Add(pKey);
+
                         break;
                     }
                 }
@@ -376,25 +377,13 @@ namespace Microsoft.StreamProcessing
                 this.emitCTI = false;
                 foreach (var p in this.cleanKeys)
                 {
-                    this.leftQueue.Lookup(p, out int index);
-                    var l = this.leftQueue.entries[index];
-                    var r = this.rightQueue.entries[index];
-                    if (l.value.Count == 0 && r.value.Count == 0)
-                    {
-                        this.partitionData.Lookup(p, out int fullIndex);
-                        var partition = this.partitionData.entries[fullIndex].value;
+                    this.seenKeys.Remove(p);
 
-                        // Even though this partition does not have pending entries, it may have pending end points,
-                        // so wait until they are processed before removing the key/partition entirely.
-                        if (partition.leftEndPointHeap.Count == 0 && partition.rightEndPointHeap.Count == 0)
-                        {
-                            this.seenKeys.Remove(p);
-                            l.value.Dispose();
-                            this.leftQueue.Remove(p);
-                            r.value.Dispose();
-                            this.rightQueue.Remove(p);
-                        }
-                    }
+                    this.leftQueue.Lookup(p, out int index);
+                    this.leftQueue.entries[index].value.Dispose();
+                    this.leftQueue.Remove(p);
+                    this.rightQueue.entries[index].value.Dispose();
+                    this.rightQueue.Remove(p);
                 }
 
                 this.cleanKeys.Clear();
@@ -815,6 +804,11 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AddToBatch(long start, long end, ref TKey key, ref TLeft payload, int hash)
         {
+            if (start < this.lastCTI)
+            {
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
+            }
+
             int index = this.output.Count++;
             this.output.vsync.col[index] = start;
             this.output.vother.col[index] = end;
@@ -1024,18 +1018,48 @@ namespace Microsoft.StreamProcessing
         [DataContract]
         private sealed class PartitionEntry
         {
+            /// <summary>
+            /// Stores left intervals starting at <see cref="currTime"/>.
+            /// FastMap visibility means that the interval is currently joined by at least one event on the right.
+            /// When the interval is not joined, it is "invisible".
+            /// </summary>
             [DataMember]
             public FastMap<LeftEvent> leftIntervalMap = new FastMap<LeftEvent>();
+
+            /// <summary>
+            /// Stores left start edges at <see cref="currTime"/>
+            /// FastMap visibility means that the interval is currently joined by at least one event on the right.
+            /// When the interval is not joined, it is "invisible".
+            /// </summary>
             [DataMember]
             public FastMap<LeftEvent> leftEdgeMap = new FastMap<LeftEvent>();
+
+            /// <summary>
+            /// Stores left end edges at some point in the future, i.e. after <see cref="currTime"/>.
+            /// These can originate from edge end events or interval events.
+            /// </summary>
             [DataMember]
             public IEndPointOrderer leftEndPointHeap;
+
+            /// <summary>
+            /// Stores the right events present for this partition at <see cref="currTime"/>
+            /// </summary>
             [DataMember]
             public FastMap<RightEvent> rightMap = new FastMap<RightEvent>();
+
+            /// <summary>
+            /// Stores right end edges for <see cref="currTime"/>, excluding interval endpoints
+            /// </summary>
             [DataMember]
             public FastStack<QueuedEndEdge> rightEndEdges = new FastStack<QueuedEndEdge>();
+
+            /// <summary>
+            /// Stores right endpoints at some point in the future, i.e. after <see cref="currTime"/>, originating
+            /// from intervals.
+            /// </summary>
             [DataMember]
             public IEndPointOrderer rightEndPointHeap;
+
             [DataMember]
             public long nextLeftTime = long.MinValue;
             [DataMember]
@@ -1051,6 +1075,13 @@ namespace Microsoft.StreamProcessing
                 this.leftEndPointHeap = parent.leftEndPointGenerator();
                 this.rightEndPointHeap = parent.rightEndPointGenerator();
             }
+
+            public bool IsClean() => this.leftIntervalMap.IsEmpty &&
+                                     this.leftEdgeMap.IsEmpty &&
+                                     this.leftEndPointHeap.IsEmpty &&
+                                     this.rightMap.IsEmpty &&
+                                     this.rightEndEdges.Count == 0 &&
+                                     this.rightEndPointHeap.IsEmpty;
         }
     }
 }

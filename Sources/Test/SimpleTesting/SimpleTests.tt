@@ -45,14 +45,12 @@ namespace SimpleTesting
         public string StringAutoProp { get; set; }
         public int IntAutoProp { get; set; }
         public bool Equals(ClassWithAutoProps a, ClassWithAutoProps b)
-        {
-            return a.IntAutoProp == b.IntAutoProp &&
+            => a.IntAutoProp == b.IntAutoProp &&
                 a.IntField == b.IntField &&
                 (a.StringAutoProp != null || b.StringAutoProp == null) &&
                 (a.StringAutoProp == null || a.StringAutoProp.Equals(b.StringAutoProp)) &&
                 (a.StringField != null || b.StringField == null) &&
                 (a.StringField == null || a.StringField.Equals(b.StringField));
-        }
 
         public int GetHashCode(ClassWithAutoProps obj) => obj.IntField.GetHashCode();
         public override bool Equals(object obj) => obj is ClassWithAutoProps other ? Equals(this, other) : false;
@@ -64,11 +62,9 @@ namespace SimpleTesting
         public string StringAutoProp { get; set; }
         public int IntAutoProp { get; set; }
         public bool Equals(ClassWithOnlyAutoProps a, ClassWithOnlyAutoProps b)
-        {
-            return a.IntAutoProp == b.IntAutoProp &&
+            => a.IntAutoProp == b.IntAutoProp &&
                 (a.StringAutoProp != null || b.StringAutoProp == null) &&
                 (a.StringAutoProp == null || a.StringAutoProp.Equals(b.StringAutoProp));
-        }
 
         public int GetHashCode(ClassWithOnlyAutoProps obj) => obj.IntAutoProp.GetHashCode();
         public override bool Equals(object obj) => obj is ClassWithOnlyAutoProps other ? Equals(this, other) : false;
@@ -117,7 +113,7 @@ namespace SimpleTesting
             int ret = (int)(obj.SyncTime ^ obj.OtherTime);
             foreach (var l in obj.Payload)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
@@ -147,14 +143,10 @@ namespace SimpleTesting
         public ClassWithNestedType1<int>.NestedType<string> nt;
 
         public PayloadWithFieldOfNestedType1()
-        {
-            this.nt = new ClassWithNestedType1<int>.NestedType<string>();
-        }
+            => this.nt = new ClassWithNestedType1<int>.NestedType<string>();
 
         public PayloadWithFieldOfNestedType1(int i)
-        {
-            this.nt = new ClassWithNestedType1<int>.NestedType<string> { x = i };
-        }
+            => this.nt = new ClassWithNestedType1<int>.NestedType<string> { x = i };
     }
 
     public class PayloadWithFieldOfNestedType2
@@ -162,14 +154,10 @@ namespace SimpleTesting
         public ClassWithNestedType2<int, string>.NestedType nt;
 
         public PayloadWithFieldOfNestedType2()
-        {
-            this.nt = new ClassWithNestedType2<int, string>.NestedType();
-        }
+            => this.nt = new ClassWithNestedType2<int, string>.NestedType();
 
         public PayloadWithFieldOfNestedType2(int i)
-        {
-            this.nt = new ClassWithNestedType2<int, string>.NestedType { x = i };
-        }
+            => this.nt = new ClassWithNestedType2<int, string>.NestedType { x = i };
     }
 <#
 foreach (var fusionOption in new [] { "Fused", string.Empty })
@@ -211,10 +199,12 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             .Select(e =>
                 new MyStruct2 { field1 = e, field2 = new MyString(Convert.ToString("string" + e)), field3 = new NestedStruct { nestedField = e } });
 
+<#  if (string.IsNullOrEmpty(fusionOption)) { #>
         private static IComparerExpression<T> GetDefaultComparerExpression<T>(T t) => ComparerExpression<T>.Default;
 
         private static IEqualityComparerExpression<T> GetDefaultEqualityComparerExpression<T>(T t) => EqualityComparerExpression<T>.Default;
 
+<#  } #>
         public static bool MyIsEqual(List<RankedEvent<char>> a, List<RankedEvent<char>> b)
         {
             if (a.Count != b.Count) return false;
@@ -232,73 +222,51 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             int ret = 0;
             foreach (var l in a)
             {
-                ret = ret ^ l.GetHashCode();
+                ret ^= l.GetHashCode();
             }
             return ret;
         }
 
         private void TestWhere(Expression<Func<MyStruct2, bool>> predicate, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhere(predicate, disableFusion));
 
         private void TestSelect<TResult>(Expression<Func<MyStruct2, TResult>> function, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestSelect(function, disableFusion));
 
         public void TestWhereSelect<U>(Expression<Func<MyStruct2, bool>> wherePredicate, Expression<Func<MyStruct2, U>> selectFunction, bool disableFusion = true)
-        {
-            Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
-        }
+            => Assert.IsTrue(this.enumerable.TestWhereSelect(wherePredicate, selectFunction, disableFusion));
 
         [TestMethod, TestCategory("Gated")]
         public void Where1<#= suffix #>()
-        {
-            TestWhere(e => e.field2.mystring.Contains("string")<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestWhere(e => e.field2.mystring.Contains("string")<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Where2<#= suffix #>()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0")<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0")<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Where3<#= suffix #>()
-        {
-            TestWhere(e => e.field2.mystring.Equals("string0")<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestWhere(e => e.field2.mystring.Equals("string0")<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Where4<#= suffix #>()
-        {
-            TestWhere(e => e.field3.nestedField == 0<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestWhere(e => e.field3.nestedField == 0<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Where5<#= suffix #>()
-        {
-            TestWhere(e => true<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestWhere(e => true<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Where6<#= suffix #>()
-        {
-            TestWhere(e => false<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestWhere(e => false<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Where7<#= suffix #>()
-        {
-            TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestWhere(e => e.field3.nestedField == 0 || e.field3.nestedField == 1<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Where8<#= suffix #>()
-        {
-            TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestWhere(e => string.Compare(e.field2.mystring, "string0") == 0<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Where9<#= suffix #>()
@@ -319,62 +287,44 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
 
         [TestMethod, TestCategory("Gated")]
         public void WhereWithFailedTransformation<#= suffix #>() // stays columnar, but causes payload to be reconstituted
-        {
-            Enumerable.Range(0, 100)
+            => Enumerable.Range(0, 100)
                 .Select(i => new StructTuple<int, char> { Item1 = i, Item2 = i.ToString()[0], })
                 .TestWhere(r => r.ToString().Length > 3<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
 
         [TestMethod, TestCategory("Gated")]
         public void Select1<#= suffix #>()
-        {
-            TestSelect(e => e.field1<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => e.field1<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Select2<#= suffix #>()
-        {
-            TestSelect(e => e.field2<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => e.field2<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Select3<#= suffix #>()
-        {
-            TestSelect(e => e.field3<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => e.field3<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Select4<#= suffix #>()
-        {
-            TestSelect(e => new NestedStruct { nestedField = e.field1 }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => new NestedStruct { nestedField = e.field1 }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Select5<#= suffix #>()
-        {
-            TestSelect(e => e.doubleField<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => e.doubleField<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void Select6<#= suffix #>()
-        {
-            TestSelect(e => ((ulong)e.field1)<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => ((ulong)e.field1)<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
+        // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
         [TestMethod, TestCategory("Gated")]
         public void Select7<#= suffix #>()
-        {
-            // Tests to make sure that we ref count correctly by doing two pointer swings to the same column.
-            TestSelect(e => new { A = e.field1, B = e.field1, }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => new { A = e.field1, B = e.field1, }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
+        // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
+        // This is just a degenerate case where the expression is *always* null.
         [TestMethod, TestCategory("Gated")]
         public void Select8<#= suffix #>()
-        {
-            // Tests whether an expression that cannot be columnerized causes code gen to fall back to row-oriented.
-            // This is just a degenerate case where the expression is *always* null.
-            TestSelect<ClassWithOnlyAutoProps>(e => null<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect<ClassWithOnlyAutoProps>(e => null<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectFromUlongToLong<#= suffix #>()
@@ -395,9 +345,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousType<#= suffix #>()
-        {
-            TestSelect(e => new { anonfield1 = e.field1, x = 3 }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => new { anonfield1 = e.field1, x = 3 }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeChained<#= suffix #>()
@@ -435,13 +383,11 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             Assert.IsTrue(Enumerable.Zip(input, payloadEnum, (integer, anon) => integer == anon.X).All(p => p));
         }
 
+        // The point of this test is to have an anonymous type with a "field" in it
+        // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
         [TestMethod, TestCategory("Gated")]
         public void SelectAnonymousTypeWithFloatField<#= suffix #>()
-        {
-            // The point of this test is to have an anonymous type with a "field" in it
-            // whose type does not have an overload for it in MemoryPool<TKey, TPayload>.Get(out ColumnBatch<>).
-            TestSelect(e => new { floatField = e.field1 * 3.0, }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => new { floatField = e.field1 * 3.0, }<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWhereAnonymousType<#= suffix #>()
@@ -577,9 +523,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
 
         [TestMethod, TestCategory("Gated")]
         public void SelectWithCtorCall<#= suffix #>()
-        {
-            TestSelect(e => new StructWithCtor(e.field1)<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestSelect(e => new StructWithCtor(e.field1)<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectMany01<#= suffix #>()
@@ -688,6 +632,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectStart02<#= suffix #>()
         {
@@ -715,6 +660,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey01<#= suffix #>()
         {
@@ -741,6 +687,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey02<#= suffix #>()
         {
@@ -767,6 +714,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey03<#= suffix #>()
         {
@@ -793,6 +741,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 ;
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectKey04<#= suffix #>()
         {
@@ -856,6 +805,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyKey01<#= suffix #>()
         {
@@ -884,6 +834,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(output));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void SelectManyStartKey01<#= suffix #>()
         {
@@ -915,9 +866,7 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
 
         [TestMethod, TestCategory("Gated")]
         public void WhereSelect1<#= suffix #>()
-        {
-            TestWhereSelect(e => true, e => e.field1<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
-        }
+            => TestWhereSelect(e => true, e => e.field1<#= !string.IsNullOrEmpty(fusionOption) ? ", false" : string.Empty #>);
 
         [TestMethod, TestCategory("Gated")]
         public void SelectStruct<#= suffix #>()
@@ -1213,7 +1162,6 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(2), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -1233,7 +1181,6 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None);
             var result = str.AlterEventDuration(5).ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -1272,7 +1219,6 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             };
             var str = input.ToObservable().ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.Time(1), OnCompletedPolicy.None);
             var result = str.ToStreamEventObservable().ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
@@ -1571,7 +1517,6 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             var str = reversedInput.ToStatStreamable();
             var sortedStream = str.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            var a = result.ToArray();
             Assert.IsTrue(input.SequenceEqual(result));
             sortedStream.Dispose();
         }
