@@ -47,21 +47,24 @@ namespace SimpleTesting
         {
             var container = new QueryContainer(null);
 
-            var left = new StreamEvent<MyData>[] {
+            var left = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "B" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 2, field2 = "E" })
             };
 
-            var right = new StreamEvent<MyData2>[] {
+            var right = new StreamEvent<MyData2>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 1, field4 = "W" }),
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 1, field4 = "X" }),
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 2, field4 = "Y" })
             };
 
             var output = new List<StreamEvent<MyData3>>();
-            var expected = new StreamEvent<MyData3>[] {
+            var expected = new StreamEvent<MyData3>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 2, field2 = "E", field3 = -1, field4 = "null" }),
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 1, field2 = "B", field3 = 1, field4 = "W" }),
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 1, field2 = "A", field3 = 1, field4 = "W" }),
@@ -106,21 +109,24 @@ namespace SimpleTesting
         {
             var container = new QueryContainer(null);
 
-            var left = new StreamEvent<MyData>[] {
+            var left = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "B" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 2, field2 = "E" })
             };
 
-            var right = new StreamEvent<MyData2>[] {
+            var right = new StreamEvent<MyData2>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 1, field4 = "W" }),
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 1, field4 = "X" }),
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 2, field4 = "Y" })
             };
 
             var output = new List<StreamEvent<MyData3>>();
-            var expected = new StreamEvent<MyData3>[] {
+            var expected = new StreamEvent<MyData3>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 2, field2 = "E", field3 = -1, field4 = "null" }),
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 1, field2 = "B", field3 = 1, field4 = "W" }),
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 1, field2 = "A", field3 = 1, field4 = "W" }),
@@ -164,21 +170,24 @@ namespace SimpleTesting
         {
             var container = new QueryContainer(null);
 
-            var left = new StreamEvent<MyData>[] {
+            var left = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "B" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 2, field2 = "E" })
             };
 
-            var right = new StreamEvent<MyData2>[] {
+            var right = new StreamEvent<MyData2>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 1, field4 = "W" }),
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 1, field4 = "X" }),
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 2, field4 = "Y" })
             };
 
             var output = new List<StreamEvent<MyData3>>();
-            var expected = new StreamEvent<MyData3>[] {
+            var expected = new StreamEvent<MyData3>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 2, field2 = "E", field3 = -1, field4 = "null" }),
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 1, field2 = "B", field3 = 1, field4 = "W" }),
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 1, field2 = "A", field3 = 1, field4 = "W" }),
@@ -223,21 +232,24 @@ namespace SimpleTesting
         {
             var container = new QueryContainer(null);
 
-            var left = new StreamEvent<MyData>[] {
+            var left = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "B" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(10, new MyData { field1 = 2, field2 = "E" })
             };
 
-            var right = new StreamEvent<MyData2>[] {
+            var right = new StreamEvent<MyData2>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 1, field4 = "W" }),
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 1, field4 = "X" }),
                 StreamEvent.CreatePoint(10, new MyData2 { field3 = 2, field4 = "Y" })
             };
 
             var output = new List<StreamEvent<MyData3>>();
-            var expected = new StreamEvent<MyData3>[] {
+            var expected = new StreamEvent<MyData3>[]
+            {
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 2, field2 = "E", field3 = -1, field4 = "null" }),
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 1, field2 = "B", field3 = 1, field4 = "W" }),
                 StreamEvent.CreatePoint(10, new MyData3 { field1 = 1, field2 = "A", field3 = 1, field4 = "W" }),

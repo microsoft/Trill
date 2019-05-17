@@ -285,10 +285,12 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, TRegister, TAccumulator>> initializeTemplate = (ts, reg) => CallInliner.Call(accumulatorInitialization);
             var userInitializeFunction = initializeTemplate.InlineCalls();
             var accumulatorLocalForInitialize = Expression.Parameter(typeof(TAccumulator), "acc");
-            var initializeBody = new List<Expression>() {
+            var initializeBody = new List<Expression>()
+            {
                 Expression.Assign(accumulatorLocalForInitialize, userInitializeFunction.Body),
                 Expression.Assign(Expression.MakeMemberAccess(accumulatorLocalForInitialize, memberInfo), Expression.Constant(initialValueForBooleanField, typeof(bool))),
-                accumulatorLocalForInitialize };
+                accumulatorLocalForInitialize
+            };
             var initializeFunction = (Expression<Func<long, TRegister, TAccumulator>>)Expression.Lambda(
                 Expression.Block(new[] { accumulatorLocalForInitialize }, initializeBody),
                 Expression.Parameter(typeof(long), "ts"), Expression.Parameter(typeof(TRegister), "reg"));

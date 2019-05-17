@@ -556,23 +556,29 @@ namespace Microsoft.StreamProcessing
             var newEqualityComparerSelectorMap = new Dictionary<Expression, object>();
             var newPayloadEqualityComparer = EqualityComparerExpression<TResult>.Default;
 
-            if (hasStartEdge) foreach (var kvp in this.EqualityComparerSelectorMap)
+            if (hasStartEdge)
             {
-                if (kvp.Key.ExpressionEquals(selector))
+                foreach (var kvp in this.EqualityComparerSelectorMap)
                 {
-                    newPayloadEqualityComparer = kvp.Value as IEqualityComparerExpression<TResult>;
+                    if (kvp.Key.ExpressionEquals(selector))
+                    {
+                        newPayloadEqualityComparer = kvp.Value as IEqualityComparerExpression<TResult>;
+                    }
                 }
             }
 
             var newSortSelectorMap = new Dictionary<Expression, Guid?>();
             IComparerExpression<TResult> newPayloadComparer = null;
-            if (hasStartEdge) foreach (var kvp in this.SortSelectorMap)
+            if (hasStartEdge)
             {
-                if (kvp.Key.ExpressionEquals(selector))
+                foreach (var kvp in this.SortSelectorMap)
                 {
-                    newPayloadComparer = ComparerExpression<TResult>.Default;
-                    Expression<Func<TResult, TResult>> fullSelector = (x => x);
-                    newSortSelectorMap.Add(fullSelector, kvp.Value);
+                    if (kvp.Key.ExpressionEquals(selector))
+                    {
+                        newPayloadComparer = ComparerExpression<TResult>.Default;
+                        Expression<Func<TResult, TResult>> fullSelector = (x => x);
+                        newSortSelectorMap.Add(fullSelector, kvp.Value);
+                    }
                 }
             }
 
@@ -924,10 +930,14 @@ namespace Microsoft.StreamProcessing
                 this.constantHopOffset = properties.ConstantHopOffset;
             }
 
-            if (properties.IsIntervalFree) {
-                this.IntervalFreeValidator = IntervalFreeValidation; }
-            if (properties.IsSyncTimeSimultaneityFree) {
-                this.SyncTimeSimultaneityFreeValidator = SyncTimeSimulteneityFreeValidation; }
+            if (properties.IsIntervalFree)
+            {
+                this.IntervalFreeValidator = IntervalFreeValidation;
+            }
+            if (properties.IsSyncTimeSimultaneityFree)
+            {
+                this.SyncTimeSimultaneityFreeValidator = SyncTimeSimulteneityFreeValidation;
+            }
 
             if (typeof(TKey).GetPartitionType() != null)
             {
@@ -974,9 +984,12 @@ namespace Microsoft.StreamProcessing
 
         private void SimpleValidation(long sync, TKey key)
         {
-            if (this.lastSeenTimestamp > sync) throw new InvalidOperationException(
-                                                    "The operator AlterLifetime produced output out of sync-time order on an input event. The current internal sync time is " + this.lastSeenTimestamp.ToString(CultureInfo.InvariantCulture)
-                                                  + ". The event's sync time is " + sync.ToString(CultureInfo.InvariantCulture) + ".");
+            if (this.lastSeenTimestamp > sync)
+            {
+                throw new InvalidOperationException(
+                    "The operator AlterLifetime produced output out of sync-time order on an input event. The current internal sync time is " + this.lastSeenTimestamp.ToString(CultureInfo.InvariantCulture)
+                    + ". The event's sync time is " + sync.ToString(CultureInfo.InvariantCulture) + ".");
+            }
             this.lastSeenTimestamp = sync;
         }
 
@@ -985,10 +998,13 @@ namespace Microsoft.StreamProcessing
             object partitionKey = this.getPartitionKey(key);
             if (this.lastSeenTimestampPartitioned.TryGetValue(partitionKey, out long current))
             {
-                if (current > sync) throw new InvalidOperationException(
-                                            "The operator AlterLifetime produced output out of sync-time order on an input event. The current internal sync time is " + current.ToString(CultureInfo.InvariantCulture)
-                                          + ". The event's sync time is " + sync.ToString(CultureInfo.InvariantCulture)
-                                          + ". The event's partition key is " + current.ToString(CultureInfo.InvariantCulture) + ".");
+                if (current > sync)
+                {
+                    throw new InvalidOperationException(
+                        "The operator AlterLifetime produced output out of sync-time order on an input event. The current internal sync time is " + current.ToString(CultureInfo.InvariantCulture)
+                        + ". The event's sync time is " + sync.ToString(CultureInfo.InvariantCulture)
+                        + ". The event's partition key is " + current.ToString(CultureInfo.InvariantCulture) + ".");
+                }
                 this.lastSeenTimestampPartitioned[partitionKey] = sync;
             }
             else
@@ -997,26 +1013,34 @@ namespace Microsoft.StreamProcessing
 
         private void ConstantDurationValidation(long sync, long other)
         {
-            if (other < sync) throw new StreamProcessingException(string.Format(
-                CultureInfo.InvariantCulture,
-                "Expected only start and interval events, but encountered an end edge event at time {0}.",
-                sync.ToString(CultureInfo.InvariantCulture)));
-
+            if (other < sync)
+            {
+                throw new StreamProcessingException(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Expected only start and interval events, but encountered an end edge event at time {0}.",
+                    sync.ToString(CultureInfo.InvariantCulture)));
+            }
             if (!this.constantDuration.HasValue) this.constantDuration = sync - other;
 
             if (this.constantDuration.Value == StreamEvent.InfinitySyncTime)
             {
-                if (other != StreamEvent.InfinitySyncTime) throw new StreamProcessingException(string.Format(
+                if (other != StreamEvent.InfinitySyncTime)
+                {
+                    throw new StreamProcessingException(string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Expected only start edges, found an interval of length {0} at time {1}.",
+                        (other - sync).ToString(CultureInfo.InvariantCulture),
+                        sync.ToString(CultureInfo.InvariantCulture)));
+                }
+            }
+            else if (other - sync != this.constantDuration.Value)
+            {
+                throw new StreamProcessingException(string.Format(
                     CultureInfo.InvariantCulture,
-                    "Expected only start edges, found an interval of length {0} at time {1}.",
+                    "Expected only intervals of time {0}, found an interval of length {1} at time {2}.", this.constantDuration.Value.ToString(CultureInfo.InvariantCulture),
                     (other - sync).ToString(CultureInfo.InvariantCulture),
                     sync.ToString(CultureInfo.InvariantCulture)));
             }
-            else if (other - sync != this.constantDuration.Value) throw new StreamProcessingException(string.Format(
-                CultureInfo.InvariantCulture,
-                "Expected only intervals of time {0}, found an interval of length {1} at time {2}.", this.constantDuration.Value.ToString(CultureInfo.InvariantCulture),
-                (other - sync).ToString(CultureInfo.InvariantCulture),
-                sync.ToString(CultureInfo.InvariantCulture)));
         }
 
         private void ConstantHopValidation(long sync, long other)
@@ -1031,22 +1055,30 @@ namespace Microsoft.StreamProcessing
             }
             else
             {
-                if ((sync - this.constantHopOffset.Value) % this.constantHopLength.Value != 0) throw new StreamProcessingException(string.Format(
-                    CultureInfo.InvariantCulture,
-                    "The sync time {0} does not correspond to the given hopping window properties of length {1} and offset {2}.",
-                    sync.ToString(CultureInfo.InvariantCulture), this.constantHopLength.Value.ToString(CultureInfo.InvariantCulture), this.constantHopOffset.Value.ToString(CultureInfo.InvariantCulture)));
+                if ((sync - this.constantHopOffset.Value) % this.constantHopLength.Value != 0)
+                {
+                    throw new StreamProcessingException(string.Format(
+                        CultureInfo.InvariantCulture,
+                        "The sync time {0} does not correspond to the given hopping window properties of length {1} and offset {2}.",
+                        sync.ToString(CultureInfo.InvariantCulture), this.constantHopLength.Value.ToString(CultureInfo.InvariantCulture), this.constantHopOffset.Value.ToString(CultureInfo.InvariantCulture)));
+                }
             }
         }
 
         private void SyncTimeSimulteneityFreeValidation(long sync, long other, TKey key)
         {
             if (!this.lastSyncTimeForSimultaneous.ContainsKey(key))
+            {
                 this.lastSyncTimeForSimultaneous.Add(key, sync);
-            else if (this.lastSyncTimeForSimultaneous[key] == sync) throw new StreamProcessingException(string.Format(
-                CultureInfo.InvariantCulture,
-                "Was not expecting to see events happening simultaneously, but found simultaneous events at time {0} for key {1}.",
-                sync.ToString(CultureInfo.InvariantCulture),
-                key.ToString()));
+            }
+            else if (this.lastSyncTimeForSimultaneous[key] == sync)
+            {
+                throw new StreamProcessingException(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Was not expecting to see events happening simultaneously, but found simultaneous events at time {0} for key {1}.",
+                    sync.ToString(CultureInfo.InvariantCulture),
+                    key.ToString()));
+            }
         }
 
         public override void ProduceQueryPlan(PlanNode previous) => throw new NotImplementedException();

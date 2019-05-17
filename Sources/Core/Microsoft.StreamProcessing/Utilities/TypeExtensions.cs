@@ -31,8 +31,11 @@ namespace Microsoft.StreamProcessing
                 { "%d", "op_Modulus" },
             };
 
-            foreach (var pair in OperatorNameLookup) KnownSupportedOperators.Add(
-                pair.Key, new HashSet<Type> { typeof(long), typeof(ulong), typeof(int), typeof(uint), typeof(short), typeof(ushort), typeof(double), typeof(float), typeof(decimal), typeof(byte), typeof(sbyte) });
+            foreach (var pair in OperatorNameLookup)
+            {
+                KnownSupportedOperators.Add(
+                    pair.Key, new HashSet<Type> { typeof(long), typeof(ulong), typeof(int), typeof(uint), typeof(short), typeof(ushort), typeof(double), typeof(float), typeof(decimal), typeof(byte), typeof(sbyte) });
+            }
         }
 
         public static PropertyInfo GetPropertyByName(this Type type, string name)

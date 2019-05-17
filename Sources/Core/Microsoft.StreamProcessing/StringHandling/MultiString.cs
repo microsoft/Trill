@@ -708,9 +708,15 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             var largestr = this.col.charArray.contentString;
 
             for (int i = 0; i < this.Count; i++)
+            {
                 if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                {
                     if (!(largestr.IndexOf(str, startscol[i] + 2, lengthscol[i], StringComparison.Ordinal) >= 0))
+                    {
                         rbv[i >> 6] |= (1L << (i & 0x3f));
+                    }
+                }
+            }
 
             return result;
         }

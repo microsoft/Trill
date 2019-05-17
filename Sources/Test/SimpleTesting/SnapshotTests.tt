@@ -46,14 +46,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot1<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "D" })
             };
@@ -70,14 +72,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot2<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "A" })
@@ -96,14 +100,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         public void TumblingSnapshot3<#= suffix #>()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "A" })
@@ -121,14 +127,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot4<#= suffix #>() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 4),
             };
@@ -146,14 +154,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 4, field2 = "D" })
             };
@@ -170,14 +180,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot2<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "A" }),
@@ -197,14 +209,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         public void HoppingSnapshot3<#= suffix #>()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "D" })
@@ -222,14 +236,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot4<#= suffix #>() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 6),
                 StreamEvent.CreateInterval(40, 50, 4),
@@ -248,14 +264,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot1<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -275,14 +293,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot2<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -302,7 +322,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot3<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -313,7 +334,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -337,7 +359,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot4<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -352,7 +375,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -380,7 +404,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot5<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(0, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(5, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
@@ -397,7 +422,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(0, 5, 1),
                 StreamEvent.CreateInterval(5, 11, 3),
                 StreamEvent.CreateInterval(11, 12, 4),
@@ -427,14 +453,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup1<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -452,14 +480,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup2<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -477,7 +507,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup3<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -488,7 +519,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -510,7 +542,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup4<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -525,7 +558,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -551,14 +585,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup1<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 71, new MyData { field1 = 4, field2 = "A" }),
@@ -576,14 +612,16 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup2<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 18, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 27, new MyData { field1 = 2, field2 = "A" }),
@@ -601,7 +639,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup3<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -612,7 +651,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),
@@ -634,7 +674,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup4<#= suffix #>()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -649,7 +690,8 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),

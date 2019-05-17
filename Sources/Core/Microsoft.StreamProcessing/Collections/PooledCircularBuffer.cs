@@ -248,8 +248,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public IEnumerator<T> GetEnumerator()
         {
             foreach (var buffer in this.buffers)
-                foreach (var item in buffer.Iterate())
-                    yield return item;
+            {
+                foreach (var item in buffer.Iterate()) yield return item;
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();

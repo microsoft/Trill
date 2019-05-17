@@ -192,9 +192,11 @@ namespace Microsoft.StreamProcessing
             MetadataReference trill = MetadataReference.CreateFromFile(typeof(StreamMessage).GetTypeInfo().Assembly.Location);
             MetadataReference linq = MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location);
             MetadataReference contracts = MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataContractAttribute).GetTypeInfo().Assembly.Location);
-            MetadataReference[] baseReferences = { trill,
+            MetadataReference[] baseReferences =
+            {
+                trill,
 #if !DOTNETCORE
-               mscorlib, linq, contracts, numerics,
+                mscorlib, linq, contracts, numerics,
 #endif
             };
 
@@ -511,8 +513,9 @@ namespace System.Runtime.CompilerServices
                 }
 
                 if (!t.GetTypeInfo().Assembly.IsDynamic && t.GetTypeInfo().IsGenericType)
-                    foreach (var gta in t.GenericTypeArguments)
-                        l.AddRange(GenericTypeVariables(gta));
+                {
+                    foreach (var gta in t.GenericTypeArguments) l.AddRange(GenericTypeVariables(gta));
+                }
             }
             return l.Distinct();
         }
@@ -599,8 +602,12 @@ namespace System.Runtime.CompilerServices
             if (!this.Fields.Any())
             {
                 if (t.HasSupportedParameterizedConstructor())
+                {
                     foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    {
                         d.Add(p.Name, new MyFieldInfo(p/*, prefix*/));
+                    }
+                }
                 else
                 {
                     this.noFields = true;

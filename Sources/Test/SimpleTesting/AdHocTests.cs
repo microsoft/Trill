@@ -2238,14 +2238,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest5()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 2, 'a'),
                 StreamEvent.CreateInterval(2, 3, 'a'),
                 StreamEvent.CreateInterval(3, 4, 'b'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<List<RankedEvent<char>>>[] {
+            var expectedOutput = new StreamEvent<List<RankedEvent<char>>>[]
+            {
                 StreamEvent.CreateInterval(1, 2, new List<RankedEvent<char>> { new RankedEvent<char>(1, 'a') }),
                 StreamEvent.CreateInterval(2, 3, new List<RankedEvent<char>> { new RankedEvent<char>(1, 'a') }),
                 StreamEvent.CreateInterval(3, 4, new List<RankedEvent<char>> { new RankedEvent<char>(1, 'b') }),

@@ -716,7 +716,8 @@ namespace SimpleTesting
         public void AlterLifeTimeWithFlush()
         {
             var startDate = new DateTime(100);
-            var data = new[] {
+            var data = new[]
+            {
                 new { Time = startDate, DeviceId = 4, Value = 4 },
                 new { Time = startDate, DeviceId = 6, Value = 6 },
                 new { Time = startDate.AddMinutes(1),  DeviceId = 6, Value = 6 },
@@ -754,7 +755,8 @@ namespace SimpleTesting
         public void AlterLifeTimeWithFlushDoubles()
         {
             var startDate = new DateTime(100);
-            var data = new[] {
+            var data = new[]
+            {
                 new { Time = startDate,                DeviceId = 4, Value = 4 },
                 new { Time = startDate,                DeviceId = 4, Value = 4 },
                 new { Time = startDate,                DeviceId = 6, Value = 6 },

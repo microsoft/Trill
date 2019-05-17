@@ -511,7 +511,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -521,7 +522,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -586,7 +588,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -596,7 +599,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -687,7 +691,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -697,7 +702,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -779,7 +785,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -789,7 +796,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -858,7 +866,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -868,7 +877,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -927,7 +937,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -937,7 +948,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -1022,7 +1034,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -1032,7 +1045,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -1108,7 +1122,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -1118,7 +1133,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -1173,7 +1189,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -1198,7 +1215,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -1214,7 +1232,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -1269,7 +1288,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -1294,7 +1314,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -1314,7 +1335,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -1368,7 +1390,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -1393,7 +1416,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -1411,7 +1435,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -1481,7 +1506,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -1506,7 +1532,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -1541,7 +1568,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -1593,7 +1621,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -1618,7 +1647,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -1634,7 +1664,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -1689,7 +1720,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -1714,7 +1746,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -1734,7 +1767,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -1802,7 +1836,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i, current);
                         }
@@ -1812,14 +1847,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -1844,7 +1881,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -1876,7 +1914,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i.start, current);
                         }
@@ -1886,14 +1925,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -1977,7 +2018,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i, current);
                         }
@@ -1987,14 +2029,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -2019,7 +2063,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -2068,7 +2113,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i.start, current);
                         }
@@ -2078,14 +2124,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -2602,7 +2650,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -2612,7 +2661,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -2681,7 +2731,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -2691,7 +2742,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -2783,7 +2835,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -2793,7 +2846,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -2879,7 +2933,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -2889,7 +2944,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -2958,7 +3014,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -2968,7 +3025,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -3027,7 +3085,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -3037,7 +3096,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -3122,7 +3182,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -3132,7 +3193,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -3208,7 +3270,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -3218,7 +3281,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -3732,7 +3796,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -3742,7 +3807,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -3807,7 +3873,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -3817,7 +3884,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -3909,7 +3977,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -3919,7 +3988,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -4001,7 +4071,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -4011,7 +4082,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -4081,7 +4153,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -4091,7 +4164,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -4150,7 +4224,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -4160,7 +4235,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -4246,7 +4322,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -4256,7 +4333,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -4332,7 +4410,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -4342,7 +4421,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -4398,7 +4478,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -4423,7 +4504,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -4439,7 +4521,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -4495,7 +4578,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -4520,7 +4604,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -4540,7 +4625,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -4595,7 +4681,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -4620,7 +4707,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -4638,7 +4726,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -4709,7 +4798,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -4734,7 +4824,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -4769,7 +4860,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -4822,7 +4914,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -4847,7 +4940,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -4863,7 +4957,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -4919,7 +5014,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -4944,7 +5040,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -4964,7 +5061,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -5033,7 +5131,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i, current);
                         }
@@ -5043,14 +5142,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -5075,7 +5176,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -5107,7 +5209,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i.start, current);
                         }
@@ -5117,14 +5220,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -5209,7 +5314,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i, current);
                         }
@@ -5219,14 +5325,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -5251,7 +5359,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -5300,7 +5409,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i.start, current);
                         }
@@ -5310,14 +5420,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -5839,7 +5951,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -5849,7 +5962,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -5918,7 +6032,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -5928,7 +6043,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -6021,7 +6137,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -6031,7 +6148,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -6117,7 +6235,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -6127,7 +6246,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -6197,7 +6317,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -6207,7 +6328,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -6266,7 +6388,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -6276,7 +6399,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -6362,7 +6486,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -6372,7 +6497,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -6448,7 +6574,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -6458,7 +6585,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -6967,7 +7095,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -6977,7 +7106,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -7042,7 +7172,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -7052,7 +7183,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -7143,7 +7275,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -7153,7 +7286,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -7235,7 +7369,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -7245,7 +7380,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -7314,7 +7450,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -7324,7 +7461,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -7383,7 +7521,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -7393,7 +7532,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -7478,7 +7618,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -7488,7 +7629,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -7564,7 +7706,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -7574,7 +7717,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -7629,7 +7773,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -7654,7 +7799,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -7670,7 +7816,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -7725,7 +7872,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -7750,7 +7898,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -7770,7 +7919,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -7824,7 +7974,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -7849,7 +8000,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -7867,7 +8019,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -7937,7 +8090,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -7962,7 +8116,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -7997,7 +8152,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -8049,7 +8205,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -8074,7 +8231,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -8090,7 +8248,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -8145,7 +8304,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -8170,7 +8330,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -8190,7 +8351,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -8258,7 +8420,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i, current);
                         }
@@ -8268,14 +8431,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -8300,7 +8465,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -8332,7 +8498,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i.start, current);
                         }
@@ -8342,14 +8509,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -8433,7 +8602,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i, current);
                         }
@@ -8443,14 +8613,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -8475,7 +8647,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -8524,7 +8697,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i.start, current);
                         }
@@ -8534,14 +8708,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -9058,7 +9234,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -9068,7 +9245,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -9137,7 +9315,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -9147,7 +9326,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -9239,7 +9419,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -9249,7 +9430,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -9335,7 +9517,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -9345,7 +9528,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -9414,7 +9598,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -9424,7 +9609,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -9483,7 +9669,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -9493,7 +9680,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -9578,7 +9766,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -9588,7 +9777,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -9664,7 +9854,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -9674,7 +9865,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -10188,7 +10380,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -10198,7 +10391,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -10263,7 +10457,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -10273,7 +10468,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -10365,7 +10561,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -10375,7 +10572,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -10457,7 +10655,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -10467,7 +10666,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -10537,7 +10737,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -10547,7 +10748,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -10606,7 +10808,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -10616,7 +10819,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -10702,7 +10906,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -10712,7 +10917,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -10788,7 +10994,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -10798,7 +11005,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -10854,7 +11062,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -10879,7 +11088,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -10895,7 +11105,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -10951,7 +11162,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -10976,7 +11188,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -10996,7 +11209,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -11051,7 +11265,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -11076,7 +11291,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -11094,7 +11310,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -11165,7 +11382,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -11190,7 +11408,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -11225,7 +11444,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 Assert.IsTrue(!punctuations.Any());
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -11278,7 +11498,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -11303,7 +11524,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -11319,7 +11541,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -11375,7 +11598,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -11400,7 +11624,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(5),
                     FlushPolicy.FlushOnPunctuation,
@@ -11420,7 +11645,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 Assert.Fail("Expecting OutofOrderException");
     
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
@@ -11489,7 +11715,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i, current);
                         }
@@ -11499,14 +11726,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -11531,7 +11760,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -11563,7 +11793,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i.start, current);
                         }
@@ -11573,14 +11804,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -11665,7 +11898,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i, current);
                         }
@@ -11675,14 +11909,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -11707,7 +11943,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 .Select(t => new TestStruct { start = t, end = t + rand.Next(1, maxInterval) })
                 .ToList();
 
-            try {
+            try
+            {
                 var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
                     DisorderPolicy.Throw(20),
                     FlushPolicy.FlushOnPunctuation,
@@ -11756,7 +11993,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     while (queue.Peek() <= highmark - 20)
                     {
                         current = queue.Dequeue();
-                        if (current - lastPunc >= 10) {
+                        if (current - lastPunc >= 10)
+                        {
                             lastPunc = current;
                             return Tuple.Create(i.start, current);
                         }
@@ -11766,14 +12004,16 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Count() > 0)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                     }
                 }
                 Assert.IsTrue(punctuations.SequenceEqual(expectedPunctuations));
             }
-            catch(Exception) {
+            catch(Exception)
+            {
                 Assert.Fail("no exception should be thrown since disorder: 10 is always less than lag: 20.");
             }
         }
@@ -12295,7 +12535,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -12305,7 +12546,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -12374,7 +12616,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -12384,7 +12627,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -12477,7 +12721,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -12487,7 +12732,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -12573,7 +12819,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 5)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -12583,7 +12830,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -12653,7 +12901,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -12663,7 +12912,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -12722,7 +12972,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -12732,7 +12983,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -12818,7 +13070,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -12828,7 +13081,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -12904,7 +13158,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 while (queue.Peek() <= highmark - 20)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -12914,7 +13169,8 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }

@@ -23,7 +23,8 @@ namespace SimpleTesting
         public void ExtendTest1()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(2, 1, "A"),
                 StreamEvent.CreateStart(2, "A"),
@@ -34,7 +35,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, "A")
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(2, "A"),
                 StreamEvent.CreateStart(3, "A"),
@@ -67,7 +69,8 @@ namespace SimpleTesting
         public void ExtendTest2()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateInterval(1, 5, "A"),
                 StreamEvent.CreateInterval(2, 10, "A"),
                 StreamEvent.CreateInterval(3, 8, "A"),
@@ -75,7 +78,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(8, 9, "A"),
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateInterval(1, 15, "A"),
                 StreamEvent.CreateInterval(2, 20, "A"),
                 StreamEvent.CreateInterval(3, 18, "A"),
@@ -98,7 +102,8 @@ namespace SimpleTesting
         {
             var payload = StructTuple.Create("A", 3);
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateInterval(1, 5, payload),
                 StreamEvent.CreateInterval(2, 10, payload),
                 StreamEvent.CreateInterval(3, 8, payload),
@@ -106,7 +111,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(8, 9, payload),
             };
 
-            var compareTo = new StreamEvent<StructTuple<string, int>>[] {
+            var compareTo = new StreamEvent<StructTuple<string, int>>[]
+            {
                 StreamEvent.CreateInterval(1, 15, payload),
                 StreamEvent.CreateInterval(2, 20, payload),
                 StreamEvent.CreateInterval(3, 18, payload),
@@ -125,7 +131,8 @@ namespace SimpleTesting
         public void ExtendTestNegative1()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(2, "A"),
                 StreamEvent.CreateStart(3, "A"),
@@ -136,7 +143,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, "A"),
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(2, 1, "A"),
                 StreamEvent.CreateStart(2, "A"),
@@ -158,7 +166,8 @@ namespace SimpleTesting
         public void ExtendTestNegative2()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateInterval(1, 15, "A"),
                 StreamEvent.CreateInterval(2, 20, "A"),
                 StreamEvent.CreateInterval(3, 18, "A"),
@@ -166,7 +175,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(8, 19, "A"),
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateInterval(1, 5, "A"),
                 StreamEvent.CreateInterval(2, 10, "A"),
                 StreamEvent.CreateInterval(3, 8, "A"),
@@ -185,7 +195,8 @@ namespace SimpleTesting
         public void ExtendTestNegative3()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(2, "A"),
                 StreamEvent.CreateStart(3, "A"),
@@ -196,7 +207,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(18, 4, "A"),
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(3, "A"),
                 StreamEvent.CreateStart(4, "A"),
                 StreamEvent.CreateEnd(7, 3, "A"),
@@ -214,7 +226,8 @@ namespace SimpleTesting
         public void ExtendTestNegative4()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateInterval(1, 15, "A"),
                 StreamEvent.CreateInterval(2, 20, "A"),
                 StreamEvent.CreateInterval(3, 18, "A"),
@@ -222,7 +235,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(8, 19, "A"),
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateInterval(2, 5, "A"),
                 END
             };
@@ -241,7 +255,8 @@ namespace SimpleTesting
         {
             var payload = StructTuple.Create("A", 3);
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateInterval(1, 15, payload),
                 StreamEvent.CreateInterval(2, 20, payload),
                 StreamEvent.CreateInterval(3, 18, payload),
@@ -249,7 +264,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(8, 19, payload),
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateInterval(2, 5, payload),
                 END2
             };

@@ -131,10 +131,13 @@ namespace Microsoft.StreamProcessing
             this.leftQueue.Insert(pKey, new Queue<LEntry>());
             this.rightQueue.Insert(pKey, new Queue<REntry>());
 
-            if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(
-                ref index,
-                pKey,
-                new PartitionEntry { endPointHeap = this.endpointGenerator(), key = pKey, hash = hash });
+            if (!this.partitionData.Lookup(pKey, out int index))
+            {
+                this.partitionData.Insert(
+                    ref index,
+                    pKey,
+                    new PartitionEntry { endPointHeap = this.endpointGenerator(), key = pKey, hash = hash });
+            }
         }
 
         protected override void ProcessBothBatches(StreamMessage<PartitionKey<TPartitionKey>, TLeft> leftBatch, StreamMessage<PartitionKey<TPartitionKey>, TRight> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)

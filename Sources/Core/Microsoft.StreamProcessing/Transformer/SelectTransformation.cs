@@ -409,9 +409,9 @@ namespace Microsoft.StreamProcessing
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
             if (node.Object is ParameterExpression parameter)
-                if (!this.parameterInformation.ContainsKey(parameter))
-                    this.needsSourceInstance = true;
-
+            {
+                if (!this.parameterInformation.ContainsKey(parameter)) this.needsSourceInstance = true;
+            }
             foreach (var a in node.Arguments)
             {
                 parameter = a as ParameterExpression;

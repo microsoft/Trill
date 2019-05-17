@@ -78,19 +78,24 @@ namespace Microsoft.StreamProcessing
         {
             // Simple case: key type is a simple partition key
             if (typeof(TKey).GetGenericTypeDefinition() == typeof(PartitionKey<>))
+            {
                 return typeof(PartitionedEquiJoinPipeSimple<,,,>).MakeGenericType(
                                          typeof(TLeft),
                                          typeof(TRight),
                                          typeof(TResult),
                                          typeof(TKey).GetPartitionType());
+            }
             // Middle case: type is one level of grouping, e.g., TKey = CompoundGroupKey<PartitionKey<TP>, TG>
             if (typeof(TKey).GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(PartitionKey<>))
+            {
                 return typeof(PartitionedEquiJoinPipeCompound<,,,,>).MakeGenericType(
                                          typeof(TKey).GenericTypeArguments[1],
                                          typeof(TLeft),
                                          typeof(TRight),
                                          typeof(TResult),
                                          typeof(TKey).GetPartitionType());
+            }
+
             // Generic case
             return typeof(PartitionedEquiJoinPipe<,,,,>).MakeGenericType(
                                      typeof(TKey),
@@ -104,19 +109,25 @@ namespace Microsoft.StreamProcessing
         {
             // Simple case: key type is a simple partition key
             if (typeof(TKey).GetGenericTypeDefinition() == typeof(PartitionKey<>))
+            {
                 return typeof(PartitionedFixedIntervalEquiJoinPipeSimple<,,,>).MakeGenericType(
                                          typeof(TLeft),
                                          typeof(TRight),
                                          typeof(TResult),
                                          typeof(TKey).GetPartitionType());
+            }
+
             // Middle case: type is one level of grouping, e.g., TKey = CompoundGroupKey<PartitionKey<TP>, TG>
             if (typeof(TKey).GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(PartitionKey<>))
+            {
                 return typeof(PartitionedFixedIntervalEquiJoinPipeCompound<,,,,>).MakeGenericType(
                                          typeof(TKey).GenericTypeArguments[1],
                                          typeof(TLeft),
                                          typeof(TRight),
                                          typeof(TResult),
                                          typeof(TKey).GetPartitionType());
+            }
+
             // Generic case
             return typeof(PartitionedFixedIntervalEquiJoinPipe<,,,,>).MakeGenericType(
                                      typeof(TKey),
