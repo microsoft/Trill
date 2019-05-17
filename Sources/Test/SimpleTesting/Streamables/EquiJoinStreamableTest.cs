@@ -2,6 +2,9 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -16,6 +19,7 @@ namespace SimpleTesting
             JoinIntervalsTest();
             JoinEdgeIntervalTest();
             JoinEdgesTest();
+            PartitionedStartEdgeJoinTest();
         }
 
         private static void JoinIntervalsTest()
@@ -153,6 +157,63 @@ namespace SimpleTesting
             };
 
             Assert.IsTrue(outputStream.IsEquivalentTo(correct));
+        }
+
+        private static void PartitionedStartEdgeJoinTest()
+        {
+            var input1 = new[]
+            {
+                PartitionedStreamEvent.CreateStart("Partition1", 100, "A1"),
+                PartitionedStreamEvent.CreateStart("Partition1", 101, "B1"),
+                PartitionedStreamEvent.CreateStart("Partition1", 102, "C1"),
+
+                PartitionedStreamEvent.CreateStart("Partition2", 100, "A1"),
+                PartitionedStreamEvent.CreateStart("Partition2", 101, "B1"),
+                PartitionedStreamEvent.CreateStart("Partition2", 102, "C1"),
+            };
+
+            var input2 = new[]
+            {
+                PartitionedStreamEvent.CreateStart("Partition1", 105, "A2"),
+                PartitionedStreamEvent.CreateStart("Partition1", 106, "B2"),
+                PartitionedStreamEvent.CreateStart("Partition1", 107, "D2"),
+
+                PartitionedStreamEvent.CreateStart("Partition2", 108, "A2"),
+                PartitionedStreamEvent.CreateStart("Partition2", 109, "D2"),
+                PartitionedStreamEvent.CreateStart("Partition2", 110, "C2"),
+            };
+
+            // Set properties to start-edge only
+            var inputStream1 = input1.ToObservable().ToStreamable();
+            inputStream1.Properties.IsConstantDuration = true;
+            inputStream1.Properties.ConstantDurationLength = StreamEvent.InfinitySyncTime;
+            var inputStream2 = input2.ToObservable().ToStreamable();
+            inputStream2.Properties.IsConstantDuration = true;
+            inputStream2.Properties.ConstantDurationLength = StreamEvent.InfinitySyncTime;
+
+            var output = new List<PartitionedStreamEvent<string, string>>();
+            inputStream1
+                .Join(
+                    inputStream2,
+                    l => (l != null ? l[0].ToString() : null),
+                    r => (r != null ? r[0].ToString() : null),
+                    (l, r) => l + "," + r)
+                .ToStreamEventObservable()
+                .ForEachAsync(e => output.Add(e))
+                .Wait();
+
+            var correct = new[]
+            {
+                PartitionedStreamEvent.CreateStart("Partition1", 105, "A1,A2"),
+                PartitionedStreamEvent.CreateStart("Partition1", 106, "B1,B2"),
+
+                PartitionedStreamEvent.CreateStart("Partition2", 108, "A1,A2"),
+                PartitionedStreamEvent.CreateStart("Partition2", 110, "C1,C2"),
+
+                PartitionedStreamEvent.CreateLowWatermark<string, string>(StreamEvent.InfinitySyncTime)
+            };
+
+            Assert.IsTrue(output.SequenceEqual(correct));
         }
     }
 }
