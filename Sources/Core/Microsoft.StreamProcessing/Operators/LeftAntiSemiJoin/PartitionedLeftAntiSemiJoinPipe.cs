@@ -363,8 +363,8 @@ namespace Microsoft.StreamProcessing
                             partition.nextRightTime = this.lastRightCTI;
 
                         UpdateTime(partition, Math.Min(this.lastLeftCTI, this.lastRightCTI));
-                        if (partition.IsClean())
-                            this.cleanKeys.Add(pKey);
+                        if (partition.IsClean()) this.cleanKeys.Add(pKey);
+
                         break;
                     }
                 }
@@ -377,25 +377,13 @@ namespace Microsoft.StreamProcessing
                 this.emitCTI = false;
                 foreach (var p in this.cleanKeys)
                 {
-                    this.leftQueue.Lookup(p, out int index);
-                    var l = this.leftQueue.entries[index];
-                    var r = this.rightQueue.entries[index];
-                    if (l.value.Count == 0 && r.value.Count == 0)
-                    {
-                        this.partitionData.Lookup(p, out int fullIndex);
-                        var partition = this.partitionData.entries[fullIndex].value;
+                    this.seenKeys.Remove(p);
 
-                        // Even though this partition does not have pending entries, it may have pending end points,
-                        // so wait until they are processed before removing the key/partition entirely.
-                        if (partition.IsClean())
-                        {
-                            this.seenKeys.Remove(p);
-                            l.value.Dispose();
-                            this.leftQueue.Remove(p);
-                            r.value.Dispose();
-                            this.rightQueue.Remove(p);
-                        }
-                    }
+                    this.leftQueue.Lookup(p, out int index);
+                    this.leftQueue.entries[index].value.Dispose();
+                    this.leftQueue.Remove(p);
+                    this.rightQueue.entries[index].value.Dispose();
+                    this.rightQueue.Remove(p);
                 }
 
                 this.cleanKeys.Clear();
@@ -818,7 +806,7 @@ namespace Microsoft.StreamProcessing
         {
             if (start < this.lastCTI)
             {
-                throw new InvalidOperationException("Outputting an event out of order!");
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
             }
 
             int index = this.output.Count++;
@@ -1088,16 +1076,12 @@ namespace Microsoft.StreamProcessing
                 this.rightEndPointHeap = parent.rightEndPointGenerator();
             }
 
-            public bool IsClean()
-            {
-                return
-                    this.leftIntervalMap.IsEmpty &&
-                    this.leftEdgeMap.IsEmpty &&
-                    this.leftEndPointHeap.IsEmpty &&
-                    this.rightMap.IsEmpty &&
-                    this.rightEndEdges.Count == 0 &&
-                    this.rightEndPointHeap.IsEmpty;
-            }
+            public bool IsClean() => this.leftIntervalMap.IsEmpty &&
+                                     this.leftEdgeMap.IsEmpty &&
+                                     this.leftEndPointHeap.IsEmpty &&
+                                     this.rightMap.IsEmpty &&
+                                     this.rightEndEdges.Count == 0 &&
+                                     this.rightEndPointHeap.IsEmpty;
         }
     }
 }

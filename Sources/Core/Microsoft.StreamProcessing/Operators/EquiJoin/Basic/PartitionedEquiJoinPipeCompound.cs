@@ -417,8 +417,8 @@ namespace Microsoft.StreamProcessing
                             UpdateNextRightTime(partition, this.lastRightCTI);
 
                         UpdateTime(partition, Math.Min(this.lastLeftCTI, this.lastRightCTI));
-                        if (partition.IsClean())
-                            this.cleanKeys.Add(pKey);
+                        if (partition.IsClean()) this.cleanKeys.Add(pKey);
+
                         break;
                     }
                 }
@@ -431,21 +431,9 @@ namespace Microsoft.StreamProcessing
                 this.emitCTI = false;
                 foreach (var p in this.cleanKeys)
                 {
-                    this.leftQueue.Lookup(p, out int index);
-                    var l = this.leftQueue.entries[index];
-                    var r = this.rightQueue.entries[index];
-                    if (l.value.Count == 0 && r.value.Count == 0)
-                    {
-                        this.partitionData.Lookup(p, out index);
-                        var partition = this.partitionData.entries[index].value;
-
-                        if (partition.IsClean())
-                        {
-                            this.seenKeys.Remove(p);
-                            this.leftQueue.Remove(p);
-                            this.rightQueue.Remove(p);
-                        }
-                    }
+                    this.seenKeys.Remove(p);
+                    this.leftQueue.Remove(p);
+                    this.rightQueue.Remove(p);
                 }
 
                 this.cleanKeys.Clear();
@@ -1002,7 +990,7 @@ namespace Microsoft.StreamProcessing
         {
             if (start < this.lastCTI)
             {
-                throw new InvalidOperationException("Outputting an event out of order!");
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
             }
 
             int index = this.output.Count++;
@@ -1264,15 +1252,11 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public long currTime = long.MinValue;
 
-            public bool IsClean()
-            {
-                return
-                    this.leftIntervalMap.IsEmpty &&
-                    this.leftEdgeMap.IsEmpty &&
-                    this.endPointHeap.IsEmpty &&
-                    this.rightIntervalMap.IsEmpty &&
-                    this.rightEdgeMap.IsEmpty;
-            }
+            public bool IsClean() => this.leftIntervalMap.IsEmpty &&
+                                     this.leftEdgeMap.IsEmpty &&
+                                     this.endPointHeap.IsEmpty &&
+                                     this.rightIntervalMap.IsEmpty &&
+                                     this.rightEdgeMap.IsEmpty;
         }
     }
 }

@@ -324,7 +324,7 @@ namespace Microsoft.StreamProcessing
         {
             if (current.Sync < this.lastCTI)
             {
-                throw new InvalidOperationException("Outputting an event out of order!");
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
             }
 
             int index = this.output.Count++;

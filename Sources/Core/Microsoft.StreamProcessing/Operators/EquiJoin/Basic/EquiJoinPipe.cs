@@ -875,7 +875,7 @@ namespace Microsoft.StreamProcessing
         {
             if (start < this.lastCTI)
             {
-                throw new InvalidOperationException("Outputting an event out of order!");
+                throw new StreamProcessingOutOfOrderException("Outputting an event out of order!");
             }
 
             int index = this.output.Count++;
