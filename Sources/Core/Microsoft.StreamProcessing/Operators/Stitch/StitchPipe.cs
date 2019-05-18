@@ -365,9 +365,9 @@ namespace Microsoft.StreamProcessing
             {
                 var iterator = FastDictionary2<TPayload, ActiveEvent>.IteratorStart;
                 while (closed.Value.Iterate(ref iterator))
-                    foreach (var v in closed.Value.entries[iterator].value)
-                        Emit(v);
-
+                {
+                    foreach (var v in closed.Value.entries[iterator].value) Emit(v);
+                }
                 closed.Value.Initialize();
                 this.ClosedEvents.Remove(closed.Key);
 

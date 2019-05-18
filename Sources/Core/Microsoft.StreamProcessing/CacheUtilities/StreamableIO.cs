@@ -177,10 +177,10 @@ namespace Microsoft.StreamProcessing
 
         public void Checkpoint(Stream stream) { }
         public void Dispose() => throw new NotImplementedException();
-        public void OnCompleted() => observer.OnCompleted();
+        public void OnCompleted() => this.observer.OnCompleted();
         public void OnError(Exception error) => throw error;
-        public void OnFlush() => observer.OnNext(new QueuedMessage<StreamMessage<TKey, TPayload>> { Kind = MessageKind.Flush });
-        public void OnNext(StreamMessage<TKey, TPayload> value) => observer.OnNext(new QueuedMessage<StreamMessage<TKey, TPayload>> { Kind = MessageKind.DataBatch, Message = value });
+        public void OnFlush() => this.observer.OnNext(new QueuedMessage<StreamMessage<TKey, TPayload>> { Kind = MessageKind.Flush });
+        public void OnNext(StreamMessage<TKey, TPayload> value) => this.observer.OnNext(new QueuedMessage<StreamMessage<TKey, TPayload>> { Kind = MessageKind.DataBatch, Message = value });
         public void ProduceQueryPlan(PlanNode previous) { }
         public void Reset() { }
         public void Restore(Stream stream) { }

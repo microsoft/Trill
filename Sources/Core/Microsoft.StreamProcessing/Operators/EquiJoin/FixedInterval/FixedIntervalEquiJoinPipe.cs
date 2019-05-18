@@ -99,13 +99,17 @@ namespace Microsoft.StreamProcessing
                 {
                     UpdateTime(this.nextLeftTime);
                     if (leftBatch.vother.col[leftBatch.iter] == StreamEvent.PunctuationOtherTime)
+                    {
                         AddPunctuationToBatch(this.nextLeftTime);
+                    }
                     else
+                    {
                         ProcessLeftEvent(
                             this.nextLeftTime,
                             ref leftBatch.key.col[leftBatch.iter],
                             leftBatch[leftBatch.iter],
                             leftBatch.hash.col[leftBatch.iter]);
+                    }
 
                     leftBatch.iter++;
 
@@ -122,13 +126,17 @@ namespace Microsoft.StreamProcessing
                 {
                     UpdateTime(this.nextRightTime);
                     if (rightBatch.vother.col[rightBatch.iter] == StreamEvent.PunctuationOtherTime)
+                    {
                         AddPunctuationToBatch(this.nextRightTime);
+                    }
                     else
+                    {
                         ProcessRightEvent(
                             this.nextRightTime,
                             ref rightBatch.key.col[rightBatch.iter],
                             rightBatch[rightBatch.iter],
                             rightBatch.hash.col[rightBatch.iter]);
+                    }
 
                     rightBatch.iter++;
 
@@ -167,13 +175,17 @@ namespace Microsoft.StreamProcessing
                 UpdateTime(this.nextLeftTime);
 
                 if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+                {
                     AddPunctuationToBatch(this.nextLeftTime);
+                }
                 else
+                {
                     ProcessLeftEvent(
                         this.nextLeftTime,
                         ref batch.key.col[batch.iter],
                         batch[batch.iter],
                         batch.hash.col[batch.iter]);
+                }
 
                 batch.iter++;
             }
@@ -202,13 +214,17 @@ namespace Microsoft.StreamProcessing
                 UpdateTime(this.nextRightTime);
 
                 if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
+                {
                     AddPunctuationToBatch(this.nextRightTime);
+                }
                 else
+                {
                     ProcessRightEvent(
                         this.nextRightTime,
                         ref batch.key.col[batch.iter],
                         batch[batch.iter],
                         batch.hash.col[batch.iter]);
+                }
 
                 batch.iter++;
             }
@@ -311,8 +327,8 @@ namespace Microsoft.StreamProcessing
                 var rin = this.rightIntervalMap.Values[index];
                 if (this.keyComparerEquals(key, rin.Key))
                 {
-                    long leftEnd = currentTime + leftDuration;
-                    long rightEnd = rin.Start + rightDuration;
+                    long leftEnd = currentTime + this.leftDuration;
+                    long rightEnd = rin.Start + this.rightDuration;
                     AddToBatch(
                         currentTime,
                         leftEnd < rightEnd ? leftEnd : rightEnd,
@@ -334,8 +350,8 @@ namespace Microsoft.StreamProcessing
                 var lin = this.leftIntervalMap.Values[index];
                 if (this.keyComparerEquals(key, lin.Key))
                 {
-                    long rightEnd = currentTime + rightDuration;
-                    long leftEnd = lin.Start + leftDuration;
+                    long rightEnd = currentTime + this.rightDuration;
+                    long leftEnd = lin.Start + this.leftDuration;
                     AddToBatch(
                         currentTime,
                         rightEnd < leftEnd ? rightEnd : leftEnd,

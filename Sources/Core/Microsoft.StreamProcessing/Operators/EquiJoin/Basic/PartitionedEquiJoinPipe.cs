@@ -134,8 +134,11 @@ namespace Microsoft.StreamProcessing
             this.leftQueue.Insert(pKey, new Queue<LEntry>());
             this.rightQueue.Insert(pKey, new Queue<REntry>());
 
-            if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(
-                ref index, pKey, new PartitionEntry { endPointHeap = this.endpointGenerator(), key = pKey });
+            if (!this.partitionData.Lookup(pKey, out int index))
+            {
+                this.partitionData.Insert(
+                   ref index, pKey, new PartitionEntry { endPointHeap = this.endpointGenerator(), key = pKey });
+            }
         }
 
         protected override void ProcessBothBatches(StreamMessage<TKey, TLeft> leftBatch, StreamMessage<TKey, TRight> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)

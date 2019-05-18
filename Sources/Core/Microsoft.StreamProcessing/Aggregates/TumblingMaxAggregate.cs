@@ -25,10 +25,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<MinMaxState<T>>> InitialState()
             => () => new MinMaxState<T> { currentTimestamp = InvalidSyncTime };
 
-        public Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> Accumulate()
-            => (state, timestamp, input) => new MinMaxState<T> {
-                currentTimestamp = timestamp,
-                currentValue = (state.currentTimestamp == InvalidSyncTime || this.comparer(input, state.currentValue) > 0) ? input : state.currentValue };
+        public Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> Accumulate() =>
+            (state, timestamp, input) =>
+                new MinMaxState<T>
+                {
+                    currentTimestamp = timestamp,
+                    currentValue = (state.currentTimestamp == InvalidSyncTime || this.comparer(input, state.currentValue) > 0) ? input : state.currentValue
+                };
 
         public Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> Deaccumulate()
             => (state, timestamp, input) => state; // never invoked, hence not implemented

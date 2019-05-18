@@ -280,11 +280,12 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Dispose()
         {
-            foreach (var f in this.Fibers)
-                f.Dispose();
+            foreach (var f in this.Fibers) f.Dispose();
+
             for (int i = 0; i < this.MergeSource.Length; i++)
-                if (this.MergeSource[i] != null)
-                    this.MergeSource[i].Dispose();
+            {
+                if (this.MergeSource[i] != null) this.MergeSource[i].Dispose();
+            }
             this.ecbPool.Dispose();
         }
     }
@@ -686,11 +687,13 @@ namespace Microsoft.StreamProcessing.Internal
             [EditorBrowsable(EditorBrowsableState.Never)]
             public void Dispose()
             {
-                foreach (var f in this.Fibers)
-                    f.Dispose();
+                foreach (var f in this.Fibers) f.Dispose();
+
                 for (int i = 0; i < this.MergeSource.Length; i++)
-                    if (this.MergeSource[i] != null)
-                        this.MergeSource[i].Dispose();
+                {
+                    if (this.MergeSource[i] != null) this.MergeSource[i].Dispose();
+                }
+
                 this.ecbPool.Dispose();
             }
         }

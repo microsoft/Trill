@@ -174,7 +174,8 @@ namespace Microsoft.StreamProcessing
             protected override Expression VisitBinary(BinaryExpression node)
             {
                 string left_result;
-                switch (node.NodeType) {
+                switch (node.NodeType)
+                {
                     case ExpressionType.OrElse:
                         this.inPlace = false;
                         Visit(node.Left);

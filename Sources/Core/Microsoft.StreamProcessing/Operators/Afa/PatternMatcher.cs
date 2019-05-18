@@ -410,8 +410,9 @@ namespace Microsoft.StreamProcessing
                             result.AddArc(from, to, kvp2.Value);
 
                             if (nextPattern.finalStates.Contains(kvp2.Key))
-                                if (!result.finalStates.Contains(to))
-                                    result.finalStates.Add(to);
+                            {
+                                if (!result.finalStates.Contains(to)) result.finalStates.Add(to);
+                            }
                         }
                     }
                 }

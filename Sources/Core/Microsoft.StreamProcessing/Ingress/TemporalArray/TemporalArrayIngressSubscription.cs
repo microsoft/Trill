@@ -145,10 +145,12 @@ namespace Microsoft.StreamProcessing
 
             int n = value.Count + value.Offset;
             // Sanity check
-            if (n > value.Array.Length) throw new IngressException(
-                $"Invalid array segment. Offset: {value.Offset} Count: {value.Count} Length: {value.Array.Length}");
+            if (n > value.Array.Length)
+            {
+                throw new IngressException(
+                    $"Invalid array segment. Offset: {value.Offset} Count: {value.Count} Length: {value.Array.Length}");
+            }
             int offset = value.Offset;
-
             while (offset < n)
             {
                 var full = this.currentBatch.Add(
@@ -229,10 +231,12 @@ namespace Microsoft.StreamProcessing
 
             int n = value.Count + value.Offset;
             // Sanity check
-            if (n > value.Array.Length) throw new IngressException(
-                $"Invalid array segment. Offset: {value.Offset} Count: {value.Count} Length: {value.Array.Length}");
+            if (n > value.Array.Length)
+            {
+                throw new IngressException(
+                    $"Invalid array segment. Offset: {value.Offset} Count: {value.Count} Length: {value.Array.Length}");
+            }
             int offset = value.Offset;
-
             while (offset < n)
             {
                 var full = this.currentBatch.Add(
@@ -296,10 +300,12 @@ namespace Microsoft.StreamProcessing
 
             int n = value.Count + value.Offset;
             // Sanity check
-            if (n > value.Array.Length) throw new IngressException(
-                $"Invalid array segment. Offset: {value.Offset} Count: {value.Count} Length: {value.Array.Length}");
+            if (n > value.Array.Length)
+            {
+                throw new IngressException(
+                    $"Invalid array segment. Offset: {value.Offset} Count: {value.Count} Length: {value.Array.Length}");
+            }
             int offset = value.Offset;
-
             while (offset < n)
             {
                 var full = this.currentBatch.Add(
@@ -379,8 +385,11 @@ namespace Microsoft.StreamProcessing
 
             int n = value.Count + value.Offset;
             // Sanity check
-            if (n > value.Array.Length) throw new IngressException(
-                $"Invalid array segment. Offset: {value.Offset} Count: {value.Count} Length: {value.Array.Length}");
+            if (n > value.Array.Length)
+            {
+                throw new IngressException(
+                    $"Invalid array segment. Offset: {value.Offset} Count: {value.Count} Length: {value.Array.Length}");
+            }
             int offset = value.Offset;
 
             while (offset < n)

@@ -24,7 +24,8 @@ namespace SimpleTesting
 {
     public static class ClassWithNestedType1<T>
     {
-        public class NestedType<U> {
+        public class NestedType<U>
+        {
             public T x;
             public U y;
         }
@@ -32,7 +33,8 @@ namespace SimpleTesting
 
     public static class ClassWithNestedType2<T, U>
     {
-        public class NestedType {
+        public class NestedType
+        {
             public T x;
             public U y;
         }
@@ -897,14 +899,16 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpIntervals<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
                 StreamEvent.CreateInterval(4, 8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
@@ -921,7 +925,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpEdges<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -932,7 +937,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -953,14 +959,16 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedIntervals<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 15, 'a'),
                 StreamEvent.CreateInterval(2, 16, 'b'),
                 StreamEvent.CreateInterval(3, 17, 'c'),
                 StreamEvent.CreateInterval(4, 18, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 11, 'a'),
                 StreamEvent.CreateInterval(2, 12, 'b'),
                 StreamEvent.CreateInterval(3, 13, 'c'),
@@ -977,7 +985,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedEdges<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -988,7 +997,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateEnd(3, 1, 'a'),
@@ -1010,14 +1020,16 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy1<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(20, 9, 'x'),
@@ -1032,14 +1044,16 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy2<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(24, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -1054,14 +1068,16 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy3<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -1077,7 +1093,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy4<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
@@ -1093,7 +1110,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateEnd(30, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
@@ -1119,7 +1137,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -1131,7 +1150,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
 <# if (string.IsNullOrEmpty(disorderPolicy)) { #>
                 StreamEvent.CreatePunctuation<char>(2),
@@ -1168,13 +1188,15 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void AlterDurationTest1<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(3, 'x'),
                 StreamEvent.CreateEnd(5, 3, 'x'),
                 StreamEvent.CreateStart(7, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 8, 'x'),
                 StreamEvent.CreateInterval(7, 12, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
@@ -1187,7 +1209,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy3<#= suffix #>()
         { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -1199,7 +1222,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -1587,7 +1611,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void CountColumnar1<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -1599,7 +1624,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<ulong>[] {
+            var expected = new StreamEvent<ulong>[]
+            {
                 StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
                 StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
@@ -1619,7 +1645,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar1<#= suffix #>() // tests codegen for Snapshot_noecq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -1633,7 +1660,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -1657,7 +1685,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             var one = StreamEvent.MinSyncTime + 1;
             var two = StreamEvent.MinSyncTime + 2;
             var three = StreamEvent.MinSyncTime + 3;
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 'a'),
                 StreamEvent.CreateInterval(zero, one, 'b'),
                 StreamEvent.CreateInterval(zero, one, 'c'),
@@ -1669,7 +1698,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateInterval(two, three, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 98.0),
                 StreamEvent.CreatePunctuation<double>(one),
                 StreamEvent.CreateInterval(one, two, 101.0),
@@ -1687,7 +1717,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar3<#= suffix #>() // tests codegen for Snapshot_pq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -1701,7 +1732,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -1773,7 +1805,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest1<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -1784,7 +1817,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -1800,7 +1834,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest2<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -1810,7 +1845,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -1826,7 +1862,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest3<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -1836,7 +1873,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateEnd(26, 3, 'c'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 26, 'c'),
@@ -1852,14 +1890,16 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest1<#= suffix #>()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
                 StreamEvent.CreateStart(6, 'c'),
                 StreamEvent.CreateStart(8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(5, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -1867,7 +1907,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
@@ -1890,14 +1931,16 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest2<#= suffix #>()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
                 StreamEvent.CreateStart(4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(5, 20, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -1905,7 +1948,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -1969,7 +2013,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest4<#= suffix #>()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateEnd(5, 1, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
@@ -1980,7 +2025,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 StreamEvent.CreateEnd(20, 16, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(6, 10, 'b'),
                 StreamEvent.CreateInterval(11, 15, 'c'),
@@ -2000,7 +2046,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
                                  .ToObservable()
                                  .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
-            var expectedResult = new StreamEvent<ResultEvent>[] {
+            var expectedResult = new StreamEvent<ResultEvent>[]
+            {
                 StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),

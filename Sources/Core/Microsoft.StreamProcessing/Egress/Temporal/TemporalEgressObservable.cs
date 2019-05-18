@@ -41,9 +41,11 @@ namespace Microsoft.StreamProcessing
             if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
                 pipe = GetPipe(observer);
             else
+            {
                 pipe = new StreamEventEgressPipe<TPayload>(
-                observer,
-                this.container);
+                    observer,
+                    this.container);
+            }
             if (this.container != null) this.container.RegisterEgressPipe(this.identifier, pipe);
             return this.source.Subscribe(pipe);
         }
@@ -114,10 +116,12 @@ namespace Microsoft.StreamProcessing
             if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
                 pipe = GetPipe(observer);
             else
+            {
                 pipe = new StartEdgeEgressPipe<TPayload, TResult>(
-                this.constructor,
-                observer,
-                this.container);
+                    this.constructor,
+                    observer,
+                    this.container);
+            }
             if (this.container != null) this.container.RegisterEgressPipe(this.identifier, pipe);
             return this.source.Subscribe(pipe);
         }
@@ -180,10 +184,12 @@ namespace Microsoft.StreamProcessing
             if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
                 pipe = GetPipe(observer);
             else
+            {
                 pipe = new IntervalEgressPipe<TPayload, TResult>(
-                this.constructor,
-                observer,
-                this.container);
+                    this.constructor,
+                    observer,
+                    this.container);
+            }
             if (this.container != null) this.container.RegisterEgressPipe(this.identifier, pipe);
             return this.source.Subscribe(pipe);
         }
@@ -243,9 +249,11 @@ namespace Microsoft.StreamProcessing
             if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
                 pipe = GetPipe(observer);
             else
+            {
                 pipe = new PartitionedStreamEventEgressPipe<TKey, TPayload>(
-                observer,
-                this.container);
+                    observer,
+                    this.container);
+            }
             if (this.container != null) this.container.RegisterEgressPipe(this.identifier, pipe);
             return this.source.Subscribe(pipe);
         }
@@ -316,10 +324,12 @@ namespace Microsoft.StreamProcessing
             if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
                 pipe = GetPipe(observer);
             else
+            {
                 pipe = new PartitionedStartEdgeEgressPipe<TKey, TPayload, TResult>(
-                this.constructor,
-                observer,
-                this.container);
+                    this.constructor,
+                    observer,
+                    this.container);
+            }
             if (this.container != null) this.container.RegisterEgressPipe(this.identifier, pipe);
             return this.source.Subscribe(pipe);
         }
@@ -382,10 +392,12 @@ namespace Microsoft.StreamProcessing
             if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
                 pipe = GetPipe(observer);
             else
+            {
                 pipe = new PartitionedIntervalEgressPipe<TKey, TPayload, TResult>(
-                this.constructor,
-                observer,
-                this.container);
+                    this.constructor,
+                    observer,
+                    this.container);
+            }
             if (this.container != null) this.container.RegisterEgressPipe(this.identifier, pipe);
             return this.source.Subscribe(pipe);
         }

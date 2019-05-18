@@ -252,10 +252,14 @@ namespace Microsoft.StreamProcessing
             int iter = FastDictionary<TKey, long>.IteratorStart;
             var temp = new List<Tuple<TKey, long, TPartitionKey>>();
             while (this.lastDataTimeDictionary.Iterate(ref iter))
+            {
                 if (this.stateDictionary.entries[iter].value.Any())
+                {
                     temp.Add(Tuple.Create(
                         this.lastDataTimeDictionary.entries[iter].key,
                         Math.Min(this.lastDataTimeDictionary.entries[iter].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[iter].value), this.getPartitionKey(this.lastDataTimeDictionary.entries[iter].key)));
+                }
+            }
             foreach (var item in temp.OrderBy(o => o.Item2))
             {
                 if (!this.orderedKeysDictionary.TryGetValue(item.Item3, out var orderedKeys))

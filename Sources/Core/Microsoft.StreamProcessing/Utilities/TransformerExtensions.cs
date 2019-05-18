@@ -131,8 +131,9 @@ namespace Microsoft.StreamProcessing
             var n = f.Parameters.Count;
             var remainingParameters = new List<ParameterExpression>();
             for (int i = 0; i < n; i++)
-                if (i != j)
-                    remainingParameters.Add(f.Parameters[i]);
+            {
+                if (i != j) remainingParameters.Add(f.Parameters[i]);
+            }
             return Expression.Lambda(newLambda.Body, remainingParameters);
         }
 

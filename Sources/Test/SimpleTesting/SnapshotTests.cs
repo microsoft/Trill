@@ -22,14 +22,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot1Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "D" })
             };
@@ -46,14 +48,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot2Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "A" })
@@ -72,14 +76,16 @@ namespace SimpleTesting
         public void TumblingSnapshot3Row()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "A" })
@@ -97,14 +103,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot4Row() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 4),
             };
@@ -122,14 +130,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 4, field2 = "D" })
             };
@@ -146,14 +156,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot2Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "A" }),
@@ -173,14 +185,16 @@ namespace SimpleTesting
         public void HoppingSnapshot3Row()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "D" })
@@ -198,14 +212,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot4Row() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 6),
                 StreamEvent.CreateInterval(40, 50, 4),
@@ -224,14 +240,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot1Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -251,14 +269,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot2Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -278,7 +298,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot3Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -289,7 +310,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -313,7 +335,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot4Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -328,7 +351,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -356,7 +380,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot5Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(0, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(5, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
@@ -373,7 +398,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(0, 5, 1),
                 StreamEvent.CreateInterval(5, 11, 3),
                 StreamEvent.CreateInterval(11, 12, 4),
@@ -403,14 +429,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup1Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -428,14 +456,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup2Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -453,7 +483,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup3Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -464,7 +495,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -486,7 +518,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup4Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -501,7 +534,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -527,14 +561,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup1Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 71, new MyData { field1 = 4, field2 = "A" }),
@@ -552,14 +588,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup2Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 18, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 27, new MyData { field1 = 2, field2 = "A" }),
@@ -577,7 +615,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup3Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -588,7 +627,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),
@@ -610,7 +650,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup4Row()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -625,7 +666,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),
@@ -663,14 +705,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot1RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "D" })
             };
@@ -687,14 +731,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot2RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "A" })
@@ -713,14 +759,16 @@ namespace SimpleTesting
         public void TumblingSnapshot3RowSmallBatch()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "A" })
@@ -738,14 +786,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot4RowSmallBatch() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 4),
             };
@@ -763,14 +813,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 4, field2 = "D" })
             };
@@ -787,14 +839,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot2RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "A" }),
@@ -814,14 +868,16 @@ namespace SimpleTesting
         public void HoppingSnapshot3RowSmallBatch()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "D" })
@@ -839,14 +895,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot4RowSmallBatch() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 6),
                 StreamEvent.CreateInterval(40, 50, 4),
@@ -865,14 +923,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot1RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -892,14 +952,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot2RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -919,7 +981,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot3RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -930,7 +993,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -954,7 +1018,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot4RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -969,7 +1034,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -997,7 +1063,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot5RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(0, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(5, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
@@ -1014,7 +1081,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(0, 5, 1),
                 StreamEvent.CreateInterval(5, 11, 3),
                 StreamEvent.CreateInterval(11, 12, 4),
@@ -1044,14 +1112,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup1RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -1069,14 +1139,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup2RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -1094,7 +1166,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup3RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1105,7 +1178,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -1127,7 +1201,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup4RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1142,7 +1217,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -1168,14 +1244,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup1RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 71, new MyData { field1 = 4, field2 = "A" }),
@@ -1193,14 +1271,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup2RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 18, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 27, new MyData { field1 = 2, field2 = "A" }),
@@ -1218,7 +1298,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup3RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1229,7 +1310,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),
@@ -1251,7 +1333,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup4RowSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1266,7 +1349,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),
@@ -1303,14 +1387,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot1Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "D" })
             };
@@ -1327,14 +1413,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot2Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "A" })
@@ -1353,14 +1441,16 @@ namespace SimpleTesting
         public void TumblingSnapshot3Columnar()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "A" })
@@ -1378,14 +1468,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot4Columnar() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 4),
             };
@@ -1403,14 +1495,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 4, field2 = "D" })
             };
@@ -1427,14 +1521,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot2Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "A" }),
@@ -1454,14 +1550,16 @@ namespace SimpleTesting
         public void HoppingSnapshot3Columnar()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "D" })
@@ -1479,14 +1577,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot4Columnar() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 6),
                 StreamEvent.CreateInterval(40, 50, 4),
@@ -1505,14 +1605,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot1Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -1532,14 +1634,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot2Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -1559,7 +1663,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot3Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1570,7 +1675,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -1594,7 +1700,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot4Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1609,7 +1716,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -1637,7 +1745,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot5Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(0, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(5, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
@@ -1654,7 +1763,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(0, 5, 1),
                 StreamEvent.CreateInterval(5, 11, 3),
                 StreamEvent.CreateInterval(11, 12, 4),
@@ -1684,14 +1794,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup1Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -1709,14 +1821,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup2Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -1734,7 +1848,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup3Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1745,7 +1860,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -1767,7 +1883,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup4Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1782,7 +1899,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -1808,14 +1926,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup1Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 71, new MyData { field1 = 4, field2 = "A" }),
@@ -1833,14 +1953,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup2Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 18, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 27, new MyData { field1 = 2, field2 = "A" }),
@@ -1858,7 +1980,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup3Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1869,7 +1992,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),
@@ -1891,7 +2015,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup4Columnar()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -1906,7 +2031,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),
@@ -1944,14 +2070,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot1ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "D" })
             };
@@ -1968,14 +2096,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot2ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 2, field2 = "A" })
@@ -1994,14 +2124,16 @@ namespace SimpleTesting
         public void TumblingSnapshot3ColumnarSmallBatch()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(50, 60, new MyData { field1 = 2, field2 = "A" })
@@ -2019,14 +2151,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void TumblingSnapshot4ColumnarSmallBatch() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 4),
             };
@@ -2044,14 +2178,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 4, field2 = "D" })
             };
@@ -2068,14 +2204,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot2ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 30, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(30, 50, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreateInterval(30, 40, new MyData { field1 = 4, field2 = "A" }),
@@ -2095,14 +2233,16 @@ namespace SimpleTesting
         public void HoppingSnapshot3ColumnarSmallBatch()
         {
 
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(41, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(20, 40, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(50, 70, new MyData { field1 = 2, field2 = "D" })
@@ -2120,14 +2260,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot4ColumnarSmallBatch() // like 2, but without grouping
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(20, 30, 2),
                 StreamEvent.CreateInterval(30, 40, 6),
                 StreamEvent.CreateInterval(40, 50, 4),
@@ -2146,14 +2288,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot1ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -2173,14 +2317,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot2ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -2200,7 +2346,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot3ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -2211,7 +2358,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -2235,7 +2383,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot4ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -2250,7 +2399,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -2278,7 +2428,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshot5ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(0, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(5, new MyData { field1 = 2, field2 = "D" }),
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
@@ -2295,7 +2446,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(0, 5, 1),
                 StreamEvent.CreateInterval(5, 11, 3),
                 StreamEvent.CreateInterval(11, 12, 4),
@@ -2325,14 +2477,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup1ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -2350,14 +2504,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup2ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 18, 2),
                 StreamEvent.CreateInterval(21, 25, 2),
@@ -2375,7 +2531,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup3ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -2386,7 +2543,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -2408,7 +2566,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup4ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -2423,7 +2582,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(11, 12, 1),
                 StreamEvent.CreateInterval(12, 21, 2),
                 StreamEvent.CreateInterval(21, 25, 4),
@@ -2449,14 +2609,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup1ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 71, new MyData { field1 = 4, field2 = "A" }),
@@ -2474,14 +2636,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup2ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 18, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 27, new MyData { field1 = 2, field2 = "A" }),
@@ -2499,7 +2663,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup3ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -2510,7 +2675,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(45, new MyData { field1 = 2, field2 = "D" })
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),
@@ -2532,7 +2698,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotSimpleGroup4ColumnarSmallBatch()
         {
-            var input = new StreamEvent<MyData>[] {
+            var input = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
@@ -2547,7 +2714,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePoint(75, new MyData { field1 = 2, field2 = "D" }),
             };
 
-            var expected = new StreamEvent<MyData>[] {
+            var expected = new StreamEvent<MyData>[]
+            {
                 StreamEvent.CreateInterval(11, 12, new MyData { field1 = 1, field2 = "A" }),
                 StreamEvent.CreateInterval(12, 21, new MyData { field1 = 2, field2 = "A" }),
                 StreamEvent.CreateInterval(21, 31, new MyData { field1 = 4, field2 = "A" }),

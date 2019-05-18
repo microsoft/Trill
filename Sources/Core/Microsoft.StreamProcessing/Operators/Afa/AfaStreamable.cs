@@ -92,9 +92,12 @@ namespace Microsoft.StreamProcessing
                             ? GetUngroupedDAfaPipe(emptyObserver) as IStreamObserver<TKey, TPayload>
                             : new CompiledUngroupedDAfaPipe<TPayload, TRegister, TAccumulator>(downcast, observer as IStreamObserver<Empty, TRegister>, this.afa, this.MaxDuration) as IStreamObserver<TKey, TPayload>;
                     }
-                    else return this.Source.Properties.IsColumnar
-                        ? GetUngroupedAFAPipe(emptyObserver) as IStreamObserver<TKey, TPayload>
-                        : new CompiledUngroupedAfaPipe<TPayload, TRegister, TAccumulator>(downcast, observer as IStreamObserver<Empty, TRegister>, this.afa, this.MaxDuration) as IStreamObserver<TKey, TPayload>;
+                    else
+                    {
+                        return this.Source.Properties.IsColumnar
+                            ? GetUngroupedAFAPipe(emptyObserver) as IStreamObserver<TKey, TPayload>
+                            : new CompiledUngroupedAfaPipe<TPayload, TRegister, TAccumulator>(downcast, observer as IStreamObserver<Empty, TRegister>, this.afa, this.MaxDuration) as IStreamObserver<TKey, TPayload>;
+                    }
                 }
                 else
                 {

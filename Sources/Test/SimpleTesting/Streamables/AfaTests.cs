@@ -110,7 +110,8 @@ namespace SimpleTesting
                 .Where(e => e.IsData)
                 .ToEnumerable()
                 ;
-            var expected = new StreamEvent<Empty>[] {
+            var expected = new StreamEvent<Empty>[]
+            {
                 StreamEvent.CreateInterval(2, 10, Empty.Default),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
@@ -123,11 +124,12 @@ namespace SimpleTesting
             pat1.AddListElementArc(1, 1, fence: (ts, events, reg) => !events.Any(p => p.Field2 == 1));
             pat1.AddListElementArc(1, 2, fence: (ts, events, reg) => events.Any(p => p.Field2 == 1));
 
-            var input = new StreamEvent<AfaPayload>[] {
+            var input = new StreamEvent<AfaPayload>[]
+            {
                 StreamEvent.CreatePoint(100, new AfaPayload { Field1 = "A", Field2 = 0 }),
                 StreamEvent.CreatePoint(110, new AfaPayload { Field1 = "C", Field2 = 0 }),
                 StreamEvent.CreatePoint(140, new AfaPayload { Field1 = "B", Field2 = 1 }),
-                };
+            };
             var result = input
                 .ToObservable()
                 .ToStreamable()
@@ -138,7 +140,8 @@ namespace SimpleTesting
                 .Where(e => e.IsData)
                 .ToEnumerable()
                 ;
-            var expected = new StreamEvent<Empty>[] {
+            var expected = new StreamEvent<Empty>[]
+            {
                 StreamEvent.CreateInterval(140, 1100, Empty.Default),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
@@ -175,7 +178,8 @@ namespace SimpleTesting
                     .ToEnumerable()
                     .ToArray()
                     ;
-            var expected = new StreamEvent<Empty>[] {
+            var expected = new StreamEvent<Empty>[]
+            {
                 StreamEvent.CreateInterval(2, 10, Empty.Default),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
@@ -200,8 +204,7 @@ namespace SimpleTesting
                     fence: (ts, acc, reg) => acc);
 
             var result =
-                new Tuple<int, int>[] {
-                    Tuple.Create(0, 0), Tuple.Create(0, 0), Tuple.Create(1, 1), }
+                new Tuple<int, int>[] { Tuple.Create(0, 0), Tuple.Create(0, 0), Tuple.Create(1, 1) }
                 .Select(e => StreamEvent.CreatePoint<long>(e.Item1, e.Item2))
                     .ToObservable()
                     .ToStreamable()
@@ -213,9 +216,7 @@ namespace SimpleTesting
                     .ToEnumerable()
                     ;
             var x = result.ToArray();
-            var expected = new StreamEvent<Empty>[] {
-                StreamEvent.CreateInterval(1, 10, Empty.Default),
-            };
+            var expected = new StreamEvent<Empty>[] { StreamEvent.CreateInterval(1, 10, Empty.Default) };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
@@ -257,9 +258,7 @@ namespace SimpleTesting
                     .ToEnumerable()
                     .ToArray()
                     ;
-            var expected = new StreamEvent<Empty>[] {
-                StreamEvent.CreateInterval(3, 11, Empty.Default),
-            };
+            var expected = new StreamEvent<Empty>[] { StreamEvent.CreateInterval(3, 11, Empty.Default) };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
@@ -299,15 +298,14 @@ namespace SimpleTesting
                     .ToEnumerable()
                     .ToArray()
                     ;
-            var expected = new StreamEvent<Empty>[] {
-                StreamEvent.CreateInterval(3, 11, Empty.Default),
-            };
+            var expected = new StreamEvent<Empty>[] { StreamEvent.CreateInterval(3, 11, Empty.Default) };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
         public static void AfaDefinePattern01()
         {
-            var source1 = new StreamEvent<AfaPayload>[] {
+            var source1 = new StreamEvent<AfaPayload>[]
+            {
                 StreamEvent.CreatePoint(100, new AfaPayload { Field1 = "A", Field2 = 4 }),
                 StreamEvent.CreatePoint(110, new AfaPayload { Field1 = "C", Field2 = 3 }),
                 StreamEvent.CreatePoint(120, new AfaPayload { Field1 = "A", Field2 = 1 }),
@@ -329,7 +327,8 @@ namespace SimpleTesting
                         .ToEnumerable()
                         .ToArray();
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(110, 1100, 0),
                 StreamEvent.CreateInterval(150, 1120, 14),
             };
@@ -339,7 +338,8 @@ namespace SimpleTesting
 
         public static void AfaDefinePattern02()
         {
-            var source1 = new StreamEvent<AfaPayload>[] {
+            var source1 = new StreamEvent<AfaPayload>[]
+            {
                 StreamEvent.CreatePoint(100, new AfaPayload { Field1 = "A", Field2 = 4 }),
                 StreamEvent.CreatePoint(110, new AfaPayload { Field1 = "C", Field2 = 3 }),
                 StreamEvent.CreatePoint(120, new AfaPayload { Field1 = "A", Field2 = 1 }),
@@ -361,7 +361,8 @@ namespace SimpleTesting
                 .ToArray()
                 ;
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(110, 1100, 0),
                 StreamEvent.CreateInterval(150, 1120, 14),
             };
@@ -371,7 +372,8 @@ namespace SimpleTesting
 
         public static void AfaDefinePattern03()
         {
-            var source1 = new StreamEvent<AfaPayload>[] {
+            var source1 = new StreamEvent<AfaPayload>[]
+            {
                 StreamEvent.CreatePoint(100, new AfaPayload { Field1 = "A", Field2 = 4 }),
                 StreamEvent.CreatePoint(110, new AfaPayload { Field1 = "C", Field2 = 3 }),
                 StreamEvent.CreatePoint(120, new AfaPayload { Field1 = "A", Field2 = 1 }),
@@ -392,7 +394,8 @@ namespace SimpleTesting
                 .ToArray()
                 ;
 
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(110, 1100, 17),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
@@ -401,7 +404,8 @@ namespace SimpleTesting
 
         public static void AfaPatternAiBi01()
         {
-            var source1 = new StreamEvent<AfaPayload>[] {
+            var source1 = new StreamEvent<AfaPayload>[]
+            {
                 StreamEvent.CreatePoint(100, new AfaPayload { Field1 = "A", Field2 = 4 }),
                 StreamEvent.CreatePoint(110, new AfaPayload { Field1 = "A", Field2 = 3 }),
                 StreamEvent.CreatePoint(120, new AfaPayload { Field1 = "A", Field2 = 1 }),
@@ -421,7 +425,8 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(130, 1120, 1),
                 StreamEvent.CreateInterval(140, 1110, 1),
                 StreamEvent.CreateInterval(150, 1100, 1),
@@ -431,7 +436,8 @@ namespace SimpleTesting
 
         public static void AfaPatternAiBi02()
         {
-            var source1 = new StreamEvent<AfaPayload>[] {
+            var source1 = new StreamEvent<AfaPayload>[]
+            {
                 StreamEvent.CreatePoint(100, new AfaPayload { Field1 = "A", Field2 = 4 }),
                 StreamEvent.CreatePoint(110, new AfaPayload { Field1 = "A", Field2 = 3 }),
                 StreamEvent.CreatePoint(120, new AfaPayload { Field1 = "A", Field2 = 1 }),
@@ -452,7 +458,8 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            var expected = new StreamEvent<int>[] {
+            var expected = new StreamEvent<int>[]
+            {
                 StreamEvent.CreateInterval(150, 1100, 1),
             };
             Assert.IsTrue(result.SequenceEqual(expected));

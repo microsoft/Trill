@@ -18,7 +18,8 @@ namespace SimpleTesting
 {
     public static class ClassWithNestedType1<T>
     {
-        public class NestedType<U> {
+        public class NestedType<U>
+        {
             public T x;
             public U y;
         }
@@ -26,7 +27,8 @@ namespace SimpleTesting
 
     public static class ClassWithNestedType2<T, U>
     {
-        public class NestedType {
+        public class NestedType
+        {
             public T x;
             public U y;
         }
@@ -5871,14 +5873,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpIntervalsRow()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
                 StreamEvent.CreateInterval(4, 8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
@@ -5895,7 +5899,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpEdgesRow()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -5906,7 +5911,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -5927,14 +5933,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedIntervalsRow()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 15, 'a'),
                 StreamEvent.CreateInterval(2, 16, 'b'),
                 StreamEvent.CreateInterval(3, 17, 'c'),
                 StreamEvent.CreateInterval(4, 18, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 11, 'a'),
                 StreamEvent.CreateInterval(2, 12, 'b'),
                 StreamEvent.CreateInterval(3, 13, 'c'),
@@ -5951,7 +5959,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedEdgesRow()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -5962,7 +5971,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateEnd(3, 1, 'a'),
@@ -5983,14 +5993,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy1Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(20, 9, 'x'),
@@ -6005,14 +6017,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy2Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(24, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -6027,14 +6041,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy3Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -6050,7 +6066,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy4Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
@@ -6066,7 +6083,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(30, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
@@ -6091,7 +6109,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -6103,7 +6122,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreatePunctuation<char>(2),
                 StreamEvent.CreateStart(2, 'b'),
@@ -6128,13 +6148,15 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AlterDurationTest1Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(3, 'x'),
                 StreamEvent.CreateEnd(5, 3, 'x'),
                 StreamEvent.CreateStart(7, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 8, 'x'),
                 StreamEvent.CreateInterval(7, 12, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
@@ -6147,7 +6169,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy3Row()
         { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -6159,7 +6182,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -6543,7 +6567,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CountColumnar1Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -6555,7 +6580,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<ulong>[] {
+            var expected = new StreamEvent<ulong>[]
+            {
                 StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
                 StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
@@ -6575,7 +6601,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar1Row() // tests codegen for Snapshot_noecq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -6589,7 +6616,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -6613,7 +6641,8 @@ namespace SimpleTesting
             var one = StreamEvent.MinSyncTime + 1;
             var two = StreamEvent.MinSyncTime + 2;
             var three = StreamEvent.MinSyncTime + 3;
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 'a'),
                 StreamEvent.CreateInterval(zero, one, 'b'),
                 StreamEvent.CreateInterval(zero, one, 'c'),
@@ -6625,7 +6654,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(two, three, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 98.0),
                 StreamEvent.CreatePunctuation<double>(one),
                 StreamEvent.CreateInterval(one, two, 101.0),
@@ -6643,7 +6673,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar3Row() // tests codegen for Snapshot_pq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -6657,7 +6688,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -6729,7 +6761,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest1Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -6740,7 +6773,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -6756,7 +6790,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest2Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -6766,7 +6801,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -6782,7 +6818,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest3Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -6792,7 +6829,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 3, 'c'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 26, 'c'),
@@ -6808,14 +6846,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest1Row()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
                 StreamEvent.CreateStart(6, 'c'),
                 StreamEvent.CreateStart(8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(5, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -6823,7 +6863,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
@@ -6846,14 +6887,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest2Row()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
                 StreamEvent.CreateStart(4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(5, 20, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -6861,7 +6904,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -6925,7 +6969,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest4Row()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateEnd(5, 1, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
@@ -6936,7 +6981,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(20, 16, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(6, 10, 'b'),
                 StreamEvent.CreateInterval(11, 15, 'c'),
@@ -6956,7 +7002,8 @@ namespace SimpleTesting
             var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
                                  .ToObservable()
                                  .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
-            var expectedResult = new StreamEvent<ResultEvent>[] {
+            var expectedResult = new StreamEvent<ResultEvent>[]
+            {
                 StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),
@@ -7818,14 +7865,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpIntervalsRowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
                 StreamEvent.CreateInterval(4, 8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
@@ -7842,7 +7891,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpEdgesRowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -7853,7 +7903,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -7874,14 +7925,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedIntervalsRowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 15, 'a'),
                 StreamEvent.CreateInterval(2, 16, 'b'),
                 StreamEvent.CreateInterval(3, 17, 'c'),
                 StreamEvent.CreateInterval(4, 18, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 11, 'a'),
                 StreamEvent.CreateInterval(2, 12, 'b'),
                 StreamEvent.CreateInterval(3, 13, 'c'),
@@ -7898,7 +7951,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedEdgesRowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -7909,7 +7963,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateEnd(3, 1, 'a'),
@@ -7931,7 +7986,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2RowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -7943,7 +7999,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -7962,13 +8019,15 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AlterDurationTest1RowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(3, 'x'),
                 StreamEvent.CreateEnd(5, 3, 'x'),
                 StreamEvent.CreateStart(7, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 8, 'x'),
                 StreamEvent.CreateInterval(7, 12, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
@@ -7981,7 +8040,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy3RowFloating()
         { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -7993,7 +8053,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -8375,7 +8436,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CountColumnar1RowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -8387,7 +8449,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<ulong>[] {
+            var expected = new StreamEvent<ulong>[]
+            {
                 StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
                 StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
@@ -8407,7 +8470,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar1RowFloating() // tests codegen for Snapshot_noecq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -8421,7 +8485,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -8445,7 +8510,8 @@ namespace SimpleTesting
             var one = StreamEvent.MinSyncTime + 1;
             var two = StreamEvent.MinSyncTime + 2;
             var three = StreamEvent.MinSyncTime + 3;
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 'a'),
                 StreamEvent.CreateInterval(zero, one, 'b'),
                 StreamEvent.CreateInterval(zero, one, 'c'),
@@ -8457,7 +8523,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(two, three, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 98.0),
                 StreamEvent.CreatePunctuation<double>(one),
                 StreamEvent.CreateInterval(one, two, 101.0),
@@ -8475,7 +8542,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar3RowFloating() // tests codegen for Snapshot_pq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -8489,7 +8557,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -8561,7 +8630,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest1RowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -8572,7 +8642,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -8588,7 +8659,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest2RowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -8598,7 +8670,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -8614,7 +8687,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest3RowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -8624,7 +8698,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 3, 'c'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 26, 'c'),
@@ -8640,14 +8715,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest1RowFloating()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
                 StreamEvent.CreateStart(6, 'c'),
                 StreamEvent.CreateStart(8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(5, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -8655,7 +8732,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
@@ -8678,14 +8756,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest2RowFloating()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
                 StreamEvent.CreateStart(4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(5, 20, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -8693,7 +8773,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -8757,7 +8838,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest4RowFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateEnd(5, 1, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
@@ -8768,7 +8850,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(20, 16, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(6, 10, 'b'),
                 StreamEvent.CreateInterval(11, 15, 'c'),
@@ -8788,7 +8871,8 @@ namespace SimpleTesting
             var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
                                  .ToObservable()
                                  .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
-            var expectedResult = new StreamEvent<ResultEvent>[] {
+            var expectedResult = new StreamEvent<ResultEvent>[]
+            {
                 StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),
@@ -9650,14 +9734,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpIntervalsRowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
                 StreamEvent.CreateInterval(4, 8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
@@ -9674,7 +9760,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpEdgesRowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -9685,7 +9772,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -9706,14 +9794,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedIntervalsRowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 15, 'a'),
                 StreamEvent.CreateInterval(2, 16, 'b'),
                 StreamEvent.CreateInterval(3, 17, 'c'),
                 StreamEvent.CreateInterval(4, 18, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 11, 'a'),
                 StreamEvent.CreateInterval(2, 12, 'b'),
                 StreamEvent.CreateInterval(3, 13, 'c'),
@@ -9730,7 +9820,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedEdgesRowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -9741,7 +9832,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateEnd(3, 1, 'a'),
@@ -9762,14 +9854,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy1RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(20, 9, 'x'),
@@ -9784,14 +9878,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy2RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(24, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -9806,14 +9902,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy3RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -9829,7 +9927,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy4RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
@@ -9845,7 +9944,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(30, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
@@ -9870,7 +9970,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -9882,7 +9983,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreatePunctuation<char>(2),
                 StreamEvent.CreateStart(2, 'b'),
@@ -9907,13 +10009,15 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AlterDurationTest1RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(3, 'x'),
                 StreamEvent.CreateEnd(5, 3, 'x'),
                 StreamEvent.CreateStart(7, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 8, 'x'),
                 StreamEvent.CreateInterval(7, 12, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
@@ -9926,7 +10030,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy3RowSmallBatch()
         { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -9938,7 +10043,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -10322,7 +10428,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CountColumnar1RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -10334,7 +10441,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<ulong>[] {
+            var expected = new StreamEvent<ulong>[]
+            {
                 StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
                 StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
@@ -10354,7 +10462,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar1RowSmallBatch() // tests codegen for Snapshot_noecq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -10368,7 +10477,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -10392,7 +10502,8 @@ namespace SimpleTesting
             var one = StreamEvent.MinSyncTime + 1;
             var two = StreamEvent.MinSyncTime + 2;
             var three = StreamEvent.MinSyncTime + 3;
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 'a'),
                 StreamEvent.CreateInterval(zero, one, 'b'),
                 StreamEvent.CreateInterval(zero, one, 'c'),
@@ -10404,7 +10515,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(two, three, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 98.0),
                 StreamEvent.CreatePunctuation<double>(one),
                 StreamEvent.CreateInterval(one, two, 101.0),
@@ -10422,7 +10534,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar3RowSmallBatch() // tests codegen for Snapshot_pq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -10436,7 +10549,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -10508,7 +10622,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest1RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -10519,7 +10634,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -10535,7 +10651,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest2RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -10545,7 +10662,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -10561,7 +10679,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest3RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -10571,7 +10690,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 3, 'c'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 26, 'c'),
@@ -10587,14 +10707,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest1RowSmallBatch()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
                 StreamEvent.CreateStart(6, 'c'),
                 StreamEvent.CreateStart(8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(5, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -10602,7 +10724,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
@@ -10625,14 +10748,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest2RowSmallBatch()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
                 StreamEvent.CreateStart(4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(5, 20, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -10640,7 +10765,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -10704,7 +10830,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest4RowSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateEnd(5, 1, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
@@ -10715,7 +10842,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(20, 16, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(6, 10, 'b'),
                 StreamEvent.CreateInterval(11, 15, 'c'),
@@ -10735,7 +10863,8 @@ namespace SimpleTesting
             var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
                                  .ToObservable()
                                  .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
-            var expectedResult = new StreamEvent<ResultEvent>[] {
+            var expectedResult = new StreamEvent<ResultEvent>[]
+            {
                 StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),
@@ -11598,14 +11727,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpIntervalsRowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
                 StreamEvent.CreateInterval(4, 8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
@@ -11622,7 +11753,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpEdgesRowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -11633,7 +11765,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -11654,14 +11787,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedIntervalsRowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 15, 'a'),
                 StreamEvent.CreateInterval(2, 16, 'b'),
                 StreamEvent.CreateInterval(3, 17, 'c'),
                 StreamEvent.CreateInterval(4, 18, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 11, 'a'),
                 StreamEvent.CreateInterval(2, 12, 'b'),
                 StreamEvent.CreateInterval(3, 13, 'c'),
@@ -11678,7 +11813,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedEdgesRowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -11689,7 +11825,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateEnd(3, 1, 'a'),
@@ -11711,7 +11848,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2RowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -11723,7 +11861,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -11742,13 +11881,15 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AlterDurationTest1RowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(3, 'x'),
                 StreamEvent.CreateEnd(5, 3, 'x'),
                 StreamEvent.CreateStart(7, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 8, 'x'),
                 StreamEvent.CreateInterval(7, 12, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
@@ -11761,7 +11902,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy3RowSmallBatchFloating()
         { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -11773,7 +11915,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -12155,7 +12298,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CountColumnar1RowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -12167,7 +12311,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<ulong>[] {
+            var expected = new StreamEvent<ulong>[]
+            {
                 StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
                 StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
@@ -12187,7 +12332,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar1RowSmallBatchFloating() // tests codegen for Snapshot_noecq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -12201,7 +12347,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -12225,7 +12372,8 @@ namespace SimpleTesting
             var one = StreamEvent.MinSyncTime + 1;
             var two = StreamEvent.MinSyncTime + 2;
             var three = StreamEvent.MinSyncTime + 3;
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 'a'),
                 StreamEvent.CreateInterval(zero, one, 'b'),
                 StreamEvent.CreateInterval(zero, one, 'c'),
@@ -12237,7 +12385,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(two, three, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 98.0),
                 StreamEvent.CreatePunctuation<double>(one),
                 StreamEvent.CreateInterval(one, two, 101.0),
@@ -12255,7 +12404,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar3RowSmallBatchFloating() // tests codegen for Snapshot_pq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -12269,7 +12419,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -12341,7 +12492,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest1RowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -12352,7 +12504,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -12368,7 +12521,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest2RowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -12378,7 +12532,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -12394,7 +12549,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest3RowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -12404,7 +12560,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 3, 'c'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 26, 'c'),
@@ -12420,14 +12577,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest1RowSmallBatchFloating()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
                 StreamEvent.CreateStart(6, 'c'),
                 StreamEvent.CreateStart(8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(5, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -12435,7 +12594,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
@@ -12458,14 +12618,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest2RowSmallBatchFloating()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
                 StreamEvent.CreateStart(4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(5, 20, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -12473,7 +12635,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -12537,7 +12700,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest4RowSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateEnd(5, 1, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
@@ -12548,7 +12712,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(20, 16, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(6, 10, 'b'),
                 StreamEvent.CreateInterval(11, 15, 'c'),
@@ -12568,7 +12733,8 @@ namespace SimpleTesting
             var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
                                  .ToObservable()
                                  .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
-            var expectedResult = new StreamEvent<ResultEvent>[] {
+            var expectedResult = new StreamEvent<ResultEvent>[]
+            {
                 StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),
@@ -13429,14 +13595,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpIntervalsColumnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
                 StreamEvent.CreateInterval(4, 8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
@@ -13453,7 +13621,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpEdgesColumnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -13464,7 +13633,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -13485,14 +13655,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedIntervalsColumnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 15, 'a'),
                 StreamEvent.CreateInterval(2, 16, 'b'),
                 StreamEvent.CreateInterval(3, 17, 'c'),
                 StreamEvent.CreateInterval(4, 18, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 11, 'a'),
                 StreamEvent.CreateInterval(2, 12, 'b'),
                 StreamEvent.CreateInterval(3, 13, 'c'),
@@ -13509,7 +13681,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedEdgesColumnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -13520,7 +13693,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateEnd(3, 1, 'a'),
@@ -13541,14 +13715,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy1Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(20, 9, 'x'),
@@ -13563,14 +13739,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy2Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(24, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -13585,14 +13763,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy3Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -13608,7 +13788,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy4Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
@@ -13624,7 +13805,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(30, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
@@ -13649,7 +13831,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -13661,7 +13844,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreatePunctuation<char>(2),
                 StreamEvent.CreateStart(2, 'b'),
@@ -13686,13 +13870,15 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AlterDurationTest1Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(3, 'x'),
                 StreamEvent.CreateEnd(5, 3, 'x'),
                 StreamEvent.CreateStart(7, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 8, 'x'),
                 StreamEvent.CreateInterval(7, 12, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
@@ -13705,7 +13891,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy3Columnar()
         { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -13717,7 +13904,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -14101,7 +14289,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CountColumnar1Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -14113,7 +14302,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<ulong>[] {
+            var expected = new StreamEvent<ulong>[]
+            {
                 StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
                 StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
@@ -14133,7 +14323,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar1Columnar() // tests codegen for Snapshot_noecq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -14147,7 +14338,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -14171,7 +14363,8 @@ namespace SimpleTesting
             var one = StreamEvent.MinSyncTime + 1;
             var two = StreamEvent.MinSyncTime + 2;
             var three = StreamEvent.MinSyncTime + 3;
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 'a'),
                 StreamEvent.CreateInterval(zero, one, 'b'),
                 StreamEvent.CreateInterval(zero, one, 'c'),
@@ -14183,7 +14376,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(two, three, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 98.0),
                 StreamEvent.CreatePunctuation<double>(one),
                 StreamEvent.CreateInterval(one, two, 101.0),
@@ -14201,7 +14395,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar3Columnar() // tests codegen for Snapshot_pq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -14215,7 +14410,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -14287,7 +14483,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest1Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -14298,7 +14495,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -14314,7 +14512,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest2Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -14324,7 +14523,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -14340,7 +14540,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest3Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -14350,7 +14551,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 3, 'c'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 26, 'c'),
@@ -14366,14 +14568,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest1Columnar()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
                 StreamEvent.CreateStart(6, 'c'),
                 StreamEvent.CreateStart(8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(5, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -14381,7 +14585,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
@@ -14404,14 +14609,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest2Columnar()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
                 StreamEvent.CreateStart(4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(5, 20, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -14419,7 +14626,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -14483,7 +14691,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest4Columnar()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateEnd(5, 1, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
@@ -14494,7 +14703,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(20, 16, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(6, 10, 'b'),
                 StreamEvent.CreateInterval(11, 15, 'c'),
@@ -14514,7 +14724,8 @@ namespace SimpleTesting
             var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
                                  .ToObservable()
                                  .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
-            var expectedResult = new StreamEvent<ResultEvent>[] {
+            var expectedResult = new StreamEvent<ResultEvent>[]
+            {
                 StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),
@@ -15376,14 +15587,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpIntervalsColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
                 StreamEvent.CreateInterval(4, 8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
@@ -15400,7 +15613,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpEdgesColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -15411,7 +15625,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -15432,14 +15647,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedIntervalsColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 15, 'a'),
                 StreamEvent.CreateInterval(2, 16, 'b'),
                 StreamEvent.CreateInterval(3, 17, 'c'),
                 StreamEvent.CreateInterval(4, 18, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 11, 'a'),
                 StreamEvent.CreateInterval(2, 12, 'b'),
                 StreamEvent.CreateInterval(3, 13, 'c'),
@@ -15456,7 +15673,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedEdgesColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -15467,7 +15685,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateEnd(3, 1, 'a'),
@@ -15489,7 +15708,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2ColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -15501,7 +15721,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -15520,13 +15741,15 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AlterDurationTest1ColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(3, 'x'),
                 StreamEvent.CreateEnd(5, 3, 'x'),
                 StreamEvent.CreateStart(7, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 8, 'x'),
                 StreamEvent.CreateInterval(7, 12, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
@@ -15539,7 +15762,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy3ColumnarFloating()
         { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -15551,7 +15775,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -15933,7 +16158,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CountColumnar1ColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -15945,7 +16171,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<ulong>[] {
+            var expected = new StreamEvent<ulong>[]
+            {
                 StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
                 StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
@@ -15965,7 +16192,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar1ColumnarFloating() // tests codegen for Snapshot_noecq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -15979,7 +16207,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -16003,7 +16232,8 @@ namespace SimpleTesting
             var one = StreamEvent.MinSyncTime + 1;
             var two = StreamEvent.MinSyncTime + 2;
             var three = StreamEvent.MinSyncTime + 3;
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 'a'),
                 StreamEvent.CreateInterval(zero, one, 'b'),
                 StreamEvent.CreateInterval(zero, one, 'c'),
@@ -16015,7 +16245,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(two, three, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 98.0),
                 StreamEvent.CreatePunctuation<double>(one),
                 StreamEvent.CreateInterval(one, two, 101.0),
@@ -16033,7 +16264,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar3ColumnarFloating() // tests codegen for Snapshot_pq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -16047,7 +16279,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -16119,7 +16352,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest1ColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -16130,7 +16364,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -16146,7 +16381,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest2ColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -16156,7 +16392,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -16172,7 +16409,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest3ColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -16182,7 +16420,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 3, 'c'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 26, 'c'),
@@ -16198,14 +16437,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest1ColumnarFloating()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
                 StreamEvent.CreateStart(6, 'c'),
                 StreamEvent.CreateStart(8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(5, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -16213,7 +16454,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
@@ -16236,14 +16478,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest2ColumnarFloating()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
                 StreamEvent.CreateStart(4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(5, 20, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -16251,7 +16495,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -16315,7 +16560,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest4ColumnarFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateEnd(5, 1, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
@@ -16326,7 +16572,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(20, 16, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(6, 10, 'b'),
                 StreamEvent.CreateInterval(11, 15, 'c'),
@@ -16346,7 +16593,8 @@ namespace SimpleTesting
             var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
                                  .ToObservable()
                                  .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
-            var expectedResult = new StreamEvent<ResultEvent>[] {
+            var expectedResult = new StreamEvent<ResultEvent>[]
+            {
                 StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),
@@ -17208,14 +17456,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpIntervalsColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
                 StreamEvent.CreateInterval(4, 8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
@@ -17232,7 +17482,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpEdgesColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -17243,7 +17494,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -17264,14 +17516,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedIntervalsColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 15, 'a'),
                 StreamEvent.CreateInterval(2, 16, 'b'),
                 StreamEvent.CreateInterval(3, 17, 'c'),
                 StreamEvent.CreateInterval(4, 18, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 11, 'a'),
                 StreamEvent.CreateInterval(2, 12, 'b'),
                 StreamEvent.CreateInterval(3, 13, 'c'),
@@ -17288,7 +17542,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedEdgesColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -17299,7 +17554,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateEnd(3, 1, 'a'),
@@ -17320,14 +17576,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy1ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(20, 9, 'x'),
@@ -17342,14 +17600,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy2ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(24, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -17364,14 +17624,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy3ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
                 StreamEvent.CreateEnd(20, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
                 StreamEvent.CreateEnd(22, 9, 'y'),
@@ -17387,7 +17649,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy4ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(5, 'x'),
@@ -17403,7 +17666,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(30, 5, 'x'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(5, 'x'),
                 StreamEvent.CreateStart(9, 'y'),
                 StreamEvent.CreateStart(9, 'x'),
@@ -17428,7 +17692,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -17440,7 +17705,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreatePunctuation<char>(2),
                 StreamEvent.CreateStart(2, 'b'),
@@ -17465,13 +17731,15 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AlterDurationTest1ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(3, 'x'),
                 StreamEvent.CreateEnd(5, 3, 'x'),
                 StreamEvent.CreateStart(7, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 8, 'x'),
                 StreamEvent.CreateInterval(7, 12, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
@@ -17484,7 +17752,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy3ColumnarSmallBatch()
         { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -17496,7 +17765,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -17880,7 +18150,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CountColumnar1ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -17892,7 +18163,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<ulong>[] {
+            var expected = new StreamEvent<ulong>[]
+            {
                 StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
                 StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
@@ -17912,7 +18184,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar1ColumnarSmallBatch() // tests codegen for Snapshot_noecq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -17926,7 +18199,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -17950,7 +18224,8 @@ namespace SimpleTesting
             var one = StreamEvent.MinSyncTime + 1;
             var two = StreamEvent.MinSyncTime + 2;
             var three = StreamEvent.MinSyncTime + 3;
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 'a'),
                 StreamEvent.CreateInterval(zero, one, 'b'),
                 StreamEvent.CreateInterval(zero, one, 'c'),
@@ -17962,7 +18237,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(two, three, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 98.0),
                 StreamEvent.CreatePunctuation<double>(one),
                 StreamEvent.CreateInterval(one, two, 101.0),
@@ -17980,7 +18256,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar3ColumnarSmallBatch() // tests codegen for Snapshot_pq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -17994,7 +18271,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -18066,7 +18344,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest1ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -18077,7 +18356,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -18093,7 +18373,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest2ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -18103,7 +18384,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -18119,7 +18401,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest3ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -18129,7 +18412,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 3, 'c'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 26, 'c'),
@@ -18145,14 +18429,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest1ColumnarSmallBatch()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
                 StreamEvent.CreateStart(6, 'c'),
                 StreamEvent.CreateStart(8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(5, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -18160,7 +18446,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
@@ -18183,14 +18470,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest2ColumnarSmallBatch()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
                 StreamEvent.CreateStart(4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(5, 20, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -18198,7 +18487,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -18262,7 +18552,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest4ColumnarSmallBatch()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateEnd(5, 1, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
@@ -18273,7 +18564,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(20, 16, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(6, 10, 'b'),
                 StreamEvent.CreateInterval(11, 15, 'c'),
@@ -18293,7 +18585,8 @@ namespace SimpleTesting
             var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
                                  .ToObservable()
                                  .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
-            var expectedResult = new StreamEvent<ResultEvent>[] {
+            var expectedResult = new StreamEvent<ResultEvent>[]
+            {
                 StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),
@@ -19156,14 +19449,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpIntervalsColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
                 StreamEvent.CreateInterval(4, 8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(2, 6, 'b'),
                 StreamEvent.CreateInterval(3, 7, 'c'),
@@ -19180,7 +19475,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantNoOpEdgesColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -19191,7 +19487,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -19212,14 +19509,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedIntervalsColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 15, 'a'),
                 StreamEvent.CreateInterval(2, 16, 'b'),
                 StreamEvent.CreateInterval(3, 17, 'c'),
                 StreamEvent.CreateInterval(4, 18, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 11, 'a'),
                 StreamEvent.CreateInterval(2, 12, 'b'),
                 StreamEvent.CreateInterval(3, 13, 'c'),
@@ -19236,7 +19535,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ClipByConstantClippedEdgesColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -19247,7 +19547,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(8, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateEnd(3, 1, 'a'),
@@ -19269,7 +19570,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2ColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -19281,7 +19583,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(4, 'c'),
@@ -19300,13 +19603,15 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AlterDurationTest1ColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(3, 'x'),
                 StreamEvent.CreateEnd(5, 3, 'x'),
                 StreamEvent.CreateStart(7, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 8, 'x'),
                 StreamEvent.CreateInterval(7, 12, 'y'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
@@ -19319,7 +19624,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy3ColumnarSmallBatchFloating()
         { // Simulates the way Stat does ingress (but with 80K batches, not 3...)
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -19331,7 +19637,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -19713,7 +20020,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CountColumnar1ColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),
@@ -19725,7 +20033,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<ulong>[] {
+            var expected = new StreamEvent<ulong>[]
+            {
                 StreamEvent.CreateStart<ulong>(StreamEvent.MinSyncTime, 3),
                 StreamEvent.CreatePunctuation<ulong>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd<ulong>(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 3),
@@ -19745,7 +20054,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar1ColumnarSmallBatchFloating() // tests codegen for Snapshot_noecq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -19759,7 +20069,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -19783,7 +20094,8 @@ namespace SimpleTesting
             var one = StreamEvent.MinSyncTime + 1;
             var two = StreamEvent.MinSyncTime + 2;
             var three = StreamEvent.MinSyncTime + 3;
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 'a'),
                 StreamEvent.CreateInterval(zero, one, 'b'),
                 StreamEvent.CreateInterval(zero, one, 'c'),
@@ -19795,7 +20107,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(two, three, 'i'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateInterval(zero, one, 98.0),
                 StreamEvent.CreatePunctuation<double>(one),
                 StreamEvent.CreateInterval(one, two, 101.0),
@@ -19813,7 +20126,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void AverageColumnar3ColumnarSmallBatchFloating() // tests codegen for Snapshot_pq
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'a'),      // 97
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'b'),      // 98
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 'c'),      // 99  running average = 98
@@ -19827,7 +20141,8 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime + 2, 'i'),  // 105 running average = 101
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expected = new StreamEvent<double>[] {
+            var expected = new StreamEvent<double>[]
+            {
                 StreamEvent.CreateStart(StreamEvent.MinSyncTime, 98.0),
                 StreamEvent.CreatePunctuation<double>(StreamEvent.MinSyncTime + 1),
                 StreamEvent.CreateEnd(StreamEvent.MinSyncTime + 1, StreamEvent.MinSyncTime, 98.0),
@@ -19899,7 +20214,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest1ColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -19910,7 +20226,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -19926,7 +20243,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest2ColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -19936,7 +20254,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateInterval(3, 24, 'c'),
@@ -19952,7 +20271,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest3ColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -19962,7 +20282,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(26, 3, 'c'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateInterval(2, 22, 'b'),
                 StreamEvent.CreateInterval(3, 26, 'c'),
@@ -19978,14 +20299,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest1ColumnarSmallBatchFloating()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
                 StreamEvent.CreateStart(6, 'c'),
                 StreamEvent.CreateStart(8, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(5, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -19993,7 +20316,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(2, 20, 'a'),
                 StreamEvent.CreateInterval(3, 20, 'a'),
                 StreamEvent.CreateStart(4, 'b'),
@@ -20016,14 +20340,16 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void BinaryUnionTest2ColumnarSmallBatchFloating()
         {
-            var input1 = new StreamEvent<char>[] {
+            var input1 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
                 StreamEvent.CreateStart(4, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var input2 = new StreamEvent<char>[] {
+            var input2 = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(5, 20, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
                 StreamEvent.CreateStart(7, 'c'),
@@ -20031,7 +20357,8 @@ namespace SimpleTesting
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
 
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 20, 'a'),
                 StreamEvent.CreateStart(2, 'b'),
                 StreamEvent.CreateStart(3, 'c'),
@@ -20095,7 +20422,8 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void ToEndEdgeFreeTest4ColumnarSmallBatchFloating()
         {
-            var input = new StreamEvent<char>[] {
+            var input = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateStart(1, 'a'),
                 StreamEvent.CreateEnd(5, 1, 'a'),
                 StreamEvent.CreateStart(6, 'b'),
@@ -20106,7 +20434,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(20, 16, 'd'),
                 StreamEvent.CreatePunctuation<char>(StreamEvent.InfinitySyncTime),
             };
-            var expectedOutput = new StreamEvent<char>[] {
+            var expectedOutput = new StreamEvent<char>[]
+            {
                 StreamEvent.CreateInterval(1, 5, 'a'),
                 StreamEvent.CreateInterval(6, 10, 'b'),
                 StreamEvent.CreateInterval(11, 15, 'c'),
@@ -20126,7 +20455,8 @@ namespace SimpleTesting
             var stream = Events().ToEvents(e => e.Vs.Ticks, e => e.Vs.Ticks + threeSecondTicks)
                                  .ToObservable()
                                  .ToStreamable(DisorderPolicy.Adjust(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None());
-            var expectedResult = new StreamEvent<ResultEvent>[] {
+            var expectedResult = new StreamEvent<ResultEvent>[]
+            {
                 StreamEvent.CreateStart(633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateEnd(633979008020000000, 633979008010000000, new ResultEvent { Key = 1, Cnt = 1 }),
                 StreamEvent.CreateStart(633979008020000000, new ResultEvent { Key = 1, Cnt = 2 }),

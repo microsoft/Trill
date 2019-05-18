@@ -113,7 +113,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<<#= IterateComma("TOutput$", count) #>, StructTuple<<#= IterateComma("TOutput$", count) #>>>> aggregateMerger =
-                (<#= IterateComma("output$", count) #>) => new StructTuple<<#= IterateComma("TOutput$", count) #>> {
+                (<#= IterateComma("output$", count) #>) => new StructTuple<<#= IterateComma("TOutput$", count) #>>
+                {
 <#= IterateCommaLine("                    Item$ = output$", count) #>
                 };
 
@@ -165,7 +166,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<<#= IterateComma("TOutput$", count) #>, StructTuple<<#= IterateComma("TOutput$", count) #>>>> aggregateMerger =
-                (<#= IterateComma("output$", count) #>) => new StructTuple<<#= IterateComma("TOutput$", count) #>> {
+                (<#= IterateComma("output$", count) #>) => new StructTuple<<#= IterateComma("TOutput$", count) #>>
+                {
 <#= IterateCommaLine("                    Item$ = output$", count) #>
                 };
             Expression<Func<GroupSelectorInput<TInnerKey>, StructTuple<<#= IterateComma("TOutput$", count) #>>, TOutput>> reducerTemplate =

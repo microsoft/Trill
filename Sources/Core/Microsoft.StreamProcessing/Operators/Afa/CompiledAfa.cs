@@ -165,7 +165,7 @@ namespace Microsoft.StreamProcessing
                                         toState = to,
                                         Initialize = mearc.Initialize != null
                                             ? mearc.Initialize.Compile()
-                                            : defaultAccumulator == default
+                                            : this.defaultAccumulator == default
                                                 ? (ts, reg) => default // To avoid a closure
                                                 : (Func<long, TRegister, TAccumulator>)((ts, reg) => this.defaultAccumulator),
                                         Accumulate = mearc.Accumulate != null ? mearc.Accumulate.Compile() : (ts, ev, reg, acc) => acc,
@@ -176,9 +176,12 @@ namespace Microsoft.StreamProcessing
                                         arcType = mearc.ArcType
                                     };
                                 for (int i = 0; i < this.numStartStates; i++)
+                                {
                                     if (from == this.startStates[i])
+                                    {
                                         this.multiEventStateMap[from][multiEventCount].fromStartState = true;
-
+                                    }
+                                }
                                 multiEventCount++;
                                 break;
                             case ArcType.ListElement:

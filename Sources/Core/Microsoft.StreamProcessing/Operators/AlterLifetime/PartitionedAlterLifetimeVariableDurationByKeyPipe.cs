@@ -71,17 +71,26 @@ namespace Microsoft.StreamProcessing
                     {
                         var iter = FastDictionary<TPartitionKey, long>.IteratorStart;
                         while (this.lastSync.Iterate(ref iter))
-                        if (this.lastSync.entries[iter].value < vsync[i])
-                            this.lastSync.entries[iter].value = Math.Max(vsync[i], this.lastSync.entries[iter].value);
+                        {
+                            if (this.lastSync.entries[iter].value < vsync[i])
+                            {
+                                this.lastSync.entries[iter].value = Math.Max(vsync[i], this.lastSync.entries[iter].value);
+                            }
+                        }
                     }
                     else if (vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
                     {
                         partition = batch.key.col[i].Key;
                         if (this.startTimeSelector != null) vsync[i] = this.startTimeSelectorCompiled(partition, vsync[i]);
+
                         if (this.lastSync.Lookup(partition, out index))
+                        {
                             this.lastSync.entries[index].value = Math.Max(vsync[i], this.lastSync.entries[index].value);
+                        }
                         else
+                        {
                             this.lastSync.Insert(ref index, partition, vsync[i]);
+                        }
                     }
                     continue;
                 }

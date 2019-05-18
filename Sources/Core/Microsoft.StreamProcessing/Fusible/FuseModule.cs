@@ -38,11 +38,14 @@ namespace Microsoft.StreamProcessing
         {
             if (this.expressions.Count == 0)
             {
-                this.expressions.Add(new ExpressionProfile {
-                    category = ExpressionCategory.Select,
-                    inputType = typeof(TPayload),
-                    outputType = typeof(TResult),
-                    expression = selector });
+                this.expressions.Add(
+                    new ExpressionProfile
+                    {
+                        category = ExpressionCategory.Select,
+                        inputType = typeof(TPayload),
+                        outputType = typeof(TResult),
+                        expression = selector
+                    });
                 return this;
             }
             var prev = this.expressions[this.expressions.Count - 1];
@@ -76,12 +79,15 @@ namespace Microsoft.StreamProcessing
         {
             if (this.expressions.Count == 0)
             {
-                this.expressions.Add(new ExpressionProfile {
-                    category = ExpressionCategory.Select,
-                    hasStartEdge = true,
-                    inputType = typeof(TPayload),
-                    outputType = typeof(TResult),
-                    expression = selector });
+                this.expressions.Add(
+                    new ExpressionProfile
+                    {
+                        category = ExpressionCategory.Select,
+                        hasStartEdge = true,
+                        inputType = typeof(TPayload),
+                        outputType = typeof(TResult),
+                        expression = selector
+                    });
                 return this;
             }
             var prev = this.expressions[this.expressions.Count - 1];
@@ -120,13 +126,16 @@ namespace Microsoft.StreamProcessing
         {
             if (this.expressions.Count == 0)
             {
-                this.expressions.Add(new ExpressionProfile {
-                    category = ExpressionCategory.Select,
-                    hasKey = true,
-                    keyType = typeof(TKey),
-                    inputType = typeof(TPayload),
-                    outputType = typeof(TResult),
-                    expression = selector });
+                this.expressions.Add(
+                    new ExpressionProfile
+                    {
+                        category = ExpressionCategory.Select,
+                        hasKey = true,
+                        keyType = typeof(TKey),
+                        inputType = typeof(TPayload),
+                        outputType = typeof(TResult),
+                        expression = selector
+                    });
                 return this;
             }
             var prev = this.expressions[this.expressions.Count - 1];
@@ -494,13 +503,16 @@ namespace Microsoft.StreamProcessing
         public override string ToString()
         {
             string output = string.Empty;
-            foreach (var item in this.expressions) output = output
+            foreach (var item in this.expressions)
+            {
+                output = output
                     + "Category:" + item.category.ToString() + ":"
                     + "KeyType:" + (item.keyType?.ToString() ?? "null") + ":"
                     + "OutputType:" + (item.outputType?.ToString() ?? "null") + ":"
                     + "UsesKey:" + item.hasKey.ToString() + ":"
                     + "UsesStartEdge:" + item.hasStartEdge.ToString() + ":"
                     + "Expression:" + item.expression.ExpressionToCSharp() + Environment.NewLine;
+            }
             if (this.durationAdjustment != null) output = output + "Duration:" + this.durationAdjustment + Environment.NewLine;
             return output;
         }
@@ -610,7 +622,9 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (this.durationAdjustment != null) currentStatement = Expression.Block(Expression.IfThen(
+            if (this.durationAdjustment != null)
+            {
+                currentStatement = Expression.Block(Expression.IfThen(
                 Expression.GreaterThan(otherParam, syncParam),
                 Expression.Block(
                     Expression.Assign(
@@ -618,12 +632,14 @@ namespace Microsoft.StreamProcessing
                         this.durationAdjustment.ExpressionEquals(Expression.Constant(StreamEvent.InfinitySyncTime))
                             ? this.durationAdjustment
                             : Expression.Add(syncParam, this.durationAdjustment)), currentStatement)));
-
-            if (canBePunctuation) currentStatement = Expression.Block(Expression.IfThenElse(
-                Expression.Equal(otherParam, Expression.Constant(long.MinValue)),
-                ParameterSubstituter.Replace(action.Parameters[2], Expression.Constant(default(TResult), typeof(TResult)), action.Body),
-                currentStatement));
-
+            }
+            if (canBePunctuation)
+            {
+                currentStatement = Expression.Block(Expression.IfThenElse(
+                  Expression.Equal(otherParam, Expression.Constant(long.MinValue)),
+                  ParameterSubstituter.Replace(action.Parameters[2], Expression.Constant(default(TResult), typeof(TResult)), action.Body),
+                  currentStatement));
+            }
             return Expression.Lambda<Action<long, long, TPayload, TKey>>(currentStatement, syncParam, otherParam, parameter, keyParam);
         }
 
