@@ -84,10 +84,13 @@ namespace Microsoft.StreamProcessing
             this.leftQueue.Insert(pKey, new Queue<LEntry>());
             this.rightQueue.Insert(pKey, new Queue<REntry>());
 
-            if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(
-                ref index,
-                pKey,
-                new PartitionEntry { key = pKey, hash = hash });
+            if (!this.partitionData.Lookup(pKey, out int index))
+            {
+                this.partitionData.Insert(
+                    ref index,
+                    pKey,
+                    new PartitionEntry { key = pKey, hash = hash });
+            }
         }
 
         protected override void ProcessBothBatches(StreamMessage<PartitionKey<TPartitionKey>, TLeft> leftBatch, StreamMessage<PartitionKey<TPartitionKey>, TRight> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
@@ -435,8 +438,8 @@ namespace Microsoft.StreamProcessing
             var intervals = partition.rightIntervalMap.Find(partition.hash);
             while (intervals.Next(out var index))
             {
-                long leftEnd = currentTime + leftDuration;
-                long rightEnd = partition.rightIntervalMap.Values[index].Start + rightDuration;
+                long leftEnd = currentTime + this.leftDuration;
+                long rightEnd = partition.rightIntervalMap.Values[index].Start + this.rightDuration;
                 AddToBatch(
                     currentTime,
                     leftEnd < rightEnd ? leftEnd : rightEnd,
@@ -453,8 +456,8 @@ namespace Microsoft.StreamProcessing
             var intervals = partition.leftIntervalMap.Find(partition.hash);
             while (intervals.Next(out var index))
             {
-                long rightEnd = currentTime + rightDuration;
-                long leftEnd = partition.leftIntervalMap.Values[index].Start + leftDuration;
+                long rightEnd = currentTime + this.rightDuration;
+                long leftEnd = partition.leftIntervalMap.Values[index].Start + this.leftDuration;
                 AddToBatch(
                     currentTime,
                     rightEnd < leftEnd ? rightEnd : leftEnd,

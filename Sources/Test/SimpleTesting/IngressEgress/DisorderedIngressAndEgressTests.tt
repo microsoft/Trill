@@ -171,7 +171,8 @@ foreach (var diagnostic in new[] {string.Empty, "Diagnostic"})
                 while (queue.Peek() <= highmark - <#= lag #>)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i, current);
                     }
@@ -181,7 +182,8 @@ foreach (var diagnostic in new[] {string.Empty, "Diagnostic"})
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<int>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -198,7 +200,8 @@ foreach (var diagnostic in new[] {string.Empty, "Diagnostic"})
     { 
         PopIndent(); #>
             }
-            catch(Exception) {
+            catch(Exception)
+            {
 <#          if (dataDisorderAmount < lag)
             { #>
                 Assert.Fail("no exception should be thrown since disorder: <#= dataDisorderAmount #> is always less than lag: <#= lag #>.");
@@ -235,7 +238,8 @@ foreach (var diagnostic in new[] {string.Empty, "Diagnostic"})
 
 <#  if (disorder == "Throw")
     { #>
-            try {
+            try
+            {
 <#      PushIndent("    ");
     } #>
             var ingress = disorderedInputData.ToObservable().ToTemporalStreamable(o => o.start, o => o.end,
@@ -335,7 +339,8 @@ foreach (var diagnostic in new[] {string.Empty, "Diagnostic"})
                 while (queue.Peek() <= highmark - <#= lag #>)
                 {
                     current = queue.Dequeue();
-                    if (current - lastPunc >= 10) {
+                    if (current - lastPunc >= 10)
+                    {
                         lastPunc = current;
                         return Tuple.Create(i.start, current);
                     }
@@ -345,7 +350,8 @@ foreach (var diagnostic in new[] {string.Empty, "Diagnostic"})
             while (queue.Count() > 0)
             {
                 current = queue.Dequeue();
-                if (current - lastPunc >= 10) {
+                if (current - lastPunc >= 10)
+                {
                     lastPunc = current;
                     expectedPunctuations.Add(StreamEvent.CreatePunctuation<TestStruct>(((long)current).SnapToLeftBoundary(10)));
                 }
@@ -361,7 +367,8 @@ foreach (var diagnostic in new[] {string.Empty, "Diagnostic"})
     { 
         PopIndent(); #>
             }
-            catch(Exception) {
+            catch(Exception)
+            {
 <#      if (dataDisorderAmount < lag)
         { #>
                 Assert.Fail("no exception should be thrown since disorder: <#= dataDisorderAmount #> is always less than lag: <#= lag #>.");

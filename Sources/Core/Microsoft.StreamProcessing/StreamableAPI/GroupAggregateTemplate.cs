@@ -109,7 +109,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, StructTuple<TOutput1, TOutput2>>> aggregateMerger =
-                (output1, output2) => new StructTuple<TOutput1, TOutput2> {
+                (output1, output2) => new StructTuple<TOutput1, TOutput2>
+                {
                     Item1 = output1,
                     Item2 = output2
                 };
@@ -169,7 +170,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, StructTuple<TOutput1, TOutput2>>> aggregateMerger =
-                (output1, output2) => new StructTuple<TOutput1, TOutput2> {
+                (output1, output2) => new StructTuple<TOutput1, TOutput2>
+                {
                     Item1 = output1,
                     Item2 = output2
                 };
@@ -218,7 +220,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, StructTuple<TOutput1, TOutput2, TOutput3>>> aggregateMerger =
-                (output1, output2, output3) => new StructTuple<TOutput1, TOutput2, TOutput3> {
+                (output1, output2, output3) => new StructTuple<TOutput1, TOutput2, TOutput3>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3
@@ -286,7 +289,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, StructTuple<TOutput1, TOutput2, TOutput3>>> aggregateMerger =
-                (output1, output2, output3) => new StructTuple<TOutput1, TOutput2, TOutput3> {
+                (output1, output2, output3) => new StructTuple<TOutput1, TOutput2, TOutput3>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3
@@ -341,7 +345,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>>> aggregateMerger =
-                (output1, output2, output3, output4) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4> {
+                (output1, output2, output3, output4) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -417,7 +422,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>>> aggregateMerger =
-                (output1, output2, output3, output4) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4> {
+                (output1, output2, output3, output4) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -478,7 +484,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>>> aggregateMerger =
-                (output1, output2, output3, output4, output5) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5> {
+                (output1, output2, output3, output4, output5) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -562,7 +569,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>>> aggregateMerger =
-                (output1, output2, output3, output4, output5) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5> {
+                (output1, output2, output3, output4, output5) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -629,7 +637,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6> {
+                (output1, output2, output3, output4, output5, output6) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -721,7 +730,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6> {
+                (output1, output2, output3, output4, output5, output6) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -794,7 +804,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7> {
+                (output1, output2, output3, output4, output5, output6, output7) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -894,7 +905,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7> {
+                (output1, output2, output3, output4, output5, output6, output7) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -973,7 +985,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8> {
+                (output1, output2, output3, output4, output5, output6, output7, output8) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -1081,7 +1094,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8> {
+                (output1, output2, output3, output4, output5, output6, output7, output8) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -1166,7 +1180,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -1282,7 +1297,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -1373,7 +1389,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -1497,7 +1514,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -1594,7 +1612,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -1726,7 +1745,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -1829,7 +1849,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -1969,7 +1990,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -2078,7 +2100,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -2226,7 +2249,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -2341,7 +2365,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -2497,7 +2522,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -2618,7 +2644,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14, output15) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14, output15) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,
@@ -2782,7 +2809,8 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(merger, nameof(merger));
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>>> aggregateMerger =
-                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14, output15) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15> {
+                (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14, output15) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>
+                {
                     Item1 = output1,
                     Item2 = output2,
                     Item3 = output3,

@@ -121,7 +121,8 @@ namespace SimpleTesting
             stream.GetProperties(out StreamProperties<Empty, T> properties);
             if (!properties.IsStartEdgeOnly)
             {
-                var secondStream = new StreamEvent<T>[] {
+                var secondStream = new StreamEvent<T>[]
+                {
                     StreamEvent.CreateStart(StreamEvent.MaxSyncTime, default(T)),
                     StreamEvent.CreatePunctuation<T>(StreamEvent.InfinitySyncTime),
                 }.ToObservable().ToStreamable();
@@ -315,13 +316,6 @@ namespace SimpleTesting
     {
         public int f;
         public StructWithCtor(int x) => this.f = x;
-    }
-
-    public class ClassWithNoFieldsButWithPublicProperties
-    {
-        private int x;
-        public int X { get => this.x; set => this.x = value; }
-
     }
 
     public abstract class TestWithConfigSettingsAndMemoryLeakDetection

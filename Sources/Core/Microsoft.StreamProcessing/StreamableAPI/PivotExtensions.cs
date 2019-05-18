@@ -327,12 +327,14 @@ namespace Microsoft.StreamProcessing
                         this.isNull.Add(field.Name, (TInput o) => true);
                     }
 
-                    var fieldAssignment = new[] {
-                    Expression.Bind(
-                        valueField.Member,
-                        IsNullable(field.PropertyType)
-                            ? Expression.PropertyOrField(Expression.PropertyOrField(input, field.Name), "Value")
-                            : Expression.PropertyOrField(input, field.Name)) };
+                    var fieldAssignment = new[]
+                    {
+                        Expression.Bind(
+                            valueField.Member,
+                            IsNullable(field.PropertyType)
+                                ? Expression.PropertyOrField(Expression.PropertyOrField(input, field.Name), "Value")
+                                : Expression.PropertyOrField(input, field.Name))
+                    };
                     var constructor = Expression.MemberInit(newExpression, keyAssignments.Concat(fieldAssignment));
                     var fieldResult = Expression.Lambda<Func<TInput, string, TResult>>(constructor, input, attribute);
                     this.fields.Add(field.Name, fieldResult.Compile());
@@ -361,12 +363,14 @@ namespace Microsoft.StreamProcessing
                         this.isNull.Add(field.Name, (TInput o) => true);
                     }
 
-                    var fieldAssignment = new[] {
-                    Expression.Bind(
-                        valueField.Member,
-                        IsNullable(field.FieldType)
-                            ? Expression.PropertyOrField(Expression.PropertyOrField(input, field.Name), "Value")
-                            : Expression.PropertyOrField(input, field.Name)) };
+                    var fieldAssignment = new[]
+                    {
+                        Expression.Bind(
+                            valueField.Member,
+                            IsNullable(field.FieldType)
+                                ? Expression.PropertyOrField(Expression.PropertyOrField(input, field.Name), "Value")
+                                : Expression.PropertyOrField(input, field.Name))
+                    };
                     var constructor = Expression.MemberInit(newExpression, keyAssignments.Concat(fieldAssignment));
                     var fieldResult = Expression.Lambda<Func<TInput, string, TResult>>(constructor, input, attribute);
                     this.fields.Add(field.Name, fieldResult.Compile());

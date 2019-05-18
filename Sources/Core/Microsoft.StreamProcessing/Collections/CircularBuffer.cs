@@ -255,8 +255,9 @@ namespace Microsoft.StreamProcessing
         public IEnumerator<T> GetEnumerator()
         {
             foreach (var buffer in this.buffers)
-                foreach (var item in buffer.Iterate())
-                    yield return item;
+            {
+                foreach (var item in buffer.Iterate()) yield return item;
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();

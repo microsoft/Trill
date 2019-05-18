@@ -24,7 +24,8 @@ namespace SimpleTesting
         public static void StitchTestMultisetMultiStart()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(2, "A"),
                 StreamEvent.CreateEnd(3, 2, "A"),
@@ -36,7 +37,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(7, 4, "A")
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(2, "A"),
                 StreamEvent.CreateEnd(6, 1, "A"), // 6->5->1
@@ -64,7 +66,8 @@ namespace SimpleTesting
             var input = inputList.ToObservable().ToStreamable();
             var outputStream = input.Stitch();
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(2, "B"),
                 StreamEvent.CreateEnd(3, 1, "A"),
@@ -79,7 +82,8 @@ namespace SimpleTesting
         public void StitchTestSimpleSplice()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(2, 1, "A"),
                 StreamEvent.CreateStart(2, "A"),
@@ -90,7 +94,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, "A")
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(5, 1, "A"),
                 END
@@ -106,7 +111,8 @@ namespace SimpleTesting
         public void StitchTestMultisetOneStart()
         {
             // Two different start times
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(2, 1, "A"),
@@ -119,7 +125,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(6, 1, "A")
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(5, 1, "A"), // 5->4->3->2->1
@@ -138,7 +145,8 @@ namespace SimpleTesting
         public void StitchTestMultisetExtraSlowStart()
         {
             // Two different start times
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(1, "A"),
@@ -159,7 +167,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(6, 1, "A")
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateStart(1, "A"),
@@ -181,7 +190,8 @@ namespace SimpleTesting
             // This is the odd little case where we swapped "BEGIN" and "END" at both times 3 and 4
             // so that they arrive in the opposite order. This shouldn't trouble the system at all:
             // Everything that happens at Time 3 is identical. Right? Right!
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(2, 1, "A"),
                 StreamEvent.CreateStart(2, "A"),
@@ -192,7 +202,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, "A")
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(5, 1, "A"),
                 END
@@ -209,7 +220,8 @@ namespace SimpleTesting
         {
             // We have done horrible thigns to the dictionary: all elements are
             // identical!
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(2, 1, "A"),
                 StreamEvent.CreateStart(2, "B"),
@@ -220,7 +232,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, "B")
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(5, 1, "A"),
                 END
@@ -311,7 +324,8 @@ namespace SimpleTesting
         public static void StitchTestMultisetMultiStartCodegen()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(2, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(3, 2, StructTuple.Create("A", 3)),
@@ -323,7 +337,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(7, 4, StructTuple.Create("A", 3))
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(2, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(6, 1, StructTuple.Create("A", 3)), // 6->5->1
@@ -353,7 +368,8 @@ namespace SimpleTesting
             var input = inputList.ToObservable().ToStreamable();
             var outputStream = input.Stitch();
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(2, StructTuple.Create("B", 3)),
                 StreamEvent.CreateEnd(3, 1, StructTuple.Create("A", 3)),
@@ -369,7 +385,8 @@ namespace SimpleTesting
         public void StitchTestSimpleSpliceCodegen()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(2, 1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(2, StructTuple.Create("A", 3)),
@@ -380,7 +397,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, StructTuple.Create("A", 3))
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(5, 1, StructTuple.Create("A", 3)),
                 END
@@ -396,7 +414,8 @@ namespace SimpleTesting
         public void StitchTestMultisetOneStartCodegen()
         {
             // Two different start times
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(2, 1, StructTuple.Create("A", 3)),
@@ -409,7 +428,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(6, 1, StructTuple.Create("A", 3))
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(5, 1, StructTuple.Create("A", 3)), // 5->4->3->2->1
@@ -430,7 +450,8 @@ namespace SimpleTesting
         public void StitchTestMultisetExtraSlowStartCodegen()
         {
             // Two different start times
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
@@ -451,7 +472,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(6, 1, StructTuple.Create("A", 3))
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
@@ -475,7 +497,8 @@ namespace SimpleTesting
             // This is the odd little case where we swapped "BEGIN" and "END" at both times 3 and 4
             // so that they arrive in the opposite order. This shouldn't trouble the system at all:
             // Everything that happens at Time 3 is identical. Right? Right!
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(2, 1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(2, StructTuple.Create("A", 3)),
@@ -486,7 +509,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, StructTuple.Create("A", 3))
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(5, 1, StructTuple.Create("A", 3)),
                 END
@@ -505,7 +529,8 @@ namespace SimpleTesting
         {
             // We have done horrible thigns to the dictionary: all elements are
             // identical!
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(2, 1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateStart(2, StructTuple.Create("B", 3)),
@@ -516,7 +541,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, StructTuple.Create("B", 3))
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreateStart(1, StructTuple.Create("A", 3)),
                 StreamEvent.CreateEnd(5, 1, StructTuple.Create("A", 3)),
                 END

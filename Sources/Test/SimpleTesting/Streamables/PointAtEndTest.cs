@@ -23,7 +23,8 @@ namespace SimpleTesting
         public void PointAtEndTest1()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(2, 1, "A"),
                 StreamEvent.CreateStart(2, "A"),
@@ -34,7 +35,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, "A")
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreatePoint(2, "A"),
                 StreamEvent.CreatePoint(3, "A"),
                 StreamEvent.CreatePoint(4, "A"),
@@ -52,7 +54,8 @@ namespace SimpleTesting
         public void PointAtEndTest2()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateInterval(1, 5, "A"),
                 StreamEvent.CreateInterval(2, 10, "A"),
                 StreamEvent.CreateInterval(3, 8, "A"),
@@ -60,7 +63,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(8, 9, "A"),
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreatePoint(5, "A"),
                 StreamEvent.CreatePoint(6, "A"),
                 StreamEvent.CreatePoint(8, "A"),
@@ -88,7 +92,8 @@ namespace SimpleTesting
         public void PointAtEndTest3()
         {
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, "A"),
                 StreamEvent.CreateEnd(2, 1, "A"),
                 StreamEvent.CreateStart(2, "A"),
@@ -99,7 +104,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, "A")
             };
 
-            var compareTo = new[] {
+            var compareTo = new[]
+            {
                 StreamEvent.CreatePoint(101, "A"),
                 StreamEvent.CreatePoint(102, "A"),
                 StreamEvent.CreatePoint(103, "A"),
@@ -122,7 +128,8 @@ namespace SimpleTesting
         {
             var payload = StructTuple.Create("A", 3);
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, payload),
                 StreamEvent.CreateEnd(2, 1, payload),
                 StreamEvent.CreateStart(2, payload),
@@ -133,7 +140,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, payload)
             };
 
-            var compareTo = new StreamEvent<StructTuple<string, int>>[] {
+            var compareTo = new StreamEvent<StructTuple<string, int>>[]
+            {
                 StreamEvent.CreatePoint(2, payload),
                 StreamEvent.CreatePoint(3, payload),
                 StreamEvent.CreatePoint(4, payload),
@@ -155,7 +163,8 @@ namespace SimpleTesting
         {
             var payload = StructTuple.Create("A", 3);
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateInterval(1, 5, payload),
                 StreamEvent.CreateInterval(2, 10, payload),
                 StreamEvent.CreateInterval(3, 8, payload),
@@ -163,7 +172,8 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(8, 9, payload),
             };
 
-            var compareTo = new StreamEvent<StructTuple<string, int>>[] {
+            var compareTo = new StreamEvent<StructTuple<string, int>>[]
+            {
                 StreamEvent.CreatePoint(5, payload),
                 StreamEvent.CreatePoint(6, payload),
                 StreamEvent.CreatePoint(8, payload),
@@ -186,7 +196,8 @@ namespace SimpleTesting
         {
             var payload = StructTuple.Create("A", 3);
             // nothing interesting happens here
-            var inputList = new[] {
+            var inputList = new[]
+            {
                 StreamEvent.CreateStart(1, payload),
                 StreamEvent.CreateEnd(2, 1, payload),
                 StreamEvent.CreateStart(2, payload),
@@ -197,7 +208,8 @@ namespace SimpleTesting
                 StreamEvent.CreateEnd(5, 4, payload)
             };
 
-            var compareTo = new StreamEvent<StructTuple<string, int>>[] {
+            var compareTo = new StreamEvent<StructTuple<string, int>>[]
+            {
                 StreamEvent.CreatePoint(101, payload),
                 StreamEvent.CreatePoint(102, payload),
                 StreamEvent.CreatePoint(103, payload),

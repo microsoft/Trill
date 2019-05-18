@@ -9,7 +9,8 @@ using System.Runtime.Serialization;
 
 namespace Microsoft.StreamProcessing.Internal
 {
-    internal static class StructTuple {
+    internal static class StructTuple
+    {
         public static StructTuple<T1> Create<T1>(T1 item1)
         {
             return new StructTuple<T1>() { Item1 = item1 };

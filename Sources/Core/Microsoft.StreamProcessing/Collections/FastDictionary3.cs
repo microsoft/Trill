@@ -118,7 +118,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 index++;
                 if (index == this.Size)
                     index = 0;
-            } while (true);
+            }
+            while (true);
         }
 
         /// <summary>

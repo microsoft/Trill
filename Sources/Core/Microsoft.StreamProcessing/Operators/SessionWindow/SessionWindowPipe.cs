@@ -222,10 +222,14 @@ namespace Microsoft.StreamProcessing
             int iter = FastDictionary<TKey, long>.IteratorStart;
             var temp = new List<Tuple<TKey, long>>();
             while (this.lastDataTimeDictionary.Iterate(ref iter))
+            {
                 if (this.stateDictionary.entries[iter].value.Any())
+                {
                     temp.Add(Tuple.Create(
                         this.windowEndTimeDictionary.entries[iter].key,
                         Math.Min(this.lastDataTimeDictionary.entries[iter].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[iter].value)));
+                }
+            }
             foreach (var item in temp.OrderBy(o => o.Item2)) this.orderedKeys.AddLast(new LinkedListNode<TKey>(item.Item1));
             base.UpdatePointers();
         }

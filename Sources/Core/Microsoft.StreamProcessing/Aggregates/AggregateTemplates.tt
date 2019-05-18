@@ -3,7 +3,8 @@
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#
-var averageTypesToGenerate = new[] {
+var averageTypesToGenerate = new[]
+{
     new { InputTypeFriendlyName = "SByte", TypeName = "sbyte", SumTypeName = "long", ReturnTypeName = "double" },
     new { InputTypeFriendlyName = "Short", TypeName = "short", SumTypeName = "long", ReturnTypeName = "double" },
     new { InputTypeFriendlyName = "Int", TypeName = "int", SumTypeName = "long", ReturnTypeName = "double" },
@@ -19,7 +20,8 @@ var averageTypesToGenerate = new[] {
     new { InputTypeFriendlyName = "Complex", TypeName = "Complex", SumTypeName = "Complex", ReturnTypeName = "Complex" }
 };
 
-var sumTypesToGenerate = new[] {
+var sumTypesToGenerate = new[]
+{
     new { InputTypeFriendlyName = "SByte", TypeName = "sbyte" },
     new { InputTypeFriendlyName = "Byte", TypeName = "byte" },
     new { InputTypeFriendlyName = "Short", TypeName = "short" },

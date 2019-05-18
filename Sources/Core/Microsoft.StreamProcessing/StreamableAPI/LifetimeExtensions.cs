@@ -75,13 +75,17 @@ namespace Microsoft.StreamProcessing
             }
 
             if (windowSize % period == 0)
+            {
                 return source.AlterEventLifetime(vs => AdjustStartTime(vs, offset, period), windowSize)
                     .SetProperty().IsConstantHop(true, period, offset);
+            }
             else
+            {
                 return source.AlterEventLifetime(
                         vs => AdjustStartTime(vs, offset, period),
                         vs => AdjustStartTime(vs + windowSize, offset, period) - AdjustStartTime(vs, offset, period))
                     .SetProperty().IsConstantHop(true, period, offset);
+            }
         }
 
         /// <summary>
