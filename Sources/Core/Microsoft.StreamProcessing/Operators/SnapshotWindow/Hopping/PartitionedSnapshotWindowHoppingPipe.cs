@@ -284,10 +284,10 @@ namespace Microsoft.StreamProcessing
                     {
                         foreach (var ecqState in partition.ecq.Iterate())
                         {
-                            iter = FastDictionary<TKey, StateAndActive<TState>>.IteratorStart;
-                            while (ecqState.states.Iterate(ref iter))
+                            var stateIter = FastDictionary<TKey, StateAndActive<TState>>.IteratorStart;
+                            while (ecqState.states.Iterate(ref stateIter))
                             {
-                                if (ecqState.states.entries[iter].value.active > 0)
+                                if (ecqState.states.entries[stateIter].value.active > 0)
                                 {
                                     partitionHasValidOutstandingState = true;
                                     break;
