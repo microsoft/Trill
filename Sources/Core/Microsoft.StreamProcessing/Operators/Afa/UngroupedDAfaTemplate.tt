@@ -172,10 +172,12 @@ using Microsoft.StreamProcessing.Internal.Collections;
                                                 activeState_state = -1; // assume the arc does not fire
                                                 <# foreach (var edge in sourceNodeInfo.Item2) { #>
 
-                                                if (<#= edge.Fence("synctime", "batch[i]", "activeState_register") #>) {
+                                                if (<#= edge.Fence("synctime", "batch[i]", "activeState_register") #>)
+                                                {
                                                     // assign new register value
                                                     <# UpdateRegisterValue(edge, "activeState_register", "synctime", "batch[i]", "activeState_register"); #>
                                                     activeState_register = newReg;
+
                                                     // target nodes
                                                     <# foreach (var ns in edge.EpsilonReachableNodes) { #>
 

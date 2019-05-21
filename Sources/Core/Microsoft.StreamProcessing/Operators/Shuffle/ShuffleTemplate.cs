@@ -218,7 +218,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(" sourceBatch = batch as ");
             this.Write(this.ToStringHelper.ToStringWithCulture(sourceBatchClassType));
             this.Write(this.ToStringHelper.ToStringWithCulture(TOuterKeyTSourceGenericParameters));
-            this.Write(";\r\n\r\n        var count = batch.Count;\r\n        var srckey = batch.key.col;\r\n\r\n\r\n");
+            this.Write(";\r\n\r\n        var count = batch.Count;\r\n        var srckey = batch.key.col;\r\n\r\n");
   foreach (var f in this.fields)
     {
         if (f.canBeFixed)

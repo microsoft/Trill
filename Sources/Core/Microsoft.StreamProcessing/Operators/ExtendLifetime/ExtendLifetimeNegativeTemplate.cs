@@ -285,7 +285,7 @@ internal sealed class ");
             this.Write(this.ToStringHelper.ToStringWithCulture(BatchGeneratedFrom_TKey_TPayload));
             this.Write(this.ToStringHelper.ToStringWithCulture(TKeyTPayloadGenericParameters));
             this.Write(" batch, int index, long sync, long other, int hash)\r\n        {\r\n            this." +
-                    "Key = key;\r\n            //this.Payload = payload;\r\n");
+                    "Key = key;\r\n");
  if (this.noFields) { 
             this.Write("            this.Payload = batch.payload.col[index];\r\n");
  } else { 

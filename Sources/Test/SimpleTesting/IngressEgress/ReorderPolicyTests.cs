@@ -107,7 +107,6 @@ namespace SimpleTesting
 
             var outputList = new List<StreamEvent<int>>();
 
-
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
@@ -135,7 +134,6 @@ namespace SimpleTesting
             Config.IngressSortingTechnique = SortingTechnique.PriorityQueue;
 
             var outputList = new List<StreamEvent<int>>();
-
 
             double disorderFraction = 0.5;
             int reorderLatency = 202;
@@ -255,7 +253,6 @@ namespace SimpleTesting
 
             var outputList = new List<StreamEvent<int>>();
 
-
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
@@ -283,7 +280,6 @@ namespace SimpleTesting
             Config.IngressSortingTechnique = SortingTechnique.PriorityQueue;
 
             var outputList = new List<StreamEvent<int>>();
-
 
             double disorderFraction = 0.5;
             int reorderLatency = 202;
@@ -402,7 +398,6 @@ namespace SimpleTesting
 
             var outputList = new List<StreamEvent<int>>();
 
-
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
@@ -430,7 +425,6 @@ namespace SimpleTesting
             Config.IngressSortingTechnique = SortingTechnique.PriorityQueue;
 
             var outputList = new List<StreamEvent<int>>();
-
 
             double disorderFraction = 0.5;
             int reorderLatency = 202;
@@ -550,7 +544,6 @@ namespace SimpleTesting
 
             var outputList = new List<StreamEvent<int>>();
 
-
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
@@ -578,7 +571,6 @@ namespace SimpleTesting
             Config.IngressSortingTechnique = SortingTechnique.PriorityQueue;
 
             var outputList = new List<StreamEvent<int>>();
-
 
             double disorderFraction = 0.5;
             int reorderLatency = 202;

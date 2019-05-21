@@ -14,6 +14,7 @@ namespace Microsoft.StreamProcessing
     public static partial class Streamable
     {
         #region Detect extensions for IStreamable
+
         /// <summary>
         /// Detect a pattern over the incoming stream. Takes augmented finite automaton (AFA) as input. Create AFA using the Regex.* API or direct AFA specification.
         /// </summary>
@@ -156,6 +157,7 @@ namespace Microsoft.StreamProcessing
         #endregion
 
         #region CreateAFA extensions for IStreamable
+
         /// <summary>
         /// Define a pattern against which data in the input stream may be matched
         /// </summary>
@@ -196,6 +198,7 @@ namespace Microsoft.StreamProcessing
         #endregion
 
         #region Macro extensions for pattern matching
+
         /// <summary>
         /// Add to the current pattern a new pattern symbol that matches any element
         /// </summary>

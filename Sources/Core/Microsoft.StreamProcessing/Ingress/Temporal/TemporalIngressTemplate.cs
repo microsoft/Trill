@@ -774,8 +774,8 @@ if (partitioned) {
             this.Write("    protected override void OnCompleted(long punctuationTime)\r\n    {\r\n        Gen" +
                     "erateAndProcess");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));
-            this.Write("(punctuationTime);\r\n        // Flush, but if we just flushed due to the punctuati" +
-                    "on generated above\r\n        if (flushPolicy != ");
+            this.Write("(punctuationTime);\r\n\r\n        // Flush, but if we just flushed due to the punctua" +
+                    "tion generated above\r\n        if (flushPolicy != ");
             this.Write(this.ToStringHelper.ToStringWithCulture(partitionString));
             this.Write("FlushPolicy.FlushOn");
             this.Write(this.ToStringHelper.ToStringWithCulture(globalPunctuation));

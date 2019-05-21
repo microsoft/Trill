@@ -998,242 +998,242 @@ namespace Microsoft.StreamProcessing
                 case ExpressionType.Add:
                 case ExpressionType.AddChecked:
                     this.writer.Write("+"); break;
-                //
+
                 // Summary:
                 //     A bitwise or logical AND operation, such as (a & b) in C# and (a And b) in
                 //     Visual Basic.
                 case ExpressionType.And:
                     this.writer.Write("&"); break;
-                //
+
                 // Summary:
                 //     A conditional AND operation that evaluates the second operand only if the
                 //     first operand evaluates to true. It corresponds to (a && b) in C# and (a
                 //     AndAlso b) in Visual Basic.
                 case ExpressionType.AndAlso:
                     this.writer.Write("&&"); break;
-                //
+
                 // Summary:
                 //     A node that represents a null coalescing operation, such as (a ?? b) in C#
                 //     or If(a: break; b) in Visual Basic.
                 case ExpressionType.Coalesce:
                     this.writer.Write("??"); break;
-                //
+
                 // Summary:
                 //     A division operation, such as (a / b), for numeric operands.
                 case ExpressionType.Divide:
                     this.writer.Write("/"); break;
-                //
+
                 // Summary:
                 //     A node that represents an equality comparison, such as (a == b) in C# or
                 //     (a = b) in Visual Basic.
                 case ExpressionType.Equal:
                     this.writer.Write("=="); break;
-                //
+
                 // Summary:
                 //     A bitwise or logical XOR operation, such as (a ^ b) in C# or (a Xor b) in
                 //     Visual Basic.
                 case ExpressionType.ExclusiveOr:
                     this.writer.Write("^"); break;
-                //
+
                 // Summary:
                 //     A "greater than" comparison, such as (a > b).
                 case ExpressionType.GreaterThan:
                     this.writer.Write(">"); break;
-                //
+
                 // Summary:
                 //     A "greater than or equal to" comparison, such as (a >= b).
                 case ExpressionType.GreaterThanOrEqual:
                     this.writer.Write(">="); break;
-                //
+
                 // Summary:
                 //     A bitwise left-shift operation: break; such as (a << b).
                 case ExpressionType.LeftShift:
                     this.writer.Write("<<"); break;
-                //
+
                 // Summary:
                 //     A "less than" comparison: break; such as (a < b).
                 case ExpressionType.LessThan:
                     this.writer.Write("<"); break;
-                //
+
                 // Summary:
                 //     A "less than or equal to" comparison: break; such as (a <= b).
                 case ExpressionType.LessThanOrEqual:
                     this.writer.Write("<="); break;
-                //
+
                 // Summary:
                 //     An arithmetic remainder operation: break; such as (a % b) in C# or (a Mod b) in
                 //     Visual Basic.
                 case ExpressionType.Modulo:
                     this.writer.Write("%"); break;
-                //
+
                 // Summary:
                 //     A multiplication operation: break; such as (a * b): break; without overflow checking: break; for
                 //     numeric operands.
                 case ExpressionType.Multiply:
                 case ExpressionType.MultiplyChecked:
                     this.writer.Write("*"); break;
-                //
+
                 // Summary:
                 //     An arithmetic negation operation: break; such as (-a). The object a should not be
                 //     modified in place.
                 case ExpressionType.Negate:
                 case ExpressionType.NegateChecked:
                     this.writer.Write("-"); break;
-                //
+
                 // Summary:
                 //     A unary plus operation: break; such as (+a). The result of a predefined unary plus
                 //     operation is the value of the operand: break; but user-defined implementations might
                 //     have unusual results.
                 case ExpressionType.UnaryPlus:
                     this.writer.Write("+"); break;
-                //
+
                 // Summary:
                 //     A bitwise complement or logical negation operation. In C#: break; it is equivalent
                 //     to (~a) for integral types and to (!a) for Boolean values. In Visual Basic: break;
                 //     it is equivalent to (Not a). The object a should not be modified in place.
                 case ExpressionType.Not:
                     this.writer.Write("!"); break; // BUG
-                //
+
                 // Summary:
                 //     An inequality comparison: break; such as (a != b) in C# or (a <> b) in Visual Basic.
                 case ExpressionType.NotEqual:
                     this.writer.Write("!="); break;
-                //
+
                 // Summary:
                 //     A bitwise or logical OR operation: break; such as (a | b) in C# or (a Or b) in Visual
                 //     Basic.
                 case ExpressionType.Or:
                     this.writer.Write("|"); break;
-                //
+
                 // Summary:
                 //     A short-circuiting conditional OR operation: break; such as (a || b) in C# or (a
                 //     OrElse b) in Visual Basic.
                 case ExpressionType.OrElse:
                     this.writer.Write("||"); break;
-                //
+
                 // Summary:
                 //     A bitwise right-shift operation: break; such as (a >> b).
                 case ExpressionType.RightShift:
                     this.writer.Write(">>"); break;
-                //
+
                 // Summary:
                 //     A subtraction operation: break; such as (a - b): break; without overflow checking: break; for
                 //     numeric operands.
                 case ExpressionType.Subtract:
                 case ExpressionType.SubtractChecked:
                     this.writer.Write("-"); break;
-                //
+
                 // Summary:
                 //     An assignment operation: break; such as (a = b).
                 case ExpressionType.Assign:
                     this.writer.Write("="); break;
-                //
+
                 // Summary:
                 //     A unary decrement operation: break; such as (a - 1) in C# and Visual Basic. The
                 //     object a should not be modified in place.
                 case ExpressionType.Decrement:
                     this.writer.Write("-"); break;
-                //
+
                 // Summary:
                 //     A unary increment operation: break; such as (a + 1) in C# and Visual Basic. The
                 //     object a should not be modified in place.
                 case ExpressionType.Increment:
                     this.writer.Write("+"); break;
-                //
+
                 // Summary:
                 //     An addition compound assignment operation: break; such as (a += b): break; without overflow
                 //     checking: break; for numeric operands.
                 case ExpressionType.AddAssign:
                 case ExpressionType.AddAssignChecked:
                     this.writer.Write("+="); break;
-                //
+
                 // Summary:
                 //     A bitwise or logical AND compound assignment operation: break; such as (a &= b)
                 //     in C#.
                 case ExpressionType.AndAssign:
                     this.writer.Write("&="); break;
-                //
+
                 // Summary:
                 //     An division compound assignment operation: break; such as (a /= b): break; for numeric
                 //     operands.
                 case ExpressionType.DivideAssign:
                     this.writer.Write("/="); break;
-                //
+
                 // Summary:
                 //     A bitwise or logical XOR compound assignment operation: break; such as (a ^= b)
                 //     in C#.
                 case ExpressionType.ExclusiveOrAssign:
                     this.writer.Write("^="); break;
-                //
+
                 // Summary:
                 //     A bitwise left-shift compound assignment: break; such as (a <<= b).
                 case ExpressionType.LeftShiftAssign:
                     this.writer.Write("<<="); break;
-                //
+
                 // Summary:
                 //     An arithmetic remainder compound assignment operation: break; such as (a %= b) in
                 //     C#.
                 case ExpressionType.ModuloAssign:
                     this.writer.Write("%="); break;
-                //
+
                 // Summary:
                 //     A multiplication compound assignment operation: break; such as (a *= b): break; without
                 //     overflow checking: break; for numeric operands.
                 case ExpressionType.MultiplyAssign:
                 case ExpressionType.MultiplyAssignChecked:
                     this.writer.Write("*="); break;
-                //
+
                 // Summary:
                 //     A bitwise or logical OR compound assignment: break; such as (a |= b) in C#.
                 case ExpressionType.OrAssign:
                     this.writer.Write("|="); break;
-                //
+
                 // Summary:
                 //     A bitwise right-shift compound assignment operation: break; such as (a >>= b).
                 case ExpressionType.RightShiftAssign:
                     this.writer.Write(">>="); break;
-                //
+
                 // Summary:
                 //     A subtraction compound assignment operation: break; such as (a -= b): break; without overflow
                 //     checking: break; for numeric operands.
                 case ExpressionType.SubtractAssign:
                 case ExpressionType.SubtractAssignChecked:
                     this.writer.Write("-="); break;
-                //
+
                 // Summary:
                 //     A unary prefix increment: break; such as (++a). The object a should be modified
                 //     in place.
                 case ExpressionType.PreIncrementAssign:
                     this.writer.Write("++"); break;
-                //
+
                 // Summary:
                 //     A unary prefix decrement: break; such as (--a). The object a should be modified
                 //     in place.
                 case ExpressionType.PreDecrementAssign:
                     this.writer.Write("--"); break;
-                //
+
                 // Summary:
                 //     A unary postfix increment: break; such as (a++). The object a should be modified
                 //     in place.
                 case ExpressionType.PostIncrementAssign:
                     this.writer.Write("++"); break;
-                //
+
                 // Summary:
                 //     A unary postfix decrement: break; such as (a--). The object a should be modified
                 //     in place.
                 case ExpressionType.PostDecrementAssign:
                     this.writer.Write("--"); break;
-                //
+
                 // Summary:
                 //     A ones complement operation: break; such as (~a) in C#.
                 case ExpressionType.OnesComplement:
                     this.writer.Write("~"); break;
-                //
+
                 // Summary:
                 //     A true condition value.
                 case ExpressionType.IsTrue:
                     this.writer.Write("true"); break;
-                //
+
                 // Summary:
                 //     A false condition value.
                 case ExpressionType.IsFalse:
@@ -1334,6 +1334,7 @@ namespace Microsoft.StreamProcessing
             };
             var parameterMapping = new Dictionary<ParameterExpression, ParameterExpression>();
             var i = 0;
+
             // Create a mapping for each parameter/field pair, <p,f> to the indexable expression that will be substituted
             // for occurrences of "p.f" in the body of the function.
             // For fields represented as ColumnBatch<T>, this is "b.f.col", i.e., directly to the array contained in the column batch.
@@ -1629,13 +1630,13 @@ namespace Microsoft.StreamProcessing
         }
 
         protected override Expression VisitMember(MemberExpression node)
-            => node.Member.Name == "Key" && node.Expression == parameter
-                ? newParameter
+            => node.Member.Name == "Key" && node.Expression == this.parameter
+                ? this.newParameter
                 : base.VisitMember(node);
 
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            if (node == parameter) throw new InvalidOperationException("Cannot use a group key outside of accessing its key.");
+            if (node == this.parameter) throw new InvalidOperationException("Cannot use a group key outside of accessing its key.");
             return base.VisitParameter(node);
         }
 

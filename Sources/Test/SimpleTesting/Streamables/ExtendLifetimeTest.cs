@@ -101,7 +101,6 @@ namespace SimpleTesting
         public void ExtendTest3()
         {
             var payload = StructTuple.Create("A", 3);
-            // nothing interesting happens here
             var inputList = new[]
             {
                 StreamEvent.CreateInterval(1, 5, payload),
@@ -254,7 +253,6 @@ namespace SimpleTesting
         public void ExtendTestNegative5()
         {
             var payload = StructTuple.Create("A", 3);
-            // nothing interesting happens here
             var inputList = new[]
             {
                 StreamEvent.CreateInterval(1, 15, payload),

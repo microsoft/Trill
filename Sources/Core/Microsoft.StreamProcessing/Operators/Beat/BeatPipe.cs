@@ -312,8 +312,8 @@ namespace Microsoft.StreamProcessing
                 {
                     // Add interval { vSync = beatTime, vOther = interval.End }.
                     AddToBatch(beatTime, activeInterval.End, ref activeInterval.Key, ref activeInterval.Payload, hash);
-                    // Remove from active list as no longer need to output.
 
+                    // Remove from active list as no longer need to output.
                     intervalTraverser.Remove();
 
                 }

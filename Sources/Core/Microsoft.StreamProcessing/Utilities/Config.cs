@@ -20,6 +20,7 @@ namespace Microsoft.StreamProcessing
         /// Specifies that the query processor should use a priority queue to sort out-of-order data.
         /// </summary>
         PriorityQueue,
+
         /// <summary>
         /// Specifies that the query processor should use the impatience sort method to sort out-of-order data.
         /// </summary>
@@ -357,6 +358,7 @@ namespace Microsoft.StreamProcessing
                     dontFallBackToRowBasedExecution = value;
                 }
             }
+
             /// <summary>
             /// FOR TEST USE ONLY!
             /// When ForceRowBasedExecution is true, this flag is ignored.

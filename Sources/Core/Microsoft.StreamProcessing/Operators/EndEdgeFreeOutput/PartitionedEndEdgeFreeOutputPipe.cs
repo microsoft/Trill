@@ -52,8 +52,8 @@ namespace Microsoft.StreamProcessing
 
         private void OutputCompletedIntervals(PartitionEntry partition)
         {
-            var delList = new List<long>();
             // Output all completed intervals
+            var delList = new List<long>();
             foreach (var kvp in partition.eventMap)
             {
                 var index = FastDictionary2<ActiveEvent, int>.IteratorStart;

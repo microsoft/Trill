@@ -85,6 +85,7 @@ namespace Microsoft.StreamProcessing
                                          typeof(TResult),
                                          typeof(TKey).GetPartitionType());
             }
+
             // Middle case: type is one level of grouping, e.g., TKey = CompoundGroupKey<PartitionKey<TP>, TG>
             if (typeof(TKey).GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(PartitionKey<>))
             {
@@ -154,6 +155,7 @@ namespace Microsoft.StreamProcessing
                     throw new StreamProcessingException(this.errorMessages);
                 return false;
             }
+
             // This operator uses the equality method on payloads
             if (this.Right.Properties.IsColumnar && !this.Right.Properties.IsStartEdgeOnly && !this.Right.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
             {

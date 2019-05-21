@@ -270,7 +270,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(<#= inheritBase #> <#= ingressType == "StreamEvent" ? "value" : "inputValue" #>)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 <#      if (fusionOption == "Disordered")
         {
             if (ingressType == "Interval")
@@ -447,7 +446,6 @@ namespace Microsoft.StreamProcessing
                 #>, bool updateCurrentTime = true<#
             }   #>)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 <#      }
 
         if (ingressType == "StreamEvent")
@@ -716,8 +714,8 @@ namespace Microsoft.StreamProcessing
             // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
 <#          } #>
             syncTime = Math.Max(syncTime, this.currentTime);
-<#      } #>
 
+<#      } #>
 <#      if (latencyOption == "WithLatency")
         { #>
             // Process events queued for reorderLatency up to the <#= globalPunctuation #> syncTime
@@ -852,6 +850,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcess<#= globalPunctuation #>(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != <#= partitionString #>FlushPolicy.FlushOn<#= globalPunctuation #>)
                 OnFlush();

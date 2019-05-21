@@ -58,39 +58,39 @@ namespace Microsoft.StreamProcessing
 
         internal void ProcessProperties()
         {
-            reduceInMap = sourceLeft.Properties.CanSpray(keySelector) && sourceLeft.Properties.Derive(a => mapper(a, null)).CanSpray(keySelector);
-            if (reduceInMap)
+            this.reduceInMap = this.sourceLeft.Properties.CanSpray(this.keySelector) && this.sourceLeft.Properties.Derive(a => this.mapper(a, null)).CanSpray(this.keySelector);
+            if (this.reduceInMap)
             {
-                sprayComparer = sourceLeft.Properties.GetSprayComparerExpression(keySelector);
+                this.sprayComparer = this.sourceLeft.Properties.GetSprayComparerExpression(this.keySelector);
             }
-            isMulticore = sourceLeft.Properties.IsMulticore;
+            this.isMulticore = this.sourceLeft.Properties.IsMulticore;
         }
 
         public override IDisposable Subscribe(IStreamObserver<TMapKey, TOutput> observer)
         {
             // asymmetric mapper implies that we have to have a 2-input mapper
-            Contract.Assert((!leftAsymmetric) || (sourceRight != null));
+            Contract.Assert((!this.leftAsymmetric) || (this.sourceRight != null));
 
-            var mapArity = isMulticore ? 1 : Config.MapArity;
-            var reduceArity = isMulticore ? 1 : Config.ReduceArity;
+            var mapArity = this.isMulticore ? 1 : Config.MapArity;
+            var reduceArity = this.isMulticore ? 1 : Config.ReduceArity;
 
-            if (keySelector != null)
+            if (this.keySelector != null)
             {
-                if (sourceRight != null) // two-input mapper
+                if (this.sourceRight != null) // two-input mapper
                 {
                     // [1] spray batches into L1 physical cores
-                    var importLeft = new SprayGroupImportStreamable<TMapKey, TMapInputLeft>(sourceLeft, mapArity, leftAsymmetric);
-                    var importRight = new SprayGroupImportStreamable<TMapKey, TMapInputRight>(sourceRight, mapArity);
+                    var importLeft = new SprayGroupImportStreamable<TMapKey, TMapInputLeft>(this.sourceLeft, mapArity, this.leftAsymmetric);
+                    var importRight = new SprayGroupImportStreamable<TMapKey, TMapInputRight>(this.sourceRight, mapArity);
 
                     // [2] perform the spray lambda on each L1 core
                     var sprayResults = new BinaryMulticastStreamable<TMapKey, TMapInputLeft, TMapInputRight, TReduceInput>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        sprayResults[i] = new BinaryMulticastStreamable<TMapKey, TMapInputLeft, TMapInputRight, TReduceInput>(importLeft, importRight, mapper);
+                        sprayResults[i] = new BinaryMulticastStreamable<TMapKey, TMapInputLeft, TMapInputRight, TReduceInput>(importLeft, importRight, this.mapper);
 
                     // [3] apply shuffle on the result of each spray
                     Streamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>[] shuffleL1Results = new ShuffleNestedStreamable<TMapKey, TReduceInput, TReduceKey>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        shuffleL1Results[i] = new ShuffleNestedStreamable<TMapKey, TReduceInput, TReduceKey>(sprayResults[i], keySelector, reduceArity, i);
+                        shuffleL1Results[i] = new ShuffleNestedStreamable<TMapKey, TReduceInput, TReduceKey>(sprayResults[i], this.keySelector, reduceArity, i);
 
                     // [4] Union the shuffled data by group key
                     MultiUnionStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>.l2index = 0;
@@ -104,9 +104,10 @@ namespace Microsoft.StreamProcessing
 
                     for (int i = 0; i < reduceArity; i++)
                     {
-                        innerResults[i] = new MulticastStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput, TBind>(shuffleL2Results[i], reducer);
-                        ungroupInnerResults[i] = new UngroupStreamable<TMapKey, TReduceKey, TBind, TOutput>(sourceLeft.Properties.KeyEqualityComparer, innerResults[i], resultSelector);
+                        innerResults[i] = new MulticastStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput, TBind>(shuffleL2Results[i], this.reducer);
+                        ungroupInnerResults[i] = new UngroupStreamable<TMapKey, TReduceKey, TBind, TOutput>(this.sourceLeft.Properties.KeyEqualityComparer, innerResults[i], this.resultSelector);
                     }
+
                     // [6] final single merging union
                     var union = new MultiUnionStreamable<TMapKey, TOutput>(ungroupInnerResults, false);
 
@@ -115,27 +116,27 @@ namespace Microsoft.StreamProcessing
                 else // single-input mapper
                 {
                     // [1] spray batches into L1 physical cores
-                    var importLeft = new SprayGroupImportStreamable<TMapKey, TMapInputLeft>(sourceLeft, mapArity, leftAsymmetric, sprayComparer);
+                    var importLeft = new SprayGroupImportStreamable<TMapKey, TMapInputLeft>(this.sourceLeft, mapArity, this.leftAsymmetric, this.sprayComparer);
 
                     // [2] perform the spray lambda on each L1 core
                     var sprayResults = new MulticastStreamable<TMapKey, TMapInputLeft, TReduceInput>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        sprayResults[i] = new MulticastStreamable<TMapKey, TMapInputLeft, TReduceInput>(importLeft, a => mapper(a, null));
+                        sprayResults[i] = new MulticastStreamable<TMapKey, TMapInputLeft, TReduceInput>(importLeft, a => this.mapper(a, null));
 
                     Streamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>[] mergeInputs;
-                    if (reduceInMap) // apply reducer in map phase itself
+                    if (this.reduceInMap) // apply reducer in map phase itself
                     {
                         // [3] apply shuffle on the result of each spray
                         mergeInputs = new Streamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>[mapArity];
                         for (int i = 0; i < mapArity; i++)
-                            mergeInputs[i] = new GroupNestedStreamable<TMapKey, TReduceInput, TReduceKey>(sprayResults[i], keySelector);
+                            mergeInputs[i] = new GroupNestedStreamable<TMapKey, TReduceInput, TReduceKey>(sprayResults[i], this.keySelector);
                     }
                     else
                     {
                         // [3] apply shuffle on the result of each spray
                         Streamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>[] shuffleL1Results = new ShuffleNestedStreamable<TMapKey, TReduceInput, TReduceKey>[mapArity];
                         for (int i = 0; i < mapArity; i++)
-                            shuffleL1Results[i] = new ShuffleNestedStreamable<TMapKey, TReduceInput, TReduceKey>(sprayResults[i], keySelector, reduceArity, i);
+                            shuffleL1Results[i] = new ShuffleNestedStreamable<TMapKey, TReduceInput, TReduceKey>(sprayResults[i], this.keySelector, reduceArity, i);
 
                         // [4] Union the shuffled data by group key
                         MultiUnionStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>.l2index = 0;
@@ -154,8 +155,8 @@ namespace Microsoft.StreamProcessing
 
                     for (int i = 0; i < mergeInputs.Length; i++)
                     {
-                        innerResults[i] = new MulticastStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput, TBind>(mergeInputs[i], reducer);
-                        ungroupInnerResults[i] = new UngroupStreamable<TMapKey, TReduceKey, TBind, TOutput>(sourceLeft.Properties.KeyEqualityComparer, innerResults[i], resultSelector);
+                        innerResults[i] = new MulticastStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput, TBind>(mergeInputs[i], this.reducer);
+                        ungroupInnerResults[i] = new UngroupStreamable<TMapKey, TReduceKey, TBind, TOutput>(this.sourceLeft.Properties.KeyEqualityComparer, innerResults[i], this.resultSelector);
                     }
 
                     // [6] final single merging union
@@ -166,16 +167,16 @@ namespace Microsoft.StreamProcessing
             }
             else
             {
-                if (sourceRight != null) // two-input mapper
+                if (this.sourceRight != null) // two-input mapper
                 {
                     // [1] spray batches into L1 physical cores
-                    var importLeft = new SprayGroupImportStreamable<TMapKey, TMapInputLeft>(sourceLeft, mapArity, leftAsymmetric);
-                    var importRight = new SprayGroupImportStreamable<TMapKey, TMapInputRight>(sourceRight, mapArity);
+                    var importLeft = new SprayGroupImportStreamable<TMapKey, TMapInputLeft>(this.sourceLeft, mapArity, this.leftAsymmetric);
+                    var importRight = new SprayGroupImportStreamable<TMapKey, TMapInputRight>(this.sourceRight, mapArity);
 
                     // [2] perform the spray lambda on each L1 core
                     var sprayResults = new BinaryMulticastStreamable<TMapKey, TMapInputLeft, TMapInputRight, TReduceInput>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        sprayResults[i] = new BinaryMulticastStreamable<TMapKey, TMapInputLeft, TMapInputRight, TReduceInput>(importLeft, importRight, mapper);
+                        sprayResults[i] = new BinaryMulticastStreamable<TMapKey, TMapInputLeft, TMapInputRight, TReduceInput>(importLeft, importRight, this.mapper);
 
                     // [4] Union the shuffled data by group key
                     MultiUnionStreamable<TMapKey, TReduceInput>.l2index = 0;
@@ -187,12 +188,12 @@ namespace Microsoft.StreamProcessing
                 else // single-input mapper
                 {
                     // [1] spray batches into L1 physical cores
-                    var importLeft = new SprayGroupImportStreamable<TMapKey, TMapInputLeft>(sourceLeft, mapArity);
+                    var importLeft = new SprayGroupImportStreamable<TMapKey, TMapInputLeft>(this.sourceLeft, mapArity);
 
                     // [2] perform the spray lambda on each L1 core
                     var sprayResults = new MulticastStreamable<TMapKey, TMapInputLeft, TReduceInput>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        sprayResults[i] = new MulticastStreamable<TMapKey, TMapInputLeft, TReduceInput>(importLeft, a => mapper(a, null));
+                        sprayResults[i] = new MulticastStreamable<TMapKey, TMapInputLeft, TReduceInput>(importLeft, a => this.mapper(a, null));
 
                     // [4] Union the shuffled data by group key
                     MultiUnionStreamable<TMapKey, TReduceInput>.l2index = 0;
@@ -255,39 +256,39 @@ namespace Microsoft.StreamProcessing
 
         internal void ProcessProperties()
         {
-            reduceInMap = sourceLeft.Properties.CanSpray(keySelector) && sourceLeft.Properties.Derive(a => mapper(a, null)).CanSpray(keySelector);
-            if (reduceInMap)
+            this.reduceInMap = this.sourceLeft.Properties.CanSpray(this.keySelector) && this.sourceLeft.Properties.Derive(a => this.mapper(a, null)).CanSpray(this.keySelector);
+            if (this.reduceInMap)
             {
-                sprayComparer = sourceLeft.Properties.GetSprayComparerExpression(keySelector);
+                this.sprayComparer = this.sourceLeft.Properties.GetSprayComparerExpression(this.keySelector);
             }
-            isMulticore = sourceLeft.Properties.IsMulticore;
+            this.isMulticore = this.sourceLeft.Properties.IsMulticore;
         }
 
         public override IDisposable Subscribe(IStreamObserver<Empty, TOutput> observer)
         {
             // asymmetric mapper implies that we have to have a 2-input mapper
-            Contract.Assert((!leftAsymmetric) || (sourceRight != null));
+            Contract.Assert((!this.leftAsymmetric) || (this.sourceRight != null));
 
-            var mapArity = isMulticore ? 1 : Config.MapArity;
-            var reduceArity = isMulticore ? 1 : Config.ReduceArity;
+            var mapArity = this.isMulticore ? 1 : Config.MapArity;
+            var reduceArity = this.isMulticore ? 1 : Config.ReduceArity;
 
-            if (keySelector != null)
+            if (this.keySelector != null)
             {
-                if (sourceRight != null) // two-input mapper
+                if (this.sourceRight != null) // two-input mapper
                 {
                     // [1] spray batches into L1 physical cores
-                    var importLeft = new SprayGroupImportStreamable<Empty, TMapInputLeft>(sourceLeft, mapArity, leftAsymmetric);
-                    var importRight = new SprayGroupImportStreamable<Empty, TMapInputRight>(sourceRight, mapArity);
+                    var importLeft = new SprayGroupImportStreamable<Empty, TMapInputLeft>(this.sourceLeft, mapArity, this.leftAsymmetric);
+                    var importRight = new SprayGroupImportStreamable<Empty, TMapInputRight>(this.sourceRight, mapArity);
 
                     // [2] perform the spray lambda on each L1 core
                     var sprayResults = new BinaryMulticastStreamable<Empty, TMapInputLeft, TMapInputRight, TReduceInput>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        sprayResults[i] = new BinaryMulticastStreamable<Empty, TMapInputLeft, TMapInputRight, TReduceInput>(importLeft, importRight, mapper);
+                        sprayResults[i] = new BinaryMulticastStreamable<Empty, TMapInputLeft, TMapInputRight, TReduceInput>(importLeft, importRight, this.mapper);
 
                     // [3] apply shuffle on the result of each spray
                     Streamable<TReduceKey, TReduceInput>[] shuffleL1Results = new ShuffleStreamable<Empty, TReduceInput, TReduceKey>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        shuffleL1Results[i] = new ShuffleStreamable<Empty, TReduceInput, TReduceKey>(sprayResults[i], keySelector, reduceArity, i);
+                        shuffleL1Results[i] = new ShuffleStreamable<Empty, TReduceInput, TReduceKey>(sprayResults[i], this.keySelector, reduceArity, i);
 
                     // [4] Union the shuffled data by group key
                     MultiUnionStreamable<TReduceKey, TReduceInput>.l2index = 0;
@@ -301,9 +302,10 @@ namespace Microsoft.StreamProcessing
 
                     for (int i = 0; i < reduceArity; i++)
                     {
-                        innerResults[i] = new MulticastStreamable<TReduceKey, TReduceInput, TBind>(shuffleL2Results[i], reducer);
-                        ungroupInnerResults[i] = new UngroupStreamable<TReduceKey, TBind, TOutput>(innerResults[i], resultSelector);
+                        innerResults[i] = new MulticastStreamable<TReduceKey, TReduceInput, TBind>(shuffleL2Results[i], this.reducer);
+                        ungroupInnerResults[i] = new UngroupStreamable<TReduceKey, TBind, TOutput>(innerResults[i], this.resultSelector);
                     }
+
                     // [6] final single merging union
                     var union = new MultiUnionStreamable<Empty, TOutput>(ungroupInnerResults, false);
 
@@ -312,27 +314,27 @@ namespace Microsoft.StreamProcessing
                 else // single-input mapper
                 {
                     // [1] spray batches into L1 physical cores
-                    var importLeft = new SprayGroupImportStreamable<Empty, TMapInputLeft>(sourceLeft, mapArity, leftAsymmetric, sprayComparer);
+                    var importLeft = new SprayGroupImportStreamable<Empty, TMapInputLeft>(this.sourceLeft, mapArity, this.leftAsymmetric, this.sprayComparer);
 
                     // [2] perform the spray lambda on each L1 core
                     var sprayResults = new MulticastStreamable<Empty, TMapInputLeft, TReduceInput>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        sprayResults[i] = new MulticastStreamable<Empty, TMapInputLeft, TReduceInput>(importLeft, a => mapper(a, null));
+                        sprayResults[i] = new MulticastStreamable<Empty, TMapInputLeft, TReduceInput>(importLeft, a => this.mapper(a, null));
 
                     Streamable<TReduceKey, TReduceInput>[] mergeInputs;
-                    if (reduceInMap) // apply reducer in map phase itself
+                    if (this.reduceInMap) // apply reducer in map phase itself
                     {
                         // [3] apply shuffle on the result of each spray
                         mergeInputs = new Streamable<TReduceKey, TReduceInput>[mapArity];
                         for (int i = 0; i < mapArity; i++)
-                            mergeInputs[i] = new GroupStreamable<Empty, TReduceInput, TReduceKey>(sprayResults[i], keySelector);
+                            mergeInputs[i] = new GroupStreamable<Empty, TReduceInput, TReduceKey>(sprayResults[i], this.keySelector);
                     }
                     else
                     {
                         // [3] apply shuffle on the result of each spray
                         Streamable<TReduceKey, TReduceInput>[] shuffleL1Results = new ShuffleStreamable<Empty, TReduceInput, TReduceKey>[mapArity];
                         for (int i = 0; i < mapArity; i++)
-                            shuffleL1Results[i] = new ShuffleStreamable<Empty, TReduceInput, TReduceKey>(sprayResults[i], keySelector, reduceArity, i);
+                            shuffleL1Results[i] = new ShuffleStreamable<Empty, TReduceInput, TReduceKey>(sprayResults[i], this.keySelector, reduceArity, i);
 
                         // [4] Union the shuffled data by group key
                         MultiUnionStreamable<TReduceKey, TReduceInput>.l2index = 0;
@@ -351,8 +353,8 @@ namespace Microsoft.StreamProcessing
 
                     for (int i = 0; i < mergeInputs.Length; i++)
                     {
-                        innerResults[i] = new MulticastStreamable<TReduceKey, TReduceInput, TBind>(mergeInputs[i], reducer);
-                        ungroupInnerResults[i] = new UngroupStreamable<TReduceKey, TBind, TOutput>(innerResults[i], resultSelector);
+                        innerResults[i] = new MulticastStreamable<TReduceKey, TReduceInput, TBind>(mergeInputs[i], this.reducer);
+                        ungroupInnerResults[i] = new UngroupStreamable<TReduceKey, TBind, TOutput>(innerResults[i], this.resultSelector);
                     }
 
                     // [6] final single merging union
@@ -363,16 +365,16 @@ namespace Microsoft.StreamProcessing
             }
             else
             {
-                if (sourceRight != null) // two-input mapper
+                if (this.sourceRight != null) // two-input mapper
                 {
                     // [1] spray batches into L1 physical cores
-                    var importLeft = new SprayGroupImportStreamable<Empty, TMapInputLeft>(sourceLeft, mapArity, leftAsymmetric);
-                    var importRight = new SprayGroupImportStreamable<Empty, TMapInputRight>(sourceRight, mapArity);
+                    var importLeft = new SprayGroupImportStreamable<Empty, TMapInputLeft>(this.sourceLeft, mapArity, this.leftAsymmetric);
+                    var importRight = new SprayGroupImportStreamable<Empty, TMapInputRight>(this.sourceRight, mapArity);
 
                     // [2] perform the spray lambda on each L1 core
                     var sprayResults = new BinaryMulticastStreamable<Empty, TMapInputLeft, TMapInputRight, TReduceInput>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        sprayResults[i] = new BinaryMulticastStreamable<Empty, TMapInputLeft, TMapInputRight, TReduceInput>(importLeft, importRight, mapper);
+                        sprayResults[i] = new BinaryMulticastStreamable<Empty, TMapInputLeft, TMapInputRight, TReduceInput>(importLeft, importRight, this.mapper);
 
                     // [4] Union the shuffled data by group key
                     MultiUnionStreamable<Empty, TReduceInput>.l2index = 0;
@@ -384,12 +386,12 @@ namespace Microsoft.StreamProcessing
                 else // single-input mapper
                 {
                     // [1] spray batches into L1 physical cores
-                    var importLeft = new SprayGroupImportStreamable<Empty, TMapInputLeft>(sourceLeft, mapArity);
+                    var importLeft = new SprayGroupImportStreamable<Empty, TMapInputLeft>(this.sourceLeft, mapArity);
 
                     // [2] perform the spray lambda on each L1 core
                     var sprayResults = new MulticastStreamable<Empty, TMapInputLeft, TReduceInput>[mapArity];
                     for (int i = 0; i < mapArity; i++)
-                        sprayResults[i] = new MulticastStreamable<Empty, TMapInputLeft, TReduceInput>(importLeft, a => mapper(a, null));
+                        sprayResults[i] = new MulticastStreamable<Empty, TMapInputLeft, TReduceInput>(importLeft, a => this.mapper(a, null));
 
                     // [4] Union the shuffled data by group key
                     MultiUnionStreamable<Empty, TReduceInput>.l2index = 0;

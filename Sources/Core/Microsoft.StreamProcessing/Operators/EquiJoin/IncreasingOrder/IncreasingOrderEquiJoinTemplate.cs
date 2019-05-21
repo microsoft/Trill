@@ -219,7 +219,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
                         */
                         {
 
-
                             if (currentRightList.Count > 0)
                             {
                                 int compare2 = ");

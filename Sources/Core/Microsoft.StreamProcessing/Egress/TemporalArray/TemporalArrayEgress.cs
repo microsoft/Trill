@@ -117,6 +117,7 @@ namespace Microsoft.StreamProcessing
                 ? new StreamEventArrayObservable<TPayload>(stream, generator, container, identifer)
                 : new StreamEventArrayObservable<TPayload>(stream.ToEndEdgeFreeStream(), generator, container, identifer);
         }
+
         /// <summary>
         /// Exports a streamable as an observable of events. Produces events that are sync time ordered.
         /// Expects only start-edge events in the stream, and constructs user-defined payloads as a result.
@@ -224,6 +225,7 @@ namespace Microsoft.StreamProcessing
 
             return new StartEdgeArrayObservable<TPayload, TResult>(stream, generator, constructor, container, identifer);
         }
+
         /// <summary>
         /// Exports a streamable as an observable of events. Produces events that are sync time ordered.
         /// Expects only start-edge and interval events in the stream, and constructs user-defined payloads as a result.
@@ -331,6 +333,7 @@ namespace Microsoft.StreamProcessing
 
             return new IntervalArrayObservable<TPayload, TResult>(stream.ToEndEdgeFreeStream(), generator, constructor, container, identifer);
         }
+
         /// <summary>
         /// Exports a streamable as an observable of events. Produces events that are sync time ordered.
         /// </summary>
@@ -440,6 +443,7 @@ namespace Microsoft.StreamProcessing
                 ? new PartitionedStreamEventArrayObservable<TKey, TPayload>(stream, generator, container, identifer)
                 : new PartitionedStreamEventArrayObservable<TKey, TPayload>(stream.ToEndEdgeFreeStream(), generator, container, identifer);
         }
+
         /// <summary>
         /// Exports a streamable as an observable of events. Produces events that are sync time ordered.
         /// Expects only start-edge events in the stream, and constructs user-defined payloads as a result.
@@ -551,6 +555,7 @@ namespace Microsoft.StreamProcessing
 
             return new PartitionedStartEdgeArrayObservable<TKey, TPayload, TResult>(stream, generator, constructor, container, identifer);
         }
+
         /// <summary>
         /// Exports a streamable as an observable of events. Produces events that are sync time ordered.
         /// Expects only start-edge and interval events in the stream, and constructs user-defined payloads as a result.

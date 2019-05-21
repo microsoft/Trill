@@ -40,6 +40,7 @@ namespace Microsoft.StreamProcessing
             Contract.EnsuresOnThrow<IngressException>(true);
 
             int n = value.Count + value.Offset;
+
             // Sanity check
             if (n > value.Array.Length)
             {
@@ -107,6 +108,7 @@ namespace Microsoft.StreamProcessing
             Contract.EnsuresOnThrow<IngressException>(true);
 
             int n = value.Count + value.Offset;
+
             // Sanity check
             if (n > value.Array.Length)
             {

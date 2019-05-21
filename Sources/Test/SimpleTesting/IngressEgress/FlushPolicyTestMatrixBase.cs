@@ -154,6 +154,7 @@ namespace SimpleTesting.Flush
 
         // Events expected to be batched at ingress but not egressed
         private readonly Queue<StreamEvent<int>> expectedBatch = new Queue<StreamEvent<int>>();
+
         // Events expected to be batched at the filtered operator but not egressed (only used for FlushPolicy.None)
         private readonly Queue<StreamEvent<int>> filteredBatch = new Queue<StreamEvent<int>>();
         private int ingressCount = 0;

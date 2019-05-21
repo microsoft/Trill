@@ -16,10 +16,12 @@ namespace Microsoft.StreamProcessing
         /// States the maximum number of delegated branches against which to spray data.
         /// </summary>
         public int TotalBranches { get; }
+
         /// <summary>
         /// States whether the spray operation sends all data to all nodes.
         /// </summary>
         public bool Multicast { get; }
+
         /// <summary>
         /// Returns the expression for the comparer used to determine spray sort order.
         /// </summary>

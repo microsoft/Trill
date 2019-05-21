@@ -162,31 +162,37 @@ namespace Microsoft.StreamProcessing
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             public int Count;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             public int RealCount;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             public int DataMsgs;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             public long MinTicks;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             public long MaxTicks;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             public DateTime MinTime;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>

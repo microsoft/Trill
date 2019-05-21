@@ -158,7 +158,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                         */
                         {
 
-
                             if (currentRightList.Count > 0)
                             {
                                 int compare2 = <#= joinKeyOrderComparer("nextLeftKey", "currentRightKey") #>;

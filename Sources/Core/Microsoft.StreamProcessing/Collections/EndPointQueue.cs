@@ -80,6 +80,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             if (newWriteIndex == this.readIndex)
             {
                 Grow();
+
                 // After growing, it is guaranteed that writeIndex + 1 does not need to wrap.
                 insertIndex = this.writeIndex;
                 newWriteIndex = insertIndex + 1;
@@ -264,10 +265,12 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             {
                 count += oldCapacity;
             }
+
             // - Part 1: Copy from [readIndex, (less of count or until end of array)].
             int copy1Length = Math.Min(oldCapacity - this.readIndex, count);
             Array.Copy(oldTimes, this.readIndex, this.times, 0, copy1Length);
             Array.Copy(oldValues, this.readIndex, this.values, 0, copy1Length);
+
             // - Part 2: Copy from [0, (remaining elements)].
             int copy2Length = count - copy1Length;
             if (copy2Length > 0)

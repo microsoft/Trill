@@ -118,7 +118,6 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
-        // Fields used by data batches
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnBatch<long> vsync;
@@ -866,7 +865,6 @@ namespace Microsoft.StreamProcessing
             // TODO in derived class:
             // GENERATE: payload = value.payload;
             // GENERATE: value.payload.IncrementRefCount(1);
-
             if (value.key != null)
                 value.key.IncrementRefCount(1);
             value.hash.IncrementRefCount(1);

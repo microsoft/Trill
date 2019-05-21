@@ -194,7 +194,6 @@ namespace SimpleTesting
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void TestAverageAggregate_UInt()
         {
@@ -240,7 +239,6 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
-
 
         [TestMethod, TestCategory("Gated")]
         public void TestAverageAggregate_ULong()
@@ -288,7 +286,6 @@ namespace SimpleTesting
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void TestAverageAggregate_UShort()
         {
@@ -335,7 +332,6 @@ namespace SimpleTesting
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void TestAverageAggregate_Byte()
         {
@@ -381,7 +377,6 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
-
 
         [TestMethod, TestCategory("Gated")]
         public void TestAverageAggregate_SByte()

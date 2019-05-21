@@ -122,7 +122,6 @@ namespace Microsoft.StreamProcessing
             batch.Free();
         }
 
-
         public override int CurrentlyBufferedOutputCount => 0;
 
         public override int CurrentlyBufferedInputCount => 0;

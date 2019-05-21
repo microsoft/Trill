@@ -77,7 +77,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
             output.vother.col[ind] = endPointTime + 1;
             var interval = intervalMap.Values[index];
             output.key.col[ind] = interval.Key;
-            //output[ind] = interval.Payload;
 <#     foreach (var f in this.fields) { #>
 <#       if (f.OptimizeString()) { #>
 
@@ -187,7 +186,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
         public void Populate(<#= TKey #> key, <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> batch, int index, int hash)
         {
             this.Key = key;
-            //this.Payload = payload;
 <# foreach (var f in this.fields) { #>
             this.<#= f.Name #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
 <# } #>

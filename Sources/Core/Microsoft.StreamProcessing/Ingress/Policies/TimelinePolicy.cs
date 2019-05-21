@@ -14,6 +14,7 @@ namespace Microsoft.StreamProcessing
         /// Indicates that the assigned timeline should be derived from the CPU's notion of time
         /// </summary>
         WallClock,
+
         /// <summary>
         /// Indicates that the assigned timeline should be derived by a monotonically increasing counter
         /// </summary>

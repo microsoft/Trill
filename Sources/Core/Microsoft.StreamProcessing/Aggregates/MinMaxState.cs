@@ -21,12 +21,14 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public SortedMultiSet<T> savedValues;
+
         /// <summary>
         /// The current value if the aggregate were to be computed immediately.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T currentValue;
+
         /// <summary>
         /// The timestamp of the last operation on this state object.
         /// </summary>

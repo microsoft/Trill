@@ -603,7 +603,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
             <# } #>
             sb.Append("]");
             return sb.ToString();
-            //return string.Format("[Start={0}, Key='{1}', Payload='{2}'", Start, KeyColumn.col[RowIndex], Batch[RowIndex]);
         }
     }
 }
@@ -670,9 +669,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                     //keyComparerEquals(key, active.Key) &&
                     <#= this.keyComparer("key_ProcessLeftEvent", "leftEdge.Key") #> &&
                     // leftComparerEquals(payload, active.Payload)
-                    <#= this.leftComparer("batch_ProcessLeftEvent", "leftEdge.Payload") #>
-                    ;
-                //if (AreSame(end, ref key, ref payload, ref leftEdgeMap.Values[index]))
+                    <#= this.leftComparer("batch_ProcessLeftEvent", "leftEdge.Payload") #>;
                 if (areSame)
                 {
                     // Output end edge.
@@ -697,7 +694,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index_AddToBatch] = <#= start #>;
         output.vother.col[index_AddToBatch] = <#= end #>;
         output.key.col[index_AddToBatch] = <#= key #>;
-        //output[index] = payload;
 <#+     foreach (var f in this.leftFields) {
           if (f.OptimizeString()) { #>
 
@@ -727,7 +723,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index_AddToBatch] = <#= start #>;
         output.vother.col[index_AddToBatch] = <#= end #>;
         output.key.col[index_AddToBatch] = <#= key #>;
-        //output[index] = payload;
 <#+     foreach (var f in this.leftFields) {
          var sourceName = leftInterval + ".Payload";
          if (!noFields) sourceName += "." + f.OriginalName;

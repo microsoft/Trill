@@ -128,7 +128,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
                 output.vsync.col[ind] = kvp.Key + limit;
                 output.vother.col[ind] = kvp.Key;
                 output.key.col[ind] = ae.Key;
-                //output[ind] = ae.Payload;
 ");
      foreach (var f in this.fields) { 
        if (f.OptimizeString()) { 
@@ -189,7 +188,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
                         output.vsync.col[ind] = sync;
                         output.vother.col[ind] = StreamEvent.InfinitySyncTime;
                         output.key.col[ind] = batch.key.col[i];
-                        //output[ind] = batch[i];
 ");
      foreach (var f in this.fields) { 
        if (f.OptimizeString()) { 
@@ -227,7 +225,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
                         output.vsync.col[ind] = batch.vsync.col[i];
                         output.vother.col[ind] = Math.Min(batch.vother.col[i], batch.vsync.col[i] + limit);
                         output.key.col[ind] = batch.key.col[i];
-                        //output[ind] = batch[i];
 ");
      foreach (var f in this.fields) { 
        if (f.OptimizeString()) { 
@@ -262,7 +259,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
                         output.vsync.col[ind] = sync;
                         output.vother.col[ind] = other;
                         output.key.col[ind] = batch.key.col[i];
-                        //output[ind] = payload;
 ");
      foreach (var f in this.fields) { 
        if (f.OptimizeString()) { 
@@ -317,8 +313,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(BatchGeneratedFrom_TKey_TPayload));
             this.Write(this.ToStringHelper.ToStringWithCulture(TKeyTPayloadGenericParameters));
-            this.Write(" batch, int index, int hash)\r\n        {\r\n            this.Key = key;\r\n           " +
-                    " //this.Payload = payload;\r\n");
+            this.Write(" batch, int index, int hash)\r\n        {\r\n            this.Key = key;\r\n");
  foreach (var f in this.fields) { 
             this.Write("            this.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));

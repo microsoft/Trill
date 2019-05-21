@@ -17,26 +17,32 @@ namespace Microsoft.StreamProcessing
         /// Indicates that the current node is a grouping operation.
         /// </summary>
         public override PlanNodeKind Kind => PlanNodeKind.Group;
+
         /// <summary>
         /// The previous node in the plan, the input to the grouping operation.
         /// </summary>
         public PlanNode Previous { get; }
+
         /// <summary>
         /// The type of the grouping key of the input stream.
         /// </summary>
         public Type InputKeyType { get; }
+
         /// <summary>
         /// The expression used to group elements relative to a grouping key.
         /// </summary>
         public Expression GroupingExpression { get; }
+
         /// <summary>
         /// States the shuffle ID of the grouping operation.  If the operator is not a shuffle, this value should be int.MinValue.
         /// </summary>
         public int ShuffleId { get; }
+
         /// <summary>
         /// States the number of branches participating in the grouping operation.  If the operator is not a shuffle, this value should be 1.
         /// </summary>
         public int TotalBranches { get; }
+
         /// <summary>
         /// States whether the current operation is a shuffle.
         /// </summary>

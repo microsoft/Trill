@@ -206,6 +206,7 @@ namespace Microsoft.StreamProcessing
                             cachedState = false;
                             this.heldAggregates.Clear();
                         }
+
                         // Need to retrieve the key from the dictionary
                         this.currentKey = colkey_i;
                         this.currentHash = col_hash_i;
@@ -218,6 +219,7 @@ namespace Microsoft.StreamProcessing
                                 // New group. Create new state
                                 this.currentState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
                                 this.aggregateByKey.Insert(this.currentKey, this.currentState, this.currentHash);
+
                                 // No output because initial state is empty
                             }
                             else

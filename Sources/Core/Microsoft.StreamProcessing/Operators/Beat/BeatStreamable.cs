@@ -55,7 +55,6 @@ namespace Microsoft.StreamProcessing
             if (typeOfTKey.GetPartitionType() != null) return false;
 
             // This operator can handle a pseudo-columnar payload type, e.g., string.
-
             var lookupKey = CacheKey.Create(this.Properties.KeyEqualityComparer.GetEqualsExpr().ExpressionToCSharp(), this.Properties.PayloadEqualityComparer.GetEqualsExpr().ExpressionToCSharp());
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => BeatTemplate.Generate(this));

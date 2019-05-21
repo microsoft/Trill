@@ -541,8 +541,8 @@ namespace Microsoft.StreamProcessing
 
                 case "IndexOf":
                 case "LastIndexOf":
-                    methodToCall = methodName;
                     // need to decide on which overload of IndexOf/LastIndexOf was used
+                    methodToCall = methodName;
                     var firstArgAsCSharpString = args[0];
                     var firstArgIsChar = methodCall.Arguments.ElementAt(0).Type.Equals(typeof(char));
                     var n = methodCall.Arguments.Count;
@@ -587,6 +587,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 Contract.Assume(n == 4, "meant to be exhaustive");
                                 var fourthArgAsCSharpString = args[3];
+
                                 // IndexOf/LastIndexOf(string, int, int, StringComparison)
                                 firstArgsToMultiStringCall = $"{firstArgAsCSharpString}, {secondArgAsCSharpString}, {thirdArgAsCSharpString}, {fourthArgAsCSharpString}";
                             }

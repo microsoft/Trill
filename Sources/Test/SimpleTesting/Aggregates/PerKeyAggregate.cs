@@ -12,7 +12,6 @@ namespace SimpleTesting
     public class AggregateByKey : TestWithConfigSettingsAndMemoryLeakDetection
     {
 
-
         public AggregateByKey()
             : base(new ConfigModifier()
                         .ForceRowBasedExecution(false)
@@ -124,7 +123,5 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
-
-
     }
 }

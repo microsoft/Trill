@@ -28,16 +28,16 @@ namespace Microsoft.StreamProcessing
             Contract.Requires(source != null);
             Contract.Requires(resultSelector != null);
 
-            Source = source;
-            ResultSelector = resultSelector;
+            this.Source = source;
+            this.ResultSelector = resultSelector;
         }
 
         public override IDisposable Subscribe(IStreamObserver<TOuterKey, TResult> observer)
         {
-            if (Properties.IsColumnar && CanGenerateColumnar())
-                return Source.Subscribe(GetPipe(observer));
+            if (this.Properties.IsColumnar && CanGenerateColumnar())
+                return this.Source.Subscribe(GetPipe(observer));
             else
-                return Source.Subscribe(CreatePipe(observer));
+                return this.Source.Subscribe(CreatePipe(observer));
         }
 
         internal IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> CreatePipe(
@@ -56,22 +56,23 @@ namespace Microsoft.StreamProcessing
             if (!typeOfTResult.CanRepresentAsColumnar()) return false;
             if (typeOfTOuterKey.GetPartitionType() != null) return false;
             if (typeOfTInnerKey.GetPartitionType() != null) return false;
+
             // For now, restrict the inner key to be anything other than an anonymous type since those can't be ungrouped without using reflection.
             if (typeOfTInnerKey.IsAnonymousType()) return false;
 
-            var lookupKey = CacheKey.Create(ResultSelector.ExpressionToCSharp());
+            var lookupKey = CacheKey.Create(this.ResultSelector.ExpressionToCSharp());
 
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => UngroupTemplate.Generate<TOuterKey, TInnerKey, TInnerResult, TResult>(ResultSelector));
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => UngroupTemplate.Generate<TOuterKey, TInnerKey, TInnerResult, TResult>(this.ResultSelector));
 
-            errorMessages = generatedPipeType.Item2;
+            this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
 
         private IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> GetPipe(IStreamObserver<TOuterKey, TResult> observer)
         {
-            var lookupKey = CacheKey.Create(ResultSelector.ExpressionToCSharp());
+            var lookupKey = CacheKey.Create(this.ResultSelector.ExpressionToCSharp());
 
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => UngroupTemplate.Generate<TOuterKey, TInnerKey, TInnerResult, TResult>(ResultSelector));
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => UngroupTemplate.Generate<TOuterKey, TInnerKey, TInnerResult, TResult>(this.ResultSelector));
             Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new UngroupPlanNode(
                     p,
                     o,
@@ -79,7 +80,7 @@ namespace Microsoft.StreamProcessing
                     typeof(TOuterKey),
                     typeof(TInnerResult),
                     typeof(TResult),
-                    ResultSelector,
+                    this.ResultSelector,
                     true,
                     generatedPipeType.Item2));
 
@@ -107,16 +108,16 @@ namespace Microsoft.StreamProcessing
             Contract.Requires(source != null);
             Contract.Requires(resultSelector != null);
 
-            Source = source;
-            ResultSelector = resultSelector;
+            this.Source = source;
+            this.ResultSelector = resultSelector;
         }
 
         public override IDisposable Subscribe(IStreamObserver<Empty, TResult> observer)
         {
-            if (Properties.IsColumnar && CanGenerateColumnar())
-                return Source.Subscribe(GetPipe(observer));
+            if (this.Properties.IsColumnar && CanGenerateColumnar())
+                return this.Source.Subscribe(GetPipe(observer));
             else
-                return Source.Subscribe(CreatePipe(observer));
+                return this.Source.Subscribe(CreatePipe(observer));
         }
 
         internal IStreamObserver<TInnerKey, TInnerResult> CreatePipe(
@@ -132,22 +133,23 @@ namespace Microsoft.StreamProcessing
 
             if (!typeOfTResult.CanRepresentAsColumnar()) return false;
             if (typeOfTInnerKey.GetPartitionType() != null) return false;
+
             // For now, restrict the inner key to be anything other than an anonymous type since those can't be ungrouped without using reflection.
             if (typeOfTInnerKey.IsAnonymousType()) return false;
 
-            var lookupKey = CacheKey.Create(ResultSelector.ExpressionToCSharp());
+            var lookupKey = CacheKey.Create(this.ResultSelector.ExpressionToCSharp());
 
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => UngroupTemplate.Generate<TInnerKey, TInnerResult, TResult>(ResultSelector));
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => UngroupTemplate.Generate<TInnerKey, TInnerResult, TResult>(this.ResultSelector));
 
-            errorMessages = generatedPipeType.Item2;
+            this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
 
         private IStreamObserver<TInnerKey, TInnerResult> GetPipe(IStreamObserver<Empty, TResult> observer)
         {
-            var lookupKey = CacheKey.Create(ResultSelector.ExpressionToCSharp());
+            var lookupKey = CacheKey.Create(this.ResultSelector.ExpressionToCSharp());
 
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => UngroupTemplate.Generate<TInnerKey, TInnerResult, TResult>(ResultSelector));
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => UngroupTemplate.Generate<TInnerKey, TInnerResult, TResult>(this.ResultSelector));
             Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new UngroupPlanNode(
                     p,
                     o,
@@ -155,7 +157,7 @@ namespace Microsoft.StreamProcessing
                     typeof(Empty),
                     typeof(TInnerResult),
                     typeof(TResult),
-                    ResultSelector,
+                    this.ResultSelector,
                     true,
                     generatedPipeType.Item2));
 

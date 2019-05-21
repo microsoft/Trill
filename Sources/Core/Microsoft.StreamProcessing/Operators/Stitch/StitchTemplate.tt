@@ -77,10 +77,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
         this.queryPlanGenerator = queryPlanGenerator;
         GetOutputBatch();
 
-        //var khpcomparer = EqualityComparerExtensions.GetCompoundEqualityComparerExpression<KHP, <#= TKey #>, <#= TPayload #>>(
-        //                        e => e.Key, stream.Properties.KeyEqualityComparer,
-        //                        e => e.Payload, stream.Properties.PayloadEqualityComparer
-        //                        );
         var khpcomparer = new EqualityComparerExpression<KHP>(
                 (khp1, khp2) => <#= this.keyEquals("khp1", "khp2") #> && <#= this.payloadEquals("khp1.Payload", "khp2.Payload") #>,
                 (khp) => <#= this.keyHashFunction("khp") #> ^ <#= this.payloadHashFunction("khp.Payload") #>);

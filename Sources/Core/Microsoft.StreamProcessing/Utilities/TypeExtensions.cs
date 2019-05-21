@@ -398,6 +398,7 @@ namespace Microsoft.StreamProcessing
                     .Where(f => !(f.Name.StartsWith("<", StringComparison.Ordinal) && f.Name.EndsWith(">k__BackingField", StringComparison.Ordinal))) // ignore backing fields for autoprops
                     ;
                 if (allFields.Any()) return false;
+
                 // Check only the autoprops: any non-autoprop will not be able to depend on non-public fields
                 // due to the check for non-public fields.
                 var allProperties = type.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -468,6 +469,7 @@ namespace Microsoft.StreamProcessing
                 string name = TurnTypeIntoCSharpSource(genericArgument, ref introducedGenericTypeParameters);
                 genericArgs.Add(name);
             }
+
             // Need to handle nested types, e.g., T1<X,Y>.T2<A,B,C> in C#
             // The names look like this: T1`2.T2`3 where there are 5 generic arguments
             // The generic arguments go into different places in the source version of the type name.

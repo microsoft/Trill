@@ -308,8 +308,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
  if (!ungroupingToUnit) { 
             this.Write("\r\n        } // end of fixed for desthash\r\n");
  } 
-            this.Write("        } // end of fixed for srcbv\r\n\r\n        tmp.Count = count;\r\n\r\n\r\n        ba" +
-                    "tch.ReleaseKey();\r\n");
+            this.Write("        } // end of fixed for srcbv\r\n\r\n        tmp.Count = count;\r\n\r\n        batc" +
+                    "h.ReleaseKey();\r\n");
  if (ungroupingToUnit) { 
             this.Write("\r\n        batch.hash.Return();\r\n");
  } 

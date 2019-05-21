@@ -123,6 +123,7 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
@@ -163,12 +164,14 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
@@ -211,18 +214,21 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
@@ -267,24 +273,28 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
@@ -331,30 +341,35 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
@@ -403,36 +418,42 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
@@ -483,42 +504,49 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T7 Item7;
+
         /// <summary>
         /// Item number 8 of the tuple object.
         /// </summary>
@@ -571,48 +599,56 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T7 Item7;
+
         /// <summary>
         /// Item number 8 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T8 Item8;
+
         /// <summary>
         /// Item number 9 of the tuple object.
         /// </summary>
@@ -667,54 +703,63 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T7 Item7;
+
         /// <summary>
         /// Item number 8 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T8 Item8;
+
         /// <summary>
         /// Item number 9 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T9 Item9;
+
         /// <summary>
         /// Item number 10 of the tuple object.
         /// </summary>
@@ -771,60 +816,70 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T7 Item7;
+
         /// <summary>
         /// Item number 8 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T8 Item8;
+
         /// <summary>
         /// Item number 9 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T9 Item9;
+
         /// <summary>
         /// Item number 10 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T10 Item10;
+
         /// <summary>
         /// Item number 11 of the tuple object.
         /// </summary>
@@ -883,66 +938,77 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T7 Item7;
+
         /// <summary>
         /// Item number 8 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T8 Item8;
+
         /// <summary>
         /// Item number 9 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T9 Item9;
+
         /// <summary>
         /// Item number 10 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T10 Item10;
+
         /// <summary>
         /// Item number 11 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T11 Item11;
+
         /// <summary>
         /// Item number 12 of the tuple object.
         /// </summary>
@@ -1003,72 +1069,84 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T7 Item7;
+
         /// <summary>
         /// Item number 8 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T8 Item8;
+
         /// <summary>
         /// Item number 9 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T9 Item9;
+
         /// <summary>
         /// Item number 10 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T10 Item10;
+
         /// <summary>
         /// Item number 11 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T11 Item11;
+
         /// <summary>
         /// Item number 12 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T12 Item12;
+
         /// <summary>
         /// Item number 13 of the tuple object.
         /// </summary>
@@ -1131,78 +1209,91 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T7 Item7;
+
         /// <summary>
         /// Item number 8 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T8 Item8;
+
         /// <summary>
         /// Item number 9 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T9 Item9;
+
         /// <summary>
         /// Item number 10 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T10 Item10;
+
         /// <summary>
         /// Item number 11 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T11 Item11;
+
         /// <summary>
         /// Item number 12 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T12 Item12;
+
         /// <summary>
         /// Item number 13 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T13 Item13;
+
         /// <summary>
         /// Item number 14 of the tuple object.
         /// </summary>
@@ -1267,84 +1358,98 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T7 Item7;
+
         /// <summary>
         /// Item number 8 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T8 Item8;
+
         /// <summary>
         /// Item number 9 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T9 Item9;
+
         /// <summary>
         /// Item number 10 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T10 Item10;
+
         /// <summary>
         /// Item number 11 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T11 Item11;
+
         /// <summary>
         /// Item number 12 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T12 Item12;
+
         /// <summary>
         /// Item number 13 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T13 Item13;
+
         /// <summary>
         /// Item number 14 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T14 Item14;
+
         /// <summary>
         /// Item number 15 of the tuple object.
         /// </summary>
@@ -1411,90 +1516,105 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T1 Item1;
+
         /// <summary>
         /// Item number 2 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T2 Item2;
+
         /// <summary>
         /// Item number 3 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T3 Item3;
+
         /// <summary>
         /// Item number 4 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T4 Item4;
+
         /// <summary>
         /// Item number 5 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T5 Item5;
+
         /// <summary>
         /// Item number 6 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T6 Item6;
+
         /// <summary>
         /// Item number 7 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T7 Item7;
+
         /// <summary>
         /// Item number 8 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T8 Item8;
+
         /// <summary>
         /// Item number 9 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T9 Item9;
+
         /// <summary>
         /// Item number 10 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T10 Item10;
+
         /// <summary>
         /// Item number 11 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T11 Item11;
+
         /// <summary>
         /// Item number 12 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T12 Item12;
+
         /// <summary>
         /// Item number 13 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T13 Item13;
+
         /// <summary>
         /// Item number 14 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T14 Item14;
+
         /// <summary>
         /// Item number 15 of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T15 Item15;
+
         /// <summary>
         /// Item number 16 of the tuple object.
         /// </summary>

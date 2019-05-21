@@ -168,8 +168,10 @@ namespace Microsoft.StreamProcessing
                         // New group. Create new state
                         heldState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
                         entry.heldAggregates.Add(this.aggregateByKey.Insert(colkey[i], heldState, col_hash[i]));
+
                         // No output because initial state is empty
                     }
+
                     // First time group is active for this time
                     else if (entry.heldAggregates.Add(aggindex))
                     {

@@ -1015,8 +1015,8 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
                 .ToStreamEventObservable().ToEnumerable();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
-
 <# if (string.IsNullOrEmpty(disorderPolicy)) { #>
+
         [TestMethod, TestCategory("Gated")]
         public void DisorderPolicy1<#= suffix #>()
         {
@@ -1131,7 +1131,6 @@ foreach (var disorderPolicy in (new [] { string.Empty, "Floating" }))
             var result = str.ToStreamEventObservable().ToEnumerable();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
-
 <# } #>
 
         [TestMethod, TestCategory("Gated")]

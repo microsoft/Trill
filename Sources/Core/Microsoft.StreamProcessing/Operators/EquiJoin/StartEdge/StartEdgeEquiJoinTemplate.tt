@@ -136,13 +136,10 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                             while (rightEdges.Next(out rightIndex))
                             {
                                 if (first) { key = leftBatch.key.col[leftBatch.iter]; first = false; }
-                                //if (keyComparer(key, rightEdgeMap.Values[rightIndex].Key))
                                 var activeEventRight = rightEdgeMap.Values[rightIndex];
                                 var rightKey = activeEventRight.Key;
                                 if (<#= this.keyComparer("key", "rightKey") #>)
                                 {
-                                    //payload = leftBatch[leftBatch.iter];
-                                    //OutputStartEdge(nextLeftTime, ref key, ref payload, ref rightEdgeMap.Values[rightIndex].Payload, hash);
                                     <# OutputStartEdgeWithActiveEventRight("nextLeftTime", "key", "generatedLeftBatch", "leftBatch.iter", "activeEventRight", "hash"); #>
                                 }
                             }
@@ -242,13 +239,10 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                     while (rightEdges.Next(out rightIndex))
                     {
                         if (first) { key = batch.key.col[batch.iter]; first = false; }
-                        //if (keyComparer(key, rightEdgeMap.Values[rightIndex].Key))
                         var activeEventRight = rightEdgeMap.Values[rightIndex];
                         var rightKey = activeEventRight.Key;
                         if (<#= this.keyComparer("key", "rightKey") #>)
                         {
-                            //payload = batch[batch.iter];
-                            //OutputStartEdge(nextLeftTime, ref key, ref payload, ref rightEdgeMap.Values[rightIndex].Payload, hash);
                             <# OutputStartEdgeWithActiveEventRight("nextLeftTime", "key", "generatedLeftBatch", "batch.iter", "activeEventRight", "hash"); #>
                         }
                     }
@@ -257,9 +251,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
                 {
                     int newIndex = leftEdgeMap.Insert(hash);
                     if (first) key = batch.key.col[batch.iter];
-                    //payload = batch[batch.iter]; // potential rare recomputation
-
-                    //leftEdgeMap.Values[newIndex].Populate(ref key, ref payload);
                     leftEdgeMap.Values[newIndex].Populate(generatedLeftBatch, batch.iter);
                 }
             }
@@ -308,7 +299,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
             batch.iter++;
         }
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool GoToVisibleRow<TPayload>(StreamMessage<<#= TKey #>, TPayload> batch)
@@ -369,7 +359,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         [DataMember]
         public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.OriginalName #>;
         <# } #>
-
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Populate(<#= BatchGeneratedFrom_TKey_TLeft #> batch, int index)
@@ -447,7 +436,6 @@ private void ProcessRightStartEdge2(string start, string rightBatch, string righ
     if (!isLeftComplete)
     {
         int newIndex = rightEdgeMap.Insert(<#= hash #>);
-        //rightEdgeMap.Values[newIndex].Populate(ref key, ref payload);
         rightEdgeMap.Values[newIndex].Populate(<#= rightBatch #>, <#= rightBatchIndex #>);
     }
   } // end ProcessRightStartEdge
@@ -469,7 +457,6 @@ private void OutputStartEdgeWithActiveEventLeft(string start, string key, string
         output.vsync.col[index] = start_OutputStartEdge;
         output.vother.col[index] = StreamEvent.InfinitySyncTime;
         output.key.col[index] = key_OutputStartEdge;
-        //output[index] = selector(leftPayload, rightPayload);
 <#+ if (this.leftMessageRepresentation.noFields) { #>
         <#= rightBatchSelector(activeEventLeft + ".payload", "rightBatch_OutputStartEdge", "rightBatchIndex_OutputStartEdge") #>
 <#+ } else { #>
@@ -497,7 +484,6 @@ private void OutputStartEdgeWithActiveEventRight(string start, string key, strin
         output.vsync.col[index] = start_OutputStartEdge;
         output.vother.col[index] = StreamEvent.InfinitySyncTime;
         output.key.col[index] = key_OutputStartEdge;
-        //output[index] = selector(leftPayload, rightPayload);
 <#+ if (this.rightMessageRepresentation.noFields) { #>
         <#= leftBatchSelector("leftBatch_OutputStartEdge", "leftBatchIndex", rightActiveEvent + ".payload") #>
 <#+ } else { #>
@@ -509,7 +495,6 @@ private void OutputStartEdgeWithActiveEventRight(string start, string key, strin
     } // end OutputStartEdgeWithActiveEventRight
 <#+
 }
-
 
     private void GetOutputBatch() { #>
   pool.Get(out genericOutputBatch);

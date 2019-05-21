@@ -121,7 +121,6 @@ namespace Microsoft.StreamProcessing
                                 this.lastSyncTime.entries[partitionIndex].value = synctime;
                             }
 
-
                             int keyHeads_index;
                             bool keyHeadExists = false;
                             var keyHeadsFindTraverser = new FastMap<TKey>.FindTraverser(this.keyHeads.entries[partitionIndex].value);

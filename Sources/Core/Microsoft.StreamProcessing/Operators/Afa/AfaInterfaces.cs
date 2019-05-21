@@ -24,6 +24,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="patterns"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> Concat(Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern, params Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>>[] patterns);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -36,18 +37,21 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> Epsilon();
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
         /// <param name="pattern"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> KleenePlus(Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
         /// <param name="pattern"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> KleeneStar(Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -59,6 +63,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="dispose"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> MultiElement(Expression<Func<long, TRegister, TAccumulator>> initialize, Expression<Func<long, TPayload, TRegister, TAccumulator, TAccumulator>> accumulate, Expression<Func<long, TPayload, TAccumulator, bool>> skipToEnd, Expression<Func<long, TAccumulator, TRegister, bool>> fence, Expression<Func<long, TAccumulator, TRegister, TRegister>> transfer, Expression<Action<TAccumulator>> dispose);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -67,6 +72,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="patterns"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> Or(Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern1, Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern2, params Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>>[] patterns);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -77,6 +83,7 @@ namespace Microsoft.StreamProcessing
         IPattern<TKey, TPayload, TRegister, TAccumulator> OrConcat(Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern1, Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern2, params Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>>[] patterns);
 
         #region SingleElement
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -84,6 +91,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<long, TPayload, TRegister, bool>> condition = null, Expression<Func<long, TPayload, TRegister, TRegister>> aggregator = null);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -91,6 +99,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<long, TPayload, TRegister, bool>> condition, Expression<Func<TPayload, TRegister, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -98,6 +107,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<long, TPayload, TRegister, bool>> condition, Expression<Func<TPayload, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -105,6 +115,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, bool>> condition, Expression<Func<long, TPayload, TRegister, TRegister>> aggregator = null);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -112,6 +123,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, bool>> condition, Expression<Func<TPayload, TRegister, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -119,6 +131,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, bool>> condition, Expression<Func<TPayload, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -126,6 +139,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, TRegister, bool>> condition, Expression<Func<long, TPayload, TRegister, TRegister>> aggregator = null);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -133,6 +147,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, TRegister, bool>> condition, Expression<Func<TPayload, TRegister, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -143,6 +158,7 @@ namespace Microsoft.StreamProcessing
         #endregion
 
         #region ListElement
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -150,6 +166,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<long, List<TPayload>, TRegister, bool>> condition = null, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -157,6 +174,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<long, List<TPayload>, TRegister, bool>> condition, Expression<Func<List<TPayload>, TRegister, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -164,6 +182,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<long, List<TPayload>, TRegister, bool>> condition, Expression<Func<List<TPayload>, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -171,6 +190,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, bool>> condition, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -178,6 +198,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, bool>> condition, Expression<Func<List<TPayload>, TRegister, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -185,6 +206,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, bool>> condition, Expression<Func<List<TPayload>, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -192,6 +214,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, TRegister, bool>> condition, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -199,6 +222,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="aggregator"></param>
         /// <returns></returns>
         IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, TRegister, bool>> condition, Expression<Func<List<TPayload>, TRegister, TRegister>> aggregator);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -225,6 +249,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="defaultAccumulator"></param>
         /// <returns></returns>
         IAbstractPattern<TKey, TPayload, TRegister, TAccumulatorNew> SetAccumulator<TAccumulatorNew>(TAccumulatorNew defaultAccumulator = default);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -232,6 +257,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="defaultRegister"></param>
         /// <returns></returns>
         IAbstractPattern<TKey, TPayload, TRegisterNew, TAccumulator> SetRegister<TRegisterNew>(TRegisterNew defaultRegister = default);
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
@@ -256,6 +282,7 @@ namespace Microsoft.StreamProcessing
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>
         Afa<TPayload, TRegister, TAccumulator> AFA { get; }
+
         /// <summary>
         /// Interface is only public to serve CLR strong typing - instances should only be created internally. Do not use directly.
         /// </summary>

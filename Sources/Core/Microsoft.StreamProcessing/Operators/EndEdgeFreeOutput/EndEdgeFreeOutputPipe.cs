@@ -60,8 +60,8 @@ namespace Microsoft.StreamProcessing
         }
         private void OutputCompletedIntervals()
         {
-            var delList = new List<long>();
             // Output all completed intervals
+            var delList = new List<long>();
             foreach (var kvp in this.eventMap)
             {
                 var index = FastDictionary2<ActiveEvent, int>.IteratorStart;

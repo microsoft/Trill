@@ -697,9 +697,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(f.OriginalName));
             this.Write(");\r\n            ");
  } 
-            this.Write("            sb.Append(\"]\");\r\n            return sb.ToString();\r\n            //ret" +
-                    "urn string.Format(\"[Start={0}, Key=\'{1}\', Payload=\'{2}\'\", Start, KeyColumn.col[R" +
-                    "owIndex], Batch[RowIndex]);\r\n        }\r\n    }\r\n}\r\n\r\n");
+            this.Write("            sb.Append(\"]\");\r\n            return sb.ToString();\r\n        }\r\n    }\r" +
+                    "\n}\r\n\r\n");
             return this.GenerationEnvironment.ToString();
         }
 
@@ -795,9 +794,8 @@ this.Write(" &&\r\n                    // leftComparerEquals(payload, active.Pay
 
 this.Write(this.ToStringHelper.ToStringWithCulture(this.leftComparer("batch_ProcessLeftEvent", "leftEdge.Payload")));
 
-this.Write("\r\n                    ;\r\n                //if (AreSame(end, ref key, ref payload," +
-        " ref leftEdgeMap.Values[index]))\r\n                if (areSame)\r\n                " +
-        "{\r\n                    // Output end edge.\r\n                    ");
+this.Write(";\r\n                if (areSame)\r\n                {\r\n                    // Output" +
+        " end edge.\r\n                    ");
 
  AddToBatch(start, end, key, batch, index, hash); 
 this.Write("\r\n                    // Remove from leftMap.\r\n                    leftEvents.Rem" +
@@ -824,7 +822,7 @@ this.Write(";\r\n        output.key.col[index_AddToBatch] = ");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(key));
 
-this.Write(";\r\n        //output[index] = payload;\r\n");
+this.Write(";\r\n");
 
      foreach (var f in this.leftFields) {
           if (f.OptimizeString()) { 
@@ -897,7 +895,7 @@ this.Write(";\r\n        output.key.col[index_AddToBatch] = ");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(key));
 
-this.Write(";\r\n        //output[index] = payload;\r\n");
+this.Write(";\r\n");
 
      foreach (var f in this.leftFields) {
          var sourceName = leftInterval + ".Payload";

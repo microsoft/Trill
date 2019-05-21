@@ -63,10 +63,12 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// Currently for internal use only - do not use directly.
             /// </summary>
             Unsealed,
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             Sealed,
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
@@ -106,6 +108,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         }
 
         #region Relational Operators
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -138,6 +141,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         #region Arithmetic Operators
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -263,9 +267,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
         #endregion
 
-        // Clone the multi-string shell only
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Clone the multi-string shell only
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public MultiString CloneShell()
@@ -276,10 +280,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             return new MultiString(this.charArrayPool, this.intPool, this.shortPool, this.bitvectorPool);
         }
 
-
-        // Clone the multi-string, refcounting the bulky contents
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Clone the multi-string, refcounting the bulky contents
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public MultiString Clone()
@@ -481,6 +484,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
                 this.col = this.msb.ToCharArrayWrapperAndDispose();
                 this.msb = null;
+
                 // clone does not share the stage
                 char[] temp = new char[this.MaxStringSize];
                 this.stage = new string(temp);
@@ -509,9 +513,10 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         }
 
         #region Apply Operations
-        // Apply a boolean expression, returns a bitvector (e.g., StartsWith)
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Apply a boolean expression, returns a bitvector (e.g., StartsWith)
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="inBV"></param>
@@ -564,9 +569,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             return result;
         }
 
-        // Apply an expression that returns non-string
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Apply an expression that returns non-string
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="expression"></param>
@@ -616,10 +621,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             return result;
         }
 
-
-        // Apply an expression that returns another single string (e.g., Substring) per input stream
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Apply an expression that returns another single string (e.g., Substring) per input stream
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="inBV"></param>
@@ -661,6 +665,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         #region Contains
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -724,6 +729,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         #region IndexOf and LastIndexOf
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1040,7 +1046,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                     int pattern_startoffset = m.Index - 2; // position of the first character in the match
                     int pattern_endoffset = m.Index - 2 + m.Length - 1; // position of the last character in the match
 
-
                     while ((cur_i < this.starts.UsedLength - 1) && (startscol[cur_i + 1] <= pattern_startoffset))
                     {
                         rbv[cur_i >> 6] |= (1L << (cur_i & 0x3f));
@@ -1090,6 +1095,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         #region Case Manipulation
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1214,6 +1220,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         #region Split
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1249,9 +1256,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             var lengthscol = this.lengths.col;
             var largestr = this.col.charArray.contentString;
 
+            // start match at the next active bit
             int end_index = 0;
             Match m = null;
-            // start match at the next active bit
             while (((bv[end_index >> 6] & (1L << (end_index & 0x3f))) != 0) && (end_index < startscol.Length))
             {
                 end_index++;
@@ -1498,6 +1505,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         #region Substring
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1544,6 +1552,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         #region Equals
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1646,6 +1655,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         #region GetHashCode
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1741,6 +1751,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         #region Length
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1769,6 +1780,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             public MultiString theActualMultiString;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
@@ -1786,6 +1798,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 this.rowIndex = 0;
             }
             private int StartIndex => this.theActualMultiString.starts.col[this.rowIndex] + 2;
+
             /// <summary>
             /// Used internally, but also is the wrapper implementation for String.Length
             /// </summary>
@@ -1794,6 +1807,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             private string String => this.theActualMultiString.col.charArray.contentString;
 
             #region IndexOf
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
@@ -1925,6 +1939,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             #endregion
 
             #region LastIndexOf
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
