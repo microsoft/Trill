@@ -19,6 +19,7 @@ namespace Microsoft.StreamProcessing
     public sealed class QueryContainer
     {
         private readonly object sentinel = new object();
+
         /// <summary>
         /// ISurrogate to be used in serialization in checkpoints and serialized StreamMessage
         /// for payload types which can not be serialized otherwise.
@@ -125,10 +126,7 @@ namespace Microsoft.StreamProcessing
         {
             lock (this.sentinel)
             {
-                // Restoration should not happen until after all streams have been both:
-                // - Registered, and
-                // - Subscribed
-
+                // Restoration should not happen until after all streams have been both registered and subscribed
                 if (this.ingressSites.Count != this.ingressPipes.Count) throw new StreamProcessingException("Not all output data sources have been subscribed to.");
                 if (this.egressSites.Count != this.egressPipes.Count) throw new StreamProcessingException("Not all output data sources have been subscribed to.");
 

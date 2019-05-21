@@ -12,8 +12,7 @@ namespace SimpleTesting
     public class AbstractStreamMessage : TestWithConfigSettingsAndMemoryLeakDetection
     {
         public AbstractStreamMessage()
-            // Note: These tests are sensitive to the exact value of databatchsize.
-            : base(new ConfigModifier().DataBatchSize(80000))
+            : base(new ConfigModifier().DataBatchSize(80000)) // Note: These tests are sensitive to the exact value of databatchsize.
         { }
 
         // Set bit at idx.
@@ -31,6 +30,7 @@ namespace SimpleTesting
             var memoryPool = MemoryManager.GetMemoryPool<Empty, bool>(true);
             var message = new StreamMessage<Empty, bool>(memoryPool);
             message.Allocate();
+
             // mark all positions as not occupied
             for (int i = 0; i < (Config.DataBatchSize >> 6); i++) message.bitvector.col[i] = ~0L;
 
@@ -90,6 +90,7 @@ namespace SimpleTesting
             var memoryPool = MemoryManager.GetMemoryPool<Empty, bool>(true);
             var message = new StreamMessage<Empty, bool>(memoryPool);
             message.Allocate();
+
             // mark all positions as not occupied
             for (int i = 0; i < (Config.DataBatchSize >> 6); i++) message.bitvector.col[i] = ~0L;
 
@@ -147,6 +148,7 @@ namespace SimpleTesting
             var memoryPool = MemoryManager.GetMemoryPool<PartitionKey<bool>, bool>(true);
             var message = new StreamMessage<PartitionKey<bool>, bool>(memoryPool);
             message.Allocate();
+
             // mark all positions as not occupied
             for (int i = 0; i < (Config.DataBatchSize >> 6); i++) message.bitvector.col[i] = ~0L;
 
@@ -204,6 +206,7 @@ namespace SimpleTesting
             var memoryPool = MemoryManager.GetMemoryPool<CompoundGroupKey<PartitionKey<bool>, bool>, bool>(true);
             var message = new StreamMessage<CompoundGroupKey<PartitionKey<bool>, bool>, bool>(memoryPool);
             message.Allocate();
+
             // mark all positions as not occupied
             for (int i = 0; i < (Config.DataBatchSize >> 6); i++) message.bitvector.col[i] = ~0L;
 
@@ -240,6 +243,7 @@ namespace SimpleTesting
             var memoryPool = MemoryManager.GetMemoryPool<PartitionKey<bool>, bool>(true);
             var message = new StreamMessage<PartitionKey<bool>, bool>(memoryPool);
             message.Allocate();
+
             // mark all positions as not occupied
             for (int i = 0; i < (Config.DataBatchSize >> 6); i++) message.bitvector.col[i] = ~0L;
 

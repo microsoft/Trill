@@ -19,6 +19,7 @@ namespace Microsoft.StreamProcessing
         private bool endsWithNewline;
         #endregion
         #region Properties
+
         /// <summary>
         /// The string builder that generation-time code is using to assemble generated output
         /// </summary>
@@ -35,6 +36,7 @@ namespace Microsoft.StreamProcessing
         public string CurrentIndent { get; private set; } = string.Empty;
         #endregion
         #region Transform-time helpers
+
         /// <summary>
         /// Write text directly into the generated output
         /// </summary>
@@ -49,11 +51,13 @@ namespace Microsoft.StreamProcessing
                 this.GenerationEnvironment.Append(this.CurrentIndent);
                 this.endsWithNewline = false;
             }
+
             // Check if the current text ends with a newline
             if (textToAppend.EndsWith(Environment.NewLine, StringComparison.CurrentCulture))
             {
                 this.endsWithNewline = true;
             }
+
             // This is an optimization. If the current indent is "", then we don't have to do any
             // of the more complex stuff further down.
             if (this.CurrentIndent.Length == 0)
@@ -64,6 +68,7 @@ namespace Microsoft.StreamProcessing
 
             // Everywhere there is a newline in the text, add an indent after it
             textToAppend = textToAppend.Replace(Environment.NewLine, (Environment.NewLine + this.CurrentIndent));
+
             // If the text ends with a newline, then we should strip off the indent added at the very end
             // because the appropriate indent will be added when the next time Write() is called
             if (this.endsWithNewline)
@@ -71,6 +76,7 @@ namespace Microsoft.StreamProcessing
             else
                 this.GenerationEnvironment.Append(textToAppend);
         }
+
         /// <summary>
         /// Write text directly into the generated output
         /// </summary>
@@ -131,12 +137,14 @@ namespace Microsoft.StreamProcessing
         }
         #endregion
         #region ToString Helpers
+
         /// <summary>
         /// Utility class to produce culture-oriented representation of an object as a string.
         /// </summary>
         public sealed class ToStringInstanceHelper
         {
             private IFormatProvider formatProviderField = CultureInfo.InvariantCulture;
+
             /// <summary>
             /// Gets or sets format provider to be used by ToStringWithCulture method.
             /// </summary>
@@ -148,6 +156,7 @@ namespace Microsoft.StreamProcessing
                     if (value != null) this.formatProviderField = value;
                 }
             }
+
             /// <summary>
             /// This is called from the compile/run appdomain to convert objects within an expression block to a string
             /// </summary>

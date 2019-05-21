@@ -52,7 +52,6 @@ namespace Microsoft.StreamProcessing
             // to the call contain any calls to any String methods.
             // E.g., s.Contains(t) is allowed, s.Contains(t.Substring(...)) is not.
             // s.Equals(t) || s.Contains(u) is allowed
-
             if (!(e is BinaryExpression || e is UnaryExpression || e is MethodCallExpression || e is MemberExpression))
                 return false;
 
@@ -181,6 +180,7 @@ namespace Microsoft.StreamProcessing
                         Visit(node.Left);
                         left_result = this.resultBV;
                         var bv_i = "bv" + counter++;
+
                         // var bv_i = invert(left_result) | incomingBV;
                         this.vectorStatements.Add($"var {bv_i} = MultiString.InvertLeftThenOrWithRight({left_result}, {this.incomingBV}, this.pool.bitvectorPool);");
                         this.incomingBV = bv_i;
@@ -230,7 +230,6 @@ namespace Microsoft.StreamProcessing
                 // static bool System.Text.RegularExpressions.Regex.IsMatch(string e.f, string pattern)
                 // ==>
                 // public unsafe ColumnBatch<long> IsMatch(string regex, ColumnBatch<long> inBV, bool inPlace = true)
-
                 string methodCall;
                 if (VectorizableVisitor.IsStaticRegexMatch(node, this.batchType))
                 {
@@ -364,9 +363,9 @@ namespace Microsoft.StreamProcessing
                 var field = memberBinding.Member as FieldInfo;
                 if (field == null) goto JustVisit;
                 if (field.DeclaringType != this.batchType) goto JustVisit;
+
                 // also need to make sure that the instance is the parameter of the lambda, i.e. "e.f"
                 // if it is e.f.g then g doesn't correspond to a multistring column on the batch
-
                 var method = node.Method;
 
                 if (!this.multiStringTable.TryGetValue(field, out ParameterExpression wrapper))

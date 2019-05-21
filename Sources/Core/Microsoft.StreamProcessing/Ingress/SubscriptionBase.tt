@@ -236,7 +236,6 @@ foreach (bool disordered in new[] { true, false })
         /// </summary>
         [DataMember]
         protected long lastPunctuationTime = StreamEvent.MinSyncTime;
-
 <#  }
     else
     { #>
@@ -245,9 +244,8 @@ foreach (bool disordered in new[] { true, false })
         /// </summary>
         [DataMember]
         protected Dictionary<TKey, long> lastPunctuationTime = new Dictionary<TKey, long>();
-
 <#  } #>
-        /* Reorder-specific data structures */
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -429,7 +427,6 @@ foreach (bool disordered in new[] { true, false })
                 else FlushContents();
             }
         }
-
 <#  }
     else
     { #>
@@ -548,16 +545,19 @@ foreach (bool disordered in new[] { true, false })
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int CurrentlyBufferedStartEdgeCount => this.startEventInformation.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedOutputCount => this.currentBatch.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedInputCount => this.CurrentlyBufferedStartEdgeCount + this.CurrentlyBufferedReorderCount;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -567,16 +567,18 @@ foreach (bool disordered in new[] { true, false })
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
+        // needs to be a class so it can be updated while it is sitting in a queue
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataContract]
         protected sealed class AdjustInfo
-        { // needs to be a class so it can be updated while it is sitting in a queue
+        {
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             [DataMember]
             public long modifiedStartTime;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>

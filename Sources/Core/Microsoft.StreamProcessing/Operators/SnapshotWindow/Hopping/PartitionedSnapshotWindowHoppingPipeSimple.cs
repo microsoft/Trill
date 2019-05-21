@@ -145,6 +145,7 @@ namespace Microsoft.StreamProcessing
                         entry.currentEcqHeldState = null;
                         entry.currentState = new HeldState<TState> { state = this.initialState(), timestamp = syncTime };
                         entry.held = true;
+
                         // No output because initial state is empty
                     }
                     else

@@ -89,8 +89,8 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
 
     private void OutputCompletedIntervals()
     {
-        List<long> delList = new List<long>();
         // Output all completed intervals
+        List<long> delList = new List<long>();
         foreach (var kvp in eventMap)
         {
             var index = FastDictionary2<ActiveEvent, int>.IteratorStart;

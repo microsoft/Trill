@@ -86,6 +86,7 @@ namespace Microsoft.StreamProcessing
 
         private bool isColumnar;
         private Func<bool> predicate = () => true;
+
         /// <summary>
         /// Indicates whether the stream contains data in columnar payload format.
         /// </summary>
@@ -129,6 +130,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public bool IsTumbling => this.IsConstantDuration && this.ConstantDurationLength.HasValue
             && (this.ConstantDurationLength.Value == 1 || (this.IsConstantHop && this.ConstantHopLength.HasValue && this.ConstantHopLength.Value >= this.ConstantDurationLength.Value));
+
         /// <summary>
         /// Indicates that sync-times of events either stay the same or increment (hop) by a fixed amount.
         /// </summary>

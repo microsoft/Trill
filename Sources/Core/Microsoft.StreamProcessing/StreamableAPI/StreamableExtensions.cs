@@ -707,6 +707,7 @@ namespace Microsoft.StreamProcessing
         #endregion
 
         #region Aggregates
+
         /// <summary>
         /// Computes a time-sensitive count aggregate using snapshot semantics.
         /// </summary>
@@ -874,6 +875,7 @@ namespace Microsoft.StreamProcessing
         #endregion
 
         #region CompoundAggregates
+
         /// <summary>
         /// Applies an aggregate to snapshot windows on the input stream.
         /// </summary>

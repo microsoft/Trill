@@ -103,9 +103,14 @@ namespace Microsoft.StreamProcessing
                 List<Assembly> assemblyReferences;
                 int numberOfGenericParameters;
 
-                // inline: var ok = UngroupTemplate.GetGeneratedCode<TOuterKey, TInnerKey, TInnerResult, TResult>(resultSelector, false, out generatedClassName, out expandedCode, out assemblyReferences, out numberOfGenericParameters);
-
-
+                // inline:
+                // var ok = UngroupTemplate.GetGeneratedCode<TOuterKey, TInnerKey, TInnerResult, TResult>(
+                //      resultSelector,
+                //      false,
+                //      out generatedClassName,
+                //      out expandedCode,
+                //      out assemblyReferences,
+                //      out numberOfGenericParameters);
                 var generatedClassName = string.Format(
                     "UngroupPipeGeneratedFrom_{0}_{1}_{2}_{3}_{4}",
                     typeOfTOuterKey.GetValidIdentifier(),
@@ -140,10 +145,13 @@ namespace Microsoft.StreamProcessing
 
                 assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeOfTOuterKey, typeOfTInnerKey, typeofTInnerResult, typeofTResult);
                 assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+
                 // input messages
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult>());
+
                 // output messages
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TOuterKey, TResult>());
+
                 // memory pool
                 assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TOuterKey, TResult>());
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(resultSelector));

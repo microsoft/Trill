@@ -17,64 +17,75 @@ namespace Microsoft.StreamProcessing.Internal
     public abstract class CompiledAfaPipeBase<TKey, TPayload, TRegister, TAccumulator> : UnaryPipe<TKey, TPayload, TRegister>
     {
         /* Local copy of automaton */
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Justification="Used to avoid creating redundant readonly property.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly bool[] isFinal;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Justification = "Used to avoid creating redundant readonly property.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly bool[] hasOutgoingArcs;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Justification = "Used to avoid creating redundant readonly property.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly SingleEventArcInfo<TPayload, TRegister>[][] singleEventStateMap;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Justification = "Used to avoid creating redundant readonly property.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly EventListArcInfo<TPayload, TRegister>[][] eventListStateMap;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Justification = "Used to avoid creating redundant readonly property.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly MultiEventArcInfo<TPayload, TRegister, TAccumulator>[][] multiEventStateMap;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Justification = "Used to avoid creating redundant readonly property.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly int[][] epsilonStateMap;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Justification = "Used to avoid creating redundant readonly property.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly int[] startStates;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly int numStartStates;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Used to avoid creating redundant readonly property.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly TRegister defaultRegister;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly bool AllowOverlappingInstances;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -88,11 +99,13 @@ namespace Microsoft.StreamProcessing.Internal
         [SchemaSerialization]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly long MaxDuration;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly bool IsSyncTimeSimultaneityFree;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -105,11 +118,13 @@ namespace Microsoft.StreamProcessing.Internal
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "It is immutable.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly MemoryPool<TKey, TRegister> pool;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected readonly string errorMessages;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -123,6 +138,7 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected int iter;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>

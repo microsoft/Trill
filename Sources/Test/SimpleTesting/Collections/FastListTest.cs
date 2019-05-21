@@ -91,7 +91,6 @@ namespace SimpleTesting
             list.Remove(indexA);
             list.Remove(indexC);
             list.Remove(indexB2);
-            // list.Remove(indexB);
 
             Assert.IsTrue(list.IsEmpty);
             Assert.AreEqual(0, list.Count);

@@ -448,9 +448,9 @@ namespace SimpleTesting
                 PartitionedStreamEvent.CreatePoint(0, 0, 0),    // Partition 0 - always current
                 PartitionedStreamEvent.CreatePoint(1, 0, 1),    // Partition 1 - becomes inactive, reactivates immediately after LowWatermark
                 PartitionedStreamEvent.CreatePoint(2, 0, 2),    // Partition 2 - becomes inactive, reactivates after LowWatermark + punctuationFrequency
-                                                                // Partition 3 - appears for the first time immediately after LowWatermark
-                                                                // Partition 4 - appears for the first time after LowWatermark + punctuationFrequency
 
+                // Partition 3 - appears for the first time immediately after LowWatermark
+                // Partition 4 - appears for the first time after LowWatermark + punctuationFrequency
                 PartitionedStreamEvent.CreatePoint(0, 100, 0),
                 PartitionedStreamEvent.CreateLowWatermark<int, int>(100),
 
@@ -1043,16 +1043,21 @@ namespace SimpleTesting
                 Interlocked.Exchange(ref lastSeenSubscription, (int)c.Payload);
                 if (semaphore.CurrentCount == 0) semaphore.Release();
             });
+
             // Start the input feed.
             inputTask.Start();
+
             // Wait until we have at least one output data event.
             await semaphore.WaitAsync();
+
             // Dispose the subscription.
             subscription.Dispose();
+
             // Keep the input feed going, before cancel. This should behave properly if the subscription is disposed of properly.
             await Task.Delay(200);
             cancelTokenSource.Cancel();
             await inputTask;
+
             // Make sure we really got an output data event.
             Assert.IsTrue(lastSeenSubscription > 0);
         }
@@ -1335,6 +1340,7 @@ namespace SimpleTesting
             public int? Status;
             [DataMember]
             public string IncId;
+
             // Right
             [DataMember]
             public DateTime? Ts1;
@@ -2293,6 +2299,7 @@ namespace SimpleTesting
         {
             var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
             Config.ForceRowBasedExecution = true;
+
             // Should cause fallback to row-oriented.
             // BUG? Should codegen be able to handle this?
             var s = "string";

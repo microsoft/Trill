@@ -17,14 +17,17 @@ namespace Microsoft.StreamProcessing
         /// Indicates that the current node is a grouping operation.
         /// </summary>
         public override PlanNodeKind Kind => PlanNodeKind.Partition;
+
         /// <summary>
         /// The previous node in the plan, the input to the grouping operation.
         /// </summary>
         public PlanNode Previous { get; }
+
         /// <summary>
         /// The expression used to group elements relative to a grouping key.
         /// </summary>
         public Expression GroupingExpression { get; }
+
         /// <summary>
         /// The amount of time that global punctuations are delayed to account for possible partition skew.
         /// </summary>

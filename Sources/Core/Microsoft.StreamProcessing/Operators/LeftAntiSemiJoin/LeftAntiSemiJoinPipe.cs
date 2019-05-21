@@ -297,7 +297,6 @@ namespace Microsoft.StreamProcessing
                     if (FindOnRight(ref key, hash, out _))
                     {
                         // Row joins with something on right, so not currently visible.
-
                         int index = map.Insert(hash);
                         map.Values[index].Populate(start, NotActive, end, ref key, ref payload);
 
@@ -318,7 +317,6 @@ namespace Microsoft.StreamProcessing
                         else
                         {
                             // Output start edge.
-
                             int index = map.Insert(hash);
                             map.Values[index].Populate(start, start, end, ref key, ref payload);
 
@@ -333,7 +331,6 @@ namespace Microsoft.StreamProcessing
                 else
                 {
                     // Row is not yet processable, so insert as invisible.
-
                     int index = map.InsertInvisible(hash);
                     map.Values[index].Populate(start, NotActive, end, ref key, ref payload);
                 }
@@ -345,7 +342,6 @@ namespace Microsoft.StreamProcessing
             else
             {
                 // Row is an end edge.
-
                 // Remove from leftEdgeMap.
                 var leftEvents = this.leftEdgeMap.Find(hash);
                 while (leftEvents.Next(out int index))
@@ -480,8 +476,8 @@ namespace Microsoft.StreamProcessing
             {
                 if (!FindOnRight(ref this.leftEdgeMap.Values[index].Key, hash, out _))
                 {
-                    var leftEdgeItem = this.leftEdgeMap.Values[index];
                     // Row does not join, so output start edge.
+                    var leftEdgeItem = this.leftEdgeMap.Values[index];
                     this.leftEdgeMap.Values[index].CurrentStart = this.currTime;
                     AddToBatch(
                         this.currTime,
@@ -584,8 +580,8 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.keyComparerEquals(key, this.leftIntervalMap.Values[index].Key))
                 {
-                    var leftIntervalItem = this.leftIntervalMap.Values[index];
                     // Output end edge.
+                    var leftIntervalItem = this.leftIntervalMap.Values[index];
                     AddToBatch(
                         time,
                         leftIntervalItem.CurrentStart,
@@ -604,8 +600,8 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.keyComparerEquals(key, this.leftEdgeMap.Values[index].Key))
                 {
-                    var leftEdgeItem = this.leftEdgeMap.Values[index];
                     // Output end edge.
+                    var leftEdgeItem = this.leftEdgeMap.Values[index];
                     AddToBatch(
                         time,
                         leftEdgeItem.CurrentStart,

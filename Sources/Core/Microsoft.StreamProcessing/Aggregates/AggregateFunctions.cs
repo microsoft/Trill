@@ -25,6 +25,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ulong Count;
+
         /// <summary>
         /// Currently for internal use only
         /// </summary>

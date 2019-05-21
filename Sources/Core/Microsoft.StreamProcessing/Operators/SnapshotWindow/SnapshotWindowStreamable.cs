@@ -19,18 +19,22 @@ namespace Microsoft.StreamProcessing
         /// States that the aggregate is being computed over a monotonically increasing set of data.
         /// </summary>
         StartEdge,
+
         /// <summary>
         /// States that the aggregate is being computed over a sliding window, so state management is done using a queue of unknown size cap.
         /// </summary>
         Sliding,
+
         /// <summary>
         /// States that the aggregate is being computed over a hopping window, so state management is done using a queue of known size cap.
         /// </summary>
         Hopping,
+
         /// <summary>
         /// States that a priority queue is being used to manage aggregate states.
         /// </summary>
         PriorityQueue,
+
         /// <summary>
         /// States that the aggregate is being computed over a tumbling window and that state management is at its simplest.
         /// </summary>

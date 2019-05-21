@@ -186,7 +186,6 @@ if (f.Type == this.payloadType) {
     // TODO:
     // GENERATE: this.payload = value.payload;
     // GENERATE: value.payload.IncrementRefCount(1);
-
     var batch = value as <#= CLASSNAME #><#= genericParameters #>;
 
     if (batch != null) {

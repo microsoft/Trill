@@ -294,6 +294,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual bool LeftInputHasState => !this.leftQueue.IsEmpty;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -311,6 +312,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="rightBatchFree"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected abstract void ProcessBothBatches(StreamMessage<TKey, TLeft> leftBatch, StreamMessage<TKey, TRight> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree);
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -319,6 +321,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="leftBatchFree"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected abstract void ProcessLeftBatch(StreamMessage<TKey, TLeft> leftBatch, out bool leftBatchDone, out bool leftBatchFree);
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -333,21 +336,25 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedInputCount => this.CurrentlyBufferedLeftInputCount + this.CurrentlyBufferedRightInputCount;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual int CurrentlyBufferedLeftInputCount => this.leftQueue.Select(q => q.Count).Sum();
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual int CurrentlyBufferedRightInputCount => this.rightQueue.Select(q => q.Count).Sum();
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual int CurrentlyBufferedLeftKeyCount => this.LeftInputHasState ? 1 : 0;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -506,8 +513,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="previous"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void ProduceQueryPlan(PlanNode previous) =>
-            // Remove this method when moving implementation from Pipe to UnaryPipe.
-            throw new InvalidOperationException();
+            throw new InvalidOperationException(); // Remove this method when moving implementation from Pipe to UnaryPipe.
 
         private enum SerializationState { Open, CheckpointLeft, CheckpointRight, RestoreLeft, RestoreRight }
 
@@ -520,6 +526,7 @@ namespace Microsoft.StreamProcessing
             /// </summary>
             private bool isCompleted;
             protected readonly BinaryPipe<TKey, TLeft, TRight, TResult> Parent;
+
             /// <summary>
             /// Gets the 'other' observer (the 'left' observer if this is 'right', the 'right' observer if this is 'left').
             /// </summary>

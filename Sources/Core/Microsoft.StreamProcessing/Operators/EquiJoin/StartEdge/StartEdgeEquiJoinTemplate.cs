@@ -198,16 +198,11 @@ using Microsoft.StreamProcessing.Internal.Collections;
                             while (rightEdges.Next(out rightIndex))
                             {
                                 if (first) { key = leftBatch.key.col[leftBatch.iter]; first = false; }
-                                //if (keyComparer(key, rightEdgeMap.Values[rightIndex].Key))
                                 var activeEventRight = rightEdgeMap.Values[rightIndex];
                                 var rightKey = activeEventRight.Key;
                                 if (");
             this.Write(this.ToStringHelper.ToStringWithCulture(this.keyComparer("key", "rightKey")));
-            this.Write(@")
-                                {
-                                    //payload = leftBatch[leftBatch.iter];
-                                    //OutputStartEdge(nextLeftTime, ref key, ref payload, ref rightEdgeMap.Values[rightIndex].Payload, hash);
-                                    ");
+            this.Write(")\r\n                                {\r\n                                    ");
  OutputStartEdgeWithActiveEventRight("nextLeftTime", "key", "generatedLeftBatch", "leftBatch.iter", "activeEventRight", "hash"); 
             this.Write(@"                                }
                             }
@@ -316,15 +311,11 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     while (rightEdges.Next(out rightIndex))
                     {
                         if (first) { key = batch.key.col[batch.iter]; first = false; }
-                        //if (keyComparer(key, rightEdgeMap.Values[rightIndex].Key))
                         var activeEventRight = rightEdgeMap.Values[rightIndex];
                         var rightKey = activeEventRight.Key;
                         if (");
             this.Write(this.ToStringHelper.ToStringWithCulture(this.keyComparer("key", "rightKey")));
-            this.Write(")\r\n                        {\r\n                            //payload = batch[batch" +
-                    ".iter];\r\n                            //OutputStartEdge(nextLeftTime, ref key, re" +
-                    "f payload, ref rightEdgeMap.Values[rightIndex].Payload, hash);\r\n                " +
-                    "            ");
+            this.Write(")\r\n                        {\r\n                            ");
  OutputStartEdgeWithActiveEventRight("nextLeftTime", "key", "generatedLeftBatch", "batch.iter", "activeEventRight", "hash"); 
             this.Write(@"                        }
                     }
@@ -333,9 +324,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
                 {
                     int newIndex = leftEdgeMap.Insert(hash);
                     if (first) key = batch.key.col[batch.iter];
-                    //payload = batch[batch.iter]; // potential rare recomputation
-
-                    //leftEdgeMap.Values[newIndex].Populate(ref key, ref payload);
                     leftEdgeMap.Values[newIndex].Populate(generatedLeftBatch, batch.iter);
                 }
             }
@@ -513,8 +501,7 @@ this.Write("            }\r\n        }\r\n    }\r\n    if (!isLeftComplete)\r\n 
 
 this.Write(this.ToStringHelper.ToStringWithCulture(hash));
 
-this.Write(");\r\n        //rightEdgeMap.Values[newIndex].Populate(ref key, ref payload);\r\n    " +
-        "    rightEdgeMap.Values[newIndex].Populate(");
+this.Write(");\r\n        rightEdgeMap.Values[newIndex].Populate(");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(rightBatch));
 
@@ -552,14 +539,9 @@ this.Write(";\r\n        var hash_OutputStartEdge = ");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(hash));
 
-this.Write(@";
-
-        int index = output.Count++;
-        output.vsync.col[index] = start_OutputStartEdge;
-        output.vother.col[index] = StreamEvent.InfinitySyncTime;
-        output.key.col[index] = key_OutputStartEdge;
-        //output[index] = selector(leftPayload, rightPayload);
-");
+this.Write(";\r\n\r\n        int index = output.Count++;\r\n        output.vsync.col[index] = start" +
+        "_OutputStartEdge;\r\n        output.vother.col[index] = StreamEvent.InfinitySyncTi" +
+        "me;\r\n        output.key.col[index] = key_OutputStartEdge;\r\n");
 
  if (this.leftMessageRepresentation.noFields) { 
 this.Write("        ");
@@ -608,14 +590,9 @@ this.Write(";\r\n        var hash_OutputStartEdge = ");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(hash));
 
-this.Write(@";
-
-        int index = output.Count++;
-        output.vsync.col[index] = start_OutputStartEdge;
-        output.vother.col[index] = StreamEvent.InfinitySyncTime;
-        output.key.col[index] = key_OutputStartEdge;
-        //output[index] = selector(leftPayload, rightPayload);
-");
+this.Write(";\r\n\r\n        int index = output.Count++;\r\n        output.vsync.col[index] = start" +
+        "_OutputStartEdge;\r\n        output.vother.col[index] = StreamEvent.InfinitySyncTi" +
+        "me;\r\n        output.key.col[index] = key_OutputStartEdge;\r\n");
 
  if (this.rightMessageRepresentation.noFields) { 
 this.Write("        ");

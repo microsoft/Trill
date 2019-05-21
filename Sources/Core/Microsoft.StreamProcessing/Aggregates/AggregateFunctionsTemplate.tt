@@ -25,10 +25,10 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// Performs multiple aggregations simultaneously
         /// </summary>
         /// <typeparam name="TInput">The input stream to aggregate</typeparam>
-<#= IterateCommaLine("        /// <typeparam name=\"TState$\">Aggregation state type for aggregate number $</typeparam>", count) #>,
-<#= IterateCommaLine("        /// <typeparam name=\"TResult$\">Result type for aggregate number $</typeparam>", count) #>,
+<#= IterateCommaLine("        /// <typeparam name=\"TState$\">Aggregation state type for aggregate number $</typeparam>", count) #>
+<#= IterateCommaLine("        /// <typeparam name=\"TResult$\">Result type for aggregate number $</typeparam>", count) #>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
-<#= IterateCommaLine("        /// <param name=\"aggregate$\">Aggregation specification number $</param>", count) #>,
+<#= IterateCommaLine("        /// <param name=\"aggregate$\">Aggregation specification number $</param>", count) #>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<<#= IterateComma("TState$", count) #>>, TResult> Combine<TInput, <#= IterateComma("TState$, TResult$", count) #>, TResult>(

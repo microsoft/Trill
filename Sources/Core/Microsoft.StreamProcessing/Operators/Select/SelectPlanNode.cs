@@ -16,10 +16,12 @@ namespace Microsoft.StreamProcessing
         /// The expression that is used to generate output events in this operator.
         /// </summary>
         public Expression Selector { get; }
+
         /// <summary>
         /// States whether the expression in the selector has access to the start edge of events.
         /// </summary>
         public bool IncludesKey { get; }
+
         /// <summary>
         /// States whether the expression in the selector has access to the start edge of events.
         /// </summary>

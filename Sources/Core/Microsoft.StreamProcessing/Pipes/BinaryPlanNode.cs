@@ -131,10 +131,12 @@ namespace Microsoft.StreamProcessing
         /// Indicates that the current node is a join operation.
         /// </summary>
         public override PlanNodeKind Kind => PlanNodeKind.Join;
+
         /// <summary>
         /// Returns the kind of join represented by the current operator.
         /// </summary>
         public JoinKind JoinKind { get; private set; }
+
         /// <summary>
         /// Returns the set of expressions employed by the current node to compute the join.
         /// </summary>

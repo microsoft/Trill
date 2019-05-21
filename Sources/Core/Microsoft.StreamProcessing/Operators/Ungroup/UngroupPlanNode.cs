@@ -17,14 +17,17 @@ namespace Microsoft.StreamProcessing
         /// The previous node in the plan, the input to the ungrouping operation.
         /// </summary>
         public PlanNode Previous { get; }
+
         /// <summary>
         /// The expression used to retrieve elements relative to a grouping key.
         /// </summary>
         public Expression ResultExpression { get; }
+
         /// <summary>
         /// The type of the grouping key of the input stream.
         /// </summary>
         public Type InputKeyType { get; }
+
         /// <summary>
         /// The payload type of the input groups.
         /// </summary>

@@ -39,15 +39,17 @@ namespace Microsoft.StreamProcessing.Internal
     [DataContract]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct StructTuple<<#= IterateComma("T$", count) #>> : IDisposable
-    {
-<# for (int i = 1; i <= count; i++) { #>
+    {<#
+    for (int i = 1; i <= count; i++)
+    { #>
+
         /// <summary>
         /// Item number <#= i #> of the tuple object.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public T<#= i #> Item<#= i #>;
-<# } #>
+<#  } #>
 
         /// <summary>
         /// Prints a string representation of the StructTuple.

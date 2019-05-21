@@ -17,6 +17,7 @@ namespace Microsoft.StreamProcessing.Internal
     {
         private string identifier;
         private Process activeProcess;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>

@@ -284,6 +284,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                                 this.batch.Count++;
                                 if (this.batch.Count == Config.DataBatchSize) FlushContents();
                             }
+
                             // Update aggregate
                             heldState.state.state = <#= difference("heldState.state.state", "ecqState.states.entries[iter].value.state.state") #>;
                             heldState.state.active -= ecqState.states.entries[iter].value.state.active;
@@ -350,6 +351,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                         cachedState = false;
                         this.heldAggregates.Clear();
                     }
+
                     // Need to retrieve the key from the dictionary
                     currentKey = col_key[i];
                     currentHash = col_hash[i];
@@ -366,6 +368,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                             currentState.state.state = <#= initialState #>;
                             currentState.timestamp = syncTime;
                             this.aggregateByKey.Insert(currentKey, currentState, currentHash);
+
                             // No output because initial state is empty
                         }
                         else

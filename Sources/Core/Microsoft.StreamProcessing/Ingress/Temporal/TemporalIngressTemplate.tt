@@ -672,6 +672,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
     protected override void OnCompleted(long punctuationTime)
     {
         GenerateAndProcess<#= globalPunctuation #>(punctuationTime);
+
         // Flush, but if we just flushed due to the punctuation generated above
         if (flushPolicy != <#= partitionString #>FlushPolicy.FlushOn<#= globalPunctuation #>)
             OnFlush();

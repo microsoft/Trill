@@ -87,7 +87,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                 output.vsync.col[ind] = kvp.Key + limit;
                 output.vother.col[ind] = kvp.Key;
                 output.key.col[ind] = ae.Key;
-                //output[ind] = ae.Payload;
 <#     foreach (var f in this.fields) { #>
 <#       if (f.OptimizeString()) { #>
 
@@ -135,7 +134,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                         output.vsync.col[ind] = sync;
                         output.vother.col[ind] = StreamEvent.InfinitySyncTime;
                         output.key.col[ind] = batch.key.col[i];
-                        //output[ind] = batch[i];
 <#     foreach (var f in this.fields) { #>
 <#       if (f.OptimizeString()) { #>
                         output.<#= f.Name #>.AddString(batch.<#= f.Name #>[i]);
@@ -164,7 +162,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                         output.vsync.col[ind] = batch.vsync.col[i];
                         output.vother.col[ind] = Math.Min(batch.vother.col[i], batch.vsync.col[i] + limit);
                         output.key.col[ind] = batch.key.col[i];
-                        //output[ind] = batch[i];
 <#     foreach (var f in this.fields) { #>
 <#       if (f.OptimizeString()) { #>
                         output.<#= f.Name #>.AddString(batch.<#= f.Name #>[i]);
@@ -190,7 +187,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                         output.vsync.col[ind] = sync;
                         output.vother.col[ind] = other;
                         output.key.col[ind] = batch.key.col[i];
-                        //output[ind] = payload;
 <#     foreach (var f in this.fields) { #>
 <#       if (f.OptimizeString()) { #>
                         output.<#= f.Name #>.AddString(batch.<#= f.Name #>[i]);
@@ -257,7 +253,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
         public void Populate(<#= TKey #> key, <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> batch, int index, int hash)
         {
             this.Key = key;
-            //this.Payload = payload;
 <# foreach (var f in this.fields) { #>
             this.<#= f.Name #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
 <# } #>

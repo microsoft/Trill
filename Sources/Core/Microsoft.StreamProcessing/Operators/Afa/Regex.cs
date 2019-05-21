@@ -14,6 +14,7 @@ namespace Microsoft.StreamProcessing
     public static class ARegex
     {
         #region SingleElement
+
         /// <summary>
         /// Creates a new pattern without a register and adds a single-element transition that succeeds on every stream element seen
         /// </summary>
@@ -261,6 +262,7 @@ namespace Microsoft.StreamProcessing
         #endregion
 
         #region ListElement
+
         /// <summary>
         /// Creates a new pattern without a register and adds a time-synchronous list transition that succeeds on every list of events seen
         /// </summary>
@@ -508,6 +510,7 @@ namespace Microsoft.StreamProcessing
         #endregion
 
         #region Epsilon
+
         /// <summary>
         /// Creates a new pattern without a register and adds an epsilon transition
         /// </summary>
@@ -537,6 +540,7 @@ namespace Microsoft.StreamProcessing
         #endregion
 
         #region Concat, OrConcat, Or
+
         /// <summary>
         /// Creates a new pattern resulting from the concatenation of other patterns
         /// </summary>
@@ -697,6 +701,7 @@ namespace Microsoft.StreamProcessing
         #endregion
 
         #region Kleene and ?
+
         /// <summary>
         /// Creates a new pattern resulting from zero to many iterations of the given pattern
         /// </summary>

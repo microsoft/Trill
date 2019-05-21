@@ -156,8 +156,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "               {\r\n                    var active = queue.Dequeue();\r\n\r\n         " +
                     "           int ind = output.Count++;\r\n                    output.vsync.col[ind] " +
                     "= threshhold;\r\n                    output.vother.col[ind] = active.Sync;\r\n      " +
-                    "              output.key.col[ind] = active.Key;\r\n                    //output[in" +
-                    "d] = active.Payload;\r\n");
+                    "              output.key.col[ind] = active.Key;\r\n");
      foreach (var f in this.fields) { 
        if (f.OptimizeString()) { 
             this.Write("\r\n                    output.");
@@ -226,8 +225,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     }
                     else
                     {
-                        int keyIndex;
                         // Check to see if the key is already being tracked
+                        int keyIndex;
                         if (!lastDataTimeDictionary.Lookup(batch.key.col[i], out keyIndex))
                             keyIndex = AllocatePartition(batch.key.col[i]);
                         ReachTime(keyIndex, vsync[i]);
@@ -364,7 +363,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(BatchGeneratedFrom_TKey_TPayload));
             this.Write(this.ToStringHelper.ToStringWithCulture(TKeyTPayloadGenericParameters));
             this.Write(" batch, int index, int hash, long sync)\r\n        {\r\n            this.Key = key;\r\n" +
-                    "            //this.Payload = payload;\r\n");
+                    "");
  foreach (var f in this.fields) { 
             this.Write("            this.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));

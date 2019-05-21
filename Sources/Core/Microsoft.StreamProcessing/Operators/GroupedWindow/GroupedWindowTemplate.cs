@@ -526,8 +526,8 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write(@";
                         currentState.state.active = 1; // start edge only
                         currentState.timestamp = syncTime;
-                        // No output because initial state is empty
 
+                        // No output because initial state is empty
                         this.heldAggregates.Insert(ref index, currentKey, currentState, currentHash);
                     }
                     else
@@ -639,9 +639,9 @@ using Microsoft.StreamProcessing.Aggregates;
                     this.Observer.OnNext(this.batch);
                     ");
             this.Write(this.ToStringHelper.ToStringWithCulture(getOutputBatch));
-            this.Write("\r\n                    this.batch.Allocate();\r\n                }\r\n            }\r\n " +
-                    "           // Time has moved forward, clean the held aggregates\r\n            thi" +
-                    "s.heldAggregates.Clean();\r\n            ");
+            this.Write("\r\n                    this.batch.Allocate();\r\n                }\r\n            }\r\n\r" +
+                    "\n            // Time has moved forward, clean the held aggregates\r\n            t" +
+                    "his.heldAggregates.Clean();\r\n            ");
  } 
             this.Write("\r\n            // Since sync time changed, set lastSyncTime\r\n            this.last" +
                     "SyncTime = syncTime;\r\n        }\r\n        if (this.batch.Count > 0)\r\n        {\r\n " +

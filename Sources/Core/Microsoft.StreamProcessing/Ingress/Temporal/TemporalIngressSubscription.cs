@@ -267,7 +267,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 
             if (value.IsPunctuation)
             {
@@ -347,7 +346,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             Contract.Assume(value.SyncTime != value.OtherTime);
 
             if (value.IsPunctuation)
@@ -572,6 +570,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -635,7 +634,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 
             if (value.IsPunctuation)
             {
@@ -715,7 +713,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             Contract.Assume(value.SyncTime != value.OtherTime);
 
             if (value.IsPunctuation)
@@ -935,6 +932,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -991,7 +989,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             this.action(value.SyncTime, value.OtherTime, value.Payload, Empty.Default);
         }
 
@@ -1081,7 +1078,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref StreamEvent<TResult> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             Contract.Assume(value.SyncTime != value.OtherTime);
 
             if (value.IsPunctuation)
@@ -1306,6 +1302,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -1354,7 +1351,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 
             if (value.IsPunctuation)
             {
@@ -1554,6 +1550,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -1617,7 +1614,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 
             if (value.IsPunctuation)
             {
@@ -1812,6 +1808,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -1868,7 +1865,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             this.action(value.SyncTime, value.OtherTime, value.Payload, Empty.Default);
         }
 
@@ -2078,6 +2074,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -2138,7 +2135,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             var value = StreamEvent.CreateInterval(this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue);
 
             if (value.IsPunctuation)
@@ -2219,7 +2215,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
@@ -2347,6 +2342,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -2422,7 +2418,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             var value = StreamEvent.CreateInterval(this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue);
 
             if (value.IsPunctuation)
@@ -2503,7 +2498,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref StreamEvent<TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
@@ -2626,6 +2620,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -2694,7 +2689,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             this.action(this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue, Empty.Default);
         }
 
@@ -2784,7 +2778,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref StreamEvent<TResult> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
@@ -2912,6 +2905,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -2972,7 +2966,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             var value = StreamEvent.CreateInterval(this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue);
 
             if (value.IsPunctuation)
@@ -3082,6 +3075,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -3157,7 +3151,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             var value = StreamEvent.CreateInterval(this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue);
 
             if (value.IsPunctuation)
@@ -3262,6 +3255,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -3330,7 +3324,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             this.action(this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue, Empty.Default);
         }
 
@@ -3449,6 +3442,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessPunctuation(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != FlushPolicy.FlushOnPunctuation)
                 OnFlush();
@@ -3498,7 +3492,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(PartitionedStreamEvent<TKey, TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 
             if (value.IsLowWatermark)
             {
@@ -3617,7 +3610,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref PartitionedStreamEvent<TKey, TPayload> value, bool updateCurrentTime = true)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             Contract.Assume(value.SyncTime != value.OtherTime);
 
             if (value.IsLowWatermark)
@@ -3915,6 +3907,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -3979,7 +3972,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(PartitionedStreamEvent<TKey, TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 
             if (value.IsLowWatermark)
             {
@@ -4098,7 +4090,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref PartitionedStreamEvent<TKey, TPayload> value, bool updateCurrentTime = true)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             Contract.Assume(value.SyncTime != value.OtherTime);
 
             if (value.IsLowWatermark)
@@ -4391,6 +4382,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -4448,7 +4440,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(PartitionedStreamEvent<TKey, TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             this.action(value.SyncTime, value.OtherTime, value.Payload, new PartitionKey<TKey>(value.PartitionKey));
         }
 
@@ -4577,7 +4568,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref PartitionedStreamEvent<TKey, TResult> value, bool updateCurrentTime = true)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             Contract.Assume(value.SyncTime != value.OtherTime);
 
             if (value.IsLowWatermark)
@@ -4875,6 +4865,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -4924,7 +4915,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(PartitionedStreamEvent<TKey, TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 
             if (value.IsLowWatermark)
             {
@@ -5164,6 +5154,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -5228,7 +5219,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(PartitionedStreamEvent<TKey, TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
 
             if (value.IsLowWatermark)
             {
@@ -5463,6 +5453,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -5520,7 +5511,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(PartitionedStreamEvent<TKey, TPayload> value)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             this.action(value.SyncTime, value.OtherTime, value.Payload, new PartitionKey<TKey>(value.PartitionKey));
         }
 
@@ -5770,6 +5760,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -5837,7 +5828,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             var value = PartitionedStreamEvent.CreateInterval(this.partitionFunction(inputValue), this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue);
 
             if (value.IsLowWatermark)
@@ -5948,7 +5938,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref PartitionedStreamEvent<TKey, TPayload> value, bool updateCurrentTime = true)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             // Update global high water mark if necessary
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
@@ -6138,6 +6127,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -6220,7 +6210,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             var value = PartitionedStreamEvent.CreateInterval(this.partitionFunction(inputValue), this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue);
 
             if (value.IsLowWatermark)
@@ -6331,7 +6320,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref PartitionedStreamEvent<TKey, TPayload> value, bool updateCurrentTime = true)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             // Update global high water mark if necessary
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
@@ -6516,6 +6504,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -6591,7 +6580,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             this.action(this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue, new PartitionKey<TKey>(this.partitionFunction(inputValue)));
         }
 
@@ -6711,7 +6699,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void Process(ref PartitionedStreamEvent<TKey, TResult> value, bool updateCurrentTime = true)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             // Update global high water mark if necessary
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
@@ -6901,6 +6888,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -6968,7 +6956,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             var value = PartitionedStreamEvent.CreateInterval(this.partitionFunction(inputValue), this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue);
 
             if (value.IsLowWatermark)
@@ -7107,6 +7094,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -7189,7 +7177,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             var value = PartitionedStreamEvent.CreateInterval(this.partitionFunction(inputValue), this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue);
 
             if (value.IsLowWatermark)
@@ -7323,6 +7310,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();
@@ -7398,7 +7386,6 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         public override void OnNext(TPayload inputValue)
         {
-            Contract.EnsuresOnThrow<IngressException>(true);
             this.action(this.startEdgeFunction(inputValue), this.endEdgeFunction(inputValue), inputValue, new PartitionKey<TKey>(this.partitionFunction(inputValue)));
         }
 
@@ -7546,6 +7533,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             GenerateAndProcessLowWatermark(punctuationTime);
+
             // Flush, but if we just flushed due to the punctuation generated above
             if (this.flushPolicy != PartitionedFlushPolicy.FlushOnLowWatermark)
                 OnFlush();

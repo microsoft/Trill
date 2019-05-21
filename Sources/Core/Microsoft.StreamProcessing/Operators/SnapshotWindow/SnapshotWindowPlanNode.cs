@@ -19,6 +19,7 @@ namespace Microsoft.StreamProcessing
         /// States what kind of algorithm is being used for the computation of aggregate state.
         /// </summary>
         public AggregatePipeType InternalAggregateType { get; }
+
         /// <summary>
         /// States precisely what aggregate is being computed.
         /// </summary>

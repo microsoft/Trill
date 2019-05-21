@@ -20,10 +20,10 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// Performs multiple aggregations simultaneously
         /// </summary>
         /// <typeparam name="TInput">The input stream to aggregate</typeparam>
-        /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>,
-        /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
+        /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>
+        /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
-        /// <param name="aggregate1">Aggregation specification number 1</param>,
+        /// <param name="aggregate1">Aggregation specification number 1</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1>, TResult> Combine<TInput, TState1, TResult1, TResult>(
@@ -81,12 +81,12 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// </summary>
         /// <typeparam name="TInput">The input stream to aggregate</typeparam>
         /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>,
-        /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>,
+        /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
-        /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
+        /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
-        /// <param name="aggregate2">Aggregation specification number 2</param>,
+        /// <param name="aggregate2">Aggregation specification number 2</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TResult>(
@@ -157,14 +157,14 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TInput">The input stream to aggregate</typeparam>
         /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>,
         /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>,
-        /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>,
+        /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
-        /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
+        /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
-        /// <param name="aggregate3">Aggregation specification number 3</param>,
+        /// <param name="aggregate3">Aggregation specification number 3</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TResult>(
@@ -252,16 +252,16 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>,
         /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>,
         /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>,
-        /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>,
+        /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
-        /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>,
+        /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
         /// <param name="aggregate3">Aggregation specification number 3</param>,
-        /// <param name="aggregate4">Aggregation specification number 4</param>,
+        /// <param name="aggregate4">Aggregation specification number 4</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TResult>(
@@ -370,18 +370,18 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>,
         /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>,
         /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>,
-        /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>,
+        /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
         /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>,
-        /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>,
+        /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
         /// <param name="aggregate3">Aggregation specification number 3</param>,
         /// <param name="aggregate4">Aggregation specification number 4</param>,
-        /// <param name="aggregate5">Aggregation specification number 5</param>,
+        /// <param name="aggregate5">Aggregation specification number 5</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TResult>(
@@ -515,20 +515,20 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>,
         /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>,
         /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>,
-        /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>,
+        /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
         /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>,
         /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>,
-        /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>,
+        /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
         /// <param name="aggregate3">Aggregation specification number 3</param>,
         /// <param name="aggregate4">Aggregation specification number 4</param>,
         /// <param name="aggregate5">Aggregation specification number 5</param>,
-        /// <param name="aggregate6">Aggregation specification number 6</param>,
+        /// <param name="aggregate6">Aggregation specification number 6</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TResult>(
@@ -691,14 +691,14 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>,
         /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>,
         /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>,
-        /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>,
+        /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
         /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>,
         /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>,
         /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>,
-        /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>,
+        /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -706,7 +706,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate4">Aggregation specification number 4</param>,
         /// <param name="aggregate5">Aggregation specification number 5</param>,
         /// <param name="aggregate6">Aggregation specification number 6</param>,
-        /// <param name="aggregate7">Aggregation specification number 7</param>,
+        /// <param name="aggregate7">Aggregation specification number 7</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TResult>(
@@ -902,7 +902,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>,
         /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>,
         /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>,
-        /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>,
+        /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -910,7 +910,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>,
         /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>,
         /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>,
-        /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>,
+        /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -919,7 +919,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate5">Aggregation specification number 5</param>,
         /// <param name="aggregate6">Aggregation specification number 6</param>,
         /// <param name="aggregate7">Aggregation specification number 7</param>,
-        /// <param name="aggregate8">Aggregation specification number 8</param>,
+        /// <param name="aggregate8">Aggregation specification number 8</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TResult>(
@@ -1152,7 +1152,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>,
         /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>,
         /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>,
-        /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>,
+        /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -1161,7 +1161,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>,
         /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>,
         /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>,
-        /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>,
+        /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -1171,7 +1171,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate6">Aggregation specification number 6</param>,
         /// <param name="aggregate7">Aggregation specification number 7</param>,
         /// <param name="aggregate8">Aggregation specification number 8</param>,
-        /// <param name="aggregate9">Aggregation specification number 9</param>,
+        /// <param name="aggregate9">Aggregation specification number 9</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TResult>(
@@ -1445,7 +1445,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>,
         /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>,
         /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>,
-        /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>,
+        /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -1455,7 +1455,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>,
         /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>,
         /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>,
-        /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>,
+        /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -1466,7 +1466,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate7">Aggregation specification number 7</param>,
         /// <param name="aggregate8">Aggregation specification number 8</param>,
         /// <param name="aggregate9">Aggregation specification number 9</param>,
-        /// <param name="aggregate10">Aggregation specification number 10</param>,
+        /// <param name="aggregate10">Aggregation specification number 10</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TResult>(
@@ -1785,7 +1785,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>,
         /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>,
         /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>,
-        /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>,
+        /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -1796,7 +1796,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>,
         /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>,
         /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>,
-        /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>,
+        /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -1808,7 +1808,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate8">Aggregation specification number 8</param>,
         /// <param name="aggregate9">Aggregation specification number 9</param>,
         /// <param name="aggregate10">Aggregation specification number 10</param>,
-        /// <param name="aggregate11">Aggregation specification number 11</param>,
+        /// <param name="aggregate11">Aggregation specification number 11</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TResult>(
@@ -2176,7 +2176,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>,
         /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>,
         /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>,
-        /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>,
+        /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -2188,7 +2188,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>,
         /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>,
         /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>,
-        /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>,
+        /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -2201,7 +2201,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate9">Aggregation specification number 9</param>,
         /// <param name="aggregate10">Aggregation specification number 10</param>,
         /// <param name="aggregate11">Aggregation specification number 11</param>,
-        /// <param name="aggregate12">Aggregation specification number 12</param>,
+        /// <param name="aggregate12">Aggregation specification number 12</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TState12, TResult12, TResult>(
@@ -2622,7 +2622,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>,
         /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>,
         /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>,
-        /// <typeparam name="TState13">Aggregation state type for aggregate number 13</typeparam>,
+        /// <typeparam name="TState13">Aggregation state type for aggregate number 13</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -2635,7 +2635,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>,
         /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>,
         /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>,
-        /// <typeparam name="TResult13">Result type for aggregate number 13</typeparam>,
+        /// <typeparam name="TResult13">Result type for aggregate number 13</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -2649,7 +2649,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate10">Aggregation specification number 10</param>,
         /// <param name="aggregate11">Aggregation specification number 11</param>,
         /// <param name="aggregate12">Aggregation specification number 12</param>,
-        /// <param name="aggregate13">Aggregation specification number 13</param>,
+        /// <param name="aggregate13">Aggregation specification number 13</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TState12, TResult12, TState13, TResult13, TResult>(
@@ -3127,7 +3127,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>,
         /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>,
         /// <typeparam name="TState13">Aggregation state type for aggregate number 13</typeparam>,
-        /// <typeparam name="TState14">Aggregation state type for aggregate number 14</typeparam>,
+        /// <typeparam name="TState14">Aggregation state type for aggregate number 14</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -3141,7 +3141,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>,
         /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>,
         /// <typeparam name="TResult13">Result type for aggregate number 13</typeparam>,
-        /// <typeparam name="TResult14">Result type for aggregate number 14</typeparam>,
+        /// <typeparam name="TResult14">Result type for aggregate number 14</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -3156,7 +3156,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate11">Aggregation specification number 11</param>,
         /// <param name="aggregate12">Aggregation specification number 12</param>,
         /// <param name="aggregate13">Aggregation specification number 13</param>,
-        /// <param name="aggregate14">Aggregation specification number 14</param>,
+        /// <param name="aggregate14">Aggregation specification number 14</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TState12, TResult12, TState13, TResult13, TState14, TResult14, TResult>(
@@ -3695,7 +3695,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>,
         /// <typeparam name="TState13">Aggregation state type for aggregate number 13</typeparam>,
         /// <typeparam name="TState14">Aggregation state type for aggregate number 14</typeparam>,
-        /// <typeparam name="TState15">Aggregation state type for aggregate number 15</typeparam>,
+        /// <typeparam name="TState15">Aggregation state type for aggregate number 15</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -3710,7 +3710,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>,
         /// <typeparam name="TResult13">Result type for aggregate number 13</typeparam>,
         /// <typeparam name="TResult14">Result type for aggregate number 14</typeparam>,
-        /// <typeparam name="TResult15">Result type for aggregate number 15</typeparam>,
+        /// <typeparam name="TResult15">Result type for aggregate number 15</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -3726,7 +3726,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate12">Aggregation specification number 12</param>,
         /// <param name="aggregate13">Aggregation specification number 13</param>,
         /// <param name="aggregate14">Aggregation specification number 14</param>,
-        /// <param name="aggregate15">Aggregation specification number 15</param>,
+        /// <param name="aggregate15">Aggregation specification number 15</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TState12, TResult12, TState13, TResult13, TState14, TResult14, TState15, TResult15, TResult>(

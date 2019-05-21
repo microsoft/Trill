@@ -22,7 +22,6 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void PointAtEndTest1()
         {
-            // nothing interesting happens here
             var inputList = new[]
             {
                 StreamEvent.CreateStart(1, "A"),
@@ -127,7 +126,6 @@ namespace SimpleTesting
         public void PointAtEndTest4()
         {
             var payload = StructTuple.Create("A", 3);
-            // nothing interesting happens here
             var inputList = new[]
             {
                 StreamEvent.CreateStart(1, payload),
@@ -162,7 +160,6 @@ namespace SimpleTesting
         public void PointAtEndTest5()
         {
             var payload = StructTuple.Create("A", 3);
-            // nothing interesting happens here
             var inputList = new[]
             {
                 StreamEvent.CreateInterval(1, 5, payload),
@@ -195,7 +192,6 @@ namespace SimpleTesting
         public void PointAtEndTest6()
         {
             var payload = StructTuple.Create("A", 3);
-            // nothing interesting happens here
             var inputList = new[]
             {
                 StreamEvent.CreateStart(1, payload),

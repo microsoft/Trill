@@ -127,7 +127,6 @@ internal sealed class ");
             output.vother.col[ind] = endPointTime + 1;
             var interval = intervalMap.Values[index];
             output.key.col[ind] = interval.Key;
-            //output[ind] = interval.Payload;
 ");
      foreach (var f in this.fields) { 
        if (f.OptimizeString()) { 
@@ -215,8 +214,7 @@ internal sealed class ");
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(BatchGeneratedFrom_TKey_TPayload));
             this.Write(this.ToStringHelper.ToStringWithCulture(TKeyTPayloadGenericParameters));
-            this.Write(" batch, int index, int hash)\r\n        {\r\n            this.Key = key;\r\n           " +
-                    " //this.Payload = payload;\r\n");
+            this.Write(" batch, int index, int hash)\r\n        {\r\n            this.Key = key;\r\n");
  foreach (var f in this.fields) { 
             this.Write("            this.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));
