@@ -54,7 +54,6 @@ namespace SimpleTesting
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void TestSumAggregate_Long()
         {
@@ -98,7 +97,6 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
-
 
         [TestMethod, TestCategory("Gated")]
         public void TestSumAggregate_Short()
@@ -144,7 +142,6 @@ namespace SimpleTesting
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void TestSumAggregate_UInt()
         {
@@ -188,7 +185,6 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
-
 
         [TestMethod, TestCategory("Gated")]
         public void TestSumAggregate_ULong()
@@ -278,7 +274,6 @@ namespace SimpleTesting
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void TestSumAggregate_Decimal()
         {
@@ -322,7 +317,6 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
-
 
         [TestMethod, TestCategory("Gated")]
         public void TestSumAggregate_Double()
@@ -425,7 +419,6 @@ namespace SimpleTesting
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void TestSumAggregate_SByte()
         {
@@ -469,7 +462,6 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
-
 
     }
 }

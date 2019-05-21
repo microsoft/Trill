@@ -130,7 +130,6 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
 
             var outputList = new List<StreamEvent<int>>();
 
-
             double disorderFraction = 0.5;
             int reorderLatency = 202;
             int disorderAmount = 200;
@@ -158,7 +157,6 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
             Config.IngressSortingTechnique = SortingTechnique.PriorityQueue;
 
             var outputList = new List<StreamEvent<int>>();
-
 
             double disorderFraction = 0.5;
             int reorderLatency = 202;

@@ -679,9 +679,9 @@ using Microsoft.StreamProcessing.Aggregates;
  foreach (var f in this.outputFields.Where(fld => fld.canBeFixed)) { 
             this.Write("        }\r\n");
  } 
-            this.Write("\r\n        generatedBatch.Release();\r\n        generatedBatch.Return();\r\n    }\r\n\r\n\r" +
-                    "\n\r\n    public void OnPunctuation(long syncTime)\r\n    {\r\n        HeldState heldSt" +
-                    "ate;\r\n\r\n");
+            this.Write("\r\n        generatedBatch.Release();\r\n        generatedBatch.Return();\r\n    }\r\n\r\n " +
+                    "   public void OnPunctuation(long syncTime)\r\n    {\r\n        HeldState heldState;" +
+                    "\r\n\r\n");
  if (this.outputFields.Count() > 1) { 
             this.Write("        ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TOutput));

@@ -43,7 +43,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<<#= IterateComma("TState$", count) #>>, TState<#= i #>>> target<#= i #> = state => state.Item<#= i #>;
 <# } #>
             var target = new System.Collections.Generic.List<LambdaExpression> { <#= IterateComma("target$", count) #> };
-
 <# for (int i = 2; i <= count; i++) for (int j = 1; j < i; j++) {
    if (j == 1) { #>
             if (aggregate<#= i #>.HasSameStateAs(aggregate<#= j #>))

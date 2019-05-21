@@ -58,8 +58,8 @@ foreach (var m in new [] { "StreamEvent", "Interval" })
         private readonly bool delayed;
 
         private readonly QueryContainer container;
-
 <#  if (!fused) { #>
+
         internal <#= partitionString #>DiagnosticObservable<<#= typeParameters #>> diagnosticOutput;
 <#  } #>
 

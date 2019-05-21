@@ -222,7 +222,6 @@ internal sealed class <#= className #><#= genericParameters #> :
 
         tmp.Count = count;
 
-
         batch.ReleaseKey();
 <# if (ungroupingToUnit) { #>
 

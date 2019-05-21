@@ -25,13 +25,11 @@ namespace Microsoft.StreamProcessing
         internal static IStreamable<TKey, TPayload> GetStreamable<TKey, TPayload>(this IPropertySetter<TKey, TPayload> source)
             => ((PropertySetter<TKey, TPayload>)source).GetStreamable();
 
-
         /// <summary>
         /// Enter into a mode where you can set a property for the stream.
         /// </summary>
         public static IPropertySetter<TKey, TPayload> SetProperty<TKey, TPayload>(this IStreamable<TKey, TPayload> source)
             => new PropertySetter<TKey, TPayload>(source);
-
 
         /// <summary>
         /// Set a property of whether or not the stream is devoid of intervals.

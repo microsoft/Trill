@@ -714,8 +714,8 @@ namespace Microsoft.StreamProcessing
             // Note that currentTime only reflects events already processed, and excludes events in the reorder buffer.
 <#          } #>
             syncTime = Math.Max(syncTime, this.currentTime);
-<#      } #>
 
+<#      } #>
 <#      if (latencyOption == "WithLatency")
         { #>
             // Process events queued for reorderLatency up to the <#= globalPunctuation #> syncTime

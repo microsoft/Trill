@@ -375,9 +375,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
                 "batch.iter",
                 "batch.hash.col[batch.iter]");
             
-            this.Write("\r\n            batch.iter++;\r\n        }\r\n    }\r\n\r\n\r\n    [MethodImpl(MethodImplOpti" +
-                    "ons.AggressiveInlining)]\r\n    private bool GoToVisibleRow<TPayload>(StreamMessag" +
-                    "e<");
+            this.Write("\r\n            batch.iter++;\r\n        }\r\n    }\r\n\r\n    [MethodImpl(MethodImplOption" +
+                    "s.AggressiveInlining)]\r\n    private bool GoToVisibleRow<TPayload>(StreamMessage<" +
+                    "");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", TPayload> batch)\r\n    {\r\n        while (batch.iter < batch.Count && (batch.bitv" +
                     "ector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0 && batch.vother.c" +
@@ -408,8 +408,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(f.OriginalName));
             this.Write(";\r\n        ");
  } 
-            this.Write("\r\n\r\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\r\n        public vo" +
-                    "id Populate(");
+            this.Write("\r\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\r\n        public void" +
+                    " Populate(");
             this.Write(this.ToStringHelper.ToStringWithCulture(BatchGeneratedFrom_TKey_TLeft));
             this.Write(" batch, int index)\r\n        {\r\n            Key = batch.key.col[index];\r\n         " +
                     "   ");
@@ -615,7 +615,6 @@ this.Write("        output.hash.col[index] = hash_OutputStartEdge;\r\n\r\n      
 
 
 }
-
 
     private void GetOutputBatch() { 
 this.Write("  pool.Get(out genericOutputBatch);\r\n  genericOutputBatch.Allocate();\r\n  output =" +

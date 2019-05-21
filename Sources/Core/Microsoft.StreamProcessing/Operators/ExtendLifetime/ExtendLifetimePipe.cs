@@ -29,7 +29,6 @@ namespace Microsoft.StreamProcessing
         private EndPointHeap endPointHeap = new EndPointHeap();
 
 
-
         [Obsolete("Used only by serialization. Do not call directly.")]
         public ExtendLifetimePipe() { }
 

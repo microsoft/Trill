@@ -268,6 +268,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #endregion
 
         /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// Clone the multi-string shell only
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -280,6 +281,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         }
 
         /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// Clone the multi-string, refcounting the bulky contents
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -513,6 +515,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         #region Apply Operations
 
         /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// Apply a boolean expression, returns a bitvector (e.g., StartsWith)
         /// </summary>
         /// <param name="expression"></param>
@@ -567,6 +570,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         }
 
         /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// Apply an expression that returns non-string
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
@@ -618,6 +622,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         }
 
         /// <summary>
+        /// Currently for internal use only - do not use directly.
         /// Apply an expression that returns another single string (e.g., Substring) per input stream
         /// </summary>
         /// <param name="expression"></param>
@@ -1040,7 +1045,6 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 {
                     int pattern_startoffset = m.Index - 2; // position of the first character in the match
                     int pattern_endoffset = m.Index - 2 + m.Length - 1; // position of the last character in the match
-
 
                     while ((cur_i < this.starts.UsedLength - 1) && (startscol[cur_i + 1] <= pattern_startoffset))
                     {

@@ -99,7 +99,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
 
         <#= BatchGeneratedFrom_TKey_TPayload #><#= genericParameters #> resultBatch = resultBatchUncast as <#= BatchGeneratedFrom_TKey_TPayload #><#= genericParameters #>;
 
-
         resultBatch.CloneFromNoPayload(batch);
 
         // Get memory pools for the payload columns.

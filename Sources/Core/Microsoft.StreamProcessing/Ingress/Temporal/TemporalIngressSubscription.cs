@@ -3803,7 +3803,6 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lowWatermark) return;
 
-
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
             {
@@ -4277,7 +4276,6 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
-
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -4761,7 +4759,6 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lowWatermark) return;
 
-
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
             {
@@ -5120,7 +5117,6 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lowWatermark) return;
 
-
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
             if (this.lowWatermark < syncTime)
@@ -5418,7 +5414,6 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
-
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
@@ -5726,7 +5721,6 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lowWatermark) return;
 
-
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
             if (this.lowWatermark < syncTime)
@@ -6022,7 +6016,6 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
-
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -6399,7 +6392,6 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
-
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -6784,7 +6776,6 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lowWatermark) return;
 
-
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
             {
@@ -7060,7 +7051,6 @@ namespace Microsoft.StreamProcessing
         {
             if (syncTime <= this.lowWatermark) return;
 
-
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
             if (this.lowWatermark < syncTime)
@@ -7275,7 +7265,6 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
-
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
@@ -7498,7 +7487,6 @@ namespace Microsoft.StreamProcessing
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
             if (syncTime <= this.lowWatermark) return;
-
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);

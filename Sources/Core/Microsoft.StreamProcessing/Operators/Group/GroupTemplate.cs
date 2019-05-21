@@ -228,7 +228,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(";\r\n        resultBatch.key.IncrementRefCount(1);\r\n");
  } 
  } 
-            this.Write("\r\n\r\n");
+            this.Write("\r\n");
  foreach (var f in this.fields) { 
             this.Write("\r\n");
      if (f.canBeFixed) { 

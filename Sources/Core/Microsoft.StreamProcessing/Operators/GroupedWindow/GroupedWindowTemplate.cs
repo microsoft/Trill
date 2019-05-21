@@ -300,7 +300,7 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write(" batch = inputBatch as ");
             this.Write(this.ToStringHelper.ToStringWithCulture(BatchGeneratedFrom_Unit_TInput));
             this.Write(this.ToStringHelper.ToStringWithCulture(UnitTInputGenericParameters));
-            this.Write(";\r\n\r\n\r\n        ");
+            this.Write(";\r\n\r\n        ");
  if (this.outputFields.Count() > 1) { 
             this.Write("        ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TResult));

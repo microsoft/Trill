@@ -115,7 +115,6 @@ namespace Microsoft.StreamProcessing
                             + ". The event's value is " + batch[i].ToString() + ".");
                     }
 
-
                     this.lastSync = vsync[i];
 
                 }

@@ -501,8 +501,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
         generatedBatch.Return();
     }
 
-
-
     public void OnPunctuation(long syncTime)
     {
         HeldState heldState;

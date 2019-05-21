@@ -30,7 +30,6 @@ foreach (bool disordered in new[] { true, false })
     string priorityQueueSorter = !partitioned ? "StreamEventPriorityQueue<" + (disordered ? "TResult" : "TPayload") + ">" : "PartitionedStreamEventPriorityQueue<TKey, " + (disordered ? "TResult" : "TPayload") + ">";
     string globalPunctuation= partitioned ? "LowWatermark" : "Punctuation";
 
-
     string genericArguments = !partitioned ? "TPayload" : "TKey, TPayload";
     string adjustedGenericArgs = disordered ? genericArguments.Replace("TPayload", "TResult") : genericArguments;
     string baseStructure = partitionString + "StreamEvent<" + adjustedGenericArgs + ">";

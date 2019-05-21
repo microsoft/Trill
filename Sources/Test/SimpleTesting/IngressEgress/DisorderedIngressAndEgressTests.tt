@@ -84,9 +84,9 @@ foreach (var diagnostic in new[] {string.Empty, "Diagnostic"})
                 <#= punctuationpolicy == "Time" ? "PeriodicPunctuationPolicy.Time(10)" : "null"#>);
 
             var prog = ingress.ToStreamEventObservable();
-
 <#  if (diagnostic == "Diagnostic")
     { #>
+
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
             diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));

@@ -145,7 +145,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<Micro
 
         <#= BatchGeneratedFrom_Unit_TInput #><#= UnitTInputGenericParameters #> batch = inputBatch as <#= BatchGeneratedFrom_Unit_TInput #><#= UnitTInputGenericParameters #>;
 
-
         <# if (this.outputFields.Count() > 1) { #>
         <#= TResult #> temporaryOutput;
         <# } #>

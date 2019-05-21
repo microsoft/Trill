@@ -102,7 +102,6 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-
         /// <summary>
         /// Determines whether the Sorted Multiset contains at least one instance of the given element.
         /// </summary>

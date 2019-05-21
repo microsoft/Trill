@@ -98,7 +98,6 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-
         public override IDisposable Subscribe(IStreamObserver<TMapKey, TOutput> observer)
         {
             // asymmetric mapper implies that we have to have a 2-input mapper
@@ -146,7 +145,6 @@ namespace Microsoft.StreamProcessing
                 var sprayResults1 = new MulticastStreamable<TMapKey, TMapInputLeft1, TReduceInput1>[mapArity];
                 for (int i = 0; i < mapArity; i++)
                     sprayResults1[i] = new MulticastStreamable<TMapKey, TMapInputLeft1, TReduceInput1>(importLeft, a => this.mapper1(a, null));
-
 
                 if (this.reduceInMap || (this.reduceOptions == OperationalHint.Asymmetric))
                 {
@@ -338,7 +336,6 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-
         public override IDisposable Subscribe(IStreamObserver<Empty, TOutput> observer)
         {
             // asymmetric mapper implies that we have to have a 2-input mapper
@@ -386,7 +383,6 @@ namespace Microsoft.StreamProcessing
                 var sprayResults1 = new MulticastStreamable<Empty, TMapInputLeft1, TReduceInput1>[mapArity];
                 for (int i = 0; i < mapArity; i++)
                     sprayResults1[i] = new MulticastStreamable<Empty, TMapInputLeft1, TReduceInput1>(importLeft, a => this.mapper1(a, null));
-
 
                 if (this.reduceInMap || (this.reduceOptions == OperationalHint.Asymmetric))
                 {

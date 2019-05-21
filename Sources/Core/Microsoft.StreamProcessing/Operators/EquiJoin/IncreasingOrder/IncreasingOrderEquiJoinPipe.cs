@@ -62,10 +62,8 @@ namespace Microsoft.StreamProcessing
             this.joinKeyOrderComparerExpression = stream.Left.Properties.KeyComparer.GetCompareExpr();
             this.joinKeyOrderComparer = this.joinKeyOrderComparerExpression.Compile();
 
-
             this.currentLeftList = new List<ActiveEvent<TLeft>>();
             this.currentRightList = new List<ActiveEvent<TRight>>();
-
 
             this.errorMessages = stream.ErrorMessages;
             this.pool = MemoryManager.GetMemoryPool<TKey, TResult>(stream.Properties.IsColumnar);
@@ -244,7 +242,6 @@ namespace Microsoft.StreamProcessing
                                 }
                             }
 
-
                             if (compare <= 0)
                             {
                                 // update the right array
@@ -305,7 +302,6 @@ namespace Microsoft.StreamProcessing
                         */
                     {
 
-
                         if (this.currentRightList.Count > 0)
                         {
                             int compare2 = this.joinKeyOrderComparer(this.nextLeftKey, this.currentRightKey);
@@ -346,9 +342,7 @@ namespace Microsoft.StreamProcessing
                     }
                     #endregion
 
-
                     leftBatch.iter++;
-
 
                     #region GoToVisibleRow
                     /* Inlined version of:
@@ -371,7 +365,6 @@ namespace Microsoft.StreamProcessing
                         return;
                     }
                     #endregion
-
 
                     #region UpdateNextLeftTime
 
@@ -505,7 +498,6 @@ namespace Microsoft.StreamProcessing
                 }
 
                 this.nextLeftKey = batch.key.col[batch.iter];
-
 
                 int compare = this.joinKeyOrderComparer(this.nextLeftKey, this.nextRightKey);
                 if ((compare == 0) && (this.nextLeftTime <= this.nextRightTime))

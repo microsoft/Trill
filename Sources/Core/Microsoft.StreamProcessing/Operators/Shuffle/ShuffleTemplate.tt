@@ -153,7 +153,6 @@ internal sealed class <#= className #><#= genericParameters #> :
         var count = batch.Count;
         var srckey = batch.key.col;
 
-
 <#  foreach (var f in this.fields)
     {
         if (f.canBeFixed)

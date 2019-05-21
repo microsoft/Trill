@@ -326,7 +326,6 @@ namespace Microsoft.StreamProcessing
             };
             var item = RemoveOne(this.OpenEvents, matchSmall, start);
 
-
             // and add it to the End list
             item.End = endTime;
 

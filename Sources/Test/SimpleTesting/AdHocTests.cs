@@ -272,7 +272,6 @@ namespace SimpleTesting
             var ingress = qc.RegisterInput(input.ToObservable(), DisorderPolicy.Adjust(0),
                 PartitionedFlushPolicy.FlushOnLowWatermark, null, PeriodicLowWatermarkPolicy.Time(10, 50));
 
-
             var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
             var process = qc.Restore();
             process.Flush();
@@ -1481,7 +1480,6 @@ namespace SimpleTesting
             public string ClusterName;
         }
 
-
         private class QueryProcessor : IDisposable
         {
             private IObserver<StreamEvent<InputEvent>> observer;
@@ -1866,7 +1864,6 @@ namespace SimpleTesting
                          .Select(e => StreamEvent.CreatePoint(e.Timestamp.Ticks, e))
                          .ToObservable()
                          .ToStreamable();
-
 
             try
             {
@@ -2354,7 +2351,6 @@ namespace SimpleTesting
                 .ToTemporalStreamable(r => r.EventId)
                 .Multicast(2)
                 ;
-
 
             var requestStarts = inputs[0].Where(r => r.EventId == StartId).AlterEventDuration(maxRequestDuration);
             var requestEnds = inputs[1].Where(r => r.EventId == EndId);

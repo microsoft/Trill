@@ -10,6 +10,7 @@ using System.Runtime.Serialization;
 namespace Microsoft.StreamProcessing.Internal.Collections
 {
     /// <summary>
+    /// Currently for internal use only - do not use directly.
     /// Fast dictionary implementation, sparse entries, no next pointers, bitvector pre-filtering, lean API.
     /// Supports remove operation
     /// </summary>

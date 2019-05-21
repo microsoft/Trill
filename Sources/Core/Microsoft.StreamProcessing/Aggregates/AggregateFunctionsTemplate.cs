@@ -37,7 +37,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1>, TState1>> target1 = state => state.Item1;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1 };
 
-
             Expression<Func<StructTuple<TState1>>> newInitialState =
                 () => new StructTuple<TState1>
                 {
@@ -102,7 +101,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2>, TState1>> target1 = state => state.Item1;
             Expression<Func<StructTuple<TState1, TState2>, TState2>> target2 = state => state.Item2;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -183,7 +181,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3>, TState2>> target2 = state => state.Item2;
             Expression<Func<StructTuple<TState1, TState2, TState3>, TState3>> target3 = state => state.Item3;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -283,7 +280,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4>, TState3>> target3 = state => state.Item3;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4>, TState4>> target4 = state => state.Item4;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -406,7 +402,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5>, TState4>> target4 = state => state.Item4;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5>, TState5>> target5 = state => state.Item5;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -556,7 +551,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TState5>> target5 = state => state.Item5;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TState6>> target6 = state => state.Item6;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -737,7 +731,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TState6>> target6 = state => state.Item6;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TState7>> target7 = state => state.Item7;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -953,7 +946,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TState7>> target7 = state => state.Item7;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TState8>> target8 = state => state.Item8;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -1208,7 +1200,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TState8>> target8 = state => state.Item8;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TState9>> target9 = state => state.Item9;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -1506,7 +1497,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TState9>> target9 = state => state.Item9;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TState10>> target10 = state => state.Item10;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -1851,7 +1841,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TState10>> target10 = state => state.Item10;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TState11>> target11 = state => state.Item11;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -2247,7 +2236,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TState11>> target11 = state => state.Item11;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TState12>> target12 = state => state.Item12;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11, target12 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -2698,7 +2686,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TState12>> target12 = state => state.Item12;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TState13>> target13 = state => state.Item13;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11, target12, target13 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -3208,7 +3195,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TState13>> target13 = state => state.Item13;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TState14>> target14 = state => state.Item14;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11, target12, target13, target14 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -3781,7 +3767,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TState14>> target14 = state => state.Item14;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TState15>> target15 = state => state.Item15;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11, target12, target13, target14, target15 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];

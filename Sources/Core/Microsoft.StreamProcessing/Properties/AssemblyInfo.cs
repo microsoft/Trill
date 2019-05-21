@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 
-
 #pragma warning disable 0436
 
 // Test

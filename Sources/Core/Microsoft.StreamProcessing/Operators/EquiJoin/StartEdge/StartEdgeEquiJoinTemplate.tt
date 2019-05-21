@@ -300,7 +300,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         }
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool GoToVisibleRow<TPayload>(StreamMessage<<#= TKey #>, TPayload> batch)
     {
@@ -360,7 +359,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         [DataMember]
         public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.OriginalName #>;
         <# } #>
-
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Populate(<#= BatchGeneratedFrom_TKey_TLeft #> batch, int index)
@@ -497,7 +495,6 @@ private void OutputStartEdgeWithActiveEventRight(string start, string key, strin
     } // end OutputStartEdgeWithActiveEventRight
 <#+
 }
-
 
     private void GetOutputBatch() { #>
   pool.Get(out genericOutputBatch);

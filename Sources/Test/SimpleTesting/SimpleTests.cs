@@ -6105,7 +6105,6 @@ namespace SimpleTesting
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2Row()
         {
@@ -7981,7 +7980,6 @@ namespace SimpleTesting
                 .ToStreamEventObservable().ToEnumerable();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
-
 
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2RowFloating()
@@ -9966,7 +9964,6 @@ namespace SimpleTesting
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2RowSmallBatch()
         {
@@ -11843,7 +11840,6 @@ namespace SimpleTesting
                 .ToStreamEventObservable().ToEnumerable();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
-
 
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2RowSmallBatchFloating()
@@ -13827,7 +13823,6 @@ namespace SimpleTesting
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2Columnar()
         {
@@ -15703,7 +15698,6 @@ namespace SimpleTesting
                 .ToStreamEventObservable().ToEnumerable();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
-
 
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2ColumnarFloating()
@@ -17688,7 +17682,6 @@ namespace SimpleTesting
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2ColumnarSmallBatch()
         {
@@ -19565,7 +19558,6 @@ namespace SimpleTesting
                 .ToStreamEventObservable().ToEnumerable();
             Assert.IsTrue(expectedOutput.SequenceEqual(result));
         }
-
 
         [TestMethod, TestCategory("Gated")]
         public void PunctuationPolicy2ColumnarSmallBatchFloating()

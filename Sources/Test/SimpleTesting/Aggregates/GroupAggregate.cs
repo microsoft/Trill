@@ -53,7 +53,6 @@ namespace SimpleTesting
                 (key, c, sum, d, e, f, g, h, i, j, k, l, m, n, o, p) =>
                     key.Key * 100 + (int)((c + d + e + f + g + h + i + j + k + l + m + n + o) / 2) * 10 + sum);
 
-
             var correct = new[]
             {
                 StreamEvent.CreateStart(0, 139),

@@ -35,7 +35,6 @@ namespace SimpleTesting
             Assert.AreEqual(indexA, index);
             Assert.IsFalse(iter.Next(out _));
 
-
             int indexB = list.Insert("b");
             int indexA2 = list.Insert("a");
             int indexB2 = list.Insert("b");

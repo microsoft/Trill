@@ -131,7 +131,7 @@ using Microsoft.StreamProcessing.Aggregates;
                     "r]\r\n        public long timestamp;\r\n        [DataMember]\r\n        public FastDic" +
                     "tionary<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
-            this.Write(", StateAndActive> states;\r\n    }\r\n\r\n\r\n    ");
+            this.Write(", StateAndActive> states;\r\n    }\r\n\r\n    ");
             this.Write(this.ToStringHelper.ToStringWithCulture(Transformer.GetMemoryPoolClassName(this.keyType, this.outputType)));
             this.Write(this.ToStringHelper.ToStringWithCulture(genericParameters2));
             this.Write(" pool;\r\n\r\n    private StreamMessage<");
@@ -503,8 +503,8 @@ using Microsoft.StreamProcessing.Aggregates;
                     "              // Update timestamp\r\n                        heldState.timestamp =" +
                     " ecqState.timestamp;\r\n                    }\r\n                }\r\n\r\n              " +
                     "  // Since sync time changed, set this.lastSyncTime\r\n                this.lastSy" +
-                    "ncTime = syncTime;\r\n            }\r\n\r\n\r\n            if (currentState == null || c" +
-                    "urrentHash != col_hash[i] || !");
+                    "ncTime = syncTime;\r\n            }\r\n\r\n            if (currentState == null || cur" +
+                    "rentHash != col_hash[i] || !");
             this.Write(this.ToStringHelper.ToStringWithCulture(inlinedKeyComparerEquals("currentKey", "key_i")));
             this.Write(@")
             {
@@ -647,8 +647,8 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write("        }\r\n");
  } 
             this.Write("\r\n        generatedBatch.Release();\r\n        generatedBatch.Return();\r\n    }\r\n\r\n\r" +
-                    "\n\r\n    public void OnPunctuation(long syncTime)\r\n    {\r\n        HeldState heldSt" +
-                    "ate;\r\n\r\n");
+                    "\n    public void OnPunctuation(long syncTime)\r\n    {\r\n        HeldState heldStat" +
+                    "e;\r\n\r\n");
  if (this.outputFields.Count() > 1) { 
             this.Write("        ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TOutput));
