@@ -681,6 +681,7 @@ namespace System.Runtime.CompilerServices
         private IEnumerable<MyFieldInfo> fields;
         private Type payloadType;
         private Type keyType;
+
         /// <summary>
         /// When the payload type doesn't have any public fields (e.g., it is a primitive type like int64),
         /// then a pseudo-field, "payload" is used to hold full payload, as opposed to its public fields

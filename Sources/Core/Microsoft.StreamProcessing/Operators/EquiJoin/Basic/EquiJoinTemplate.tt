@@ -1015,7 +1015,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index] = start;
         output.vother.col[index] = end;
         output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
         <#= rightBatchSelector("leftInterval.Payload", "rightBatch", "rightIndex") #>
         output.hash.col[index] = hash;
 
@@ -1028,7 +1027,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index] = start;
         output.vother.col[index] = end;
         output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
         <#= rightBatchSelector("leftEdge.Payload", "rightBatch", "rightIndex") #>
         output.hash.col[index] = hash;
 
@@ -1042,7 +1040,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index] = start;
         output.vother.col[index] = end;
         output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
         <#= leftBatchSelector("leftBatch", "leftIndex", "rightInterval.Payload") #>
         output.hash.col[index] = hash;
 
@@ -1055,7 +1052,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index] = start;
         output.vother.col[index] = end;
         output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
         <#= activeSelector("leftInterval.Payload", "rightInterval.Payload") #>
         output.hash.col[index] = hash;
 
@@ -1068,7 +1064,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index] = start;
         output.vother.col[index] = end;
         output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
         <#= activeSelector("leftInterval.Payload", "rightEdge.Payload") #>
         output.hash.col[index] = hash;
 
@@ -1081,7 +1076,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index] = start;
         output.vother.col[index] = end;
         output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
         <#= activeSelector("leftEdge.Payload", "rightInterval.Payload") #>
         output.hash.col[index] = hash;
 
@@ -1094,7 +1088,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index] = start;
         output.vother.col[index] = end;
         output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
         <#= activeSelector("leftEdge.Payload", "rightEdge.Payload") #>
         output.hash.col[index] = hash;
 
@@ -1108,7 +1101,6 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         output.vsync.col[index] = start;
         output.vother.col[index] = end;
         output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
         <#= leftBatchSelector("leftBatch", "leftIndex", "rightEdge.Payload") #>
         output.hash.col[index] = hash;
 

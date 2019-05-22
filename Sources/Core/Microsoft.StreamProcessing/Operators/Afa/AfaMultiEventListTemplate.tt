@@ -439,7 +439,6 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
         }
 <# } #>
 
-
 <# if (grouped) { #>
 
         currentTimestampEventList.Clear();

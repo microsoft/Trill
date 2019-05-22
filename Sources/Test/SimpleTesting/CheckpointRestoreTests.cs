@@ -44,7 +44,6 @@ namespace SimpleTesting
         }
     }
 
-
     [TestClass]
     public class CheckpointRestoreTestsAllowFallbackRow : TestWithConfigSettingsWithoutMemoryLeakDetection
     {
@@ -626,7 +625,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -634,7 +632,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 4).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -721,7 +718,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -729,7 +725,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -816,7 +811,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -824,7 +818,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -911,7 +904,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -919,7 +911,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -996,11 +987,9 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(0, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
 
-
             var fullData = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(0, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
-
 
             // Query 1: Checkpoint
             var input1 = container1.RegisterInput(preCheckpointSubject);
@@ -1080,7 +1069,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -1088,7 +1076,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -2110,7 +2097,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -2118,7 +2104,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 4).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -2205,7 +2190,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -2213,7 +2197,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -2300,7 +2283,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -2308,7 +2290,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -2395,7 +2376,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -2403,7 +2383,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -2480,11 +2459,9 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(0, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
 
-
             var fullData = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(0, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
-
 
             // Query 1: Checkpoint
             var input1 = container1.RegisterInput(preCheckpointSubject);
@@ -2564,7 +2541,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -2572,7 +2548,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -3592,7 +3567,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -3600,7 +3574,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 4).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -3687,7 +3660,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -3695,7 +3667,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -3782,7 +3753,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -3790,7 +3760,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -3877,7 +3846,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -3885,7 +3853,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -3962,11 +3929,9 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(0, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
 
-
             var fullData = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(0, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
-
 
             // Query 1: Checkpoint
             var input1 = container1.RegisterInput(preCheckpointSubject);
@@ -4046,7 +4011,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -4054,7 +4018,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -5076,7 +5039,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -5084,7 +5046,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 4).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -5171,7 +5132,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -5179,7 +5139,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -5266,7 +5225,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -5274,7 +5232,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -5361,7 +5318,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -5369,7 +5325,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);
@@ -5446,11 +5401,9 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(0, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
 
-
             var fullData = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(0, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
-
 
             // Query 1: Checkpoint
             var input1 = container1.RegisterInput(preCheckpointSubject);
@@ -5530,7 +5483,6 @@ namespace SimpleTesting
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
 
-
             var fullData1 = Enumerable.Range(0, 20000).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(e, new StructTuple<int, int> { Item1 = e % 10, Item2 = e }));
@@ -5538,7 +5490,6 @@ namespace SimpleTesting
             var fullData2 = Enumerable.Range(0, 10).ToList()
                 .ToObservable()
                 .Select(e => StreamEvent.CreateStart(5000, new StructTuple<int, int> { Item1 = e, Item2 = e + 31337 }));
-
 
             // Query 1: Checkpoint
             var input11 = container1.RegisterInput(preCheckpointSubject1);

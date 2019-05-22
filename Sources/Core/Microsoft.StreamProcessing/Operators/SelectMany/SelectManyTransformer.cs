@@ -89,7 +89,6 @@ namespace Microsoft.StreamProcessing
 
                 // No substitutions are made for the start edge parameter or key parameter. Both just remain in the
                 // body of the result selector and are set as local variables in the generated code.
-
                 var keyParameterIndex = stream.HasStartEdge ? 1 : 0;
 
                 var tuple = OptimizeSelectMany(selector.Body);

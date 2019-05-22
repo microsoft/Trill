@@ -11,10 +11,10 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 {
     /// <summary>
     /// Currently for internal use only - do not use directly.
+    /// Fast dictionary implementation, sparse entries, no next pointers, bitvector pre-filtering, lean API
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
-    // BC: fast dictionary implementation, sparse entries, no next pointers, bitvector pre-filtering, lean API
     [DataContract]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class FastDictionary<TKey, TValue>
@@ -38,6 +38,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public Entry<TKey, TValue>[] entries;
         [DataMember]
         private int resizeThreshold;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -146,15 +147,15 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             }
         }
 
-        /* User has to pass in the initial index value of IteratorStart
-         * Iterate returns false when done, else returns true after setting the index to the
-         * next iterated element
-         */
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
+        /* User has to pass in the initial index value of IteratorStart
+         * Iterate returns false when done, else returns true after setting the index to the
+         * next iterated element
+         */
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public bool Iterate(ref int index)

@@ -227,7 +227,6 @@ namespace Microsoft.StreamProcessing
                                             this.activeStates.Values[index].register = newReg;
                                             this.activeStates.Values[index].PatternStartTimestamp = synctime;
 
-
                                             // Add epsilon arc destinations to stack
                                             if (this.epsilonStateMap == null) break;
                                             if (this.epsilonStateMap[ns] != null)

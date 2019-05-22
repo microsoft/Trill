@@ -20,10 +20,12 @@ namespace Microsoft.StreamProcessing
         /// The aggregate object used in the window operation.
         /// </summary>
         public IAggregate<TInput, TState, TResult> Aggregate { get; }
+
         /// <summary>
         /// The function used to select key values in the window operation.
         /// </summary>
         public Expression KeySelector { get; }
+
         /// <summary>
         /// The function used to compute result values in the window operation.
         /// </summary>

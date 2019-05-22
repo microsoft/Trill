@@ -264,8 +264,8 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                 HeldStateStruct currentState;
                 currentState.state = <#= initialState #>;
                 currentState.timestamp = syncTime;
-                // No output because initial state is empty
 
+                // No output because initial state is empty
                 this.heldAggregates.Insert(ref index, currentKey, currentState, currentHash);
             }
             else
@@ -344,7 +344,8 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                     this.batch.hash.col[c] = iter1entry.hash;
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                }
+            }
+
             // Time has moved forward, clean the held aggregates
             this.heldAggregates.Clean();
 <# } #>

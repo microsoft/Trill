@@ -71,7 +71,6 @@ namespace SimpleTesting
         public float GetValue() => this.value;
     }
 
-
     [TestClass]
     public class SurrogateTests : TestWithConfigSettingsWithoutMemoryLeakDetection
     {

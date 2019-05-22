@@ -22,47 +22,56 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public bool IsColumnar;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnPool<long> longPool;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnPool<TKey> keyPool;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnPool<TPayload> payloadPool;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnPool<int> intPool;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnPool<short> shortPool;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnPool<byte> bytePool;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnPool<string> stringPool;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnPool<long> bitvectorPool;
         private readonly StreamMessagePool<TKey, TPayload> eventBatchPool;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>

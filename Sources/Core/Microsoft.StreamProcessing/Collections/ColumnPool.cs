@@ -27,17 +27,16 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <returns></returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public abstract string GetStatusReport();
+
         /// <summary>
-        /// If there are any unreturned memory blocks,
-        /// this returns the column pool itself (so
-        /// that it can be further queried). Otherwise
-        /// it returns null;
+        /// If there are any unreturned memory blocks, this returns the column pool itself (so
+        /// that it can be further queried). Otherwise it returns null
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public abstract ColumnPoolBase Leaked { get; }
+
         /// <summary>
-        /// Frees the queue and re-initializes the pool.
-        /// If the reset flag is set, then it also zeros out
+        /// Frees the queue and re-initializes the pool. If the reset flag is set, then it also zeros out
         /// the number of objects it has created.
         /// </summary>
         /// <param name="reset"></param>

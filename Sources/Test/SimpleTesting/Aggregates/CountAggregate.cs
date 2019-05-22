@@ -142,7 +142,6 @@ namespace SimpleTesting
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
 
-
         [TestMethod, TestCategory("Gated")]
         public void TestCountNotNullAggregate_WithNulls()
         {
@@ -230,7 +229,6 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
-
 
 
     }

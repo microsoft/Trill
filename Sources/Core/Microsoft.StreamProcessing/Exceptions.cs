@@ -16,11 +16,13 @@ namespace Microsoft.StreamProcessing
         /// Create an Ingress exception with no underlying message.
         /// </summary>
         public IngressException() { }
+
         /// <summary>
         /// Create an Ingress exception with the given message.
         /// </summary>
         /// <param name="message">The error message associated with the exception.</param>
         public IngressException(string message) : base(message) { }
+
         /// <summary>
         /// Create an Ingress exception with the given message.
         /// </summary>
@@ -39,11 +41,13 @@ namespace Microsoft.StreamProcessing
         /// Create a Stream Processing exception with no underlying message.
         /// </summary>
         public StreamProcessingException() : base() { }
+
         /// <summary>
         /// Create a Stream Processing exception with the given message.
         /// </summary>
         /// <param name="message">The error message associated with the exception.</param>
         public StreamProcessingException(string message) : base(message) { }
+
         /// <summary>
         /// Create a Stream Processing exception with the given message and given inner exception.
         /// </summary>

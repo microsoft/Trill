@@ -24,12 +24,14 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TInnerKey innerGroup;
+
         /// <summary>
         /// The value of the outer grouping key.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TOuterKey outerGroup;
+
         /// <summary>
         /// A hash code incorporating both key elements.
         /// </summary>
@@ -42,6 +44,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TInnerKey InnerGroup => this.innerGroup;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -134,6 +137,7 @@ namespace Microsoft.StreamProcessing
         /// The rank of the event within the current grouping
         /// </summary>
         public int Rank => this.rank;
+
         /// <summary>
         /// The actual event associated with the ranking
         /// </summary>

@@ -271,7 +271,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
         public void Populate(<#= TKey #> key, <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> batch, int index, long sync, long other, int hash)
         {
             this.Key = key;
-            //this.Payload = payload;
 <# if (this.noFields) { #>
             this.Payload = batch.payload.col[index];
 <# } else { #>

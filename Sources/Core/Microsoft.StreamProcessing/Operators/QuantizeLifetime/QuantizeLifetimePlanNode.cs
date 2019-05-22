@@ -15,14 +15,17 @@ namespace Microsoft.StreamProcessing
         /// Represents the length of each event after transformation
         /// </summary>
         public long Width { get; }
+
         /// <summary>
         /// Represents the length whose multiples define the left (start) edge of each transformed lifetime
         /// </summary>
         public long Skip { get; }
+
         /// <summary>
         /// Represents the length whose multiples define the left (start) edge of each transformed lifetime
         /// </summary>
         public long Progress { get; }
+
         /// <summary>
         /// Represents the "zero" from which the interval begins skipping
         /// </summary>

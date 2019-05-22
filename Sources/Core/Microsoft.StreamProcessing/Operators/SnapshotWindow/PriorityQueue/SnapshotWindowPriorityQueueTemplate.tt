@@ -22,7 +22,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
         public FastDictionary<<#= TKey #>, StateAndActive> states;
     }
 
-
     <#= Transformer.GetMemoryPoolClassName(this.keyType, this.outputType) #><#= genericParameters2 #> pool;
 
     private StreamMessage<<#= TKey #>, <#= TOutput #>> genericOutputbatch;
@@ -284,6 +283,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
+
                         // Update aggregate
                         heldState.state.state = <#= difference("heldState.state.state", "ecqState.states.entries[iter].value.state") #>;
                         heldState.state.active -= ecqState.states.entries[iter].value.active;
@@ -340,7 +340,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                 this.lastSyncTime = syncTime;
             }
 
-
             if (currentState == null || currentHash != col_hash[i] || !<#= inlinedKeyComparerEquals("currentKey", "key_i") #>)
             {
                 if (cachedState)
@@ -348,6 +347,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                     cachedState = false;
                     this.heldAggregates.Clear();
                 }
+
                 // Need to retrieve the key from the dictionary
                 currentKey = key_i;
                 currentHash = col_hash[i];
@@ -364,6 +364,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                         currentState.state.state = <#= initialState #>;
                         currentState.timestamp = syncTime;
                         this.aggregateByKey.Insert(currentKey, currentState, currentHash);
+
                         // No output because initial state is empty
                     }
                     else
@@ -474,7 +475,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
         generatedBatch.Release();
         generatedBatch.Return();
     }
-
 
 
     public void OnPunctuation(long syncTime)

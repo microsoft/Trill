@@ -80,8 +80,8 @@ namespace Microsoft.StreamProcessing
                     {
                         if (singleFieldProjection.Expression is ParameterExpression dereferencedObject)
                         {
-                            Contract.Assume(dereferencedObject == keySelector.Parameters.ElementAt(0));
                             // then can just swing a pointer to set the key of the result message
+                            Contract.Assume(dereferencedObject == keySelector.Parameters.ElementAt(0));
                             var f = singleFieldProjection.Member;
                             var sourceMessageRepresentation = new ColumnarRepresentation(typeOfTSource);
                             var fieldToSwingFrom = sourceMessageRepresentation.Fields[f.Name];

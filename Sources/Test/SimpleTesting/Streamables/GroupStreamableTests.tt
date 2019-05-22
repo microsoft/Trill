@@ -142,7 +142,6 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
                 StreamEvent.CreateStart(10040, new GameData { EventType = 2, GameId = 10 })
             }.ToObservable().ToStreamable();
 
-
             var thresholdInput = new[]
             {
                 StreamEvent.CreateStart(9000, new ThresholdData { Threshold = 2, Medal = 43 }),
@@ -295,6 +294,5 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
             Config.UseMultiString = savedUseMultiString;
         }
     }
-
 <# } #>
 }

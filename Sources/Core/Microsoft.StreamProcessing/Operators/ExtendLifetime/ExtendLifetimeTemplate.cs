@@ -269,7 +269,7 @@ internal sealed class ");
             this.Write(this.ToStringHelper.ToStringWithCulture(BatchGeneratedFrom_TKey_TPayload));
             this.Write(this.ToStringHelper.ToStringWithCulture(TKeyTPayloadGenericParameters));
             this.Write(" batch, int index, long startEdge, int hash)\r\n        {\r\n            this.Key = k" +
-                    "ey;\r\n            //this.Payload = payload;\r\n");
+                    "ey;\r\n");
  foreach (var f in this.fields) { 
             this.Write("            this.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));

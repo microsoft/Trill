@@ -52,10 +52,9 @@ foreach (var lag in new [] {0, 10, 1000}) //different lag values to have overlap
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
+<#  if (disorder == String.Empty && punctuationpolicy == String.Empty)
+    { #>
 
-
-<# if (disorder == String.Empty && punctuationpolicy == String.Empty)
-{ #>
         [TestMethod, TestCategory("Gated")]
         public void Level1InLevel1OutTrivial<#= suffix #>()
         {
@@ -85,7 +84,7 @@ foreach (var lag in new [] {0, 10, 1000}) //different lag values to have overlap
             Assert.IsTrue(output.Select(o => o.Payload).SequenceEqual(input));
             Assert.IsTrue(output.All(o => o.EndTime == StreamEvent.InfinitySyncTime));
         }
-<# }  #>
+<#  }  #>
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTest<#= suffix #>()
@@ -123,16 +122,11 @@ default: #>
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-<# switch (punctuationpolicy)
-        {
-case "Time": #>
+<#  if (punctuationpolicy == "Time")
+    { #>
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-<# break;
-} #>
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+<#  } #>
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -172,15 +166,10 @@ default: #>
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-<# switch (punctuationpolicy)
-        {
-case "Time": #>
+<#  if (punctuationpolicy == "Time")
+    { #>
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-<# break;
-} #>
-
-
+<#  } #>
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }

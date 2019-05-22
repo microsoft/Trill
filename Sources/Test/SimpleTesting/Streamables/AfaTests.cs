@@ -88,7 +88,6 @@ namespace SimpleTesting
         public FList<Payload2> MatchedPayloads { get; set; }
     }
 
-
     internal class AfaTests
     {
         public static void CoreAfaList01()

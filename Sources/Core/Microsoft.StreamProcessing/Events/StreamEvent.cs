@@ -167,7 +167,6 @@ namespace Microsoft.StreamProcessing
 
     }
 
-
     internal class PartitionedStreamEventSyncTimeComparer<TKey, TPayload> : IComparer<PartitionedStreamEvent<TKey, TPayload>>
     {
         public int Compare(PartitionedStreamEvent<TKey, TPayload> x, PartitionedStreamEvent<TKey, TPayload> y)

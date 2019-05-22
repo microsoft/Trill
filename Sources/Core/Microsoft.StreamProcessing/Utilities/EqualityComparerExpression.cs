@@ -25,6 +25,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns>true iff the two values should be considered equal.</returns>
         Expression<Func<T, T, bool>> GetEqualsExpr();
+
         /// <summary>
         /// A function that computes a hash value over type <typeparamref name="T"/>
         /// </summary>
@@ -406,8 +407,10 @@ namespace Microsoft.StreamProcessing
             if (fields.Length == 0)
             {
                 return Tuple.Create(
+
                     // (l,r) => true
                     Expression.Lambda(Expression.Constant(true, typeof(bool)), left, right) as Expression<Func<T, T, bool>>,
+
                     // a => 0
                     Expression.Lambda(Expression.Constant(0, typeof(int)), a) as Expression<Func<T, int>>);
             }
@@ -463,8 +466,8 @@ namespace Microsoft.StreamProcessing
                     Contract.Assume(args.Length == 1);
                     if (ShouldUseCastToInt(args[0]))
                     {
-                        var a = Expression.Parameter(type, "a");
                         // (a) => a == null ? 0 : (int)a;
+                        var a = Expression.Parameter(type, "a");
                         var lambda = Expression.Lambda(
                             Expression.Condition(
                                 Expression.Equal(a, Expression.Constant(null, typeof(T))),
@@ -535,7 +538,7 @@ namespace Microsoft.StreamProcessing
         {
             Expression<Func<PartitionKey<T>, T>> keyExtractor1 = o => o.Key;
             Expression<Func<PartitionKey<T>, T>> keyExtractor2 = o => o.Key;
-            var baseGetEqualsExpr = baseComparer.GetEqualsExpr();
+            var baseGetEqualsExpr = this.baseComparer.GetEqualsExpr();
             var newExpressionBody = baseGetEqualsExpr.ReplaceParametersInBody(keyExtractor1.Body, keyExtractor2.Body);
             return Expression.Lambda<Func<PartitionKey<T>, PartitionKey<T>, bool>>(
                 newExpressionBody,
@@ -546,7 +549,7 @@ namespace Microsoft.StreamProcessing
         public Expression<Func<PartitionKey<T>, int>> GetGetHashCodeExpr()
         {
             Expression<Func<PartitionKey<T>, T>> keyExtractor = o => o.Key;
-            var baseGetEqualsExpr = baseComparer.GetGetHashCodeExpr();
+            var baseGetEqualsExpr = this.baseComparer.GetGetHashCodeExpr();
             var newExpressionBody = baseGetEqualsExpr.ReplaceParametersInBody(keyExtractor.Body);
             return Expression.Lambda<Func<PartitionKey<T>, int>>(
                 newExpressionBody,

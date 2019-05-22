@@ -473,14 +473,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ref ActiveIntervalLeft leftInterval, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(RightBatchType));
-            this.Write(@" rightBatch, int rightIndex, int hash)
-    {
-        int index = output.Count++;
-        output.vsync.col[index] = start;
-        output.vother.col[index] = end;
-        output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
-        ");
+            this.Write(" rightBatch, int rightIndex, int hash)\r\n    {\r\n        int index = output.Count++" +
+                    ";\r\n        output.vsync.col[index] = start;\r\n        output.vother.col[index] = " +
+                    "end;\r\n        output.key.col[index] = key;\r\n        ");
             this.Write(this.ToStringHelper.ToStringWithCulture(rightBatchSelector("leftInterval.Payload", "rightBatch", "rightIndex")));
             this.Write("\r\n        output.hash.col[index] = hash;\r\n\r\n        if (output.Count == Config.Da" +
                     "taBatchSize) FlushContents();\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions.Aggres" +
@@ -488,14 +483,10 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(" key, ");
             this.Write(this.ToStringHelper.ToStringWithCulture(LeftBatchType));
-            this.Write(@" leftBatch, int leftIndex, ref ActiveIntervalRight rightInterval, int hash)
-    {
-        int index = output.Count++;
-        output.vsync.col[index] = start;
-        output.vother.col[index] = end;
-        output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
-        ");
+            this.Write(" leftBatch, int leftIndex, ref ActiveIntervalRight rightInterval, int hash)\r\n    " +
+                    "{\r\n        int index = output.Count++;\r\n        output.vsync.col[index] = start;" +
+                    "\r\n        output.vother.col[index] = end;\r\n        output.key.col[index] = key;\r" +
+                    "\n        ");
             this.Write(this.ToStringHelper.ToStringWithCulture(leftBatchSelector("leftBatch", "leftIndex", "rightInterval.Payload")));
             this.Write("\r\n        output.hash.col[index] = hash;\r\n\r\n        if (output.Count == Config.Da" +
                     "taBatchSize) FlushContents();\r\n    }\r\n\r\n    [MethodImpl(MethodImplOptions.Aggres" +
@@ -507,7 +498,6 @@ using Microsoft.StreamProcessing.Internal.Collections;
         output.vsync.col[index] = start;
         output.vother.col[index] = end;
         output.key.col[index] = key;
-        //output[index] = selector(leftPayload, rightPayload);
         ");
             this.Write(this.ToStringHelper.ToStringWithCulture(activeSelector("leftInterval.Payload", "rightInterval.Payload")));
             this.Write(@"

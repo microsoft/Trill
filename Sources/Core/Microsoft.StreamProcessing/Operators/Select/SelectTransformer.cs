@@ -46,10 +46,12 @@ namespace Microsoft.StreamProcessing
         /// of the result batch.
         /// </summary>
         private string ProjectionReturningResultInstance = null;
+
         /// <summary>
         /// Needed when the projection function references the parameter (i.e., source instance) directly.
         /// </summary>
         private bool needSourceInstance = false;
+
         private ColumnarRepresentation resultPayloadRepresentation;
         private IEnumerable<string> multiStringOperations;
         private IEnumerable<MyFieldInfo> unassignedFields;
@@ -100,6 +102,7 @@ namespace Microsoft.StreamProcessing
                 var resultSelector = stream.Selector;
                 var sourceMessageType = StreamMessageManager.GetStreamMessageType<TKey, TPayload>();
                 var parameterSubsitutions = new List<Tuple<ParameterExpression, SelectParameterInformation>>();
+
                 // Don't create a parameter substitution for the start edge parameter. That will just remain in the
                 // body of the result selector and will be set as a local variable in the generated code.
                 if (stream.HasKey)

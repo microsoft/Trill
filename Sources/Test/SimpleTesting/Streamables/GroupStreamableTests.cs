@@ -116,7 +116,6 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(10040, new GameData { EventType = 2, GameId = 10 })
             }.ToObservable().ToStreamable();
 
-
             var thresholdInput = new[]
             {
                 StreamEvent.CreateStart(9000, new ThresholdData { Threshold = 2, Medal = 43 }),
@@ -270,7 +269,6 @@ namespace SimpleTesting
         }
     }
 
-
     [TestClass]
     public class GroupStreamableTestsRowSmallBatch : TestWithConfigSettingsAndMemoryLeakDetection
     {
@@ -336,7 +334,6 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(10030, new GameData { EventType = 1, GameId = 10, UserId = 100 }), // end game
                 StreamEvent.CreateStart(10040, new GameData { EventType = 2, GameId = 10 })
             }.ToObservable().ToStreamable();
-
 
             var thresholdInput = new[]
             {
@@ -491,7 +488,6 @@ namespace SimpleTesting
         }
     }
 
-
     [TestClass]
     public class GroupStreamableTestsColumnar : TestWithConfigSettingsAndMemoryLeakDetection
     {
@@ -556,7 +552,6 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(10030, new GameData { EventType = 1, GameId = 10, UserId = 100 }), // end game
                 StreamEvent.CreateStart(10040, new GameData { EventType = 2, GameId = 10 })
             }.ToObservable().ToStreamable();
-
 
             var thresholdInput = new[]
             {
@@ -711,7 +706,6 @@ namespace SimpleTesting
         }
     }
 
-
     [TestClass]
     public class GroupStreamableTestsColumnarSmallBatch : TestWithConfigSettingsAndMemoryLeakDetection
     {
@@ -777,7 +771,6 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(10030, new GameData { EventType = 1, GameId = 10, UserId = 100 }), // end game
                 StreamEvent.CreateStart(10040, new GameData { EventType = 2, GameId = 10 })
             }.ToObservable().ToStreamable();
-
 
             var thresholdInput = new[]
             {
@@ -931,5 +924,4 @@ namespace SimpleTesting
             Config.UseMultiString = savedUseMultiString;
         }
     }
-
 }

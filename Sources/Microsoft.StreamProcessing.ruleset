@@ -70,6 +70,9 @@
     <Rule Id="SA1411" Action="Warning" /> <!-- Attribute constructor must not use unnecessary parenthesis -->
     <Rule Id="SA1500" Action="Warning" /> <!-- Braces for multi-line statements must not share line -->
     <Rule Id="SA1511" Action="Warning" /> <!-- While-do footer must not be preceded by blank line -->
+    <Rule Id="SA1512" Action="Warning" /> <!-- Single-line comments must not be followed by blank line -->
+    <Rule Id="SA1514" Action="Warning" /> <!-- Element documentation header must be preceded by blank line -->
+    <Rule Id="SA1515" Action="Warning" /> <!-- Single-line comment must be preceded by blank line -->
     <Rule Id="SA1517" Action="Warning" /> <!-- Code must not contain blank lines at start of file -->
     <Rule Id="SA1518" Action="Warning" /> <!-- Use line endings correctly at end of file -->
     <Rule Id="SA1519" Action="Warning" /> <!-- Braces must not be omitted from multi-line child statement -->
@@ -135,10 +138,7 @@
     <Rule Id="SA1508" Action="None" /> <!-- Closing braces must not be preceded by blank line -->
     <Rule Id="SA1509" Action="None" /> <!-- Opening braces must not be preceded by blank line -->
     <Rule Id="SA1510" Action="None" /> <!-- Chained statement blocks must not be preceded by blank line -->
-    <Rule Id="SA1512" Action="None" /> <!-- Single-line comments must not be followed by blank line -->
     <Rule Id="SA1513" Action="None" /> <!-- Closing brace must be followed by blank line -->
-    <Rule Id="SA1514" Action="None" /> <!-- Element documentation header must be preceded by blank line -->
-    <Rule Id="SA1515" Action="None" /> <!-- Single-line comment must be preceded by blank line -->
     <Rule Id="SA1516" Action="None" /> <!-- Elements must be separated by blank line -->
     <Rule Id="SA1520" Action="None" /> <!-- Use braces consistently -->
     <Rule Id="SA1600" Action="None" /> <!-- Elements must be documented -->

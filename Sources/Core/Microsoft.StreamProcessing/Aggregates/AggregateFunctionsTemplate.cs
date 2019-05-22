@@ -20,10 +20,10 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// Performs multiple aggregations simultaneously
         /// </summary>
         /// <typeparam name="TInput">The input stream to aggregate</typeparam>
-        /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>,
-        /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
+        /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>
+        /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
-        /// <param name="aggregate1">Aggregation specification number 1</param>,
+        /// <param name="aggregate1">Aggregation specification number 1</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1>, TResult> Combine<TInput, TState1, TResult1, TResult>(
@@ -36,7 +36,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             var duplicate = new bool[1];
             Expression<Func<StructTuple<TState1>, TState1>> target1 = state => state.Item1;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1 };
-
 
             Expression<Func<StructTuple<TState1>>> newInitialState =
                 () => new StructTuple<TState1>
@@ -81,12 +80,12 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// </summary>
         /// <typeparam name="TInput">The input stream to aggregate</typeparam>
         /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>,
-        /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>,
+        /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
-        /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
+        /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
-        /// <param name="aggregate2">Aggregation specification number 2</param>,
+        /// <param name="aggregate2">Aggregation specification number 2</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TResult>(
@@ -102,7 +101,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2>, TState1>> target1 = state => state.Item1;
             Expression<Func<StructTuple<TState1, TState2>, TState2>> target2 = state => state.Item2;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -157,14 +155,14 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TInput">The input stream to aggregate</typeparam>
         /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>,
         /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>,
-        /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>,
+        /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
-        /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
+        /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
-        /// <param name="aggregate3">Aggregation specification number 3</param>,
+        /// <param name="aggregate3">Aggregation specification number 3</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TResult>(
@@ -183,7 +181,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3>, TState2>> target2 = state => state.Item2;
             Expression<Func<StructTuple<TState1, TState2, TState3>, TState3>> target3 = state => state.Item3;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -252,16 +249,16 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState1">Aggregation state type for aggregate number 1</typeparam>,
         /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>,
         /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>,
-        /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>,
+        /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
-        /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>,
+        /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
         /// <param name="aggregate3">Aggregation specification number 3</param>,
-        /// <param name="aggregate4">Aggregation specification number 4</param>,
+        /// <param name="aggregate4">Aggregation specification number 4</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TResult>(
@@ -283,7 +280,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4>, TState3>> target3 = state => state.Item3;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4>, TState4>> target4 = state => state.Item4;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -370,18 +366,18 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState2">Aggregation state type for aggregate number 2</typeparam>,
         /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>,
         /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>,
-        /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>,
+        /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
         /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>,
-        /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>,
+        /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
         /// <param name="aggregate3">Aggregation specification number 3</param>,
         /// <param name="aggregate4">Aggregation specification number 4</param>,
-        /// <param name="aggregate5">Aggregation specification number 5</param>,
+        /// <param name="aggregate5">Aggregation specification number 5</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TResult>(
@@ -406,7 +402,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5>, TState4>> target4 = state => state.Item4;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5>, TState5>> target5 = state => state.Item5;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -515,20 +510,20 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState3">Aggregation state type for aggregate number 3</typeparam>,
         /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>,
         /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>,
-        /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>,
+        /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
         /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>,
         /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>,
-        /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>,
+        /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
         /// <param name="aggregate3">Aggregation specification number 3</param>,
         /// <param name="aggregate4">Aggregation specification number 4</param>,
         /// <param name="aggregate5">Aggregation specification number 5</param>,
-        /// <param name="aggregate6">Aggregation specification number 6</param>,
+        /// <param name="aggregate6">Aggregation specification number 6</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TResult>(
@@ -556,7 +551,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TState5>> target5 = state => state.Item5;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TState6>> target6 = state => state.Item6;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -691,14 +685,14 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState4">Aggregation state type for aggregate number 4</typeparam>,
         /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>,
         /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>,
-        /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>,
+        /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
         /// <typeparam name="TResult4">Result type for aggregate number 4</typeparam>,
         /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>,
         /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>,
-        /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>,
+        /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -706,7 +700,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate4">Aggregation specification number 4</param>,
         /// <param name="aggregate5">Aggregation specification number 5</param>,
         /// <param name="aggregate6">Aggregation specification number 6</param>,
-        /// <param name="aggregate7">Aggregation specification number 7</param>,
+        /// <param name="aggregate7">Aggregation specification number 7</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TResult>(
@@ -737,7 +731,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TState6>> target6 = state => state.Item6;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TState7>> target7 = state => state.Item7;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -902,7 +895,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState5">Aggregation state type for aggregate number 5</typeparam>,
         /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>,
         /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>,
-        /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>,
+        /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -910,7 +903,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult5">Result type for aggregate number 5</typeparam>,
         /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>,
         /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>,
-        /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>,
+        /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -919,7 +912,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate5">Aggregation specification number 5</param>,
         /// <param name="aggregate6">Aggregation specification number 6</param>,
         /// <param name="aggregate7">Aggregation specification number 7</param>,
-        /// <param name="aggregate8">Aggregation specification number 8</param>,
+        /// <param name="aggregate8">Aggregation specification number 8</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TResult>(
@@ -953,7 +946,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TState7>> target7 = state => state.Item7;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TState8>> target8 = state => state.Item8;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -1152,7 +1144,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState6">Aggregation state type for aggregate number 6</typeparam>,
         /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>,
         /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>,
-        /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>,
+        /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -1161,7 +1153,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult6">Result type for aggregate number 6</typeparam>,
         /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>,
         /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>,
-        /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>,
+        /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -1171,7 +1163,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate6">Aggregation specification number 6</param>,
         /// <param name="aggregate7">Aggregation specification number 7</param>,
         /// <param name="aggregate8">Aggregation specification number 8</param>,
-        /// <param name="aggregate9">Aggregation specification number 9</param>,
+        /// <param name="aggregate9">Aggregation specification number 9</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TResult>(
@@ -1208,7 +1200,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TState8>> target8 = state => state.Item8;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TState9>> target9 = state => state.Item9;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -1445,7 +1436,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState7">Aggregation state type for aggregate number 7</typeparam>,
         /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>,
         /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>,
-        /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>,
+        /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -1455,7 +1446,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult7">Result type for aggregate number 7</typeparam>,
         /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>,
         /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>,
-        /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>,
+        /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -1466,7 +1457,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate7">Aggregation specification number 7</param>,
         /// <param name="aggregate8">Aggregation specification number 8</param>,
         /// <param name="aggregate9">Aggregation specification number 9</param>,
-        /// <param name="aggregate10">Aggregation specification number 10</param>,
+        /// <param name="aggregate10">Aggregation specification number 10</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TResult>(
@@ -1506,7 +1497,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TState9>> target9 = state => state.Item9;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TState10>> target10 = state => state.Item10;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -1785,7 +1775,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState8">Aggregation state type for aggregate number 8</typeparam>,
         /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>,
         /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>,
-        /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>,
+        /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -1796,7 +1786,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult8">Result type for aggregate number 8</typeparam>,
         /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>,
         /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>,
-        /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>,
+        /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -1808,7 +1798,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate8">Aggregation specification number 8</param>,
         /// <param name="aggregate9">Aggregation specification number 9</param>,
         /// <param name="aggregate10">Aggregation specification number 10</param>,
-        /// <param name="aggregate11">Aggregation specification number 11</param>,
+        /// <param name="aggregate11">Aggregation specification number 11</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TResult>(
@@ -1851,7 +1841,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TState10>> target10 = state => state.Item10;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TState11>> target11 = state => state.Item11;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -2176,7 +2165,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState9">Aggregation state type for aggregate number 9</typeparam>,
         /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>,
         /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>,
-        /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>,
+        /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -2188,7 +2177,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult9">Result type for aggregate number 9</typeparam>,
         /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>,
         /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>,
-        /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>,
+        /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -2201,7 +2190,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate9">Aggregation specification number 9</param>,
         /// <param name="aggregate10">Aggregation specification number 10</param>,
         /// <param name="aggregate11">Aggregation specification number 11</param>,
-        /// <param name="aggregate12">Aggregation specification number 12</param>,
+        /// <param name="aggregate12">Aggregation specification number 12</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TState12, TResult12, TResult>(
@@ -2247,7 +2236,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TState11>> target11 = state => state.Item11;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TState12>> target12 = state => state.Item12;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11, target12 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -2622,7 +2610,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState10">Aggregation state type for aggregate number 10</typeparam>,
         /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>,
         /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>,
-        /// <typeparam name="TState13">Aggregation state type for aggregate number 13</typeparam>,
+        /// <typeparam name="TState13">Aggregation state type for aggregate number 13</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -2635,7 +2623,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult10">Result type for aggregate number 10</typeparam>,
         /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>,
         /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>,
-        /// <typeparam name="TResult13">Result type for aggregate number 13</typeparam>,
+        /// <typeparam name="TResult13">Result type for aggregate number 13</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -2649,7 +2637,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate10">Aggregation specification number 10</param>,
         /// <param name="aggregate11">Aggregation specification number 11</param>,
         /// <param name="aggregate12">Aggregation specification number 12</param>,
-        /// <param name="aggregate13">Aggregation specification number 13</param>,
+        /// <param name="aggregate13">Aggregation specification number 13</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TState12, TResult12, TState13, TResult13, TResult>(
@@ -2698,7 +2686,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TState12>> target12 = state => state.Item12;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TState13>> target13 = state => state.Item13;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11, target12, target13 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -3127,7 +3114,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState11">Aggregation state type for aggregate number 11</typeparam>,
         /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>,
         /// <typeparam name="TState13">Aggregation state type for aggregate number 13</typeparam>,
-        /// <typeparam name="TState14">Aggregation state type for aggregate number 14</typeparam>,
+        /// <typeparam name="TState14">Aggregation state type for aggregate number 14</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -3141,7 +3128,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult11">Result type for aggregate number 11</typeparam>,
         /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>,
         /// <typeparam name="TResult13">Result type for aggregate number 13</typeparam>,
-        /// <typeparam name="TResult14">Result type for aggregate number 14</typeparam>,
+        /// <typeparam name="TResult14">Result type for aggregate number 14</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -3156,7 +3143,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate11">Aggregation specification number 11</param>,
         /// <param name="aggregate12">Aggregation specification number 12</param>,
         /// <param name="aggregate13">Aggregation specification number 13</param>,
-        /// <param name="aggregate14">Aggregation specification number 14</param>,
+        /// <param name="aggregate14">Aggregation specification number 14</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TState12, TResult12, TState13, TResult13, TState14, TResult14, TResult>(
@@ -3208,7 +3195,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TState13>> target13 = state => state.Item13;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TState14>> target14 = state => state.Item14;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11, target12, target13, target14 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];
@@ -3695,7 +3681,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TState12">Aggregation state type for aggregate number 12</typeparam>,
         /// <typeparam name="TState13">Aggregation state type for aggregate number 13</typeparam>,
         /// <typeparam name="TState14">Aggregation state type for aggregate number 14</typeparam>,
-        /// <typeparam name="TState15">Aggregation state type for aggregate number 15</typeparam>,
+        /// <typeparam name="TState15">Aggregation state type for aggregate number 15</typeparam>
         /// <typeparam name="TResult1">Result type for aggregate number 1</typeparam>,
         /// <typeparam name="TResult2">Result type for aggregate number 2</typeparam>,
         /// <typeparam name="TResult3">Result type for aggregate number 3</typeparam>,
@@ -3710,7 +3696,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <typeparam name="TResult12">Result type for aggregate number 12</typeparam>,
         /// <typeparam name="TResult13">Result type for aggregate number 13</typeparam>,
         /// <typeparam name="TResult14">Result type for aggregate number 14</typeparam>,
-        /// <typeparam name="TResult15">Result type for aggregate number 15</typeparam>,
+        /// <typeparam name="TResult15">Result type for aggregate number 15</typeparam>
         /// <typeparam name="TResult">Result type of the merged aggregation</typeparam>
         /// <param name="aggregate1">Aggregation specification number 1</param>,
         /// <param name="aggregate2">Aggregation specification number 2</param>,
@@ -3726,7 +3712,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// <param name="aggregate12">Aggregation specification number 12</param>,
         /// <param name="aggregate13">Aggregation specification number 13</param>,
         /// <param name="aggregate14">Aggregation specification number 14</param>,
-        /// <param name="aggregate15">Aggregation specification number 15</param>,
+        /// <param name="aggregate15">Aggregation specification number 15</param>
         /// <param name="merger">Function to take the result of all aggregations and merge them into a single result</param>
         /// <returns></returns>
         public static IAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TResult> Combine<TInput, TState1, TResult1, TState2, TResult2, TState3, TResult3, TState4, TResult4, TState5, TResult5, TState6, TResult6, TState7, TResult7, TState8, TResult8, TState9, TResult9, TState10, TResult10, TState11, TResult11, TState12, TResult12, TState13, TResult13, TState14, TResult14, TState15, TResult15, TResult>(
@@ -3781,7 +3767,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TState14>> target14 = state => state.Item14;
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TState15>> target15 = state => state.Item15;
             var target = new System.Collections.Generic.List<LambdaExpression> { target1, target2, target3, target4, target5, target6, target7, target8, target9, target10, target11, target12, target13, target14, target15 };
-
             if (aggregate2.HasSameStateAs(aggregate1))
             {
                 duplicate[1] = true; target[1] = target[0];

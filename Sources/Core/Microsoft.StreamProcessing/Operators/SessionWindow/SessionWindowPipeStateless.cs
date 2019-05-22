@@ -32,7 +32,6 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private long lastDataTime = long.MinValue;
 
-
         [Obsolete("Used only by serialization. Do not call directly.")]
         public SessionWindowPipeStateless() { }
 

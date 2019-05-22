@@ -23,6 +23,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TKey key;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -46,6 +47,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TKey key;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -71,12 +73,14 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TKey key;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TValue value;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>

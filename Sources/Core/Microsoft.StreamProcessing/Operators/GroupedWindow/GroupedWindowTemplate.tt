@@ -145,7 +145,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<Micro
 
         <#= BatchGeneratedFrom_Unit_TInput #><#= UnitTInputGenericParameters #> batch = inputBatch as <#= BatchGeneratedFrom_Unit_TInput #><#= UnitTInputGenericParameters #>;
 
-
         <# if (this.outputFields.Count() > 1) { #>
         <#= TResult #> temporaryOutput;
         <# } #>
@@ -344,8 +343,8 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<Micro
                         currentState.state.state = <#= initialState #>;
                         currentState.state.active = 1; // start edge only
                         currentState.timestamp = syncTime;
-                        // No output because initial state is empty
 
+                        // No output because initial state is empty
                         this.heldAggregates.Insert(ref index, currentKey, currentState, currentHash);
                     }
                     else
@@ -454,6 +453,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<Micro
                     this.batch.Allocate();
                 }
             }
+
             // Time has moved forward, clean the held aggregates
             this.heldAggregates.Clean();
             <# } #>

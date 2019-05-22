@@ -72,7 +72,7 @@ namespace SimpleTesting
             Assert.IsFalse(foundBadTypes, "Found one or more non-serializable, or not yet categorized types.");
         }
 
-        // RULES FOR IGNORING CERTAIN TYPES AS IRRELEVANT
+        #region RULES FOR IGNORING CERTAIN TYPES AS IRRELEVANT
         private static readonly HashSet<string> Assemblies = new HashSet<string>
         {
             "Microsoft.StreamProcessing",
@@ -141,7 +141,7 @@ namespace SimpleTesting
             typeof(GroupedActiveState<,>),
             typeof(PatternMatcher<,,,>),
         };
-        // END OF RULES
+        #endregion END OF RULES
 
         private static bool SkipTypes(Type t)
         {

@@ -141,8 +141,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
  } 
             this.Write("   }\r\n\r\n    protected override void DisposeState()\r\n    {\r\n        this.output.Fr" +
                     "ee();\r\n        this.dictPool.Dispose();\r\n    }\r\n\r\n    private void OutputComplet" +
-                    "edIntervals()\r\n    {\r\n        List<long> delList = new List<long>();\r\n        //" +
-                    " Output all completed intervals\r\n        foreach (var kvp in eventMap)\r\n        " +
+                    "edIntervals()\r\n    {\r\n        // Output all completed intervals\r\n        List<lo" +
+                    "ng> delList = new List<long>();\r\n        foreach (var kvp in eventMap)\r\n        " +
                     "{\r\n            var index = FastDictionary2<ActiveEvent, int>.IteratorStart;\r\n   " +
                     "         while (kvp.Value.Iterate(ref index))\r\n            {\r\n                va" +
                     "r outevt = kvp.Value.entries[index].key;\r\n                if (outevt.End == Stre" +

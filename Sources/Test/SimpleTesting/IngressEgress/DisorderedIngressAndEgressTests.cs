@@ -46,7 +46,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -275,7 +274,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -479,7 +477,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 PeriodicPunctuationPolicy.Time(10));
 
             var prog = ingress.ToStreamEventObservable();
-
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -841,7 +838,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -1180,7 +1176,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var prog = ingress.ToStreamEventObservable();
     
-    
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
     
@@ -1378,7 +1373,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     null);
     
                 var prog = ingress.ToStreamEventObservable();
-    
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -1612,7 +1606,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var prog = ingress.ToStreamEventObservable();
     
-    
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
     
@@ -1810,7 +1803,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     PeriodicPunctuationPolicy.Time(10));
     
                 var prog = ingress.ToStreamEventObservable();
-    
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -2174,7 +2166,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -2413,7 +2404,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -2617,7 +2607,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 PeriodicPunctuationPolicy.Time(10));
 
             var prog = ingress.ToStreamEventObservable();
-
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -2989,7 +2978,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -3327,7 +3315,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -3558,7 +3545,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -3764,7 +3750,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 PeriodicPunctuationPolicy.Time(10));
 
             var prog = ingress.ToStreamEventObservable();
-
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4128,7 +4113,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -4469,7 +4453,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var prog = ingress.ToStreamEventObservable();
     
-    
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
     
@@ -4669,7 +4652,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     null);
     
                 var prog = ingress.ToStreamEventObservable();
-    
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4905,7 +4887,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var prog = ingress.ToStreamEventObservable();
     
-    
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
     
@@ -5105,7 +5086,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     PeriodicPunctuationPolicy.Time(10));
     
                 var prog = ingress.ToStreamEventObservable();
-    
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -5471,7 +5451,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -5712,7 +5691,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -5918,7 +5896,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 PeriodicPunctuationPolicy.Time(10));
 
             var prog = ingress.ToStreamEventObservable();
-
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -6292,7 +6269,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -6630,7 +6606,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -6859,7 +6834,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -7063,7 +7037,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 PeriodicPunctuationPolicy.Time(10));
 
             var prog = ingress.ToStreamEventObservable();
-
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -7425,7 +7398,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -7764,7 +7736,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var prog = ingress.ToStreamEventObservable();
     
-    
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
     
@@ -7962,7 +7933,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     null);
     
                 var prog = ingress.ToStreamEventObservable();
-    
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -8196,7 +8166,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var prog = ingress.ToStreamEventObservable();
     
-    
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
     
@@ -8394,7 +8363,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     PeriodicPunctuationPolicy.Time(10));
     
                 var prog = ingress.ToStreamEventObservable();
-    
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -8758,7 +8726,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -8997,7 +8964,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -9201,7 +9167,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 PeriodicPunctuationPolicy.Time(10));
 
             var prog = ingress.ToStreamEventObservable();
-
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -9573,7 +9538,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -9911,7 +9875,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -10142,7 +10105,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -10348,7 +10310,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 PeriodicPunctuationPolicy.Time(10));
 
             var prog = ingress.ToStreamEventObservable();
-
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -10712,7 +10673,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -11053,7 +11013,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var prog = ingress.ToStreamEventObservable();
     
-    
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
     
@@ -11253,7 +11212,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     null);
     
                 var prog = ingress.ToStreamEventObservable();
-    
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -11489,7 +11447,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var prog = ingress.ToStreamEventObservable();
     
-    
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
     
@@ -11689,7 +11646,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                     PeriodicPunctuationPolicy.Time(10));
     
                 var prog = ingress.ToStreamEventObservable();
-    
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -12055,7 +12011,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -12296,7 +12251,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var prog = ingress.ToStreamEventObservable();
 
-
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
 
@@ -12502,7 +12456,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 PeriodicPunctuationPolicy.Time(10));
 
             var prog = ingress.ToStreamEventObservable();
-
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -12875,7 +12828,6 @@ namespace SimpleTesting.DisorderedIngressAndEgress
                 PeriodicPunctuationPolicy.Time(10));
 
             var prog = ingress.ToStreamEventObservable();
-
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));

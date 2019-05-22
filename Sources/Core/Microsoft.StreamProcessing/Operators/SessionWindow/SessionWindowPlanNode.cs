@@ -15,6 +15,7 @@ namespace Microsoft.StreamProcessing
         /// Timeout for closing the current session
         /// </summary>
         public long SessionTimeout { get; }
+
         /// <summary>
         /// The max duration of a session timeout window
         /// </summary>

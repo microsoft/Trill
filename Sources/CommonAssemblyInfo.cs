@@ -1,30 +1,31 @@
-﻿// The following assembly information is common to all product assemblies.
-// If you get compiler errors CS0579, "Duplicate '<attributename>' attribute", check your
-// Properties\AssemblyInfo.cs file and remove any lines duplicating the ones below.
-// [assembly: AssemblyCompany("Microsoft Corporation")]
-// [assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
-// [assembly: AssemblyTrademark("Microsoft and Windows are either registered trademarks or trademarks of Microsoft Corporation in the U.S. and/or other countries.")]
-// [assembly: AssemblyProduct("Microsoft.StreamProcessing")]
-// [assembly: AssemblyCulture("")]
-// #if (DEBUG || _DEBUG)
-// [assembly: AssemblyConfiguration("Debug")]
-// #else
-// [assembly: AssemblyConfiguration("")]
-// #endif
+﻿/*
+The following assembly information is common to all product assemblies.
+If you get compiler errors CS0579, "Duplicate '<attributename>' attribute", check your
+Properties\AssemblyInfo.cs file and remove any lines duplicating the ones below.
+[assembly: AssemblyCompany("Microsoft Corporation")]
+[assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
+[assembly: AssemblyTrademark("Microsoft and Windows are either registered trademarks or trademarks of Microsoft Corporation in the U.S. and/or other countries.")]
+[assembly: AssemblyProduct("Microsoft.StreamProcessing")]
+[assembly: AssemblyCulture("")]
+#if (DEBUG || _DEBUG)
+[assembly: AssemblyConfiguration("Debug")]
+#else
+[assembly: AssemblyConfiguration("")]
+#endif
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-// [assembly: AssemblyVersion("1.0.60426.1")]
-// [assembly: AssemblyFileVersion("1.0.0.0")]
+Version information for an assembly consists of the following four values:
 
+     Major Version
+     Minor Version
+     Build Number
+     Revision
+
+You can specify all the values or you can default the Build and Revision Numbers
+by using the '*' as shown below:
+[assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("1.0.60426.1")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
+*/
 
 /// <summary>
 /// Sets public key string for friend assemblies.

@@ -25,11 +25,13 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int toState;
         internal ArcType arcType;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Func<long, TPayload, TRegister, bool> Fence;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
@@ -51,11 +53,13 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int toState;
         internal ArcType arcType;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Func<long, List<TPayload>, TRegister, bool> Fence;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
@@ -77,6 +81,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public bool fromStartState;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
@@ -89,26 +94,31 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Func<long, TRegister, TAccumulator> Initialize;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Func<long, TPayload, TRegister, TAccumulator, TAccumulator> Accumulate;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Func<long, TPayload, TAccumulator, bool> SkipToEnd;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Func<long, TAccumulator, TRegister, bool> Fence;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public Func<long, TAccumulator, TRegister, TRegister> Transfer;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
@@ -131,18 +141,21 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TKey key;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int state;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TRegister register;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
@@ -168,36 +181,42 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TKey key;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int fromState;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int toState;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TRegister register;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TAccumulator accumulator;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public MultiEventArcInfo<TPayload, TRegister, TAccumulator> arcinfo;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
@@ -221,12 +240,14 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public long other;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TKey key;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>
@@ -250,6 +271,7 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public TKey key;
+
         /// <summary>
         /// Currently for internal use only - do not use directly
         /// </summary>

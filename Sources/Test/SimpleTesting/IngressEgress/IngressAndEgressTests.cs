@@ -22,7 +22,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
         [TestMethod, TestCategory("Gated")]
         public void Level1InLevel1OutTrivialRow()
         {
@@ -67,10 +66,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -88,9 +84,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -104,8 +97,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowTime()
@@ -121,11 +112,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -143,10 +131,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -160,8 +145,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowDrop()
@@ -177,10 +160,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -198,9 +178,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -214,8 +191,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowDrop10()
@@ -231,10 +206,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -252,9 +224,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -268,8 +237,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowDrop1000()
@@ -285,10 +252,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -306,9 +270,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -322,8 +283,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowDropTime()
@@ -339,11 +298,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -361,10 +317,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -378,8 +331,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowDrop10Time()
@@ -395,11 +346,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -417,10 +365,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -434,8 +379,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowDrop1000Time()
@@ -451,11 +394,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -473,10 +413,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -490,8 +427,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowThrow()
@@ -507,10 +442,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -528,9 +460,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -544,8 +473,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowThrow10()
@@ -561,10 +488,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -582,9 +506,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -598,8 +519,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowThrow1000()
@@ -615,10 +534,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -636,9 +552,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -652,8 +565,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowThrowTime()
@@ -669,11 +580,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -691,10 +599,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -708,8 +613,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowThrow10Time()
@@ -725,11 +628,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -747,10 +647,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -764,8 +661,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowThrow1000Time()
@@ -781,11 +676,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -803,10 +695,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -820,8 +709,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowAdjust()
@@ -837,10 +724,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -858,9 +742,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -874,8 +755,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowAdjust10()
@@ -891,10 +770,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -912,9 +788,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -928,8 +801,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowAdjust1000()
@@ -945,10 +816,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -966,9 +834,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -982,8 +847,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowAdjustTime()
@@ -999,11 +862,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1021,10 +881,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1038,8 +895,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowAdjust10Time()
@@ -1055,11 +910,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1077,10 +929,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1094,8 +943,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowAdjust1000Time()
@@ -1111,11 +958,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1133,10 +977,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1151,7 +992,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
 
         [TestMethod, TestCategory("Gated")]
         public void Level1InLevel1OutTrivialRowSmallBatch()
@@ -1197,10 +1037,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1218,9 +1055,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1236,8 +1070,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchTime()
         {
@@ -1252,11 +1084,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1274,10 +1103,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1293,8 +1119,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchDrop()
         {
@@ -1309,10 +1133,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1330,9 +1151,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1348,8 +1166,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchDrop10()
         {
@@ -1364,10 +1180,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1385,9 +1198,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1403,8 +1213,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchDrop1000()
         {
@@ -1419,10 +1227,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1440,9 +1245,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1458,8 +1260,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchDropTime()
         {
@@ -1474,11 +1274,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1496,10 +1293,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1515,8 +1309,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchDrop10Time()
         {
@@ -1531,11 +1323,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1553,10 +1342,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1572,8 +1358,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchDrop1000Time()
         {
@@ -1588,11 +1372,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1610,10 +1391,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1629,8 +1407,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchThrow()
         {
@@ -1645,10 +1421,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1666,9 +1439,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1684,8 +1454,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchThrow10()
         {
@@ -1700,10 +1468,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1721,9 +1486,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1739,8 +1501,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchThrow1000()
         {
@@ -1755,10 +1515,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1776,9 +1533,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1794,8 +1548,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchThrowTime()
         {
@@ -1810,11 +1562,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1832,10 +1581,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1851,8 +1597,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchThrow10Time()
         {
@@ -1867,11 +1611,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1889,10 +1630,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1908,8 +1646,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchThrow1000Time()
         {
@@ -1924,11 +1660,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1946,10 +1679,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -1965,8 +1695,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchAdjust()
         {
@@ -1981,10 +1709,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2002,9 +1727,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2020,8 +1742,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchAdjust10()
         {
@@ -2036,10 +1756,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2057,9 +1774,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2075,8 +1789,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchAdjust1000()
         {
@@ -2091,10 +1803,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2112,9 +1821,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2130,8 +1836,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchAdjustTime()
         {
@@ -2146,11 +1850,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2168,10 +1869,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2187,8 +1885,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchAdjust10Time()
         {
@@ -2203,11 +1899,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2225,10 +1918,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2244,8 +1934,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestRowSmallBatchAdjust1000Time()
         {
@@ -2260,11 +1948,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2282,10 +1967,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2299,7 +1981,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
 
         [TestMethod, TestCategory("Gated")]
         public void Level1InLevel1OutTrivialColumnar()
@@ -2345,10 +2026,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2366,9 +2044,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2382,8 +2057,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarTime()
@@ -2399,11 +2072,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2421,10 +2091,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2438,8 +2105,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarDrop()
@@ -2455,10 +2120,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2476,9 +2138,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2492,8 +2151,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarDrop10()
@@ -2509,10 +2166,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2530,9 +2184,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2546,8 +2197,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarDrop1000()
@@ -2563,10 +2212,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2584,9 +2230,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2600,8 +2243,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarDropTime()
@@ -2617,11 +2258,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2639,10 +2277,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2656,8 +2291,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarDrop10Time()
@@ -2673,11 +2306,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2695,10 +2325,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2712,8 +2339,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarDrop1000Time()
@@ -2729,11 +2354,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2751,10 +2373,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2768,8 +2387,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarThrow()
@@ -2785,10 +2402,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2806,9 +2420,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2822,8 +2433,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarThrow10()
@@ -2839,10 +2448,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2860,9 +2466,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2876,8 +2479,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarThrow1000()
@@ -2893,10 +2494,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2914,9 +2512,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2930,8 +2525,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarThrowTime()
@@ -2947,11 +2540,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2969,10 +2559,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -2986,8 +2573,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarThrow10Time()
@@ -3003,11 +2588,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3025,10 +2607,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3042,8 +2621,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarThrow1000Time()
@@ -3059,11 +2636,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3081,10 +2655,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3098,8 +2669,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarAdjust()
@@ -3115,10 +2684,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3136,9 +2702,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3152,8 +2715,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarAdjust10()
@@ -3169,10 +2730,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3190,9 +2748,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3206,8 +2761,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarAdjust1000()
@@ -3223,10 +2776,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3244,9 +2794,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3260,8 +2807,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarAdjustTime()
@@ -3277,11 +2822,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3299,10 +2841,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3316,8 +2855,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarAdjust10Time()
@@ -3333,11 +2870,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3355,10 +2889,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3372,8 +2903,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
-
 
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarAdjust1000Time()
@@ -3389,11 +2918,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3411,10 +2937,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3429,7 +2952,6 @@ namespace SimpleTesting
             .UseMultiString(true)
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
-
 
         [TestMethod, TestCategory("Gated")]
         public void Level1InLevel1OutTrivialColumnarSmallBatch()
@@ -3475,10 +2997,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3496,9 +3015,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3514,8 +3030,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchTime()
         {
@@ -3530,11 +3044,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3552,10 +3063,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3571,8 +3079,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchDrop()
         {
@@ -3587,10 +3093,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3608,9 +3111,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3626,8 +3126,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchDrop10()
         {
@@ -3642,10 +3140,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3663,9 +3158,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3681,8 +3173,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchDrop1000()
         {
@@ -3697,10 +3187,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3718,9 +3205,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3736,8 +3220,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchDropTime()
         {
@@ -3752,11 +3234,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3774,10 +3253,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3793,8 +3269,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchDrop10Time()
         {
@@ -3809,11 +3283,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3831,10 +3302,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3850,8 +3318,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchDrop1000Time()
         {
@@ -3866,11 +3332,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3888,10 +3351,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3907,8 +3367,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchThrow()
         {
@@ -3923,10 +3381,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3944,9 +3399,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -3962,8 +3414,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchThrow10()
         {
@@ -3978,10 +3428,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3999,9 +3446,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4017,8 +3461,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchThrow1000()
         {
@@ -4033,10 +3475,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4054,9 +3493,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4072,8 +3508,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchThrowTime()
         {
@@ -4088,11 +3522,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4110,10 +3541,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4129,8 +3557,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchThrow10Time()
         {
@@ -4145,11 +3571,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4167,10 +3590,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4186,8 +3606,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchThrow1000Time()
         {
@@ -4202,11 +3620,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4224,10 +3639,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4243,8 +3655,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchAdjust()
         {
@@ -4259,10 +3669,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4280,9 +3687,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4298,8 +3702,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchAdjust10()
         {
@@ -4314,10 +3716,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4335,9 +3734,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4353,8 +3749,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchAdjust1000()
         {
@@ -4369,10 +3763,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4390,9 +3781,6 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4408,8 +3796,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchAdjustTime()
         {
@@ -4424,11 +3810,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4446,10 +3829,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4465,8 +3845,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchAdjust10Time()
         {
@@ -4481,11 +3859,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4503,10 +3878,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }
@@ -4522,8 +3894,6 @@ namespace SimpleTesting
             .MultiStringTransforms(Config.CodegenOptions.MultiStringFlags.Wrappers | Config.CodegenOptions.MultiStringFlags.VectorOperations))
         { }
 
-
-
         [TestMethod, TestCategory("Gated")]
         public void StartEdgeTestColumnarSmallBatchAdjust1000Time()
         {
@@ -4538,11 +3908,8 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-        Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
-
+            Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateStart(i, i))));
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4560,10 +3927,7 @@ namespace SimpleTesting
             var outevents = prog.ToEnumerable().ToList();
             var output = outevents.Where(o => !o.IsPunctuation);
             var punctuations = outevents.Where(o => o.IsPunctuation && o.SyncTime != StreamEvent.InfinitySyncTime);
-
             Assert.IsTrue(punctuations.SequenceEqual(input.Where(i => i % 10 == 0).Select(i => StreamEvent.CreatePunctuation<int>((long)i))));
-
-
             Assert.IsTrue(output.SequenceEqual(input.Select(i => StreamEvent.CreateInterval(i, i + 5, i))));
         }
     }

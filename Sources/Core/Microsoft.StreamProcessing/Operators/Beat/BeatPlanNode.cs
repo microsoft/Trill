@@ -15,6 +15,7 @@ namespace Microsoft.StreamProcessing
         /// The offset value in the beat operation.
         /// </summary>
         public long Offset { get; }
+
         /// <summary>
         /// The period value in the beat operation.
         /// </summary>

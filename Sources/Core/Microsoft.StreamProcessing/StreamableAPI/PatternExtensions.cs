@@ -38,6 +38,7 @@ namespace Microsoft.StreamProcessing
                 if (withinDuration > StreamEvent.MaxSyncTime) throw new ArgumentException("Duration is too large");
                 stream = stream.AlterEventDuration(withinDuration - 1);
             }
+
             // Clip the stream with itself, to make it a signal stream
             var clippedStream = stream.Multicast(xs => xs.ClipEventDuration(xs));
 

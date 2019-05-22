@@ -18,7 +18,6 @@ using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Internal.Collections;
 
-
 <# if (this.keyType.Namespace != null) { #>
 using <#= this.keyType.Namespace #>;
 <# } #>

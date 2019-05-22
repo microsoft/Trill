@@ -1420,7 +1420,6 @@ namespace Microsoft.StreamProcessing
 
         private readonly QueryContainer container;
 
-
         public StreamEventIngressStreamableFused(
             IObservable<StreamEvent<TPayload>> observable,
             DisorderPolicy disorderPolicy,
@@ -1750,7 +1749,6 @@ namespace Microsoft.StreamProcessing
         private readonly bool delayed;
 
         private readonly QueryContainer container;
-
 
         public IntervalIngressStreamableFused(
             IObservable<TPayload> observable,
@@ -2109,7 +2107,6 @@ namespace Microsoft.StreamProcessing
 
         private readonly QueryContainer container;
 
-
         public PartitionedStreamEventIngressStreamableFused(
             IObservable<PartitionedStreamEvent<TPartitionKey, TPayload>> observable,
             DisorderPolicy disorderPolicy,
@@ -2448,7 +2445,6 @@ namespace Microsoft.StreamProcessing
         private readonly bool delayed;
 
         private readonly QueryContainer container;
-
 
         public PartitionedIntervalIngressStreamableFused(
             IObservable<TPayload> observable,

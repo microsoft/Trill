@@ -281,13 +281,8 @@ namespace SimpleTesting
         public NonColumnarClass(int y, char c) => this.x = y;
         public override bool Equals(object obj)
         {
-            //
-            // See the full q of guidelines at
-            //   http://go.microsoft.com/fwlink/?LinkID=85237
-            // and also the guidance for operator== at
-            //   http://go.microsoft.com/fwlink/?LinkId=85238
-            //
-
+            // See the full q of guidelines at http://go.microsoft.com/fwlink/?LinkID=85237
+            // and also the guidance for operator== at http://go.microsoft.com/fwlink/?LinkId=85238
             if (obj == null || GetType() != obj.GetType())
             {
                 return false;

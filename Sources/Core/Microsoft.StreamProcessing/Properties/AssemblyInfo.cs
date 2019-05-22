@@ -7,8 +7,8 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 
-
 #pragma warning disable 0436
+
 // Test
 [assembly: InternalsVisibleTo("Microsoft.StreamProcessing.Signals" + AssemblyRef.ProductPublicKey)]
 [assembly: InternalsVisibleTo("SimpleTesting" + AssemblyRef.ProductPublicKey)]

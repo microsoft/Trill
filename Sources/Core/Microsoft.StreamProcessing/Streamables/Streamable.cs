@@ -22,6 +22,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public StreamProperties<TKey, TPayload> Properties => this.properties;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -36,6 +37,7 @@ namespace Microsoft.StreamProcessing
         }
 
         #region IStreamable
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -49,6 +51,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public string ErrorMessages => this.errorMessages;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>

@@ -115,7 +115,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                     output.vsync.col[ind] = threshhold;
                     output.vother.col[ind] = active.Sync;
                     output.key.col[ind] = active.Key;
-                    //output[ind] = active.Payload;
 <#     foreach (var f in this.fields) { #>
 <#       if (f.OptimizeString()) { #>
 
@@ -170,8 +169,8 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
                     }
                     else
                     {
-                        int keyIndex;
                         // Check to see if the key is already being tracked
+                        int keyIndex;
                         if (!lastDataTimeDictionary.Lookup(batch.key.col[i], out keyIndex))
                             keyIndex = AllocatePartition(batch.key.col[i]);
                         ReachTime(keyIndex, vsync[i]);
@@ -291,7 +290,6 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
         public void Populate(<#= TKey #> key, <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> batch, int index, int hash, long sync)
         {
             this.Key = key;
-            //this.Payload = payload;
 <# foreach (var f in this.fields) { #>
             this.<#= f.Name #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
 <# } #>

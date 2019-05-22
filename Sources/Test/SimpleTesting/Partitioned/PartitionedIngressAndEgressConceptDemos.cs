@@ -187,6 +187,7 @@ namespace SimpleTesting.PartitionedIngressAndEgress.ConceptualDemos
                 // Flushed in response to the default OnCompletedPolicy.EndOfStream
                 PartitionedStreamEvent.CreatePoint(0, 1, 0),
                 PartitionedStreamEvent.CreateLowWatermark<int, int>(100),
+
                 // Points at time 50 are dropped
                 PartitionedStreamEvent.CreatePoint(0, 100, 0),
                 PartitionedStreamEvent.CreatePoint(1, 100, 0),
@@ -241,7 +242,6 @@ namespace SimpleTesting.PartitionedIngressAndEgress.ConceptualDemos
             this.input.OnNext(PartitionedStreamEvent.CreatePoint(0, 1100, 0));
 
             // OnCompletedPolicy.EndOfStream adds the last two points to the batch then flushes all
-
             var expected = new PartitionedStreamEvent<int, int>[]
             {
                 // Flushed in response to low watermark

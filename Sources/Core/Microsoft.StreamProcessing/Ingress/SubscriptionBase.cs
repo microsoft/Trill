@@ -173,7 +173,6 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         protected long lastPunctuationTime = StreamEvent.MinSyncTime;
 
-        /* Reorder-specific data structures */
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -391,16 +390,19 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int CurrentlyBufferedStartEdgeCount => this.startEventInformation.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedOutputCount => this.currentBatch.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedInputCount => this.CurrentlyBufferedStartEdgeCount + this.CurrentlyBufferedReorderCount;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -410,16 +412,18 @@ namespace Microsoft.StreamProcessing.Internal
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
+        // needs to be a class so it can be updated while it is sitting in a queue
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataContract]
         protected sealed class AdjustInfo
-        { // needs to be a class so it can be updated while it is sitting in a queue
+        {
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             [DataMember]
             public long modifiedStartTime;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
@@ -660,7 +664,6 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         protected long lastPunctuationTime = StreamEvent.MinSyncTime;
 
-        /* Reorder-specific data structures */
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -878,16 +881,19 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int CurrentlyBufferedStartEdgeCount => this.startEventInformation.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedOutputCount => this.currentBatch.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedInputCount => this.CurrentlyBufferedStartEdgeCount + this.CurrentlyBufferedReorderCount;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -897,16 +903,18 @@ namespace Microsoft.StreamProcessing.Internal
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
+        // needs to be a class so it can be updated while it is sitting in a queue
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataContract]
         protected sealed class AdjustInfo
-        { // needs to be a class so it can be updated while it is sitting in a queue
+        {
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             [DataMember]
             public long modifiedStartTime;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
@@ -1172,7 +1180,6 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         protected Dictionary<TKey, long> lastPunctuationTime = new Dictionary<TKey, long>();
 
-        /* Reorder-specific data structures */
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1343,7 +1350,6 @@ namespace Microsoft.StreamProcessing.Internal
             }
         }
 
-
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1425,16 +1431,19 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int CurrentlyBufferedStartEdgeCount => this.startEventInformation.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedOutputCount => this.currentBatch.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedInputCount => this.CurrentlyBufferedStartEdgeCount + this.CurrentlyBufferedReorderCount;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1444,16 +1453,18 @@ namespace Microsoft.StreamProcessing.Internal
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
+        // needs to be a class so it can be updated while it is sitting in a queue
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataContract]
         protected sealed class AdjustInfo
-        { // needs to be a class so it can be updated while it is sitting in a queue
+        {
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             [DataMember]
             public long modifiedStartTime;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
@@ -1719,7 +1730,6 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         protected Dictionary<TKey, long> lastPunctuationTime = new Dictionary<TKey, long>();
 
-        /* Reorder-specific data structures */
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1890,7 +1900,6 @@ namespace Microsoft.StreamProcessing.Internal
             }
         }
 
-
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1972,16 +1981,19 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int CurrentlyBufferedStartEdgeCount => this.startEventInformation.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedOutputCount => this.currentBatch.Count;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int CurrentlyBufferedInputCount => this.CurrentlyBufferedStartEdgeCount + this.CurrentlyBufferedReorderCount;
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1991,16 +2003,18 @@ namespace Microsoft.StreamProcessing.Internal
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
+        // needs to be a class so it can be updated while it is sitting in a queue
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataContract]
         protected sealed class AdjustInfo
-        { // needs to be a class so it can be updated while it is sitting in a queue
+        {
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
             [DataMember]
             public long modifiedStartTime;
+
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>

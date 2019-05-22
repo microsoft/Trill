@@ -159,8 +159,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(" resultBatch = resultBatchUncast as ");
             this.Write(this.ToStringHelper.ToStringWithCulture(BatchGeneratedFrom_TKey_TPayload));
             this.Write(this.ToStringHelper.ToStringWithCulture(genericParameters));
-            this.Write(";\r\n\r\n\r\n        resultBatch.CloneFromNoPayload(batch);\r\n\r\n        // Get memory po" +
-                    "ols for the payload columns.\r\n\r\n");
+            this.Write(";\r\n\r\n        resultBatch.CloneFromNoPayload(batch);\r\n\r\n        // Get memory pool" +
+                    "s for the payload columns.\r\n\r\n");
  foreach (var f in this.fields) { 
             this.Write("\r\n        this.pool.Get(out resultBatch.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));

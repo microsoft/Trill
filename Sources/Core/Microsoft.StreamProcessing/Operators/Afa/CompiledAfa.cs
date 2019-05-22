@@ -67,7 +67,6 @@ namespace Microsoft.StreamProcessing
             this.numStartStates = startStatesList.Count;
 
             // Compile the automaton
-
             foreach (var x in afa.finalStates)
             {
                 this.isFinal[x] = true;
