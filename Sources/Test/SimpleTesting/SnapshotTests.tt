@@ -152,6 +152,33 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void TumblingSnapshot5<#= suffix #>() // like 4, but with max
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(10, 10)
+                .Max(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1<#= suffix #>()
         {
             var input = new StreamEvent<MyData>[]
@@ -254,6 +281,34 @@ foreach (var batch in new [] { string.Empty, "SmallBatch" })
             var inputStream = input.ToObservable().ToStreamable();
             var query = inputStream.HoppingWindowLifetime(20, 10)
                 .Sum(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void HoppingSnapshot5<#= suffix #>() // like 5, but with max
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 2),
+                StreamEvent.CreateInterval(40, 50, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(20, 10)
+                .Max(x => x.field1)
                 ;
 
             var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
