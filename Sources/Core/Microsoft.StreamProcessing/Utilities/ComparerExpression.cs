@@ -40,6 +40,9 @@ namespace Microsoft.StreamProcessing
             typeComparerCache.Add(typeof(long), new ComparerExpression<long>((x, y) => x < y ? -1 : x == y ? 0 : 1));
             typeComparerCache.Add(typeof(ulong), new ComparerExpression<ulong>((x, y) => x < y ? -1 : x == y ? 0 : 1));
             typeComparerCache.Add(typeof(string), new ComparerExpression<string>((x, y) => x.CompareTo(y)));
+            typeComparerCache.Add(typeof(TimeSpan), new ComparerExpression<TimeSpan>((x, y) => x.CompareTo(y)));
+            typeComparerCache.Add(typeof(DateTime), new ComparerExpression<DateTime>((x, y) => x.CompareTo(y)));
+            typeComparerCache.Add(typeof(DateTimeOffset), new ComparerExpression<DateTimeOffset>((x, y) => x.CompareTo(y)));
             typeComparerCache.Add(typeof(Empty), new ComparerExpression<Empty>((x, y) => 0));
         }
 
@@ -121,6 +124,24 @@ namespace Microsoft.StreamProcessing
                     }
                     else
                     {
+                        var genericComparableInterface = type
+                            .GetTypeInfo().GetInterfaces()
+                            .Where(i => i.Namespace.Equals("System.Collections.Generic") && i.Name.Equals("IComparable`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == type)
+                            .FirstOrDefault();
+                        if (genericComparableInterface != null)
+                        {
+                            // then fall back to using a lambda of the form:
+                            // (x,y) => x.CompareTo(y)
+                            var genericInstanceOfComparerExpressionForGenericIComparable = typeof(ComparerExpressionForGenericIComparable<>).MakeGenericType(type);
+                            var ctorForComparerExpressionForGenericIComparer = genericInstanceOfComparerExpressionForGenericIComparable.GetTypeInfo().GetConstructor(Array.Empty<Type>());
+                            if (ctorForComparerExpressionForGenericIComparer != null)
+                            {
+                                comparer = (IComparerExpression<T>)ctorForComparerExpressionForGenericIComparer.Invoke(Array.Empty<object>());
+                                ComparerExpressionCache.Add(comparer);
+                                return comparer;
+                            }
+                        }
+
                         var genericComparerInterface = type
                             .GetTypeInfo().GetInterfaces()
                             .Where(i => i.Namespace.Equals("System.Collections.Generic") && i.Name.Equals("IComparer`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == type)
@@ -147,6 +168,7 @@ namespace Microsoft.StreamProcessing
                                 }
                             }
                         }
+
                         if (type.GetTypeInfo().GetInterface("System.Collections.IComparer") != null)
                         {
                             // then fall back to using a lambda of the form:
@@ -251,21 +273,23 @@ namespace Microsoft.StreamProcessing
         }
     }
 
-    internal class GenericComparerExpression<T> : ComparerExpression<T>
+    internal sealed class GenericComparerExpression<T> : ComparerExpression<T>
     {
         public GenericComparerExpression() : base(compareExpr: (x, y) => Comparer<T>.Default.Compare(x, y)) { }
     }
 
-    internal class ComparerExpressionForGenericIComparer<T> : ComparerExpression<T> where T : IComparer<T>
+    internal sealed class ComparerExpressionForGenericIComparable<T> : ComparerExpression<T> where T : IComparable<T>
+    {
+        public ComparerExpressionForGenericIComparable() : base(compareExpr: (x, y) => x.CompareTo(y)) { }
+    }
+
+    internal sealed class ComparerExpressionForGenericIComparer<T> : ComparerExpression<T> where T : IComparer<T>
     {
         public ComparerExpressionForGenericIComparer(T t) : base(compareExpr: (x, y) => t.Compare(x, y)) { }
     }
 
-    internal class ComparerExpressionForNonGenericIComparer<T> : ComparerExpression<T> where T : IComparer
+    internal sealed class ComparerExpressionForNonGenericIComparer<T> : ComparerExpression<T> where T : IComparer
     {
-        public ComparerExpressionForNonGenericIComparer(T t)
-            : base(
-                compareExpr: (x, y) => t.Compare(x, y))
-        { }
+        public ComparerExpressionForNonGenericIComparer(T t) : base(compareExpr: (x, y) => t.Compare(x, y)) { }
     }
 }
