@@ -155,6 +155,33 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void TumblingSnapshot6Row() // like 5, but with min
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(10, 10)
+                .Min(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1Row()
         {
             var input = new StreamEvent<MyData>[]
@@ -285,6 +312,34 @@ namespace SimpleTesting
             var inputStream = input.ToObservable().ToStreamable();
             var query = inputStream.HoppingWindowLifetime(20, 10)
                 .Max(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void HoppingSnapshot6Row() // like 5, but with min
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 1),
+                StreamEvent.CreateInterval(40, 50, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(20, 10)
+                .Min(x => x.field1)
                 ;
 
             var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
@@ -893,6 +948,33 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void TumblingSnapshot6RowSmallBatch() // like 5, but with min
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(10, 10)
+                .Min(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1RowSmallBatch()
         {
             var input = new StreamEvent<MyData>[]
@@ -1023,6 +1105,34 @@ namespace SimpleTesting
             var inputStream = input.ToObservable().ToStreamable();
             var query = inputStream.HoppingWindowLifetime(20, 10)
                 .Max(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void HoppingSnapshot6RowSmallBatch() // like 5, but with min
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 1),
+                StreamEvent.CreateInterval(40, 50, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(20, 10)
+                .Min(x => x.field1)
                 ;
 
             var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
@@ -1630,6 +1740,33 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void TumblingSnapshot6Columnar() // like 5, but with min
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(10, 10)
+                .Min(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1Columnar()
         {
             var input = new StreamEvent<MyData>[]
@@ -1760,6 +1897,34 @@ namespace SimpleTesting
             var inputStream = input.ToObservable().ToStreamable();
             var query = inputStream.HoppingWindowLifetime(20, 10)
                 .Max(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void HoppingSnapshot6Columnar() // like 5, but with min
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 1),
+                StreamEvent.CreateInterval(40, 50, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(20, 10)
+                .Min(x => x.field1)
                 ;
 
             var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
@@ -2368,6 +2533,33 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void TumblingSnapshot6ColumnarSmallBatch() // like 5, but with min
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(10, 10)
+                .Min(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void HoppingSnapshot1ColumnarSmallBatch()
         {
             var input = new StreamEvent<MyData>[]
@@ -2498,6 +2690,34 @@ namespace SimpleTesting
             var inputStream = input.ToObservable().ToStreamable();
             var query = inputStream.HoppingWindowLifetime(20, 10)
                 .Max(x => x.field1)
+                ;
+
+            var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void HoppingSnapshot6ColumnarSmallBatch() // like 5, but with min
+        {
+            var input = new StreamEvent<MyData>[]
+            {
+                StreamEvent.CreatePoint(11, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(12, new MyData { field1 = 1, field2 = "A" }),
+                StreamEvent.CreatePoint(21, new MyData { field1 = 2, field2 = "A" }),
+                StreamEvent.CreatePoint(25, new MyData { field1 = 2, field2 = "D" })
+            };
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateInterval(20, 30, 1),
+                StreamEvent.CreateInterval(30, 40, 1),
+                StreamEvent.CreateInterval(40, 50, 2),
+            };
+
+            var inputStream = input.ToObservable().ToStreamable();
+            var query = inputStream.HoppingWindowLifetime(20, 10)
+                .Min(x => x.field1)
                 ;
 
             var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();

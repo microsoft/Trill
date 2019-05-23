@@ -29,20 +29,20 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<MinMaxState<T>, long>> currentTimestamp = (state) => state.currentTimestamp;
             Expression<Func<MinMaxState<T>, T>> currentValue = (state) => state.currentValue;
             var currentTimestampExpression = currentTimestamp.ReplaceParametersInBody(stateExpression);
-            var currentValueExpression = currentValue.ReplaceParametersInBody(stateExpression);
-            var comparerExpression = comparer.GetCompareExpr().ReplaceParametersInBody(inputExpression, currentValueExpression);
+            var comparerExpression = comparer.GetCompareExpr().ReplaceParametersInBody(
+                inputExpression, currentValue.ReplaceParametersInBody(stateExpression));
 
             var typeInfo = typeof(MinMaxState<T>).GetTypeInfo();
             this.accumulate = Expression.Lambda<Func<MinMaxState<T>, long, T, MinMaxState<T>>>(
-                Expression.MemberInit(
-                    (NewExpression)constructor.Body,
-                    Expression.Bind(typeInfo.GetField("currentTimestamp"), timestampExpression),
-                    Expression.Bind(typeInfo.GetField("currentValue"), Expression.Condition(
-                        Expression.Or(
-                            Expression.Equal(currentTimestampExpression, Expression.Constant(InvalidSyncTime)),
-                            Expression.GreaterThan(comparerExpression, Expression.Constant(0))),
-                        inputExpression,
-                        currentValueExpression))),
+                Expression.Condition(
+                    Expression.Or(
+                        Expression.Equal(currentTimestampExpression, Expression.Constant(InvalidSyncTime)),
+                        Expression.GreaterThan(comparerExpression, Expression.Constant(0))),
+                    Expression.MemberInit(
+                        (NewExpression)constructor.Body,
+                        Expression.Bind(typeInfo.GetField("currentTimestamp"), timestampExpression),
+                        Expression.Bind(typeInfo.GetField("currentValue"), inputExpression)),
+                    stateExpression),
                 stateExpression,
                 timestampExpression,
                 inputExpression);
