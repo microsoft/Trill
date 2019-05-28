@@ -9,7 +9,7 @@ using System.Numerics;
 namespace Microsoft.StreamProcessing.Aggregates
 {
 
-    internal class ProductSByteAggregate : IAggregate<sbyte, sbyte, sbyte>
+    internal class ProductSByteAggregate : ISummableAggregate<sbyte, sbyte, sbyte>
     {
         public Expression<Func<sbyte>> InitialState() => () => 0;
 
@@ -22,10 +22,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<sbyte, sbyte, sbyte>> Difference()
             => (leftProduct, rightProduct) => (sbyte)(leftProduct / rightProduct);
 
+        public Expression<Func<sbyte, sbyte, sbyte>> Sum()
+            => (leftProduct, rightProduct) => (sbyte)(leftProduct * rightProduct);
+
         public Expression<Func<sbyte, sbyte>> ComputeResult() => product => product;
     }
 
-    internal class ProductByteAggregate : IAggregate<byte, byte, byte>
+    internal class ProductByteAggregate : ISummableAggregate<byte, byte, byte>
     {
         public Expression<Func<byte>> InitialState() => () => 0;
 
@@ -38,10 +41,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<byte, byte, byte>> Difference()
             => (leftProduct, rightProduct) => (byte)(leftProduct / rightProduct);
 
+        public Expression<Func<byte, byte, byte>> Sum()
+            => (leftProduct, rightProduct) => (byte)(leftProduct * rightProduct);
+
         public Expression<Func<byte, byte>> ComputeResult() => product => product;
     }
 
-    internal class ProductShortAggregate : IAggregate<short, short, short>
+    internal class ProductShortAggregate : ISummableAggregate<short, short, short>
     {
         public Expression<Func<short>> InitialState() => () => 0;
 
@@ -54,10 +60,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<short, short, short>> Difference()
             => (leftProduct, rightProduct) => (short)(leftProduct / rightProduct);
 
+        public Expression<Func<short, short, short>> Sum()
+            => (leftProduct, rightProduct) => (short)(leftProduct * rightProduct);
+
         public Expression<Func<short, short>> ComputeResult() => product => product;
     }
 
-    internal class ProductUShortAggregate : IAggregate<ushort, ushort, ushort>
+    internal class ProductUShortAggregate : ISummableAggregate<ushort, ushort, ushort>
     {
         public Expression<Func<ushort>> InitialState() => () => 0;
 
@@ -70,10 +79,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<ushort, ushort, ushort>> Difference()
             => (leftProduct, rightProduct) => (ushort)(leftProduct / rightProduct);
 
+        public Expression<Func<ushort, ushort, ushort>> Sum()
+            => (leftProduct, rightProduct) => (ushort)(leftProduct * rightProduct);
+
         public Expression<Func<ushort, ushort>> ComputeResult() => product => product;
     }
 
-    internal class ProductIntAggregate : IAggregate<int, int, int>
+    internal class ProductIntAggregate : ISummableAggregate<int, int, int>
     {
         public Expression<Func<int>> InitialState() => () => 0;
 
@@ -86,10 +98,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<int, int, int>> Difference()
             => (leftProduct, rightProduct) => (int)(leftProduct / rightProduct);
 
+        public Expression<Func<int, int, int>> Sum()
+            => (leftProduct, rightProduct) => (int)(leftProduct * rightProduct);
+
         public Expression<Func<int, int>> ComputeResult() => product => product;
     }
 
-    internal class ProductUIntAggregate : IAggregate<uint, uint, uint>
+    internal class ProductUIntAggregate : ISummableAggregate<uint, uint, uint>
     {
         public Expression<Func<uint>> InitialState() => () => 0;
 
@@ -102,10 +117,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<uint, uint, uint>> Difference()
             => (leftProduct, rightProduct) => (uint)(leftProduct / rightProduct);
 
+        public Expression<Func<uint, uint, uint>> Sum()
+            => (leftProduct, rightProduct) => (uint)(leftProduct * rightProduct);
+
         public Expression<Func<uint, uint>> ComputeResult() => product => product;
     }
 
-    internal class ProductLongAggregate : IAggregate<long, long, long>
+    internal class ProductLongAggregate : ISummableAggregate<long, long, long>
     {
         public Expression<Func<long>> InitialState() => () => 0;
 
@@ -118,10 +136,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<long, long, long>> Difference()
             => (leftProduct, rightProduct) => (long)(leftProduct / rightProduct);
 
+        public Expression<Func<long, long, long>> Sum()
+            => (leftProduct, rightProduct) => (long)(leftProduct * rightProduct);
+
         public Expression<Func<long, long>> ComputeResult() => product => product;
     }
 
-    internal class ProductULongAggregate : IAggregate<ulong, ulong, ulong>
+    internal class ProductULongAggregate : ISummableAggregate<ulong, ulong, ulong>
     {
         public Expression<Func<ulong>> InitialState() => () => 0;
 
@@ -134,10 +155,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<ulong, ulong, ulong>> Difference()
             => (leftProduct, rightProduct) => (ulong)(leftProduct / rightProduct);
 
+        public Expression<Func<ulong, ulong, ulong>> Sum()
+            => (leftProduct, rightProduct) => (ulong)(leftProduct * rightProduct);
+
         public Expression<Func<ulong, ulong>> ComputeResult() => product => product;
     }
 
-    internal class ProductFloatAggregate : IAggregate<float, float, float>
+    internal class ProductFloatAggregate : ISummableAggregate<float, float, float>
     {
         public Expression<Func<float>> InitialState() => () => 0;
 
@@ -150,10 +174,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<float, float, float>> Difference()
             => (leftProduct, rightProduct) => (float)(leftProduct / rightProduct);
 
+        public Expression<Func<float, float, float>> Sum()
+            => (leftProduct, rightProduct) => (float)(leftProduct * rightProduct);
+
         public Expression<Func<float, float>> ComputeResult() => product => product;
     }
 
-    internal class ProductDoubleAggregate : IAggregate<double, double, double>
+    internal class ProductDoubleAggregate : ISummableAggregate<double, double, double>
     {
         public Expression<Func<double>> InitialState() => () => 0;
 
@@ -166,10 +193,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<double, double, double>> Difference()
             => (leftProduct, rightProduct) => (double)(leftProduct / rightProduct);
 
+        public Expression<Func<double, double, double>> Sum()
+            => (leftProduct, rightProduct) => (double)(leftProduct * rightProduct);
+
         public Expression<Func<double, double>> ComputeResult() => product => product;
     }
 
-    internal class ProductDecimalAggregate : IAggregate<decimal, decimal, decimal>
+    internal class ProductDecimalAggregate : ISummableAggregate<decimal, decimal, decimal>
     {
         public Expression<Func<decimal>> InitialState() => () => 0;
 
@@ -182,10 +212,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<decimal, decimal, decimal>> Difference()
             => (leftProduct, rightProduct) => (decimal)(leftProduct / rightProduct);
 
+        public Expression<Func<decimal, decimal, decimal>> Sum()
+            => (leftProduct, rightProduct) => (decimal)(leftProduct * rightProduct);
+
         public Expression<Func<decimal, decimal>> ComputeResult() => product => product;
     }
 
-    internal class ProductBigIntegerAggregate : IAggregate<BigInteger, BigInteger, BigInteger>
+    internal class ProductBigIntegerAggregate : ISummableAggregate<BigInteger, BigInteger, BigInteger>
     {
         public Expression<Func<BigInteger>> InitialState() => () => 0;
 
@@ -198,10 +231,13 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<BigInteger, BigInteger, BigInteger>> Difference()
             => (leftProduct, rightProduct) => (BigInteger)(leftProduct / rightProduct);
 
+        public Expression<Func<BigInteger, BigInteger, BigInteger>> Sum()
+            => (leftProduct, rightProduct) => (BigInteger)(leftProduct * rightProduct);
+
         public Expression<Func<BigInteger, BigInteger>> ComputeResult() => product => product;
     }
 
-    internal class ProductComplexAggregate : IAggregate<Complex, Complex, Complex>
+    internal class ProductComplexAggregate : ISummableAggregate<Complex, Complex, Complex>
     {
         public Expression<Func<Complex>> InitialState() => () => 0;
 
@@ -213,6 +249,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<Complex, Complex, Complex>> Difference()
             => (leftProduct, rightProduct) => (Complex)(leftProduct / rightProduct);
+
+        public Expression<Func<Complex, Complex, Complex>> Sum()
+            => (leftProduct, rightProduct) => (Complex)(leftProduct * rightProduct);
 
         public Expression<Func<Complex, Complex>> ComputeResult() => product => product;
     }

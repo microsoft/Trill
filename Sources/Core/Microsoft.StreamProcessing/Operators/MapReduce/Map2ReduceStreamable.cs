@@ -30,6 +30,9 @@ namespace Microsoft.StreamProcessing
 
         private readonly OperationalHint reduceOptions;
 
+        private readonly bool reduceInMap;
+        private readonly IComparerExpression<TMapInputLeft1> sprayComparer1 = null;
+
         internal Map2ReduceStreamable(
             IStreamable<TMapKey, TMapInputLeft1> sourceLeft1,
             IStreamable<TMapKey, TMapInputRight1> sourceRight1,
@@ -80,14 +83,6 @@ namespace Microsoft.StreamProcessing
             this.leftAsymmetric2 = leftAsymmetric2;
             this.reduceOptions = reduceOptions;
 
-            ProcessProperties();
-        }
-
-        private bool reduceInMap;
-        private IComparerExpression<TMapInputLeft1> sprayComparer1 = null;
-
-        internal void ProcessProperties()
-        {
             if (this.sourceLeft1.Properties.CanSpray(this.sourceLeft2.Properties, this.keySelector1, this.keySelector2) &&
                 this.sourceLeft1.Properties.Derive(a => this.mapper1(a, null)).CanSpray(
                     this.sourceLeft2.Properties.Derive(a => this.mapper2(a, null)),
@@ -268,6 +263,9 @@ namespace Microsoft.StreamProcessing
 
         private readonly OperationalHint reduceOptions;
 
+        private readonly bool reduceInMap;
+        private readonly IComparerExpression<TMapInputLeft1> sprayComparer1 = null;
+
         internal Map2ReduceStreamable(
             IStreamable<Empty, TMapInputLeft1> sourceLeft1,
             IStreamable<Empty, TMapInputRight1> sourceRight1,
@@ -318,14 +316,6 @@ namespace Microsoft.StreamProcessing
             this.leftAsymmetric2 = leftAsymmetric2;
             this.reduceOptions = reduceOptions;
 
-            ProcessProperties();
-        }
-
-        private bool reduceInMap;
-        private IComparerExpression<TMapInputLeft1> sprayComparer1 = null;
-
-        internal void ProcessProperties()
-        {
             if (this.sourceLeft1.Properties.CanSpray(this.sourceLeft2.Properties, this.keySelector1, this.keySelector2) &&
                 this.sourceLeft1.Properties.Derive(a => this.mapper1(a, null)).CanSpray(
                     this.sourceLeft2.Properties.Derive(a => this.mapper2(a, null)),

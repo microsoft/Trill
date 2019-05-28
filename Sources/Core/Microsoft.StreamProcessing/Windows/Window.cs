@@ -99,7 +99,8 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// Computes a time-sensitive minimum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
-        public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(Expression<Func<TSource, TValue>> selector, IComparerExpression<TValue> comparer)
+        public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(
+            Expression<Func<TSource, TValue>> selector, IComparerExpression<TValue> comparer)
         {
             Invariant.IsNotNull(selector, nameof(selector));
             Invariant.IsNotNull(comparer, nameof(comparer));

@@ -77,13 +77,13 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<TState, long, DiscriminatedUnion<TLeft, TRight>, TState>> placeholder = (s, l, d) => default;
 
             Expression<Func<DiscriminatedUnion<TLeft, TRight>, TLeft>> leftSelector = d => d.Left;
-            Expression leftProperty = leftSelector.ReplaceParametersInBody(placeholder.Parameters[2]);
+            var leftProperty = leftSelector.ReplaceParametersInBody(placeholder.Parameters[2]);
 
             Expression<Func<DiscriminatedUnion<TLeft, TRight>, TRight>> rightSelector = d => d.Right;
-            Expression rightProperty = rightSelector.ReplaceParametersInBody(placeholder.Parameters[2]);
+            var rightProperty = rightSelector.ReplaceParametersInBody(placeholder.Parameters[2]);
 
             Expression<Func<DiscriminatedUnion<TLeft, TRight>, bool>> discriminatorSelector = d => d.isLeft;
-            Expression discriminator = discriminatorSelector.ReplaceParametersInBody(placeholder.Parameters[2]);
+            var discriminator = discriminatorSelector.ReplaceParametersInBody(placeholder.Parameters[2]);
 
             return Expression.Lambda<Func<TState, long, DiscriminatedUnion<TLeft, TRight>, TState>>(
                 Expression.Condition(

@@ -30,7 +30,6 @@ namespace Microsoft.StreamProcessing.Aggregates
             double result = default;
             if (set.TotalCount > 0)
             {
-                double currentFloorRank = double.MinValue;
                 double currentFloorRankPlusOne = 0;
 
                 double floorRank = this.percentile * (set.TotalCount - 1);
@@ -38,11 +37,8 @@ namespace Microsoft.StreamProcessing.Aggregates
                 floorRank = Math.Floor(floorRank);
 
                 var enumerator = set.GetEnumerable().GetEnumerator();
-                for (int index = 0; index <= floorRank; index++)
-                {
-                    enumerator.MoveNext();
-                    currentFloorRank = enumerator.Current;
-                }
+                for (int index = 0; index <= floorRank; index++) enumerator.MoveNext();
+                var currentFloorRank = enumerator.Current;
 
                 if (dividend != 0)
                 {

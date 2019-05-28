@@ -22,6 +22,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<sbyte, sbyte, sbyte>> Difference()
             => (leftSum, rightSum) => (sbyte)(leftSum - rightSum);
 
+        public Expression<Func<sbyte, sbyte, sbyte>> Sum()
+            => (leftSum, rightSum) => (sbyte)(leftSum + rightSum);
+
         public Expression<Func<sbyte, sbyte>> ComputeResult() => sum => sum;
     }
 
@@ -37,6 +40,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<byte, byte, byte>> Difference()
             => (leftSum, rightSum) => (byte)(leftSum - rightSum);
+
+        public Expression<Func<byte, byte, byte>> Sum()
+            => (leftSum, rightSum) => (byte)(leftSum + rightSum);
 
         public Expression<Func<byte, byte>> ComputeResult() => sum => sum;
     }
@@ -54,6 +60,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<short, short, short>> Difference()
             => (leftSum, rightSum) => (short)(leftSum - rightSum);
 
+        public Expression<Func<short, short, short>> Sum()
+            => (leftSum, rightSum) => (short)(leftSum + rightSum);
+
         public Expression<Func<short, short>> ComputeResult() => sum => sum;
     }
 
@@ -69,6 +78,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<ushort, ushort, ushort>> Difference()
             => (leftSum, rightSum) => (ushort)(leftSum - rightSum);
+
+        public Expression<Func<ushort, ushort, ushort>> Sum()
+            => (leftSum, rightSum) => (ushort)(leftSum + rightSum);
 
         public Expression<Func<ushort, ushort>> ComputeResult() => sum => sum;
     }
@@ -86,6 +98,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<int, int, int>> Difference()
             => (leftSum, rightSum) => (int)(leftSum - rightSum);
 
+        public Expression<Func<int, int, int>> Sum()
+            => (leftSum, rightSum) => (int)(leftSum + rightSum);
+
         public Expression<Func<int, int>> ComputeResult() => sum => sum;
     }
 
@@ -101,6 +116,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<uint, uint, uint>> Difference()
             => (leftSum, rightSum) => (uint)(leftSum - rightSum);
+
+        public Expression<Func<uint, uint, uint>> Sum()
+            => (leftSum, rightSum) => (uint)(leftSum + rightSum);
 
         public Expression<Func<uint, uint>> ComputeResult() => sum => sum;
     }
@@ -118,6 +136,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<long, long, long>> Difference()
             => (leftSum, rightSum) => (long)(leftSum - rightSum);
 
+        public Expression<Func<long, long, long>> Sum()
+            => (leftSum, rightSum) => (long)(leftSum + rightSum);
+
         public Expression<Func<long, long>> ComputeResult() => sum => sum;
     }
 
@@ -133,6 +154,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<ulong, ulong, ulong>> Difference()
             => (leftSum, rightSum) => (ulong)(leftSum - rightSum);
+
+        public Expression<Func<ulong, ulong, ulong>> Sum()
+            => (leftSum, rightSum) => (ulong)(leftSum + rightSum);
 
         public Expression<Func<ulong, ulong>> ComputeResult() => sum => sum;
     }
@@ -150,6 +174,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<float, float, float>> Difference()
             => (leftSum, rightSum) => (float)(leftSum - rightSum);
 
+        public Expression<Func<float, float, float>> Sum()
+            => (leftSum, rightSum) => (float)(leftSum + rightSum);
+
         public Expression<Func<float, float>> ComputeResult() => sum => sum;
     }
 
@@ -165,6 +192,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<double, double, double>> Difference()
             => (leftSum, rightSum) => (double)(leftSum - rightSum);
+
+        public Expression<Func<double, double, double>> Sum()
+            => (leftSum, rightSum) => (double)(leftSum + rightSum);
 
         public Expression<Func<double, double>> ComputeResult() => sum => sum;
     }
@@ -182,6 +212,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<decimal, decimal, decimal>> Difference()
             => (leftSum, rightSum) => (decimal)(leftSum - rightSum);
 
+        public Expression<Func<decimal, decimal, decimal>> Sum()
+            => (leftSum, rightSum) => (decimal)(leftSum + rightSum);
+
         public Expression<Func<decimal, decimal>> ComputeResult() => sum => sum;
     }
 
@@ -198,6 +231,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<BigInteger, BigInteger, BigInteger>> Difference()
             => (leftSum, rightSum) => (BigInteger)(leftSum - rightSum);
 
+        public Expression<Func<BigInteger, BigInteger, BigInteger>> Sum()
+            => (leftSum, rightSum) => (BigInteger)(leftSum + rightSum);
+
         public Expression<Func<BigInteger, BigInteger>> ComputeResult() => sum => sum;
     }
 
@@ -213,6 +249,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<Complex, Complex, Complex>> Difference()
             => (leftSum, rightSum) => (Complex)(leftSum - rightSum);
+
+        public Expression<Func<Complex, Complex, Complex>> Sum()
+            => (leftSum, rightSum) => (Complex)(leftSum + rightSum);
 
         public Expression<Func<Complex, Complex>> ComputeResult() => sum => sum;
     }

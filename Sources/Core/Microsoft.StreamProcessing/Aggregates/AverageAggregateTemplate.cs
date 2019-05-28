@@ -29,7 +29,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public ulong Count;
     }
 
-    internal class AverageSByteAggregate : IAggregate<sbyte, AverageState<long>, double>
+    internal class AverageSByteAggregate : ISummableAggregate<sbyte, AverageState<long>, double>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -42,6 +42,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<long>, AverageState<long>, AverageState<long>>> Difference()
             => (left, right) => new AverageState<long> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<long>, AverageState<long>, AverageState<long>>> Sum()
+            => (left, right) => new AverageState<long> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<long>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -83,7 +86,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageShortAggregate : IAggregate<short, AverageState<long>, double>
+    internal class AverageShortAggregate : ISummableAggregate<short, AverageState<long>, double>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -96,6 +99,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<long>, AverageState<long>, AverageState<long>>> Difference()
             => (left, right) => new AverageState<long> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<long>, AverageState<long>, AverageState<long>>> Sum()
+            => (left, right) => new AverageState<long> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<long>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -137,7 +143,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageIntAggregate : IAggregate<int, AverageState<long>, double>
+    internal class AverageIntAggregate : ISummableAggregate<int, AverageState<long>, double>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -150,6 +156,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<long>, AverageState<long>, AverageState<long>>> Difference()
             => (left, right) => new AverageState<long> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<long>, AverageState<long>, AverageState<long>>> Sum()
+            => (left, right) => new AverageState<long> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<long>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -191,7 +200,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageLongAggregate : IAggregate<long, AverageState<long>, double>
+    internal class AverageLongAggregate : ISummableAggregate<long, AverageState<long>, double>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -204,6 +213,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<long>, AverageState<long>, AverageState<long>>> Difference()
             => (left, right) => new AverageState<long> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<long>, AverageState<long>, AverageState<long>>> Sum()
+            => (left, right) => new AverageState<long> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<long>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -245,7 +257,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageByteAggregate : IAggregate<byte, AverageState<ulong>, double>
+    internal class AverageByteAggregate : ISummableAggregate<byte, AverageState<ulong>, double>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -258,6 +270,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<ulong>, AverageState<ulong>, AverageState<ulong>>> Difference()
             => (left, right) => new AverageState<ulong> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<ulong>, AverageState<ulong>, AverageState<ulong>>> Sum()
+            => (left, right) => new AverageState<ulong> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<ulong>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -299,7 +314,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageUShortAggregate : IAggregate<ushort, AverageState<ulong>, double>
+    internal class AverageUShortAggregate : ISummableAggregate<ushort, AverageState<ulong>, double>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -312,6 +327,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<ulong>, AverageState<ulong>, AverageState<ulong>>> Difference()
             => (left, right) => new AverageState<ulong> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<ulong>, AverageState<ulong>, AverageState<ulong>>> Sum()
+            => (left, right) => new AverageState<ulong> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<ulong>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -353,7 +371,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageUIntAggregate : IAggregate<uint, AverageState<ulong>, double>
+    internal class AverageUIntAggregate : ISummableAggregate<uint, AverageState<ulong>, double>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -366,6 +384,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<ulong>, AverageState<ulong>, AverageState<ulong>>> Difference()
             => (left, right) => new AverageState<ulong> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<ulong>, AverageState<ulong>, AverageState<ulong>>> Sum()
+            => (left, right) => new AverageState<ulong> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<ulong>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -407,7 +428,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageULongAggregate : IAggregate<ulong, AverageState<ulong>, double>
+    internal class AverageULongAggregate : ISummableAggregate<ulong, AverageState<ulong>, double>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -420,6 +441,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<ulong>, AverageState<ulong>, AverageState<ulong>>> Difference()
             => (left, right) => new AverageState<ulong> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<ulong>, AverageState<ulong>, AverageState<ulong>>> Sum()
+            => (left, right) => new AverageState<ulong> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<ulong>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -461,7 +485,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFloatAggregate : IAggregate<float, AverageState<float>, float>
+    internal class AverageFloatAggregate : ISummableAggregate<float, AverageState<float>, float>
     {
         public Expression<Func<AverageState<float>>> InitialState()
             => () => default;
@@ -474,6 +498,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<float>, AverageState<float>, AverageState<float>>> Difference()
             => (left, right) => new AverageState<float> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<float>, AverageState<float>, AverageState<float>>> Sum()
+            => (left, right) => new AverageState<float> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<float>, float>> ComputeResult()
             => state => (float)state.Sum / state.Count;
@@ -515,7 +542,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (float)state.Sum / state.Count : (float?)null;
     }
 
-    internal class AverageDoubleAggregate : IAggregate<double, AverageState<double>, double>
+    internal class AverageDoubleAggregate : ISummableAggregate<double, AverageState<double>, double>
     {
         public Expression<Func<AverageState<double>>> InitialState()
             => () => default;
@@ -528,6 +555,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<double>, AverageState<double>, AverageState<double>>> Difference()
             => (left, right) => new AverageState<double> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<double>, AverageState<double>, AverageState<double>>> Sum()
+            => (left, right) => new AverageState<double> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<double>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -569,7 +599,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageDecimalAggregate : IAggregate<decimal, AverageState<decimal>, decimal>
+    internal class AverageDecimalAggregate : ISummableAggregate<decimal, AverageState<decimal>, decimal>
     {
         public Expression<Func<AverageState<decimal>>> InitialState()
             => () => default;
@@ -582,6 +612,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<decimal>, AverageState<decimal>, AverageState<decimal>>> Difference()
             => (left, right) => new AverageState<decimal> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<decimal>, AverageState<decimal>, AverageState<decimal>>> Sum()
+            => (left, right) => new AverageState<decimal> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<decimal>, decimal>> ComputeResult()
             => state => (decimal)state.Sum / state.Count;
@@ -623,7 +656,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (decimal)state.Sum / state.Count : (decimal?)null;
     }
 
-    internal class AverageBigIntegerAggregate : IAggregate<BigInteger, AverageState<BigInteger>, double>
+    internal class AverageBigIntegerAggregate : ISummableAggregate<BigInteger, AverageState<BigInteger>, double>
     {
         public Expression<Func<AverageState<BigInteger>>> InitialState()
             => () => default;
@@ -636,6 +669,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<BigInteger>, AverageState<BigInteger>, AverageState<BigInteger>>> Difference()
             => (left, right) => new AverageState<BigInteger> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<BigInteger>, AverageState<BigInteger>, AverageState<BigInteger>>> Sum()
+            => (left, right) => new AverageState<BigInteger> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<BigInteger>, double>> ComputeResult()
             => state => (double)state.Sum / state.Count;
@@ -677,7 +713,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageComplexAggregate : IAggregate<Complex, AverageState<Complex>, Complex>
+    internal class AverageComplexAggregate : ISummableAggregate<Complex, AverageState<Complex>, Complex>
     {
         public Expression<Func<AverageState<Complex>>> InitialState()
             => () => default;
@@ -690,6 +726,9 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<Complex>, AverageState<Complex>, AverageState<Complex>>> Difference()
             => (left, right) => new AverageState<Complex> { Count = left.Count - right.Count, Sum = left.Sum - right.Sum };
+
+        public Expression<Func<AverageState<Complex>, AverageState<Complex>, AverageState<Complex>>> Sum()
+            => (left, right) => new AverageState<Complex> { Count = left.Count + right.Count, Sum = left.Sum + right.Sum };
 
         public Expression<Func<AverageState<Complex>, Complex>> ComputeResult()
             => state => (Complex)state.Sum / state.Count;

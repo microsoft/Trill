@@ -10,7 +10,7 @@ using Microsoft.StreamProcessing.Internal;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
-    internal class TumblingMinAggregate<T> : IAggregate<T, MinMaxState<T>, T>
+    internal sealed class TumblingMinAggregate<T> : IAggregate<T, MinMaxState<T>, T>
     {
         private static readonly long InvalidSyncTime = StreamEvent.MinSyncTime - 1;
         private readonly Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> accumulate;

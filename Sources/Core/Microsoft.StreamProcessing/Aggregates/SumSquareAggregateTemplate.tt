@@ -30,6 +30,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<<#= typeName #>, <#= typeName #>, <#= typeName #>>> Difference()
             => (leftSum, rightSum) => (<#= typeName #>)(leftSum - rightSum);
 
+        public Expression<Func<<#= typeName #>, <#= typeName #>, <#= typeName #>>> Sum()
+            => (leftSum, rightSum) => (<#= typeName #>)(leftSum + rightSum);
+
         public Expression<Func<<#= typeName #>, <#= typeName #>>> ComputeResult() => sum => sum;
     }
 <#
