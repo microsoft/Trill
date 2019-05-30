@@ -9,6 +9,17 @@ using System.Text;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
+    internal static class GeneratedAggregate
+    {
+        public static GeneratedAggregate<TInput, TState, TResult> Create<TInput, TState, TResult>(
+            Expression<Func<TState>> initialState,
+            Expression<Func<TState, long, TInput, TState>> accumulate,
+            Expression<Func<TState, long, TInput, TState>> deaccumulate,
+            Expression<Func<TState, TState, TState>> difference,
+            Expression<Func<TState, TResult>> computeResult)
+            => new GeneratedAggregate<TInput, TState, TResult>(initialState, accumulate, deaccumulate, difference, computeResult);
+    }
+
     internal class GeneratedAggregate<TInput, TState, TResult> : IAggregate<TInput, TState, TResult>
     {
         private readonly Expression<Func<TState>> initialState;

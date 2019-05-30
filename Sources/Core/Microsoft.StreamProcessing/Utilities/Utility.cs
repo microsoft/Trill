@@ -143,9 +143,9 @@ namespace Microsoft.StreamProcessing
         {
             var newParam1 = Expression.Parameter(selector.Parameters[0].Type, selector.Parameters[0].Name + "_1");
             var newParam2 = Expression.Parameter(selector.Parameters[0].Type, selector.Parameters[0].Name + "_2");
-            var copy1 = ParameterInliner.Inline(selector, newParam1);
-            var copy2 = ParameterInliner.Inline(selector, newParam2);
-            var result = ParameterInliner.Inline(comparer, copy1, copy2);
+            var copy1 = selector.ReplaceParametersInBody(newParam1);
+            var copy2 = selector.ReplaceParametersInBody(newParam2);
+            var result = comparer.ReplaceParametersInBody(copy1, copy2);
             return Expression.Lambda<Comparison<T2>>(result, newParam1, newParam2);
         }
 

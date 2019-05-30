@@ -188,11 +188,9 @@ namespace Microsoft.StreamProcessing
         {
             Contract.Requires(type != null);
 
-            if (type.IsAnonymousTypeName() || type.GetTypeInfo().Assembly.IsDynamic) return true;
-            if (!type.GetTypeInfo().IsGenericType)
-                return false;
-            else
-                return type.GenericTypeArguments.Any(t => t.IsAnonymousType());
+            return type.IsAnonymousTypeName()
+                || type.GetTypeInfo().Assembly.IsDynamic
+                || (type.GetTypeInfo().IsGenericType && type.GenericTypeArguments.Any(t => t.IsAnonymousType()));
         }
 
         public static bool HasSupportedParameterizedConstructor(this Type type)
@@ -309,6 +307,7 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public static bool KeyTypeNeedsGeneratedMemoryPool(this Type keyType)
         {
+            if (keyType == typeof(Empty)) return false;
             if (keyType.GetTypeInfo().IsGenericType)
             {
                 if (keyType.GetGenericTypeDefinition() != typeof(CompoundGroupKey<,>)) return true;
@@ -319,9 +318,7 @@ namespace Microsoft.StreamProcessing
                     return outerKeyType.KeyTypeNeedsGeneratedMemoryPool() || innerKeyType.KeyTypeNeedsGeneratedMemoryPool();
                 }
             }
-            return keyType == typeof(Empty)
-                ? false
-                : keyType.NeedGeneratedMemoryPool();
+            return keyType.NeedGeneratedMemoryPool();
         }
 
         /// <summary>

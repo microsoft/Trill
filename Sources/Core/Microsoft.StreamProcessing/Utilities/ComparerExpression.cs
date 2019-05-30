@@ -234,8 +234,9 @@ namespace Microsoft.StreamProcessing
             var comparerDefaultProperty = comparerTypeForPropertyType.GetTypeInfo().GetProperty("Default");
             var getter = comparerDefaultProperty.GetMethod;
             var comparerExpressionObject = getter.Invoke(null, null);
-            var comparerExpression = comparerExpressionObject.GetType().GetTypeInfo().GetMethod("GetCompareExpr").Invoke(comparerExpressionObject, null);
-            var inlinedComparerExpression = ParameterInliner.Inline((LambdaExpression)comparerExpression, Expression.Property(left, p), Expression.Property(right, p));
+            var comparerExpression = (LambdaExpression)comparerExpressionObject.GetType().GetTypeInfo()
+                .GetMethod("GetCompareExpr").Invoke(comparerExpressionObject, null);
+            var inlinedComparerExpression = comparerExpression.ReplaceParametersInBody(Expression.Property(left, p), Expression.Property(right, p));
             return Expression.Condition(Expression.Equal(inlinedComparerExpression, zero), e, inlinedComparerExpression);
         }
 

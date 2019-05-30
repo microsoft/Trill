@@ -424,10 +424,12 @@ namespace Microsoft.StreamProcessing
             var getter = equalityComparerDefaultProperty.GetMethod;
             var equalityComparerExpressionObject = getter.Invoke(null, null);
             var equalityComparerExpressionObjectType = equalityComparerExpressionObject.GetType();
-            var equalityComparerExpression = equalityComparerExpressionObjectType.GetTypeInfo().GetMethod("GetEqualsExpr").Invoke(equalityComparerExpressionObject, null);
-            var hashCodeExpression = equalityComparerExpressionObjectType.GetTypeInfo().GetMethod("GetGetHashCodeExpr").Invoke(equalityComparerExpressionObject, null);
-            var inlinedEqualityExpression = ParameterInliner.Inline((LambdaExpression)equalityComparerExpression, Expression.PropertyOrField(left, pName), Expression.PropertyOrField(right, pName));
-            var inlinedHashCodeExpression = ParameterInliner.Inline((LambdaExpression)hashCodeExpression, Expression.PropertyOrField(a, pName));
+            var equalityComparerExpression = (LambdaExpression)equalityComparerExpressionObjectType.GetTypeInfo()
+                .GetMethod("GetEqualsExpr").Invoke(equalityComparerExpressionObject, null);
+            var hashCodeExpression = (LambdaExpression)equalityComparerExpressionObjectType.GetTypeInfo()
+                .GetMethod("GetGetHashCodeExpr").Invoke(equalityComparerExpressionObject, null);
+            var inlinedEqualityExpression = equalityComparerExpression.ReplaceParametersInBody(Expression.PropertyOrField(left, pName), Expression.PropertyOrField(right, pName));
+            var inlinedHashCodeExpression = hashCodeExpression.ReplaceParametersInBody(Expression.PropertyOrField(a, pName));
             return Tuple.Create(inlinedEqualityExpression, inlinedHashCodeExpression);
         }
 

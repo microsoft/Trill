@@ -74,7 +74,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             Contract.Requires(aggregate != null);
             Contract.Requires(transform != null);
 
-            return new GeneratedAggregate<TInput, TState, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: aggregate.InitialState(),
                 accumulate: aggregate.Accumulate().TransformInput3(transform),
                 deaccumulate: aggregate.Deaccumulate().TransformInput3(transform),
@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         {
             Contract.Requires(func != null);
             Contract.Requires(transform != null);
-            var result = ParameterInliner.Inline(func, func.Parameters[0], func.Parameters[1], transform.Body);
+            var result = func.ReplaceParametersInBody(func.Parameters[0], func.Parameters[1], transform.Body);
             var transformParam = transform.Parameters[0];
             return Expression.Lambda<Func<T1, T2, TInput, TOutput>>(result, new[] { func.Parameters[0], func.Parameters[1], transformParam });
         }
@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             Contract.Requires(aggregate != null);
             Contract.Requires(transform != null);
 
-            return new GeneratedAggregate<TInput, TState, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: aggregate.InitialState(),
                 accumulate: aggregate.Accumulate(),
                 deaccumulate: aggregate.Deaccumulate(),
@@ -114,7 +114,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         {
             Contract.Requires(func != null);
             Contract.Requires(transform != null);
-            var result = ParameterInliner.Inline(transform, func.Body);
+            var result = transform.ReplaceParametersInBody(func.Body);
             return Expression.Lambda<Func<T1, TOutput>>(result, func.Parameters);
         }
 
@@ -136,7 +136,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<TState, long, TInput, TState>> newDeaccumulate = (oldState, timestamp, input) =>
                 CallInliner.Call(filter, input) ? CallInliner.Call(aggregate.Deaccumulate(), oldState, timestamp, input) : oldState;
 
-            return new GeneratedAggregate<TInput, TState, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: aggregate.InitialState(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -159,7 +159,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<TState, long, TInput?, TState>> newDeaccumulate = (oldState, timestamp, input) =>
                 input.HasValue ? CallInliner.Call(aggregate.Deaccumulate(), oldState, timestamp, input.Value) : oldState;
 
-            return new GeneratedAggregate<TInput?, TState, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: aggregate.InitialState(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -179,14 +179,14 @@ namespace Microsoft.StreamProcessing.Aggregates
 
             var inputType = typeof(TInput).GetTypeInfo();
             return inputType.IsClass
-                ? new GeneratedAggregate<TInput, TState, TResult>(
+                ? GeneratedAggregate.Create(
                     initialState: aggregate.InitialState(),
                     accumulate: AddSkipNullClassLogic(aggregate.Accumulate()),
                     deaccumulate: AddSkipNullClassLogic(aggregate.Deaccumulate()),
                     difference: aggregate.Difference(),
                     computeResult: aggregate.ComputeResult())
                 : inputType.IsGenericType && inputType.GetGenericTypeDefinition() == typeof(Nullable<>)
-                ? new GeneratedAggregate<TInput, TState, TResult>(
+                ? GeneratedAggregate.Create(
                     initialState: aggregate.InitialState(),
                     accumulate: AddSkipNullValueLogic(aggregate.Accumulate()),
                     deaccumulate: AddSkipNullValueLogic(aggregate.Deaccumulate()),
@@ -262,7 +262,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<NullOutputWrapper<TState>, TResult?>> newComputeResult =
                 state => state.Count == 0 ? (TResult?)null : CallInliner.Call(aggregate.ComputeResult(), state.State);
 
-            return new GeneratedAggregate<TInput, NullOutputWrapper<TState>, TResult?>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -312,7 +312,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<NullOutputWrapper<TState>, TResult>> newComputeResult =
                 state => state.Count == 0 ? default : CallInliner.Call(aggregate.ComputeResult(), state.State);
 
-            return new GeneratedAggregate<TInput, NullOutputWrapper<TState>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),

@@ -67,7 +67,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     merger,
                     CallInliner.Call(aggregate1.ComputeResult(), CallInliner.Call(target[0] as Expression<Func<StructTuple<TState1>, TState1>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -141,7 +141,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate1.ComputeResult(), CallInliner.Call(target[0] as Expression<Func<StructTuple<TState1, TState2>, TState1>>, state)),
                     CallInliner.Call(aggregate2.ComputeResult(), CallInliner.Call(target[1] as Expression<Func<StructTuple<TState1, TState2>, TState2>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -234,7 +234,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate2.ComputeResult(), CallInliner.Call(target[1] as Expression<Func<StructTuple<TState1, TState2, TState3>, TState2>>, state)),
                     CallInliner.Call(aggregate3.ComputeResult(), CallInliner.Call(target[2] as Expression<Func<StructTuple<TState1, TState2, TState3>, TState3>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -350,7 +350,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate3.ComputeResult(), CallInliner.Call(target[2] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4>, TState3>>, state)),
                     CallInliner.Call(aggregate4.ComputeResult(), CallInliner.Call(target[3] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4>, TState4>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -493,7 +493,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate4.ComputeResult(), CallInliner.Call(target[3] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5>, TState4>>, state)),
                     CallInliner.Call(aggregate5.ComputeResult(), CallInliner.Call(target[4] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5>, TState5>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -667,7 +667,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate5.ComputeResult(), CallInliner.Call(target[4] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TState5>>, state)),
                     CallInliner.Call(aggregate6.ComputeResult(), CallInliner.Call(target[5] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TState6>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -876,7 +876,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate6.ComputeResult(), CallInliner.Call(target[5] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TState6>>, state)),
                     CallInliner.Call(aggregate7.ComputeResult(), CallInliner.Call(target[6] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TState7>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -1124,7 +1124,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate7.ComputeResult(), CallInliner.Call(target[6] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TState7>>, state)),
                     CallInliner.Call(aggregate8.ComputeResult(), CallInliner.Call(target[7] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TState8>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -1415,7 +1415,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate8.ComputeResult(), CallInliner.Call(target[7] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TState8>>, state)),
                     CallInliner.Call(aggregate9.ComputeResult(), CallInliner.Call(target[8] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TState9>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -1753,7 +1753,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate9.ComputeResult(), CallInliner.Call(target[8] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TState9>>, state)),
                     CallInliner.Call(aggregate10.ComputeResult(), CallInliner.Call(target[9] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TState10>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -2142,7 +2142,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate10.ComputeResult(), CallInliner.Call(target[9] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TState10>>, state)),
                     CallInliner.Call(aggregate11.ComputeResult(), CallInliner.Call(target[10] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TState11>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -2586,7 +2586,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate11.ComputeResult(), CallInliner.Call(target[10] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TState11>>, state)),
                     CallInliner.Call(aggregate12.ComputeResult(), CallInliner.Call(target[11] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TState12>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -3089,7 +3089,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate12.ComputeResult(), CallInliner.Call(target[11] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TState12>>, state)),
                     CallInliner.Call(aggregate13.ComputeResult(), CallInliner.Call(target[12] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TState13>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -3655,7 +3655,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate13.ComputeResult(), CallInliner.Call(target[12] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TState13>>, state)),
                     CallInliner.Call(aggregate14.ComputeResult(), CallInliner.Call(target[13] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TState14>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
@@ -4288,7 +4288,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     CallInliner.Call(aggregate14.ComputeResult(), CallInliner.Call(target[13] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TState14>>, state)),
                     CallInliner.Call(aggregate15.ComputeResult(), CallInliner.Call(target[14] as Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TState15>>, state)));
 
-            return new GeneratedAggregate<TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
