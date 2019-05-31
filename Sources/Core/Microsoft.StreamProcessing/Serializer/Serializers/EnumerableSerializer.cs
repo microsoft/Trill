@@ -41,13 +41,11 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         /// <param name="value">The value.</param>
         /// <returns>Expression, serializing an enumerable.</returns>
         protected override Expression BuildSerializerSafe(Expression encoder, Expression value)
-        {
-            if (typeof(IList<TItem>).GetTypeInfo().IsAssignableFrom(typeof(TCollection).GetTypeInfo()))
-                return BuildSerializerForList(encoder, value);
-            if (typeof(ICollection<TItem>).GetTypeInfo().IsAssignableFrom(typeof(TCollection).GetTypeInfo()))
-                return BuildSerializerForCollection(encoder, value);
-            return BuildSerializerForEnumerable(encoder, value);
-        }
+            => typeof(IList<TItem>).GetTypeInfo().IsAssignableFrom(typeof(TCollection).GetTypeInfo())
+                ? BuildSerializerForList(encoder, value)
+                : typeof(ICollection<TItem>).GetTypeInfo().IsAssignableFrom(typeof(TCollection).GetTypeInfo())
+                    ? BuildSerializerForCollection(encoder, value)
+                    : BuildSerializerForEnumerable(encoder, value);
 
         private Expression BuildSerializerForEnumerable(Expression encoder, Expression value)
         {
@@ -119,7 +117,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             body.Add(EncodeArrayChunkMethod.ReplaceParametersInBody(encoder, count));
             body.Add(Expression.Assign(enumerator, GetEnumeratorExpression.ReplaceParametersInBody(value)));
 
-            LabelTarget label = Expression.Label();
+            var label = Expression.Label();
             body.Add(
                 Expression.Loop(
                     Expression.Block(

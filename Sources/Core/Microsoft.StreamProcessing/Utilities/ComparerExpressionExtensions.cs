@@ -14,10 +14,10 @@ namespace Microsoft.StreamProcessing.Internal
         {
             Contract.Requires(comparer != null);
             Contract.Requires(transform != null);
-            Expression<Comparison<TOldInput>> expression = comparer.GetCompareExpr();
+            var expression = comparer.GetCompareExpr();
             Expression<Comparison<TNewInput>> template =
                 (left, right) => CallInliner.Call(expression, CallInliner.Call(transform, left), CallInliner.Call(transform, right));
-            Expression<Comparison<TNewInput>> transformedExpression = template.InlineCalls();
+            var transformedExpression = template.InlineCalls();
             return new ComparerExpression<TNewInput>(transformedExpression);
         }
     }

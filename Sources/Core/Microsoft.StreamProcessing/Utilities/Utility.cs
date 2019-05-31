@@ -11,29 +11,9 @@ using System.Runtime.CompilerServices;
 
 namespace Microsoft.StreamProcessing
 {
-    internal delegate int RefComparison<T>(ref T x, ref T y);
-
     internal static class Utility
     {
         internal static readonly IDisposable EmptyDisposable = new NullDisposable();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool IsPowerOfTwo(long x) => (x > 0) && ((x & (x - 1)) == 0);
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "x+1", Justification = "Reviewed.")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "x-1", Justification = "Reviewed.")]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static int Power2Ceil(int x)
-        {
-            x--;
-            x |= x >> 1;
-            x |= x >> 2;
-            x |= x >> 4;
-            x |= x >> 8;
-            x |= x >> 16;
-            x++;
-            return x;
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static long SnapToLeftBoundary(this long value, long period, long offset = 0)
