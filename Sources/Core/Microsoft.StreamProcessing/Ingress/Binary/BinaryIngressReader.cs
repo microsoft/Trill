@@ -43,9 +43,7 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-        {
-            this.Observer.ProduceQueryPlan(new IngressPlanNode(this, typeof(Empty), typeof(TPayload), false, null));
-        }
+            => this.Observer.ProduceQueryPlan(new IngressPlanNode(this, typeof(Empty), typeof(TPayload), false, null));
 
         protected override IDisposable Action(IStreamObserver<TKey, TPayload> observer)
         {

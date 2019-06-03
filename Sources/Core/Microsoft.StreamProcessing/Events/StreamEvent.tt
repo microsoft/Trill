@@ -26,12 +26,10 @@ namespace Microsoft.StreamProcessing
         bool partitioned = (i == 1);
 #>
 
-    internal class <#= classNames[i] #>SyncTimeComparer<<#= genericParameters[i] #>> : IComparer<<#= classNames[i] #><<#= genericParameters[i] #>>>
+    internal sealed class <#= classNames[i] #>SyncTimeComparer<<#= genericParameters[i] #>> : IComparer<<#= classNames[i] #><<#= genericParameters[i] #>>>
     {
         public int Compare(<#= classNames[i] #><<#= genericParameters[i] #>> x, <#= classNames[i] #><<#= genericParameters[i] #>> y)
-        {
-            return x.SyncTime.CompareTo(y.SyncTime);
-        }
+            => x.SyncTime.CompareTo(y.SyncTime);
     }
 
     /// <summary>

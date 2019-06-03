@@ -39,7 +39,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         var returnTypeName = averageTypes.ReturnTypeName;
 #>
 
-    internal class Average<#= typeFriendlyName #>Aggregate : ISummableAggregate<<#= typeName #>, AverageState<<#= sumTypeName #>>, <#= returnTypeName #>>
+    internal sealed class Average<#= typeFriendlyName #>Aggregate : ISummableAggregate<<#= typeName #>, AverageState<<#= sumTypeName #>>, <#= returnTypeName #>>
     {
         public Expression<Func<AverageState<<#= sumTypeName #>>>> InitialState()
             => () => default;
@@ -60,7 +60,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (<#= returnTypeName #>)state.Sum / state.Count;
     }
 
-    internal class AverageNullable<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>?, AverageState<<#= sumTypeName #>>, <#= returnTypeName #>?>
+    internal sealed class AverageNullable<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>?, AverageState<<#= sumTypeName #>>, <#= returnTypeName #>?>
     {
         public Expression<Func<AverageState<<#= sumTypeName #>>>> InitialState()
             => () => default;
@@ -78,7 +78,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (<#= returnTypeName #>)state.Sum / state.Count : (<#= returnTypeName #>?)null;
     }
 
-    internal class AverageFilterable<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>, AverageState<<#= sumTypeName #>>, <#= returnTypeName #>?>
+    internal sealed class AverageFilterable<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>, AverageState<<#= sumTypeName #>>, <#= returnTypeName #>?>
     {
         public Expression<Func<AverageState<<#= sumTypeName #>>>> InitialState()
             => () => default;

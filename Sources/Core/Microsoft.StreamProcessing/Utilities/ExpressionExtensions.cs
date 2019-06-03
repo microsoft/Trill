@@ -1300,14 +1300,12 @@ namespace Microsoft.StreamProcessing
                 if (cr.noFields)
                 {
                     var columnarField = cr.PseudoField;
-                    Expression arrayToUse;
                     var batchField = batchType.GetTypeInfo().GetField(columnarField.Name);
                     var columnBatch = Expression.MakeMemberAccess(batchVariable, batchField);
                     var colArrayOfColumnBatch = Expression.MakeMemberAccess(columnBatch, batchField.FieldType.GetTypeInfo().GetField("col"));
-                    arrayToUse = colArrayOfColumnBatch;
                     me.parameterTableForAtomicTypes.Add(
                         parameter,
-                        new ParameterInformation { ArrayVariable = arrayToUse, IndexVariable = indexExpression, });
+                        new ParameterInformation { ArrayVariable = colArrayOfColumnBatch, IndexVariable = indexExpression, });
                 }
                 else
                 {

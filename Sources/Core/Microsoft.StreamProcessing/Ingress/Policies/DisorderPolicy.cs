@@ -18,7 +18,7 @@ namespace Microsoft.StreamProcessing
     /// Specifies how to handle out-of-order events
     /// </summary>
     [DataContract]
-    public class DisorderPolicy
+    public sealed class DisorderPolicy
     {
         [DataMember]
         internal DisorderPolicyType type;
@@ -93,10 +93,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="obj"></param>
         /// <returns></returns>
         public override bool Equals(object obj)
-        {
-            if (!(obj is DisorderPolicy d)) return false;
-            return this.type == d.type && this.reorderLatency == d.reorderLatency;
-        }
+            => (obj is DisorderPolicy d) && this.type == d.type && this.reorderLatency == d.reorderLatency;
 
         /// <summary>
         /// Provides a hash code for the Disorder Policy object.

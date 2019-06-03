@@ -29,7 +29,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public ulong Count;
     }
 
-    internal class AverageSByteAggregate : ISummableAggregate<sbyte, AverageState<long>, double>
+    internal sealed class AverageSByteAggregate : ISummableAggregate<sbyte, AverageState<long>, double>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -50,7 +50,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableSByteAggregate : IAggregate<sbyte?, AverageState<long>, double?>
+    internal sealed class AverageNullableSByteAggregate : IAggregate<sbyte?, AverageState<long>, double?>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -68,7 +68,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableSByteAggregate : IAggregate<sbyte, AverageState<long>, double?>
+    internal sealed class AverageFilterableSByteAggregate : IAggregate<sbyte, AverageState<long>, double?>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -86,7 +86,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageShortAggregate : ISummableAggregate<short, AverageState<long>, double>
+    internal sealed class AverageShortAggregate : ISummableAggregate<short, AverageState<long>, double>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -107,7 +107,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableShortAggregate : IAggregate<short?, AverageState<long>, double?>
+    internal sealed class AverageNullableShortAggregate : IAggregate<short?, AverageState<long>, double?>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -125,7 +125,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableShortAggregate : IAggregate<short, AverageState<long>, double?>
+    internal sealed class AverageFilterableShortAggregate : IAggregate<short, AverageState<long>, double?>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -143,7 +143,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageIntAggregate : ISummableAggregate<int, AverageState<long>, double>
+    internal sealed class AverageIntAggregate : ISummableAggregate<int, AverageState<long>, double>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -164,7 +164,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableIntAggregate : IAggregate<int?, AverageState<long>, double?>
+    internal sealed class AverageNullableIntAggregate : IAggregate<int?, AverageState<long>, double?>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -182,7 +182,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableIntAggregate : IAggregate<int, AverageState<long>, double?>
+    internal sealed class AverageFilterableIntAggregate : IAggregate<int, AverageState<long>, double?>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -200,7 +200,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageLongAggregate : ISummableAggregate<long, AverageState<long>, double>
+    internal sealed class AverageLongAggregate : ISummableAggregate<long, AverageState<long>, double>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -221,7 +221,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableLongAggregate : IAggregate<long?, AverageState<long>, double?>
+    internal sealed class AverageNullableLongAggregate : IAggregate<long?, AverageState<long>, double?>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -239,7 +239,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableLongAggregate : IAggregate<long, AverageState<long>, double?>
+    internal sealed class AverageFilterableLongAggregate : IAggregate<long, AverageState<long>, double?>
     {
         public Expression<Func<AverageState<long>>> InitialState()
             => () => default;
@@ -257,7 +257,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageByteAggregate : ISummableAggregate<byte, AverageState<ulong>, double>
+    internal sealed class AverageByteAggregate : ISummableAggregate<byte, AverageState<ulong>, double>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -278,7 +278,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableByteAggregate : IAggregate<byte?, AverageState<ulong>, double?>
+    internal sealed class AverageNullableByteAggregate : IAggregate<byte?, AverageState<ulong>, double?>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -296,7 +296,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableByteAggregate : IAggregate<byte, AverageState<ulong>, double?>
+    internal sealed class AverageFilterableByteAggregate : IAggregate<byte, AverageState<ulong>, double?>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -314,7 +314,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageUShortAggregate : ISummableAggregate<ushort, AverageState<ulong>, double>
+    internal sealed class AverageUShortAggregate : ISummableAggregate<ushort, AverageState<ulong>, double>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -335,7 +335,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableUShortAggregate : IAggregate<ushort?, AverageState<ulong>, double?>
+    internal sealed class AverageNullableUShortAggregate : IAggregate<ushort?, AverageState<ulong>, double?>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -353,7 +353,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableUShortAggregate : IAggregate<ushort, AverageState<ulong>, double?>
+    internal sealed class AverageFilterableUShortAggregate : IAggregate<ushort, AverageState<ulong>, double?>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -371,7 +371,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageUIntAggregate : ISummableAggregate<uint, AverageState<ulong>, double>
+    internal sealed class AverageUIntAggregate : ISummableAggregate<uint, AverageState<ulong>, double>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -392,7 +392,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableUIntAggregate : IAggregate<uint?, AverageState<ulong>, double?>
+    internal sealed class AverageNullableUIntAggregate : IAggregate<uint?, AverageState<ulong>, double?>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -410,7 +410,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableUIntAggregate : IAggregate<uint, AverageState<ulong>, double?>
+    internal sealed class AverageFilterableUIntAggregate : IAggregate<uint, AverageState<ulong>, double?>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -428,7 +428,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageULongAggregate : ISummableAggregate<ulong, AverageState<ulong>, double>
+    internal sealed class AverageULongAggregate : ISummableAggregate<ulong, AverageState<ulong>, double>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -449,7 +449,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableULongAggregate : IAggregate<ulong?, AverageState<ulong>, double?>
+    internal sealed class AverageNullableULongAggregate : IAggregate<ulong?, AverageState<ulong>, double?>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -467,7 +467,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableULongAggregate : IAggregate<ulong, AverageState<ulong>, double?>
+    internal sealed class AverageFilterableULongAggregate : IAggregate<ulong, AverageState<ulong>, double?>
     {
         public Expression<Func<AverageState<ulong>>> InitialState()
             => () => default;
@@ -485,7 +485,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFloatAggregate : ISummableAggregate<float, AverageState<float>, float>
+    internal sealed class AverageFloatAggregate : ISummableAggregate<float, AverageState<float>, float>
     {
         public Expression<Func<AverageState<float>>> InitialState()
             => () => default;
@@ -506,7 +506,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (float)state.Sum / state.Count;
     }
 
-    internal class AverageNullableFloatAggregate : IAggregate<float?, AverageState<float>, float?>
+    internal sealed class AverageNullableFloatAggregate : IAggregate<float?, AverageState<float>, float?>
     {
         public Expression<Func<AverageState<float>>> InitialState()
             => () => default;
@@ -524,7 +524,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (float)state.Sum / state.Count : (float?)null;
     }
 
-    internal class AverageFilterableFloatAggregate : IAggregate<float, AverageState<float>, float?>
+    internal sealed class AverageFilterableFloatAggregate : IAggregate<float, AverageState<float>, float?>
     {
         public Expression<Func<AverageState<float>>> InitialState()
             => () => default;
@@ -542,7 +542,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (float)state.Sum / state.Count : (float?)null;
     }
 
-    internal class AverageDoubleAggregate : ISummableAggregate<double, AverageState<double>, double>
+    internal sealed class AverageDoubleAggregate : ISummableAggregate<double, AverageState<double>, double>
     {
         public Expression<Func<AverageState<double>>> InitialState()
             => () => default;
@@ -563,7 +563,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableDoubleAggregate : IAggregate<double?, AverageState<double>, double?>
+    internal sealed class AverageNullableDoubleAggregate : IAggregate<double?, AverageState<double>, double?>
     {
         public Expression<Func<AverageState<double>>> InitialState()
             => () => default;
@@ -581,7 +581,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableDoubleAggregate : IAggregate<double, AverageState<double>, double?>
+    internal sealed class AverageFilterableDoubleAggregate : IAggregate<double, AverageState<double>, double?>
     {
         public Expression<Func<AverageState<double>>> InitialState()
             => () => default;
@@ -599,7 +599,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageDecimalAggregate : ISummableAggregate<decimal, AverageState<decimal>, decimal>
+    internal sealed class AverageDecimalAggregate : ISummableAggregate<decimal, AverageState<decimal>, decimal>
     {
         public Expression<Func<AverageState<decimal>>> InitialState()
             => () => default;
@@ -620,7 +620,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (decimal)state.Sum / state.Count;
     }
 
-    internal class AverageNullableDecimalAggregate : IAggregate<decimal?, AverageState<decimal>, decimal?>
+    internal sealed class AverageNullableDecimalAggregate : IAggregate<decimal?, AverageState<decimal>, decimal?>
     {
         public Expression<Func<AverageState<decimal>>> InitialState()
             => () => default;
@@ -638,7 +638,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (decimal)state.Sum / state.Count : (decimal?)null;
     }
 
-    internal class AverageFilterableDecimalAggregate : IAggregate<decimal, AverageState<decimal>, decimal?>
+    internal sealed class AverageFilterableDecimalAggregate : IAggregate<decimal, AverageState<decimal>, decimal?>
     {
         public Expression<Func<AverageState<decimal>>> InitialState()
             => () => default;
@@ -656,7 +656,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (decimal)state.Sum / state.Count : (decimal?)null;
     }
 
-    internal class AverageBigIntegerAggregate : ISummableAggregate<BigInteger, AverageState<BigInteger>, double>
+    internal sealed class AverageBigIntegerAggregate : ISummableAggregate<BigInteger, AverageState<BigInteger>, double>
     {
         public Expression<Func<AverageState<BigInteger>>> InitialState()
             => () => default;
@@ -677,7 +677,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (double)state.Sum / state.Count;
     }
 
-    internal class AverageNullableBigIntegerAggregate : IAggregate<BigInteger?, AverageState<BigInteger>, double?>
+    internal sealed class AverageNullableBigIntegerAggregate : IAggregate<BigInteger?, AverageState<BigInteger>, double?>
     {
         public Expression<Func<AverageState<BigInteger>>> InitialState()
             => () => default;
@@ -695,7 +695,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageFilterableBigIntegerAggregate : IAggregate<BigInteger, AverageState<BigInteger>, double?>
+    internal sealed class AverageFilterableBigIntegerAggregate : IAggregate<BigInteger, AverageState<BigInteger>, double?>
     {
         public Expression<Func<AverageState<BigInteger>>> InitialState()
             => () => default;
@@ -713,7 +713,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (double)state.Sum / state.Count : (double?)null;
     }
 
-    internal class AverageComplexAggregate : ISummableAggregate<Complex, AverageState<Complex>, Complex>
+    internal sealed class AverageComplexAggregate : ISummableAggregate<Complex, AverageState<Complex>, Complex>
     {
         public Expression<Func<AverageState<Complex>>> InitialState()
             => () => default;
@@ -734,7 +734,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => (Complex)state.Sum / state.Count;
     }
 
-    internal class AverageNullableComplexAggregate : IAggregate<Complex?, AverageState<Complex>, Complex?>
+    internal sealed class AverageNullableComplexAggregate : IAggregate<Complex?, AverageState<Complex>, Complex?>
     {
         public Expression<Func<AverageState<Complex>>> InitialState()
             => () => default;
@@ -752,7 +752,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             => state => state.Count != 0 ? (Complex)state.Sum / state.Count : (Complex?)null;
     }
 
-    internal class AverageFilterableComplexAggregate : IAggregate<Complex, AverageState<Complex>, Complex?>
+    internal sealed class AverageFilterableComplexAggregate : IAggregate<Complex, AverageState<Complex>, Complex?>
     {
         public Expression<Func<AverageState<Complex>>> InitialState()
             => () => default;

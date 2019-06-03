@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 
 namespace Microsoft.StreamProcessing
 {
-    internal class DiagnosticObservable<TPayload> : IObservable<OutOfOrderStreamEvent<TPayload>>, IObserver<OutOfOrderStreamEvent<TPayload>>, IDisposable
+    internal sealed class DiagnosticObservable<TPayload> : IObservable<OutOfOrderStreamEvent<TPayload>>, IObserver<OutOfOrderStreamEvent<TPayload>>, IDisposable
     {
         private List<IObserver<OutOfOrderStreamEvent<TPayload>>> observers = new List<IObserver<OutOfOrderStreamEvent<TPayload>>>();
 
@@ -42,9 +42,7 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 
     /// <summary>
@@ -80,12 +78,10 @@ namespace Microsoft.StreamProcessing
         /// <param name="delta">The amount of time that the event was out of order.</param>
         /// <returns></returns>
         public static OutOfOrderStreamEvent<TPayload> Create<TPayload>(StreamEvent<TPayload> e, long? delta)
-        {
-            return new OutOfOrderStreamEvent<TPayload> { Event = e, TimeAdjustment = delta };
-        }
+            => new OutOfOrderStreamEvent<TPayload> { Event = e, TimeAdjustment = delta };
     }
 
-    internal class PartitionedDiagnosticObservable<TKey, TPayload> : IObservable<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>, IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>, IDisposable
+    internal sealed class PartitionedDiagnosticObservable<TKey, TPayload> : IObservable<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>, IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>, IDisposable
     {
         private List<IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>> observers = new List<IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>>();
 
@@ -119,9 +115,7 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 
     /// <summary>
@@ -159,9 +153,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="delta">The amount of time that the event was out of order.</param>
         /// <returns></returns>
         public static OutOfOrderPartitionedStreamEvent<TKey, TPayload> Create<TKey, TPayload>(PartitionedStreamEvent<TKey, TPayload> e, long? delta)
-        {
-            return new OutOfOrderPartitionedStreamEvent<TKey, TPayload> { Event = e, TimeAdjustment = delta };
-        }
+            => new OutOfOrderPartitionedStreamEvent<TKey, TPayload> { Event = e, TimeAdjustment = delta };
     }
 
 }

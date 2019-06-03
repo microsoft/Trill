@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Microsoft.StreamProcessing
 {
-    internal class FusedObservable<TKey, TInput, TPayload, TResult, TOutput> : IObservable<TOutput>
+    internal sealed class FusedObservable<TKey, TInput, TPayload, TResult, TOutput> : IObservable<TOutput>
     {
         private readonly IObservable<TInput> observable;
         private readonly ParameterExpression inputParameter;
