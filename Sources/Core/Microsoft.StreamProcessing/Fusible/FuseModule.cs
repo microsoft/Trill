@@ -53,7 +53,7 @@ namespace Microsoft.StreamProcessing
             {
                 case ExpressionCategory.Select:
                 {
-                    var body = ParameterSubstituter.Replace(selector.Parameters[0], prev.expression.Body, selector.Body);
+                    var body = selector.ReplaceParametersInBody(prev.expression.Body);
 
                     prev.outputType = typeof(TResult);
                     prev.expression = Expression.Lambda(body, prev.expression.Parameters);
@@ -144,20 +144,20 @@ namespace Microsoft.StreamProcessing
                 case ExpressionCategory.Select:
                 {
                     var body = ParameterSubstituter.Replace(selector.Parameters[1], prev.expression.Body, selector.Body);
-                    IEnumerable<ParameterExpression> payloadParameter = prev.expression.Parameters.Last().Yield();
+                    var payloadParameter = prev.expression.Parameters.Last().Yield();
 
-                    IEnumerable<ParameterExpression> startEdgeParameter = prev.hasStartEdge
+                    var startEdgeParameter = prev.hasStartEdge
                         ? prev.expression.Parameters[0].Yield()
                         : Enumerable.Empty<ParameterExpression>();
 
-                    IEnumerable<ParameterExpression> keyParameter = null;
+                    IEnumerable<ParameterExpression> keyParameter;
                     if (prev.hasKey)
                     {
                         var key = prev.expression.Parameters[prev.expression.Parameters.Count - 2];
                         body = ParameterSubstituter.Replace(selector.Parameters[0], key, body);
                         keyParameter = key.Yield();
                     }
-                    else keyParameter = keyParameter = selector.Parameters[0].Yield();
+                    else keyParameter = selector.Parameters[0].Yield();
 
                     prev.outputType = typeof(TResult);
                     prev.hasKey = true;
@@ -205,9 +205,9 @@ namespace Microsoft.StreamProcessing
                 case ExpressionCategory.Select:
                 {
                     var body = ParameterSubstituter.Replace(selector.Parameters[2], prev.expression.Body, selector.Body);
-                    IEnumerable<ParameterExpression> payloadParameter = prev.expression.Parameters.Last().Yield();
+                    var payloadParameter = prev.expression.Parameters.Last().Yield();
 
-                    IEnumerable<ParameterExpression> startEdgeParameter = null;
+                    IEnumerable<ParameterExpression> startEdgeParameter;
                     if (prev.hasStartEdge)
                     {
                         var startEdge = prev.expression.Parameters[0];
@@ -216,7 +216,7 @@ namespace Microsoft.StreamProcessing
                     }
                     else startEdgeParameter = selector.Parameters[0].Yield();
 
-                    IEnumerable<ParameterExpression> keyParameter = null;
+                    IEnumerable<ParameterExpression> keyParameter;
                     if (prev.hasKey)
                     {
                         var key = prev.expression.Parameters[prev.expression.Parameters.Count - 2];
@@ -268,7 +268,7 @@ namespace Microsoft.StreamProcessing
             {
                 case ExpressionCategory.Select:
                 {
-                    var body = ParameterSubstituter.Replace(selector.Parameters[0], prev.expression.Body, selector.Body);
+                    var body = selector.ReplaceParametersInBody(prev.expression.Body);
 
                     prev.category = ExpressionCategory.SelectMany;
                     prev.outputType = typeof(TResult);
@@ -359,20 +359,20 @@ namespace Microsoft.StreamProcessing
                 case ExpressionCategory.Select:
                 {
                     var body = ParameterSubstituter.Replace(selector.Parameters[1], prev.expression.Body, selector.Body);
-                    IEnumerable<ParameterExpression> payloadParameter = prev.expression.Parameters.Last().Yield();
+                    var payloadParameter = prev.expression.Parameters.Last().Yield();
 
-                    IEnumerable<ParameterExpression> startEdgeParameter = prev.hasStartEdge
+                    var startEdgeParameter = prev.hasStartEdge
                         ? prev.expression.Parameters[0].Yield()
                         : Enumerable.Empty<ParameterExpression>();
 
-                    IEnumerable<ParameterExpression> keyParameter = null;
+                    IEnumerable<ParameterExpression> keyParameter;
                     if (prev.hasKey)
                     {
                         var key = prev.expression.Parameters[prev.expression.Parameters.Count - 2];
                         body = ParameterSubstituter.Replace(selector.Parameters[0], key, body);
                         keyParameter = key.Yield();
                     }
-                    else keyParameter = keyParameter = selector.Parameters[0].Yield();
+                    else keyParameter = selector.Parameters[0].Yield();
 
                     prev.category = ExpressionCategory.SelectMany;
                     prev.outputType = typeof(TResult);
@@ -421,9 +421,9 @@ namespace Microsoft.StreamProcessing
                 case ExpressionCategory.Select:
                 {
                     var body = ParameterSubstituter.Replace(selector.Parameters[2], prev.expression.Body, selector.Body);
-                    IEnumerable<ParameterExpression> payloadParameter = prev.expression.Parameters.Last().Yield();
+                    var payloadParameter = prev.expression.Parameters.Last().Yield();
 
-                    IEnumerable<ParameterExpression> startEdgeParameter = null;
+                    IEnumerable<ParameterExpression> startEdgeParameter;
                     if (prev.hasStartEdge)
                     {
                         var startEdge = prev.expression.Parameters[0];
@@ -432,7 +432,7 @@ namespace Microsoft.StreamProcessing
                     }
                     else startEdgeParameter = selector.Parameters[0].Yield();
 
-                    IEnumerable<ParameterExpression> keyParameter = null;
+                    IEnumerable<ParameterExpression> keyParameter;
                     if (prev.hasKey)
                     {
                         var key = prev.expression.Parameters[prev.expression.Parameters.Count - 2];
@@ -483,7 +483,7 @@ namespace Microsoft.StreamProcessing
 
             var prev = this.expressions[this.expressions.Count - 1];
             var parameter = prev.expression.Parameters[0];
-            var replaced = ParameterSubstituter.Replace(expression.Parameters[0], parameter, expression.Body);
+            var replaced = expression.ReplaceParametersInBody(parameter);
             prev.expression = Expression.Lambda<Func<TPayload, bool>>(Expression.And(prev.expression.Body, replaced), parameter);
             return this;
         }
@@ -528,7 +528,7 @@ namespace Microsoft.StreamProcessing
 
             var keyParam = action.Parameters[3];
             var parameter = action.Parameters[2];
-            Expression currentStatement = action.Body;
+            var currentStatement = action.Body;
 
             for (int index = this.expressions.Count - 1; index >= 0; index--)
             {

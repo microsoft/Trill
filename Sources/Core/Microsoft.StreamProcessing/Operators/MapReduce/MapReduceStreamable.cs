@@ -17,7 +17,9 @@ namespace Microsoft.StreamProcessing
         private readonly Func<IStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>, IStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TBind>> reducer;
         private readonly Expression<Func<TReduceKey, TBind, TOutput>> resultSelector;
         private readonly bool leftAsymmetric;
-        private bool isMulticore;
+        private readonly bool isMulticore;
+        private readonly bool reduceInMap;
+        private readonly IComparerExpression<TMapInputLeft> sprayComparer = null;
 
         internal MapReduceStreamable(
             IStreamable<TMapKey, TMapInputLeft> sourceLeft,
@@ -41,7 +43,12 @@ namespace Microsoft.StreamProcessing
             this.resultSelector = resultSelector;
             this.leftAsymmetric = leftAsymmetric;
 
-            ProcessProperties();
+            this.reduceInMap = this.sourceLeft.Properties.CanSpray(this.keySelector) && this.sourceLeft.Properties.Derive(a => this.mapper(a, null)).CanSpray(this.keySelector);
+            if (this.reduceInMap)
+            {
+                this.sprayComparer = this.sourceLeft.Properties.GetSprayComparerExpression(this.keySelector);
+            }
+            this.isMulticore = this.sourceLeft.Properties.IsMulticore;
         }
 
         internal MapReduceStreamable(
@@ -52,19 +59,6 @@ namespace Microsoft.StreamProcessing
             bool leftAsymmetric = false)
             : this(sourceLeft, sourceRight, mapper, keySelector, null, null, leftAsymmetric)
         { }
-
-        private bool reduceInMap;
-        private IComparerExpression<TMapInputLeft> sprayComparer = null;
-
-        internal void ProcessProperties()
-        {
-            this.reduceInMap = this.sourceLeft.Properties.CanSpray(this.keySelector) && this.sourceLeft.Properties.Derive(a => this.mapper(a, null)).CanSpray(this.keySelector);
-            if (this.reduceInMap)
-            {
-                this.sprayComparer = this.sourceLeft.Properties.GetSprayComparerExpression(this.keySelector);
-            }
-            this.isMulticore = this.sourceLeft.Properties.IsMulticore;
-        }
 
         public override IDisposable Subscribe(IStreamObserver<TMapKey, TOutput> observer)
         {
@@ -215,7 +209,9 @@ namespace Microsoft.StreamProcessing
         private readonly Func<IStreamable<TReduceKey, TReduceInput>, IStreamable<TReduceKey, TBind>> reducer;
         private readonly Expression<Func<TReduceKey, TBind, TOutput>> resultSelector;
         private readonly bool leftAsymmetric;
-        private bool isMulticore;
+        private readonly bool isMulticore;
+        private readonly bool reduceInMap;
+        private readonly IComparerExpression<TMapInputLeft> sprayComparer = null;
 
         internal MapReduceStreamable(
             IStreamable<Empty, TMapInputLeft> sourceLeft,
@@ -239,7 +235,12 @@ namespace Microsoft.StreamProcessing
             this.resultSelector = resultSelector;
             this.leftAsymmetric = leftAsymmetric;
 
-            ProcessProperties();
+            this.reduceInMap = this.sourceLeft.Properties.CanSpray(this.keySelector) && this.sourceLeft.Properties.Derive(a => this.mapper(a, null)).CanSpray(this.keySelector);
+            if (this.reduceInMap)
+            {
+                this.sprayComparer = this.sourceLeft.Properties.GetSprayComparerExpression(this.keySelector);
+            }
+            this.isMulticore = this.sourceLeft.Properties.IsMulticore;
         }
 
         internal MapReduceStreamable(
@@ -250,19 +251,6 @@ namespace Microsoft.StreamProcessing
             bool leftAsymmetric = false)
             : this(sourceLeft, sourceRight, mapper, keySelector, null, null, leftAsymmetric)
         { }
-
-        private bool reduceInMap;
-        private IComparerExpression<TMapInputLeft> sprayComparer = null;
-
-        internal void ProcessProperties()
-        {
-            this.reduceInMap = this.sourceLeft.Properties.CanSpray(this.keySelector) && this.sourceLeft.Properties.Derive(a => this.mapper(a, null)).CanSpray(this.keySelector);
-            if (this.reduceInMap)
-            {
-                this.sprayComparer = this.sourceLeft.Properties.GetSprayComparerExpression(this.keySelector);
-            }
-            this.isMulticore = this.sourceLeft.Properties.IsMulticore;
-        }
 
         public override IDisposable Subscribe(IStreamObserver<Empty, TOutput> observer)
         {

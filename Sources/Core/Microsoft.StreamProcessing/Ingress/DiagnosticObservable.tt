@@ -19,7 +19,7 @@ foreach (var partitionString in new string[] { string.Empty, "Partitioned" }) {
     string genericArguments = string.IsNullOrEmpty(partitionString) ? "TPayload" : "TKey, TPayload";
     string keyType = string.IsNullOrEmpty(partitionString) ? "Empty" : "PartitionKey<TKey>";
 #>
-    internal class <#= partitionString #>DiagnosticObservable<<#= genericArguments #>> : IObservable<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>, IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>, IDisposable
+    internal sealed class <#= partitionString #>DiagnosticObservable<<#= genericArguments #>> : IObservable<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>, IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>, IDisposable
     {
         private List<IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>> observers = new List<IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>>>>();
 
@@ -53,9 +53,7 @@ foreach (var partitionString in new string[] { string.Empty, "Partitioned" }) {
             }
         }
 
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 
     /// <summary>
@@ -97,9 +95,7 @@ foreach (var partitionString in new string[] { string.Empty, "Partitioned" }) {
         /// <param name="delta">The amount of time that the event was out of order.</param>
         /// <returns></returns>
         public static OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>> Create<<#= genericArguments #>>(<#= partitionString #>StreamEvent<<#= genericArguments #>> e, long? delta)
-        {
-            return new OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>> { Event = e, TimeAdjustment = delta };
-        }
+            => new OutOfOrder<#= partitionString #>StreamEvent<<#= genericArguments #>> { Event = e, TimeAdjustment = delta };
     }
 
 <# } #>

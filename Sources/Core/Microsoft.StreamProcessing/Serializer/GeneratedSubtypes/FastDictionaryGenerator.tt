@@ -71,8 +71,8 @@ foreach (var t in new[] {string.Empty, "2", "3"})
 #>
     internal partial class GeneratedFastDictionary
     {
-        private string classname;
-        private string dictType;
+        private readonly string classname;
+        private readonly string dictType;
         public GeneratedFastDictionary(string name, string dictType)
         {
             this.classname = name;

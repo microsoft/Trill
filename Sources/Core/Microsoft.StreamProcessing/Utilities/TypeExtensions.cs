@@ -188,11 +188,9 @@ namespace Microsoft.StreamProcessing
         {
             Contract.Requires(type != null);
 
-            if (type.IsAnonymousTypeName() || type.GetTypeInfo().Assembly.IsDynamic) return true;
-            if (!type.GetTypeInfo().IsGenericType)
-                return false;
-            else
-                return type.GenericTypeArguments.Any(t => t.IsAnonymousType());
+            return type.IsAnonymousTypeName()
+                || type.GetTypeInfo().Assembly.IsDynamic
+                || (type.GetTypeInfo().IsGenericType && type.GenericTypeArguments.Any(t => t.IsAnonymousType()));
         }
 
         public static bool HasSupportedParameterizedConstructor(this Type type)
@@ -296,7 +294,7 @@ namespace Microsoft.StreamProcessing
             return list;
         }
 
-        public static bool MemoryPoolHasGetMethodFor(this Type type) => (type == typeof(int) || type == typeof(long) || type == typeof(string));
+        public static bool MemoryPoolHasGetMethodFor(this Type type) => type == typeof(int) || type == typeof(long) || type == typeof(string);
 
         /// <summary>
         /// Returns true iff <paramref name="keyType"/> is a type for which
@@ -309,6 +307,7 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public static bool KeyTypeNeedsGeneratedMemoryPool(this Type keyType)
         {
+            if (keyType == typeof(Empty)) return false;
             if (keyType.GetTypeInfo().IsGenericType)
             {
                 if (keyType.GetGenericTypeDefinition() != typeof(CompoundGroupKey<,>)) return true;
@@ -319,9 +318,7 @@ namespace Microsoft.StreamProcessing
                     return outerKeyType.KeyTypeNeedsGeneratedMemoryPool() || innerKeyType.KeyTypeNeedsGeneratedMemoryPool();
                 }
             }
-            return keyType == typeof(Empty)
-                ? false
-                : keyType.NeedGeneratedMemoryPool();
+            return keyType.NeedGeneratedMemoryPool();
         }
 
         /// <summary>
@@ -370,14 +367,15 @@ namespace Microsoft.StreamProcessing
 
             // If any public instance fields are anonymous types, then they
             // cannot be represented as columns.
-            var fields = type.GetTypeInfo().GetFields(BindingFlags.Public | BindingFlags.Instance);
+            var typeInfo = type.GetTypeInfo();
+            var fields = typeInfo.GetFields(BindingFlags.Public | BindingFlags.Instance);
             if (fields.Any(f => f.FieldType.IsAnonymousTypeName())) return false;
 
             // However, an anonymous type can be decomposed into its "fields" (NOTE: anonymous types
             // have public properties, not fields) as long as they themselves are not anonymous types.
             if (type.IsAnonymousTypeName())
             {
-                var props = type.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                var props = typeInfo.GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 return props.All(p => !p.PropertyType.IsAnonymousTypeName());
             }
 
@@ -385,15 +383,14 @@ namespace Microsoft.StreamProcessing
             // since it has to have a reference to the type in the code.
             // Need to check this after the anonymous test because anonymous
             // types say they are not visible.
-            if (!type.GetTypeInfo().IsVisible) return false;
+            if (!type.IsVisible) return false;
 
             // The type must be an "open" container: that is, its state is just the value
             // of all of its fields and autoprops. Otherwise we cannot guarantee that we can
             // reconstitute a value from its columnar representation.
-            if (!type.GetTypeInfo().IsPrimitive)
+            if (!type.IsPrimitive)
             {
                 var allFields = type
-                    .GetTypeInfo()
                     .GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
                     .Where(f => !(f.Name.StartsWith("<", StringComparison.Ordinal) && f.Name.EndsWith(">k__BackingField", StringComparison.Ordinal))) // ignore backing fields for autoprops
                     ;
@@ -401,7 +398,7 @@ namespace Microsoft.StreamProcessing
 
                 // Check only the autoprops: any non-autoprop will not be able to depend on non-public fields
                 // due to the check for non-public fields.
-                var allProperties = type.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                var allProperties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 foreach (var p in allProperties)
                 {
                     var getMethod = p.GetMethod;
@@ -416,17 +413,17 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (type.GetTypeInfo().IsValueType) // we can always create instances of a struct
+            if (type.IsValueType) // we can always create instances of a struct
                 return true;
 
-            if (type.GetTypeInfo().IsAbstract || type.GetTypeInfo().IsInterface) // until we determine how we do columnar over a polymorphic set, we cannot do columnar over an abstract type or an interface
+            if (type.IsAbstract || type.IsInterface) // until we determine how we do columnar over a polymorphic set, we cannot do columnar over an abstract type or an interface
                 return false;
 
             // otherwise it must have a nullary ctor that can be called
             // when a query cannot be transformed to a columnar representation
             // (and so instances of the type must be dynamically generated
             // as part of the query processing)
-            var ctor = type.GetTypeInfo().GetConstructor(Type.EmptyTypes);
+            var ctor = type.GetConstructor(Type.EmptyTypes);
             return ctor != null;
         }
 
@@ -537,20 +534,41 @@ namespace Microsoft.StreamProcessing
             return b;
         }
 
-        public static bool ImplementsIEqualityComparerExpression(this Type t)
-            => t.GetTypeInfo()
-                .GetInterfaces()
+        public static bool IsCompoundGroupKey(this TypeInfo t, out Type outerType, out Type innerType)
+        {
+            if (t.IsGenericType && t.GenericTypeArguments.Length == 2 && t.GetGenericTypeDefinition() == typeof(CompoundGroupKey<,>))
+            {
+                outerType = t.GenericTypeArguments[0];
+                innerType = t.GenericTypeArguments[1];
+                return true;
+            }
+            else
+            {
+                outerType = default;
+                innerType = default;
+                return false;
+            }
+        }
+
+        public static bool ImplementsIEqualityComparerExpression(this TypeInfo t)
+            => t.GetInterfaces()
                 .Any(i => i.Namespace.Equals("Microsoft.StreamProcessing") && i.Name.Equals("IEqualityComparerExpression`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
 
-        public static bool ImplementsIEqualityComparer(this Type t)
-            => t.GetTypeInfo()
-                .GetInterfaces()
+        public static bool ImplementsIEqualityComparer(this TypeInfo t)
+            => t.GetInterfaces()
                 .Any(i => i.Namespace.Equals("System.Collections.Generic") && i.Name.Equals("IEqualityComparer`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
 
-        public static bool ImplementsIEquatable(this Type t)
-            => t.GetTypeInfo()
-                .GetInterfaces()
+        public static bool ImplementsIComparer(this TypeInfo t)
+            => t.GetInterfaces()
+                .Any(i => i.Namespace.Equals("System.Collections.Generic") && i.Name.Equals("IComparer`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
+
+        public static bool ImplementsIEquatable(this TypeInfo t)
+            => t.GetInterfaces()
                 .Any(i => i.Namespace.Equals("System") && i.Name.Equals("IEquatable`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
+
+        public static bool ImplementsIComparable(this TypeInfo t)
+            => t.GetInterfaces()
+                .Any(i => i.Namespace.Equals("System") && i.Name.Equals("IComparable`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
 
         #region Borrowed from Roslyn
 

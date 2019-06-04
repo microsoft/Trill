@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing.Sharding
         }
     }
 
-    internal class ShardedCacheObserver<TKey, TPayload> : IObserver<StreamMessage<TKey, TPayload>>, IDisposable
+    internal sealed class ShardedCacheObserver<TKey, TPayload> : IObserver<StreamMessage<TKey, TPayload>>, IDisposable
     {
         private readonly StreamCache<TKey, TPayload> cache;
         private readonly StreamProperties<TKey, TPayload> sourceProps;

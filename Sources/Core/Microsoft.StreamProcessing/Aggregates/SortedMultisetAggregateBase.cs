@@ -11,18 +11,17 @@ namespace Microsoft.StreamProcessing.Aggregates
 {
     internal abstract class SortedMultisetAggregateBase<T, R> : ISummableAggregate<T, SortedMultiSet<T>, R>
     {
-        private readonly Expression<Func<SortedDictionary<T, long>>> generator;
-
         protected SortedMultisetAggregateBase(IComparerExpression<T> comparer, QueryContainer container)
-            => this.generator = comparer.CreateSortedDictionaryGenerator<T, long>(container);
-
-        public Expression<Func<SortedMultiSet<T>>> InitialState()
         {
+            var generator = comparer.CreateSortedDictionaryGenerator<T, long>(container);
             Expression<Func<Func<SortedDictionary<T, long>>, SortedMultiSet<T>>> template
                 = (g) => new SortedMultiSet<T>(g);
-            var replaced = template.ReplaceParametersInBody(this.generator);
-            return Expression.Lambda<Func<SortedMultiSet<T>>>(replaced);
+            var replaced = template.ReplaceParametersInBody(generator);
+            initialState = Expression.Lambda<Func<SortedMultiSet<T>>>(replaced);
         }
+
+        private readonly Expression<Func<SortedMultiSet<T>>> initialState;
+        public Expression<Func<SortedMultiSet<T>>> InitialState() => initialState;
 
         private static readonly Expression<Func<SortedMultiSet<T>, long, T, SortedMultiSet<T>>> acc
             = (set, timestamp, input) => set.Add(input);

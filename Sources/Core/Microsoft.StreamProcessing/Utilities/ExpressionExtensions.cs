@@ -71,7 +71,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Given an expression, <paramref name="func"/>, that is a LambdaExpression,
+        /// Given an expression, <paramref name="function"/>, that is a LambdaExpression,
         /// returns the body of the lambda
         /// with all references to parameters replaced by the corresponding string from
         /// <paramref name="arguments"/>.
@@ -79,12 +79,10 @@ namespace Microsoft.StreamProcessing
         /// so if it has any side-effects, this changes the semantics
         /// from applying the function to the arguments.
         /// </summary>
-        public static string Inline(this Expression func, params string[] arguments)
+        public static string Inline(this LambdaExpression function, params string[] arguments)
         {
-            Contract.Requires(func != null);
-            Contract.Requires(func is LambdaExpression);
+            Contract.Requires(function != null);
 
-            var function = (LambdaExpression)func;
             var map = new Dictionary<ParameterExpression, string>(arguments.Length);
             for (int i = 0; i < arguments.Length; i++)
             {
@@ -121,40 +119,8 @@ namespace Microsoft.StreamProcessing
                 ? Expression.Lambda(body.Operand, lambda.Parameters)
                 : lambda;
 
-        public static Expression ReplaceParametersInBody(this LambdaExpression lambda, Expression exp0)
-            => ParameterSubstituter.Replace(lambda.Parameters[0], exp0, lambda.Body);
-
-        public static Expression ReplaceParametersInBody(this LambdaExpression lambda, Expression exp0, Expression exp1)
-            => ParameterSubstituter.Replace(lambda.Parameters[0], exp0, lambda.Parameters[1], exp1, lambda.Body);
-
-        public static Expression ReplaceParametersInBody(this LambdaExpression lambda, Expression exp0, Expression exp1, Expression exp2)
-            => ParameterSubstituter.Replace(lambda.Parameters[0], exp0, lambda.Parameters[1], exp1, lambda.Parameters[2], exp2, lambda.Body);
-    }
-
-    internal sealed class ParameterInliner : ExpressionVisitor
-    {
-        private readonly Dictionary<ParameterExpression, Expression> arguments;
-
-        private ParameterInliner(Dictionary<ParameterExpression, Expression> arguments) => this.arguments = arguments;
-
-        public static Expression Inline(LambdaExpression function, params Expression[] arguments)
-        {
-            Contract.Requires(function != null);
-
-            var map = new Dictionary<ParameterExpression, Expression>(arguments.Length);
-            for (int i = 0; i < arguments.Length; i++)
-            {
-                map.Add(function.Parameters[i], arguments[i]);
-            }
-
-            var visitor = new ParameterInliner(map);
-            return visitor.Visit(function.Body);
-        }
-
-        protected override Expression VisitParameter(ParameterExpression node)
-            => this.arguments.TryGetValue(node, out var replacement) && replacement != null
-                ? replacement
-                : node;
+        public static Expression ReplaceParametersInBody(this LambdaExpression lambda, params Expression[] expressions)
+            => ParameterSubstituter.Replace(lambda.Parameters, lambda.Body, expressions);
     }
 
     internal sealed class ConstantExpressionFinder : ExpressionVisitor
@@ -164,12 +130,10 @@ namespace Microsoft.StreamProcessing
 
         private ConstantExpressionFinder(HashSet<ParameterExpression> parameters) => this.parameters = parameters;
 
-        public static bool IsClosedExpression(Expression func)
+        public static bool IsClosedExpression(LambdaExpression function)
         {
-            Contract.Requires(func != null);
-            Contract.Requires(func is LambdaExpression);
+            Contract.Requires(function != null);
 
-            var function = (LambdaExpression)func;
             var hashSet = new HashSet<ParameterExpression>(function.Parameters);
             var me = new ConstantExpressionFinder(hashSet);
             me.Visit(function.Body);
@@ -215,7 +179,7 @@ namespace Microsoft.StreamProcessing
                     realArguments[i - 1] = Visit(callArguments[i]);
                 }
 
-                return ParameterInliner.Inline(realFunction, realArguments);
+                return realFunction.ReplaceParametersInBody(realArguments);
             }
 
             return node;
@@ -433,30 +397,11 @@ namespace Microsoft.StreamProcessing
         public static Expression Replace(ParameterExpression eOld, Expression eNew, Expression expression)
             => new ParameterSubstituter(new Dictionary<ParameterExpression, Expression> { { eOld, eNew } }).Visit(expression);
 
-        public static Expression Replace(
-            ParameterExpression eOld, Expression eNew,
-            ParameterExpression eOld2, Expression eNew2,
-            Expression expression)
-            => new ParameterSubstituter(new Dictionary<ParameterExpression, Expression> { { eOld, eNew }, { eOld2, eNew2 } }).Visit(expression);
-
-        public static Expression Replace(
-            ParameterExpression eOld, Expression eNew,
-            ParameterExpression eOld2, Expression eNew2,
-            ParameterExpression eOld3, Expression eNew3,
-            Expression expression)
-            => new ParameterSubstituter(new Dictionary<ParameterExpression, Expression> { { eOld, eNew }, { eOld2, eNew2 }, { eOld3, eNew3 } }).Visit(expression);
-
-        public static Expression<Func<PartitionKey<TPartitionKey>, TPayload, TResult>> FirstParameterAsPartitionKey<TPartitionKey, TPayload, TResult>(
-            Expression<Func<TPartitionKey, TPayload, TResult>> expression)
+        public static Expression Replace(ReadOnlyCollection<ParameterExpression> parameters, Expression expression, params Expression[] substitutes)
         {
-            Expression<Func<PartitionKey<TPartitionKey>, TPartitionKey>> unbox = (o) => o.Key;
-            var newBody = new ParameterSubstituter(
-                new Dictionary<ParameterExpression, Expression>
-                {
-                    { expression.Parameters[0], unbox.Body }
-                }).Visit(expression);
-            var newParams = unbox.Parameters.Concat(expression.Parameters.Skip(1));
-            return Expression.Lambda<Func<PartitionKey<TPartitionKey>, TPayload, TResult>>(newBody, newParams.ToArray());
+            var dictionary = new Dictionary<ParameterExpression, Expression>();
+            for (int i = 0; i < Math.Min(parameters.Count, substitutes.Length); i++) dictionary.Add(parameters[i], substitutes[i]);
+            return new ParameterSubstituter(dictionary).Visit(expression);
         }
 
         public static Expression<Func<TPayload, PartitionKey<TPartitionKey>>> AddPartitionKey<TPartitionKey, TPayload>(
@@ -1355,14 +1300,12 @@ namespace Microsoft.StreamProcessing
                 if (cr.noFields)
                 {
                     var columnarField = cr.PseudoField;
-                    Expression arrayToUse;
                     var batchField = batchType.GetTypeInfo().GetField(columnarField.Name);
                     var columnBatch = Expression.MakeMemberAccess(batchVariable, batchField);
                     var colArrayOfColumnBatch = Expression.MakeMemberAccess(columnBatch, batchField.FieldType.GetTypeInfo().GetField("col"));
-                    arrayToUse = colArrayOfColumnBatch;
                     me.parameterTableForAtomicTypes.Add(
                         parameter,
-                        new ParameterInformation { ArrayVariable = arrayToUse, IndexVariable = indexExpression, });
+                        new ParameterInformation { ArrayVariable = colArrayOfColumnBatch, IndexVariable = indexExpression, });
                 }
                 else
                 {
@@ -1659,12 +1602,10 @@ namespace Microsoft.StreamProcessing
 
         private ParameterInstanceFinder(HashSet<ParameterExpression> parameters) => this.parameters = parameters;
 
-        public static bool FoundInstance(Expression func)
+        public static bool FoundInstance(LambdaExpression function)
         {
-            Contract.Requires(func != null);
-            Contract.Requires(func is LambdaExpression);
+            Contract.Requires(function != null);
 
-            var function = (LambdaExpression)func;
             var hashSet = new HashSet<ParameterExpression>(function.Parameters);
             var me = new ParameterInstanceFinder(hashSet);
             me.Visit(function.Body);

@@ -44,7 +44,6 @@ namespace Microsoft.StreamProcessing
         public ExtendLifetimeNegativePipe(ExtendLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer, long duration)
             : base(stream, observer)
         {
-
             this.duration = duration;
 
             this.keyComparerExpr = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
@@ -71,7 +70,7 @@ namespace Microsoft.StreamProcessing
             {
                 var activeEvent = this.syncTimeMap.Values[index];
                 bool sendToOutput = true;
-                if (this.contractedToZero.TryGetValue(endPointTime, out List<ActiveEvent> found))
+                if (this.contractedToZero.TryGetValue(endPointTime, out var found))
                 {
                     for (int i = 0; i < found.Count; i++)
                     {
@@ -126,7 +125,6 @@ namespace Microsoft.StreamProcessing
                             int index = this.syncTimeMap.Insert(batch.hash.col[i]);
                             this.syncTimeMap.Values[index].Populate(batch.key.col[i], batch[i], batch.vsync.col[i], StreamEvent.InfinitySyncTime, batch.hash.col[i]);
                             this.endPointHeap.Insert(batch.vsync.col[i], index);
-
                         }
                         else if (batch.vother.col[i] > batch.vsync.col[i])
                         {
@@ -138,7 +136,6 @@ namespace Microsoft.StreamProcessing
                             int index = this.syncTimeMap.Insert(batch.hash.col[i]);
                             this.syncTimeMap.Values[index].Populate(batch.key.col[i], batch[i], sync, other, batch.hash.col[i]);
                             this.endPointHeap.Insert(batch.vsync.col[i], index);
-
                         }
                         else
                         {
@@ -182,7 +179,7 @@ namespace Microsoft.StreamProcessing
                         this.output.key.col[ind] = batch.key.col[i];
                         this.output[ind] = default;
                         this.output.hash.col[ind] = batch.hash.col[i];
-                        this.output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
+                        this.output.bitvector.col[ind >> 6] |= 1L << (ind & 0x3f);
 
                         if (this.output.Count == Config.DataBatchSize) FlushContents();
                     }

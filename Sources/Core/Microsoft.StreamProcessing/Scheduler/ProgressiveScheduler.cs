@@ -106,14 +106,14 @@ namespace Microsoft.StreamProcessing
             if (o as WrapperStreamObserver<TK, TP> != null)
                 return o;
 
-            Guid cid = o.ClassId;
+            var cid = o.ClassId;
             if (this.useCommonSprayPool && (classId != null)) cid = classId.Value;
 
             var t = new TaskEntry(cid, m => o.OnNext((StreamMessage<TK, TP>)m), o.OnCompleted, o.OnFlush, o.OnError);
 
             this.taskTable.TryAdd(cid, t);
 
-            return new WrapperStreamObserver<TK, TP>(o, this, cid, t);
+            return new WrapperStreamObserver<TK, TP>(o, this, t);
         }
 
         public void Stop()
@@ -244,19 +244,17 @@ namespace Microsoft.StreamProcessing
         }
     }
 
-    internal class WrapperStreamObserver<TK, TP> : IStreamObserver<TK, TP>, IDisposable
+    internal sealed class WrapperStreamObserver<TK, TP> : IStreamObserver<TK, TP>, IDisposable
     {
         private readonly IStreamObserver<TK, TP> o;
         private readonly OwnedThreadsScheduler scheduler;
-        private readonly Guid classId;
         private readonly TaskEntry te;
         private bool onCompletedSeen = false;
 
-        public WrapperStreamObserver(IStreamObserver<TK, TP> o, OwnedThreadsScheduler scheduler, Guid classId, TaskEntry t)
+        public WrapperStreamObserver(IStreamObserver<TK, TP> o, OwnedThreadsScheduler scheduler, TaskEntry t)
         {
             this.o = o;
             this.scheduler = scheduler;
-            this.classId = classId;
             this.te = t;
         }
 

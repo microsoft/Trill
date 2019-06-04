@@ -17,10 +17,7 @@ namespace Microsoft.StreamProcessing
         public StreamMessageEgressPipe(IObserver<StreamMessage<TKey, TPayload>> observer, QueryContainer container)
             : base(observer, container) { }
 
-        public override void OnNext(StreamMessage<TKey, TPayload> batch)
-        {
-            this.observer.OnNext(batch);
-        }
+        public override void OnNext(StreamMessage<TKey, TPayload> batch) => this.observer.OnNext(batch);
 
         public override int CurrentlyBufferedOutputCount => 0;
 

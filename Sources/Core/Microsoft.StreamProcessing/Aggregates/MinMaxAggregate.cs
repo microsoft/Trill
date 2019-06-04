@@ -12,23 +12,21 @@ namespace Microsoft.StreamProcessing.Aggregates
 {
     internal abstract class MinMaxAggregateBase<T> : ISummableAggregate<T, MinMaxState<T>, T>
     {
-        private readonly Expression<Func<SortedDictionary<T, long>>> generator;
-
         protected MinMaxAggregateBase(QueryContainer container) : this(ComparerExpression<T>.Default, container) { }
 
         protected MinMaxAggregateBase(IComparerExpression<T> comparer, QueryContainer container)
         {
             Contract.Requires(comparer != null);
-            this.generator = comparer.CreateSortedDictionaryGenerator<T, long>(container);
-        }
 
-        public Expression<Func<MinMaxState<T>>> InitialState()
-        {
+            var generator = comparer.CreateSortedDictionaryGenerator<T, long>(container);
             Expression<Func<Func<SortedDictionary<T, long>>, MinMaxState<T>>> template
                 = (g) => new MinMaxState<T> { savedValues = new SortedMultiSet<T>(g) };
-            var replaced = template.ReplaceParametersInBody(this.generator);
-            return Expression.Lambda<Func<MinMaxState<T>>>(replaced);
+            var replaced = template.ReplaceParametersInBody(generator);
+            this.initialState = Expression.Lambda<Func<MinMaxState<T>>>(replaced);
         }
+
+        private readonly Expression<Func<MinMaxState<T>>> initialState;
+        public Expression<Func<MinMaxState<T>>> InitialState() => initialState;
 
         private static readonly Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> acc
             = (set, timestamp, input) => new MinMaxState<T> { savedValues = set.savedValues.Add(input) };

@@ -55,7 +55,7 @@ namespace Microsoft.StreamProcessing.Internal
                     init.Invoke(null, new object[] { Comparer<TKey>.Create(expr.Compile()) });
                     DictionaryTypes.Add(key, temp);
                 }
-                if (!container.TryGetSortedDictionaryType(key, out Type other))
+                if (!container.TryGetSortedDictionaryType(key, out var other))
                     container.RegisterSortedDictionaryType(key, temp);
             }
             return Expression.Lambda<Func<SortedDictionary<TKey, TValue>>>(Expression.New(temp));
@@ -64,7 +64,7 @@ namespace Microsoft.StreamProcessing.Internal
 
     internal partial class GeneratedSortedDictionary
     {
-        private string name;
+        private readonly string name;
 
         public GeneratedSortedDictionary(string name) => this.name = name;
     }

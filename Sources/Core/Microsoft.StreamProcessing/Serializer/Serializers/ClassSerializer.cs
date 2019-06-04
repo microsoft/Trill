@@ -131,8 +131,8 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         public static Expression ThrowUnexpectedNullCheckExpression(Type type)
         {
-            var exceptionMethodInfo = typeof(ClassSerializer).GetMethod("UnexpectedNullValueException", BindingFlags.NonPublic | BindingFlags.Static);
-            return Expression.Throw(Expression.Call(exceptionMethodInfo, Expression.Constant(type)));
+            Expression<Func<Type, Exception>> exceptionMethod = (t) => UnexpectedNullValueException(t);
+            return Expression.Throw(exceptionMethod.ReplaceParametersInBody(Expression.Constant(type)));
         }
 
         private static Exception UnexpectedNullValueException(Type type)

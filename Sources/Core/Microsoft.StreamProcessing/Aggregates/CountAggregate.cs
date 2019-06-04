@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
-    internal class CountAggregate<TInput> : ISummableAggregate<TInput, ulong, ulong>
+    internal sealed class CountAggregate<TInput> : ISummableAggregate<TInput, ulong, ulong>
     {
         private static readonly Expression<Func<ulong>> init = () => 0;
         public Expression<Func<ulong>> InitialState() => init;

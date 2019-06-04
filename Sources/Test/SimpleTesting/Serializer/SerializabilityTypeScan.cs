@@ -105,7 +105,6 @@ namespace SimpleTesting
             "Collections.CharArray32",
             "Collections.CharArray6",
             "Collections.CharArray64",
-            "RefComparison",
             "StreamMessage",
             "Microsoft.StreamProcessing.CharArray",
             "ShardedStreamable",

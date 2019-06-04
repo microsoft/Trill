@@ -87,7 +87,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     merger,
 <#= IterateCommaLine("                    CallInliner.Call(aggregate$.ComputeResult(), CallInliner.Call(target[$$] as Expression<Func<StructTuple<" + IterateComma("TState$", count) + ">, TState$>>, state))", count) #>);
 
-            return new GeneratedAggregate<TInput, StructTuple<<#= IterateComma("TState$", count) #>>, TResult>(
+            return GeneratedAggregate.Create(
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),

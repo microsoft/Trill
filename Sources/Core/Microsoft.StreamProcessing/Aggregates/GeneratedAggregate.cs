@@ -5,9 +5,21 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
+    internal static class GeneratedAggregate
+    {
+        public static GeneratedAggregate<TInput, TState, TResult> Create<TInput, TState, TResult>(
+            Expression<Func<TState>> initialState,
+            Expression<Func<TState, long, TInput, TState>> accumulate,
+            Expression<Func<TState, long, TInput, TState>> deaccumulate,
+            Expression<Func<TState, TState, TState>> difference,
+            Expression<Func<TState, TResult>> computeResult)
+            => new GeneratedAggregate<TInput, TState, TResult>(initialState, accumulate, deaccumulate, difference, computeResult);
+    }
+
     internal class GeneratedAggregate<TInput, TState, TResult> : IAggregate<TInput, TState, TResult>
     {
         private readonly Expression<Func<TState>> initialState;
@@ -49,60 +61,13 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<TState, TResult>> ComputeResult() => this.computeResult;
 
-        public void Print()
-        {
-            Console.WriteLine("Initial State: " + this.initialState);
-            Console.WriteLine("Accumulate: " + this.accumulate);
-            Console.WriteLine("Deaccumulate: " + this.deaccumulate);
-            Console.WriteLine("Difference: " + this.difference);
-            Console.WriteLine("Compute Result: " + this.computeResult);
-        }
-    }
-
-    internal struct DiscriminatedUnion<TLeft, TRight>
-    {
-        public TLeft Left;
-        public TRight Right;
-        public bool isLeft;
-    }
-
-    internal class DiscriminatedAggregate<TLeft, TRight, TState, TResult> : IAggregate<DiscriminatedUnion<TLeft, TRight>, TState, TResult>
-    {
-        private readonly IBinaryAggregate<TLeft, TRight, TState, TResult> binary;
-
-        public DiscriminatedAggregate(IBinaryAggregate<TLeft, TRight, TState, TResult> binary) => this.binary = binary;
-
-        private static Expression<Func<TState, long, DiscriminatedUnion<TLeft, TRight>, TState>> MergeMethods(Expression<Func<TState, long, TLeft, TState>> accumulateLeft, Expression<Func<TState, long, TRight, TState>> accumulateRight)
-        {
-            Expression<Func<TState, long, DiscriminatedUnion<TLeft, TRight>, TState>> placeholder = (s, l, d) => default;
-
-            Expression<Func<DiscriminatedUnion<TLeft, TRight>, TLeft>> leftSelector = d => d.Left;
-            Expression leftProperty = leftSelector.ReplaceParametersInBody(placeholder.Parameters[2]);
-
-            Expression<Func<DiscriminatedUnion<TLeft, TRight>, TRight>> rightSelector = d => d.Right;
-            Expression rightProperty = rightSelector.ReplaceParametersInBody(placeholder.Parameters[2]);
-
-            Expression<Func<DiscriminatedUnion<TLeft, TRight>, bool>> discriminatorSelector = d => d.isLeft;
-            Expression discriminator = discriminatorSelector.ReplaceParametersInBody(placeholder.Parameters[2]);
-
-            return Expression.Lambda<Func<TState, long, DiscriminatedUnion<TLeft, TRight>, TState>>(
-                Expression.Condition(
-                    discriminator,
-                    accumulateLeft.ReplaceParametersInBody(placeholder.Parameters[0], placeholder.Parameters[1], leftProperty),
-                    accumulateRight.ReplaceParametersInBody(placeholder.Parameters[0], placeholder.Parameters[1], rightProperty)),
-                placeholder.Parameters);
-        }
-
-        public Expression<Func<TState, long, DiscriminatedUnion<TLeft, TRight>, TState>> Accumulate()
-            => MergeMethods(this.binary.AccumulateLeft(), this.binary.AccumulateRight());
-
-        public Expression<Func<TState, TResult>> ComputeResult() => this.binary.ComputeResult();
-
-        public Expression<Func<TState, long, DiscriminatedUnion<TLeft, TRight>, TState>> Deaccumulate()
-            => MergeMethods(this.binary.DeaccumulateLeft(), this.binary.DeaccumulateRight());
-
-        public Expression<Func<TState, TState, TState>> Difference() => this.binary.Difference();
-
-        public Expression<Func<TState>> InitialState() => this.binary.InitialState();
+        public override string ToString()
+            => new StringBuilder()
+                .AppendLine("Initial State: " + this.initialState)
+                .AppendLine("Accumulate: " + this.accumulate)
+                .AppendLine("Deaccumulate: " + this.deaccumulate)
+                .AppendLine("Difference: " + this.difference)
+                .AppendLine("Compute Result: " + this.computeResult)
+                .ToString();
     }
 }

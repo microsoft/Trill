@@ -33,11 +33,8 @@ namespace Microsoft.StreamProcessing.Aggregates
                 int rank = (int)Math.Ceiling(this.percentile * set.TotalCount) - 1;
 
                 var enumerator = set.GetEnumerable().GetEnumerator();
-                for (int index = 0; index <= rank; index++)
-                {
-                    enumerator.MoveNext();
-                    result = enumerator.Current;
-                }
+                for (int index = 0; index <= rank; index++) enumerator.MoveNext();
+                result = enumerator.Current;
             }
 
             return result;

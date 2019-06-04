@@ -128,7 +128,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.vother.col[c] = long.MinValue;
                             this.batch.key.col[c] = Empty.Default;
                             this.batch.hash.col[c] = 0;
-                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                            this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }

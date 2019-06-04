@@ -150,8 +150,8 @@ namespace Microsoft.StreamProcessing.Internal
     }
     internal partial class GeneratedFastDictionary
     {
-        private string classname;
-        private string dictType;
+        private readonly string classname;
+        private readonly string dictType;
         public GeneratedFastDictionary(string name, string dictType)
         {
             this.classname = name;

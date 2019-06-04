@@ -57,7 +57,7 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        public string IngressSiteIdentifier { get; private set; }
+        public string IngressSiteIdentifier { get; }
 
         public override IDisposable Subscribe(IStreamObserver<TKey, TPayload> observer)
         {

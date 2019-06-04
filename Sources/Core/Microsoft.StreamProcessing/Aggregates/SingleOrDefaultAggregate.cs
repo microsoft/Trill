@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
-    internal class SingleOrDefaultAggregate<T> : SortedMultisetAggregateBase<T, T>
+    internal sealed class SingleOrDefaultAggregate<T> : SortedMultisetAggregateBase<T, T>
     {
         public SingleOrDefaultAggregate(QueryContainer container) : base(ComparerExpression<T>.Default, container) { }
 

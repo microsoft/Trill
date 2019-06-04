@@ -83,13 +83,11 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create(this.duration);
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ExtendLifetimeBaseTemplate.Generate(stream, this.duration));
-            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new ExtendLifetimePlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2, this.duration < 0));
+            Func<PlanNode, IQueryObject, PlanNode> planNode = (PlanNode p, IQueryObject o) => new ExtendLifetimePlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2, this.duration < 0);
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, stream, observer, planNode, (this.duration < 0) ? -this.duration : this.duration);
             var returnValue = (UnaryPipe<TKey, TPayload, TPayload>)instance;
             return returnValue;
         }
-
     }
-
 }

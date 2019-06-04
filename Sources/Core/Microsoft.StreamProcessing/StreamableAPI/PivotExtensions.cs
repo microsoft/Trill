@@ -70,24 +70,24 @@ namespace Microsoft.StreamProcessing
             var accumulator = Expression.Lambda<Func<TState[], long, TInput, TState[]>>(
                 Expression.NewArrayInit(
                     typeof(TState),
-                    aggArray.Select((a, i) => ParameterInliner.Inline(a.Accumulate(), Expression.ArrayIndex(state, Expression.Constant(i)), time, input))), state, time, input);
+                    aggArray.Select((a, i) => a.Accumulate().ReplaceParametersInBody(Expression.ArrayIndex(state, Expression.Constant(i)), time, input))), state, time, input);
             var deaccumulator = Expression.Lambda<Func<TState[], long, TInput, TState[]>>(
                 Expression.NewArrayInit(
                     typeof(TState),
-                    aggArray.Select((a, i) => ParameterInliner.Inline(a.Deaccumulate(), Expression.ArrayIndex(state, Expression.Constant(i)), time, input))), state, time, input);
+                    aggArray.Select((a, i) => a.Deaccumulate().ReplaceParametersInBody(Expression.ArrayIndex(state, Expression.Constant(i)), time, input))), state, time, input);
 
             var state1 = Expression.Parameter(typeof(TState[]), "state1");
             var state2 = Expression.Parameter(typeof(TState[]), "state2");
             var difference = Expression.Lambda<Func<TState[], TState[], TState[]>>(
                 Expression.NewArrayInit(
                     typeof(TState),
-                    aggArray.Select((a, i) => ParameterInliner.Inline(a.Difference(), Expression.ArrayIndex(state1, Expression.Constant(i)), Expression.ArrayIndex(state1, Expression.Constant(i))))), state1, state2);
+                    aggArray.Select((a, i) => a.Difference().ReplaceParametersInBody(Expression.ArrayIndex(state1, Expression.Constant(i)), Expression.ArrayIndex(state1, Expression.Constant(i))))), state1, state2);
 
             var resultSelector = Expression.Lambda<Func<TState[], TAggValue[]>>(
                 Expression.NewArrayInit(
                     typeof(TAggValue),
-                    aggArray.Select((a, i) => ParameterInliner.Inline(a.ComputeResult(), Expression.ArrayIndex(state1, Expression.Constant(i))))), state1);
-            var newAgg = new GeneratedAggregate<TInput, TState[], TAggValue[]>(initialState, accumulator, deaccumulator, difference, resultSelector);
+                    aggArray.Select((a, i) => a.ComputeResult().ReplaceParametersInBody(Expression.ArrayIndex(state1, Expression.Constant(i))))), state1);
+            var newAgg = GeneratedAggregate.Create(initialState, accumulator, deaccumulator, difference, resultSelector);
 
             if (initializer.Body as NewExpression == null) throw new ArgumentException("Initializer must return a constructor expression.", nameof(initializer));
 
