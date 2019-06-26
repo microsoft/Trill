@@ -16,6 +16,7 @@ namespace Microsoft.StreamProcessing.Provider
         private static readonly MethodInfo GroupByMethod = typeof(QStreamableStatic).GetMethod("GroupBy");
         private static readonly MethodInfo QuantizeLifetimeMethod = typeof(QStreamableStatic).GetMethod("QuantizeLifetime");
         private static readonly MethodInfo SelectMethod = typeof(QStreamableStatic).GetMethod("Select");
+        private static readonly MethodInfo SelectManyMethod = typeof(QStreamableStatic).GetMethod("SelectMany");
         private static readonly MethodInfo WhereMethod = typeof(QStreamableStatic).GetMethod("Where");
 
         /// <summary>
@@ -33,6 +34,7 @@ namespace Microsoft.StreamProcessing.Provider
             if (method == GroupByMethod) return VisitGroupByCall(node);
             if (method == QuantizeLifetimeMethod) return VisitQuantizeLifetimeCall(node);
             if (method == SelectMethod) return VisitSelectCall(node);
+            if (method == SelectManyMethod) return VisitSelectManyCall(node);
             if (method == WhereMethod) return VisitWhereCall(node);
 
             return VisitNonStreamingMethodCall(node);
@@ -65,6 +67,13 @@ namespace Microsoft.StreamProcessing.Provider
         /// <param name="node">The expression to visit.</param>
         /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
         protected virtual Expression VisitSelectCall(MethodCallExpression node) => node;
+
+        /// <summary>
+        /// Visits an IQStreamable SelectMany call.
+        /// </summary>
+        /// <param name="node">The expression to visit.</param>
+        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
+        protected virtual Expression VisitSelectManyCall(MethodCallExpression node) => node;
 
         /// <summary>
         /// Visits an IQStreamable Where call.
