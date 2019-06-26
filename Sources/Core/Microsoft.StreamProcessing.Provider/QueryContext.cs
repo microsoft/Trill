@@ -3,7 +3,6 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing.Provider
@@ -44,33 +43,6 @@ namespace Microsoft.StreamProcessing.Provider
             DisorderPolicy disorderPolicy,
             PartitionPolicy partitionPolicy)
             => throw new NotImplementedException();
-
-        private void TestMethod()
-        {
-            IQStreamable<Tuple<string, int>> test0 = null;
-            IQStreamable<Tuple<string, int>> test1 = null;
-            IQStreamable<Tuple<string, int>> test2 = null;
-            var test3 = from t in test1
-                        join t1 in test0 on t.Item1 equals t1.Item1
-                        join t2 in test2 on t.Item1 equals t2.Item1
-
-                        // join t0 in test0 on t.Item1 equals t0.Item1
-                        where t.Item2 < 10
-                        group t by t.Item1 into g
-                        select g.Window.Count();
-        }
-
-        private void TestMethod2()
-        {
-            IQStreamable<Tuple<string, int, IEnumerable<object>>> test1 = null;
-            var test3 = from t in test1
-                        from o in t.Item3
-
-                        // join t0 in test0 on t.Item1 equals t0.Item1
-                        where t.Item2 < 10
-                        group o by t.Item1 into g
-                        select g.Window.Count();
-        }
 
         /// <summary>
         /// Stub
