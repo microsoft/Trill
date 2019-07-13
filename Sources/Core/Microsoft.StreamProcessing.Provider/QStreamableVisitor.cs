@@ -13,14 +13,20 @@ namespace Microsoft.StreamProcessing.Provider
     /// </summary>
     public abstract class QStreamableVisitor : ExpressionVisitor
     {
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> AlterEventDurationExpression = s => s.AlterEventDuration(0);
-        private static readonly MethodInfo AlterEventDurationMethod = ((MethodCallExpression)AlterEventDurationExpression.Body).Method.GetGenericMethodDefinition();
-
         private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> ChopExpression = s => s.Chop(0, 0);
         private static readonly MethodInfo ChopMethod = ((MethodCallExpression)ChopExpression.Body).Method.GetGenericMethodDefinition();
 
+        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> ClipDurationExpression = s => s.ClipDuration(0);
+        private static readonly MethodInfo ClipDurationMethod = ((MethodCallExpression)ClipDurationExpression.Body).Method.GetGenericMethodDefinition();
+
+        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> ExtendDurationExpression = s => s.ExtendDuration(0);
+        private static readonly MethodInfo ExtendDurationMethod = ((MethodCallExpression)ExtendDurationExpression.Body).Method.GetGenericMethodDefinition();
+
         private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> QuantizeLifetimeExpression = s => s.QuantizeLifetime(0, 0, 0);
         private static readonly MethodInfo QuantizeLifetimeMethod = ((MethodCallExpression)QuantizeLifetimeExpression.Body).Method.GetGenericMethodDefinition();
+
+        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> SetDuration = s => s.SetDuration(0);
+        private static readonly MethodInfo SetDurationMethod = ((MethodCallExpression)SetDuration.Body).Method.GetGenericMethodDefinition();
 
         private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> StitchExpression = s => s.Stitch();
         private static readonly MethodInfo StitchMethod = ((MethodCallExpression)StitchExpression.Body).Method.GetGenericMethodDefinition();
@@ -39,8 +45,8 @@ namespace Microsoft.StreamProcessing.Provider
         private static readonly MethodInfo WhereMethod = ((MethodCallExpression)WhereExpression.Body).Method.GetGenericMethodDefinition();
 
 
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<object>>> ClipEventDurationExpression = (a, b) => a.ClipEventDuration(b, aa => true, bb => true);
-        private static readonly MethodInfo ClipEventDurationMethod = ((MethodCallExpression)ClipEventDurationExpression.Body).Method.GetGenericMethodDefinition();
+        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<object>>> ClipDurationBinaryExpression = (a, b) => a.ClipDuration(b, aa => true, bb => true);
+        private static readonly MethodInfo ClipDurationBinaryMethod = ((MethodCallExpression)ClipDurationBinaryExpression.Body).Method.GetGenericMethodDefinition();
 
         private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<object>>> JoinExpression = (a, b) => a.Join(b, aa => true, bb => true, (aa, bb) => aa);
         private static readonly MethodInfo JoinMethod = ((MethodCallExpression)JoinExpression.Body).Method.GetGenericMethodDefinition();
@@ -62,9 +68,11 @@ namespace Microsoft.StreamProcessing.Provider
             if (!method.IsGenericMethod) return VisitNonStreamingMethodCall(node);
             method = method.GetGenericMethodDefinition();
 
-            if (method == AlterEventDurationMethod) return VisitAlterDurationCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value);
             if (method == ChopMethod) return VisitChopCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value, (long)((ConstantExpression)node.Arguments[2]).Value);
+            if (method == ClipDurationMethod) return VisitClipDurationCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value);
+            if (method == ExtendDurationMethod) return VisitExtendDurationCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value);
             if (method == QuantizeLifetimeMethod) return VisitQuantizeLifetimeCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value, (long)((ConstantExpression)node.Arguments[2]).Value, (long)((ConstantExpression)node.Arguments[3]).Value);
+            if (method == SetDurationMethod) return VisitSetDurationCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value);
             if (method == StitchMethod) return VisitStitchCall(node.Arguments[0]);
 
             if (method == GroupByMethod) return VisitGroupByCall(node.Arguments[0], (LambdaExpression)node.Arguments[1], (LambdaExpression)node.Arguments[2]);
@@ -72,7 +80,7 @@ namespace Microsoft.StreamProcessing.Provider
             if (method == SelectManyMethod) return VisitSelectManyCall(node.Arguments[0], (LambdaExpression)node.Arguments[1], false);
             if (method == WhereMethod) return VisitWhereCall(node.Arguments[0], (LambdaExpression)node.Arguments[1]);
 
-            if (method == ClipEventDurationMethod) return VisitClipEventDurationCall(node.Arguments[0], node.Arguments[1], (LambdaExpression)node.Arguments[2], (LambdaExpression)node.Arguments[3]);
+            if (method == ClipDurationBinaryMethod) return VisitClipEventDurationCall(node.Arguments[0], node.Arguments[1], (LambdaExpression)node.Arguments[2], (LambdaExpression)node.Arguments[3]);
             if (method == JoinMethod) return VisitJoinCall(node.Arguments[0], node.Arguments[1], (LambdaExpression)node.Arguments[2], (LambdaExpression)node.Arguments[3], (LambdaExpression)node.Arguments[4]);
             if (method == UnionMethod) return VisitUnionCall(node.Arguments[0], node.Arguments[1]);
             if (method == WhereNotExistsMethod) return VisitWhereNotExistsCall(node.Arguments[0], node.Arguments[1], (LambdaExpression)node.Arguments[2], (LambdaExpression)node.Arguments[3]);
@@ -88,14 +96,6 @@ namespace Microsoft.StreamProcessing.Provider
         protected virtual Expression VisitNonStreamingMethodCall(MethodCallExpression node) => base.VisitMethodCall(node);
 
         /// <summary>
-        /// Visits an IQStreamable Alter Duration call.
-        /// </summary>
-        /// <param name="argument">The expression representing the streamable this method is called on.</param>
-        /// <param name="duration">The new duration for each event</param>
-        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
-        protected abstract Expression VisitAlterDurationCall(Expression argument, long duration);
-
-        /// <summary>
         /// Visits an IQStreamable Chop call.
         /// </summary>
         /// <param name="argument">The expression representing the streamable this method is called on.</param>
@@ -103,6 +103,22 @@ namespace Microsoft.StreamProcessing.Provider
         /// <param name="offset">Offset from the start of time to apply the partitioning (default is 0).</param>
         /// <returns>The modified expression.</returns>
         protected abstract Expression VisitChopCall(Expression argument, long period, long offset);
+
+        /// <summary>
+        /// Visits an IQStreamable Clip Duration call.
+        /// </summary>
+        /// <param name="argument">The expression representing the streamable this method is called on.</param>
+        /// <param name="maximumDuration">The maximum duration of each event</param>
+        /// <returns>The modified expression.</returns>
+        protected abstract Expression VisitClipDurationCall(Expression argument, long maximumDuration);
+
+        /// <summary>
+        /// Visits an IQStreamable Extend Duration call.
+        /// </summary>
+        /// <param name="argument">The expression representing the streamable this method is called on.</param>
+        /// <param name="duration">The amount to extend (or contract) the duration for each event</param>
+        /// <returns>The modified expression.</returns>
+        protected abstract Expression VisitExtendDurationCall(Expression argument, long duration);
 
         /// <summary>
         /// Visits an IQStreamable Quantize Lifetime call.
@@ -113,6 +129,14 @@ namespace Microsoft.StreamProcessing.Provider
         /// <param name="offset">Offset from the start of time</param>
         /// <returns>The modified expression.</returns>
         protected abstract Expression VisitQuantizeLifetimeCall(Expression argument, long windowSize, long period, long offset);
+
+        /// <summary>
+        /// Visits an IQStreamable Set Duration call.
+        /// </summary>
+        /// <param name="argument">The expression representing the streamable this method is called on.</param>
+        /// <param name="duration">The new duration for each event</param>
+        /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
+        protected abstract Expression VisitSetDurationCall(Expression argument, long duration);
 
         /// <summary>
         /// Visits an IQStreamable Stitch call.

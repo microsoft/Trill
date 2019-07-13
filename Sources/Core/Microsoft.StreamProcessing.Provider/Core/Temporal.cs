@@ -14,21 +14,6 @@ namespace Microsoft.StreamProcessing.Provider
     public static partial class QStreamableStatic
     {
         /// <summary>
-        /// Adjusts the lifetime of incoming events to have the specified duration.
-        /// </summary>
-        /// <typeparam name="TSource">Type of payload in the stream</typeparam>
-        /// <param name="source">Input stream</param>
-        /// <param name="duration">The new duration for each event</param>
-        /// <returns>Result (output) stream</returns>
-        public static IQStreamable<TSource> AlterEventDuration<TSource>(this IQStreamable<TSource> source, long duration)
-            => source.Provider.CreateQuery<TSource>(
-                Expression.Call(
-                    null,
-                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource)),
-                    (source ?? throw new ArgumentNullException(nameof(source))).Expression,
-                    Expression.Constant(duration, typeof(long))));
-
-        /// <summary>
         /// Divides long-lasting events into smaller, repeated events of the given period with the given offset.
         /// </summary>
         /// <typeparam name="TSource">Type of payload in the stream</typeparam>
@@ -44,6 +29,49 @@ namespace Microsoft.StreamProcessing.Provider
                     (source ?? throw new ArgumentNullException(nameof(source))).Expression,
                     Expression.Constant(period, typeof(long)),
                     Expression.Constant(offset, typeof(long))));
+
+        /// <summary>
+        /// Truncates the duration of each event in the stream to a maximum of the given value.
+        /// </summary>
+        /// <typeparam name="TSource">Type of payload in the stream</typeparam>
+        /// <param name="source">Input stream</param>
+        /// <param name="maximumDuration">The maximum duration of each event</param>
+        /// <returns>Result (output) stream</returns>
+        public static IQStreamable<TSource> ClipDuration<TSource>(this IQStreamable<TSource> source, long maximumDuration)
+            => source.Provider.CreateQuery<TSource>(
+                Expression.Call(
+                    null,
+                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource)),
+                    (source ?? throw new ArgumentNullException(nameof(source))).Expression,
+                    Expression.Constant(maximumDuration, typeof(long))));
+
+        /// <summary>
+        /// Extends (or contracts) the durations of all events in the stream by a given amount. Durations that contract to zero or less are deleted.
+        /// </summary>
+        /// <typeparam name="TSource">Type of payload in the stream</typeparam>
+        /// <param name="source">Input stream</param>
+        /// <param name="duration">The amount to extend (or contract) the duration for each event</param>
+        /// <returns>Result (output) stream</returns>
+        public static IQStreamable<TSource> ExtendDuration<TSource>(this IQStreamable<TSource> source, long duration)
+            => source.Provider.CreateQuery<TSource>(
+                Expression.Call(
+                    null,
+                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource)),
+                    (source ?? throw new ArgumentNullException(nameof(source))).Expression,
+                    Expression.Constant(duration, typeof(long))));
+
+        /// <summary>
+        /// Edits the lifespan of each event to be a single point (interval of length one) whose start time is the input's end time.
+        /// </summary>
+        /// <typeparam name="TSource">Type of payload in the stream</typeparam>
+        /// <param name="source">Input stream</param>
+        /// <returns>Result (output) stream</returns>
+        public static IQStreamable<TSource> PointAtEnd<TSource>(this IQStreamable<TSource> source)
+            => source.Provider.CreateQuery<TSource>(
+                Expression.Call(
+                    null,
+                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource)),
+                    (source ?? throw new ArgumentNullException(nameof(source))).Expression));
 
         /// <summary>
         /// Adjusts the lifetime of incoming events to snap the start and end time of each event to quantized boundaries.
@@ -65,6 +93,21 @@ namespace Microsoft.StreamProcessing.Provider
                     Expression.Constant(windowSize, typeof(long)),
                     Expression.Constant(period, typeof(long)),
                     Expression.Constant(offset, typeof(long))));
+
+        /// <summary>
+        /// Sets the lifetime of incoming events to the specified duration.
+        /// </summary>
+        /// <typeparam name="TSource">Type of payload in the stream</typeparam>
+        /// <param name="source">Input stream</param>
+        /// <param name="duration">The new duration for each event</param>
+        /// <returns>Result (output) stream</returns>
+        public static IQStreamable<TSource> SetDuration<TSource>(this IQStreamable<TSource> source, long duration)
+            => source.Provider.CreateQuery<TSource>(
+                Expression.Call(
+                    null,
+                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource)),
+                    (source ?? throw new ArgumentNullException(nameof(source))).Expression,
+                    Expression.Constant(duration, typeof(long))));
 
         /// <summary>
         /// Unifies adjacent identical payloads into a single consistent lifespan.

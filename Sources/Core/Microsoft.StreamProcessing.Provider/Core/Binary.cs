@@ -27,7 +27,7 @@ namespace Microsoft.StreamProcessing.Provider
         /// <param name="rightSelector">A function to select the join key of each element of the right stream.</param>
         /// <returns>A stream that contains result elements from the left whose timelines are truncated by elements from the right.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="left" /> or <paramref name="right" /> or <paramref name="leftSelector" /> or <paramref name="rightSelector" /> is null.</exception>
-        public static IQStreamable<TLeft> ClipEventDuration<TLeft, TRight, TKey>(
+        public static IQStreamable<TLeft> ClipDuration<TLeft, TRight, TKey>(
             this IQStreamable<TLeft> left,
             IQStreamable<TRight> right,
             Expression<Func<TLeft, TKey>> leftSelector,
