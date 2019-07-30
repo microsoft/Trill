@@ -199,6 +199,7 @@ namespace Microsoft.StreamProcessing.Internal
         {
             this.batch.vsync.col[this.iter] = timestamp;
             this.batch.vother.col[this.iter] = StreamEvent.PunctuationOtherTime;
+            this.batch.bitvector.col[this.iter >> 6] |= (1L << (this.iter & 0x3f));
 
             if (this.batch.payload != null) this.batch.payload.col[this.iter] = default;
             if (this.batch.key != null) this.batch.key.col[this.iter] = default;
@@ -216,6 +217,7 @@ namespace Microsoft.StreamProcessing.Internal
         {
             this.batch.vsync.col[this.iter] = timestamp;
             this.batch.vother.col[this.iter] = PartitionedStreamEvent.LowWatermarkOtherTime;
+            this.batch.bitvector.col[this.iter >> 6] |= (1L << (this.iter & 0x3f));
 
             if (this.batch.payload != null) this.batch.payload.col[this.iter] = default;
             if (this.batch.key != null) this.batch.key.col[this.iter] = default;
