@@ -608,14 +608,6 @@ namespace Microsoft.StreamProcessing
             return base.VisitDefault(node);
         }
 
-#if !DOTNETCORE
-        protected override Expression VisitDynamic(DynamicExpression node)
-        {
-            this.writer.Write(node.ToString());
-            return base.VisitDynamic(node);
-        }
-#endif
-
         protected override ElementInit VisitElementInit(ElementInit node)
         {
             this.writer.Write(node.ToString());

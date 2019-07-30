@@ -10,7 +10,7 @@
   
   <!-- Setup global MSBuild variables -->
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     
     <!-- Automatic Version Control (TODO: not hooked up to the rest yet...) -->
     <VersionMajor>0</VersionMajor> <!-- Change major version here -->
@@ -65,7 +65,7 @@
 
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)Microsoft.StreamProcessing.Test.ruleset</CodeAnalysisRuleSet>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     
     <!-- Signing -->
