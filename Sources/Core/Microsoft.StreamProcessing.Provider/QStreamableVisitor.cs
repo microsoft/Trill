@@ -20,9 +20,7 @@ namespace Microsoft.StreamProcessing.Provider
         private static readonly MethodInfo SetDurationMethod = GetUnaryMethodInfo(s => s.SetDuration(0));
         private static readonly MethodInfo StitchMethod = GetUnaryMethodInfo(s => s.Stitch());
 
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<IGroupedWindow<object, object>>>> GroupByExpression = s => s.GroupBy(o => o, o => o);
-        private static readonly MethodInfo GroupByMethod = ((MethodCallExpression)GroupByExpression.Body).Method.GetGenericMethodDefinition();
-
+        private static readonly MethodInfo GroupByMethod = GetUnaryMethodInfo(s => s.GroupBy(o => o, o => o));
         private static readonly MethodInfo SelectMethod = GetUnaryMethodInfo(s => s.Select(o => o));
         private static readonly MethodInfo SelectManyMethod = GetUnaryMethodInfo(s => s.SelectMany(o => Array.Empty<object>()));
         private static readonly MethodInfo WhereMethod = GetUnaryMethodInfo(s => s.Where(o => true));
@@ -32,7 +30,7 @@ namespace Microsoft.StreamProcessing.Provider
         private static readonly MethodInfo UnionMethod = GetBinaryMethodInfo((a, b) => a.Union(b));
         private static readonly MethodInfo WhereNotExistsMethod = GetBinaryMethodInfo((a, b) => a.WhereNotExists(b, aa => true, bb => true));
 
-        private static MethodInfo GetUnaryMethodInfo(Expression<Func<IQStreamable<object>, IQStreamable<object>>> expression)
+        private static MethodInfo GetUnaryMethodInfo<T>(Expression<Func<IQStreamable<object>, IQStreamable<T>>> expression)
             => ((MethodCallExpression)expression.Body).Method.GetGenericMethodDefinition();
 
         private static MethodInfo GetBinaryMethodInfo(Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<object>>> expression)
