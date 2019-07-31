@@ -13,49 +13,30 @@ namespace Microsoft.StreamProcessing.Provider
     /// </summary>
     public abstract class QStreamableVisitor : ExpressionVisitor
     {
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> ChopExpression = s => s.Chop(0, 0);
-        private static readonly MethodInfo ChopMethod = ((MethodCallExpression)ChopExpression.Body).Method.GetGenericMethodDefinition();
-
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> ClipDurationExpression = s => s.ClipDuration(0);
-        private static readonly MethodInfo ClipDurationMethod = ((MethodCallExpression)ClipDurationExpression.Body).Method.GetGenericMethodDefinition();
-
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> ExtendDurationExpression = s => s.ExtendDuration(0);
-        private static readonly MethodInfo ExtendDurationMethod = ((MethodCallExpression)ExtendDurationExpression.Body).Method.GetGenericMethodDefinition();
-
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> QuantizeLifetimeExpression = s => s.QuantizeLifetime(0, 0, 0);
-        private static readonly MethodInfo QuantizeLifetimeMethod = ((MethodCallExpression)QuantizeLifetimeExpression.Body).Method.GetGenericMethodDefinition();
-
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> SetDuration = s => s.SetDuration(0);
-        private static readonly MethodInfo SetDurationMethod = ((MethodCallExpression)SetDuration.Body).Method.GetGenericMethodDefinition();
-
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> StitchExpression = s => s.Stitch();
-        private static readonly MethodInfo StitchMethod = ((MethodCallExpression)StitchExpression.Body).Method.GetGenericMethodDefinition();
-
+        private static readonly MethodInfo ChopMethod = GetUnaryMethodInfo(s => s.Chop(0, 0));
+        private static readonly MethodInfo ClipDurationMethod = GetUnaryMethodInfo(s => s.ClipDuration(0));
+        private static readonly MethodInfo ExtendDurationMethod = GetUnaryMethodInfo(s => s.ExtendDuration(0));
+        private static readonly MethodInfo QuantizeLifetimeMethod = GetUnaryMethodInfo(s => s.QuantizeLifetime(0, 0, 0));
+        private static readonly MethodInfo SetDurationMethod = GetUnaryMethodInfo(s => s.SetDuration(0));
+        private static readonly MethodInfo StitchMethod = GetUnaryMethodInfo(s => s.Stitch());
 
         private static readonly Expression<Func<IQStreamable<object>, IQStreamable<IGroupedWindow<object, object>>>> GroupByExpression = s => s.GroupBy(o => o, o => o);
         private static readonly MethodInfo GroupByMethod = ((MethodCallExpression)GroupByExpression.Body).Method.GetGenericMethodDefinition();
 
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> SelectExpression = s => s.Select(o => o);
-        private static readonly MethodInfo SelectMethod = ((MethodCallExpression)SelectExpression.Body).Method.GetGenericMethodDefinition();
+        private static readonly MethodInfo SelectMethod = GetUnaryMethodInfo(s => s.Select(o => o));
+        private static readonly MethodInfo SelectManyMethod = GetUnaryMethodInfo(s => s.SelectMany(o => Array.Empty<object>()));
+        private static readonly MethodInfo WhereMethod = GetUnaryMethodInfo(s => s.Where(o => true));
 
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>>> SelectManyExpression = s => s.SelectMany(o => Array.Empty<object>());
-        private static readonly MethodInfo SelectManyMethod = ((MethodCallExpression)SelectManyExpression.Body).Method.GetGenericMethodDefinition();
+        private static readonly MethodInfo ClipDurationBinaryMethod = GetBinaryMethodInfo((a, b) => a.ClipDuration(b, aa => true, bb => true));
+        private static readonly MethodInfo JoinMethod = GetBinaryMethodInfo((a, b) => a.Join(b, aa => true, bb => true, (aa, bb) => aa));
+        private static readonly MethodInfo UnionMethod = GetBinaryMethodInfo((a, b) => a.Union(b));
+        private static readonly MethodInfo WhereNotExistsMethod = GetBinaryMethodInfo((a, b) => a.WhereNotExists(b, aa => true, bb => true));
 
-        private static readonly Expression<Func<IQStreamable<int>, IQStreamable<int>>> WhereExpression = s => s.Where(o => true);
-        private static readonly MethodInfo WhereMethod = ((MethodCallExpression)WhereExpression.Body).Method.GetGenericMethodDefinition();
+        private static MethodInfo GetUnaryMethodInfo(Expression<Func<IQStreamable<object>, IQStreamable<object>>> expression)
+            => ((MethodCallExpression)expression.Body).Method.GetGenericMethodDefinition();
 
-
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<object>>> ClipDurationBinaryExpression = (a, b) => a.ClipDuration(b, aa => true, bb => true);
-        private static readonly MethodInfo ClipDurationBinaryMethod = ((MethodCallExpression)ClipDurationBinaryExpression.Body).Method.GetGenericMethodDefinition();
-
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<object>>> JoinExpression = (a, b) => a.Join(b, aa => true, bb => true, (aa, bb) => aa);
-        private static readonly MethodInfo JoinMethod = ((MethodCallExpression)JoinExpression.Body).Method.GetGenericMethodDefinition();
-
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<object>>> UnionExpression = (a, b) => a.Union(b);
-        private static readonly MethodInfo UnionMethod = ((MethodCallExpression)UnionExpression.Body).Method.GetGenericMethodDefinition();
-
-        private static readonly Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<object>>> WhereNotExistsExpression = (a, b) => a.WhereNotExists(b, aa => true, bb => true);
-        private static readonly MethodInfo WhereNotExistsMethod = ((MethodCallExpression)WhereNotExistsExpression.Body).Method.GetGenericMethodDefinition();
+        private static MethodInfo GetBinaryMethodInfo(Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<object>>> expression)
+            => ((MethodCallExpression)expression.Body).Method.GetGenericMethodDefinition();
 
         /// <summary>
         /// Visits the children of the System.Linq.Expressions.MethodCallExpression.
