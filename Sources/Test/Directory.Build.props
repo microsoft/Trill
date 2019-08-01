@@ -2,21 +2,19 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
-
+  
   <!-- This is needed for all .NET Framework projects that have a project reference to a multi-platform project: https://github.com/NuGet/Home/issues/4488 -->
   <ItemGroup>
     <PackageReference Include="Legacy2CPSWorkaround" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
-
+  
   <!-- Setup global MSBuild variables -->
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
-
+    <TargetFramework>net472</TargetFramework>
+    
     <!-- Automatic Version Control (TODO: not hooked up to the rest yet...) -->
-    <VersionMajor>0</VersionMajor>
-    <!-- Change major version here -->
-    <VersionMinor>9</VersionMinor>
-    <!-- Change minor version here -->
+    <VersionMajor>0</VersionMajor> <!-- Change major version here -->
+    <VersionMinor>9</VersionMinor> <!-- Change minor version here -->
   </PropertyGroup>
 
   <!-- VS to TFS Source Control integration -->
@@ -28,7 +26,7 @@
   </PropertyGroup>
 
   <!-- Define Platform and Configuration -->
-  <PropertyGroup>
+  <PropertyGroup>    
     <!-- Force x64 -->
     <PlatformTarget>x64</PlatformTarget>
     <Platform>x64</Platform>
@@ -67,9 +65,9 @@
 
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)Microsoft.StreamProcessing.Test.ruleset</CodeAnalysisRuleSet>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile />
-
+    
     <!-- Signing -->
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\TrillKey.snk</AssemblyOriginatorKeyFile>
