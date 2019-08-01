@@ -325,6 +325,19 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
+        /// Performs a filter over a streamable, excluding rows for which the predicate evaluates to false.
+        /// </summary>
+        /// <param name="source">The input stream to filter</param>
+        /// <param name="traceId">Trace Id</param>
+        public static IStreamable<TKey, TPayload> Trace<TKey, TPayload>(this IStreamable<TKey, TPayload> source, string traceId)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(traceId, nameof(traceId));
+
+            return new TraceStreamable<TKey, TPayload>(source, traceId);
+        }
+
+        /// <summary>
         /// This select many is used for generating many payloads out of one
         /// </summary>
         public static IStreamable<TKey, TResult> SelectMany<TKey, TPayload, TResult>(

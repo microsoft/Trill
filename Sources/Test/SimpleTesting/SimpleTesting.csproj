@@ -56,6 +56,7 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
+    <Compile Include="Streamables\TraceTests.cs" />
     <Compile Include="Streamables\AfaTests.cs" />
     <Compile Include="Aggregates\AverageAggregate.cs" />
     <Compile Include="Aggregates\CompoundAggregate.cs" />

@@ -295,6 +295,11 @@ namespace Microsoft.StreamProcessing
         QuantizeLifetime,
 
         /// <summary>
+        /// Passthrough trace operator
+        /// </summary>
+        Trace,
+
+        /// <summary>
         /// Represents an operator that is defined externally from the library
         /// </summary>
         UserDefined,
