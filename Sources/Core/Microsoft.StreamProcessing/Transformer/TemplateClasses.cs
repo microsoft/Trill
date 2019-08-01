@@ -13,8 +13,10 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+#if DOTNETCORE
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
+#endif
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -32,6 +34,7 @@ namespace Microsoft.StreamProcessing
         public static Assembly SystemDll = typeof(Uri).GetTypeInfo().Assembly;
         public static Assembly SystemCoreDll = typeof(BinaryExpression).GetTypeInfo().Assembly;
 
+#if DOTNETCORE
         internal static IEnumerable<PortableExecutableReference> GetNetCoreAssemblyReferences()
         {
             var allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
@@ -71,6 +74,7 @@ namespace Microsoft.StreamProcessing
         }
         private static readonly Lazy<IEnumerable<PortableExecutableReference>> netCoreAssemblyReferences
             = new Lazy<IEnumerable<PortableExecutableReference>>(GetNetCoreAssemblyReferences);
+#endif
 
         /// <summary>
         /// This is used as part of constructing the name of a field in a StreamMessage that is a column representing a field of the payload type.
@@ -148,10 +152,14 @@ namespace Microsoft.StreamProcessing
 #endif
 
             bool includeDebugInfo = Config.CodegenOptions.GenerateDebugInfo;
-            var uniqueReferences = references.Distinct().Where(r => !r.FullName.Contains("System.Private.CoreLib"));
+            var uniqueReferences = references.Distinct();
 
             if (includeIgnoreAccessChecksAssembly)
                 uniqueReferences = uniqueReferences.Concat(new Assembly[] { IgnoreAccessChecks.Assembly });
+
+#if DOTNETCORE
+            uniqueReferences = uniqueReferences.Where(r => !r.FullName.Contains("System.Private.CoreLib"));
+#endif
 
             var assemblyName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
 
@@ -184,12 +192,21 @@ namespace Microsoft.StreamProcessing
             MetadataReference trill = MetadataReference.CreateFromFile(typeof(StreamMessage).GetTypeInfo().Assembly.Location);
             MetadataReference linq = MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location);
             MetadataReference contracts = MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataContractAttribute).GetTypeInfo().Assembly.Location);
-            MetadataReference[] baseReferences = { trill };
+            MetadataReference[] baseReferences =
+            {
+                trill,
+#if !DOTNETCORE
+                mscorlib, linq, contracts, numerics,
+#endif
+            };
 
             var refs = baseReferences
                 .Concat(uniqueReferences.Where(r => Path.IsPathRooted(r.Location)).Select(r => MetadataReference.CreateFromFile(r.Location)))
-                .Concat(uniqueReferences.Where(reference => metadataReferenceCache.ContainsKey(reference)).Select(reference => metadataReferenceCache[reference]))
-                .Concat(netCoreAssemblyReferences.Value);
+                .Concat(uniqueReferences.Where(reference => metadataReferenceCache.ContainsKey(reference)).Select(reference => metadataReferenceCache[reference]));
+
+#if DOTNETCORE
+            refs = refs.Concat(netCoreAssemblyReferences.Value);
+#endif
 
             var options = new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
@@ -238,7 +255,11 @@ namespace Microsoft.StreamProcessing
 
                 if (emitResult.Success)
                 {
+#if DOTNETCORE
                     a = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyFile);
+#else
+                    a = Assembly.LoadFrom(assemblyFile);
+#endif
                 }
             }
             else
@@ -249,8 +270,13 @@ namespace Microsoft.StreamProcessing
                     if (emitResult.Success)
                     {
                         stream.Position = 0;
+#if DOTNETCORE
                         a = AssemblyLoadContext.Default.LoadFromStream(stream);
                         stream.Position = 0; // Must reset it! Loading leaves its position at the end
+#else
+                        var assembly = stream.ToArray();
+                        a = Assembly.Load(assembly);
+#endif
                         loader.RegisterDependency(a);
                         var aref = MetadataReference.CreateFromStream(stream);
                         metadataReferenceCache.Add(a, aref);
@@ -726,7 +752,7 @@ namespace System.Runtime.CompilerServices
             this.assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(keyType));
             this.keyType = keyType;
 
-#region Decompose TPayload into columns
+            #region Decompose TPayload into columns
             var payloadType = payloadRepresentation.RepresentationFor;
             this.assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(payloadType));
             this.payloadType = payloadType;
@@ -735,7 +761,7 @@ namespace System.Runtime.CompilerServices
             this.types = new HashSet<Type>(payloadTypes.Distinct());
 
             this.assemblyReferences.AddRange(this.types.SelectMany(t => Transformer.AssemblyReferencesNeededFor(t)));
-#endregion
+            #endregion
 
             this.generatedClassName = Transformer.GetMemoryPoolClassName(keyType, payloadType);
             this.className = this.generatedClassName.CleanUpIdentifierName();
