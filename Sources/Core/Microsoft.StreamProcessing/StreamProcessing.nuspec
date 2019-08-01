@@ -14,7 +14,7 @@
     <tags>Streaming Temporal Data</tags>
     <dependencies>
       <group targetFramework="netstandard2.0">
-        <dependency id="Microsoft.CodeAnalysis.Scripting" version="2.10.0" />
+        <dependency id="Microsoft.CodeAnalysis.Scripting" version="3.1.0" />
         <dependency id="Microsoft.CSharp" version="4.5.0" />
         <dependency id="NETStandard.Library" version="2.0.0" />
         <dependency id="System.Diagnostics.Contracts" version="4.3.0" />
@@ -23,20 +23,9 @@
         <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" />
         <dependency id="System.Threading.Thread" version="4.3.0" />
       </group>
-      <group targetFramework="net46">
-        <dependency id="Microsoft.CodeAnalysis.Scripting" version="2.10.0" />
-        <dependency id="Microsoft.CSharp" version="4.5.0" />
-        <dependency id="System.Diagnostics.Contracts" version="4.3.0" />
-        <dependency id="System.Diagnostics.Process" version="4.3.0" />
-        <dependency id="System.Runtime.Serialization.Primitives" version="4.3.0" />
-        <dependency id="System.Threading.Thread" version="4.3.0" />
-      </group>
     </dependencies>
   </metadata>
   <files>
-    <file src="..\..\..\bin\AnyCPU\$configuration$\net46\Microsoft.StreamProcessing.dll" target="lib\net46" />
-    <file src="..\..\..\bin\AnyCPU\$configuration$\net46\Microsoft.StreamProcessing.pdb" target="lib\net46" />
-    <file src="..\..\..\bin\AnyCPU\$configuration$\net46\Microsoft.StreamProcessing.xml" target="lib\net46" />
     <file src="..\..\..\bin\AnyCPU\$configuration$\netstandard2.0\Microsoft.StreamProcessing.deps.json" target="lib\netstandard2.0" />
     <file src="..\..\..\bin\AnyCPU\$configuration$\netstandard2.0\Microsoft.StreamProcessing.dll" target="lib\netstandard2.0" />
     <file src="..\..\..\bin\AnyCPU\$configuration$\netstandard2.0\Microsoft.StreamProcessing.pdb" target="lib\netstandard2.0" />
