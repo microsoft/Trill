@@ -41,19 +41,7 @@ namespace SimpleTesting
             return this;
         }
 
-        public override string ToString()
-        {
-            string str = "{ ";
-            bool first = true;
-            foreach (var e in this)
-            {
-                if (!first) str += ", ";
-                str += "[" + e.ToString() + "]";
-                first = false;
-            }
-            str += " }";
-            return str;
-        }
+        public override string ToString() => $"{{ {string.Join(", ", this.Select(e => $"[{e}]"))} }}";
     }
 
     public struct AfaPayload
@@ -86,11 +74,22 @@ namespace SimpleTesting
     {
         public bool IsNegative { get; set; }
         public FList<Payload2> MatchedPayloads { get; set; }
+
+        public static Register AggregateRegister(Register reg, Payload2 payload, bool isNegativeMatch) =>
+            new Register
+            {
+                IsNegative = (reg?.IsNegative ?? default) || isNegativeMatch,
+                MatchedPayloads = (reg?.MatchedPayloads.Clone() ?? new FList<Payload2>()).Add(payload)
+            };
     }
 
-    internal class AfaTests
+    public abstract class AfaTests : TestWithConfigSettingsAndMemoryLeakDetection
     {
-        public static void CoreAfaList01()
+        internal AfaTests(ConfigModifier modifer) : base(modifer)
+        { }
+
+        [TestMethod, TestCategory("Gated")]
+        public void CoreAfaList01()
         {
             var pat1 = Afa.Create<long>();
             pat1.AddListElementArc(0, 1, fence: (ts, ev, reg) => ev.Contains(0));
@@ -107,8 +106,7 @@ namespace SimpleTesting
                 .Detect(pat1, isDeterministic: true, allowOverlappingInstances: false)
                 .ToStreamEventObservable()
                 .Where(e => e.IsData)
-                .ToEnumerable()
-                ;
+                .ToEnumerable();
             var expected = new StreamEvent<Empty>[]
             {
                 StreamEvent.CreateInterval(2, 10, Empty.Default),
@@ -116,7 +114,8 @@ namespace SimpleTesting
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
-        public static void CoreAfaList02()
+        [TestMethod, TestCategory("Gated")]
+        public void CoreAfaList02()
         {
             var pat1 = Afa.Create<AfaPayload>();
             pat1.AddListElementArc(0, 1, fence: (ts, events, reg) => events.Any(p => p.Field2 == 0));
@@ -137,8 +136,7 @@ namespace SimpleTesting
                 .Detect(pat1, isDeterministic: true, allowOverlappingInstances: false)
                 .ToStreamEventObservable()
                 .Where(e => e.IsData)
-                .ToEnumerable()
-                ;
+                .ToEnumerable();
             var expected = new StreamEvent<Empty>[]
             {
                 StreamEvent.CreateInterval(140, 1100, Empty.Default),
@@ -146,7 +144,8 @@ namespace SimpleTesting
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
-        public static void CoreAfaMultiEvent01()
+        [TestMethod, TestCategory("Gated")]
+        public void CoreAfaMultiEvent01()
         {
             var pat1 = new Afa<long, Empty, bool>();
             pat1.AddMultiElementArc(0, 1,
@@ -175,8 +174,7 @@ namespace SimpleTesting
                     .ToStreamEventObservable()
                     .Where(e => e.IsData)
                     .ToEnumerable()
-                    .ToArray()
-                    ;
+                    .ToArray();
             var expected = new StreamEvent<Empty>[]
             {
                 StreamEvent.CreateInterval(2, 10, Empty.Default),
@@ -184,7 +182,8 @@ namespace SimpleTesting
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
-        public static void CoreAfaMultiEvent02()
+        [TestMethod, TestCategory("Gated")]
+        public void CoreAfaMultiEvent02()
         {
             var pat1 = new Afa<long, Empty, bool>();
             pat1.AddMultiElementArc(0, 1,
@@ -212,14 +211,14 @@ namespace SimpleTesting
                     .Detect(pat1, isDeterministic: true, allowOverlappingInstances: false)
                     .ToStreamEventObservable()
                     .Where(e => e.IsData)
-                    .ToEnumerable()
-                    ;
+                    .ToEnumerable();
             var x = result.ToArray();
             var expected = new StreamEvent<Empty>[] { StreamEvent.CreateInterval(1, 10, Empty.Default) };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
-        public static void CoreAfaMultiEvent03()
+        [TestMethod, TestCategory("Gated")]
+        public void CoreAfaMultiEvent03()
         {
             var pat1 = new Afa<long, Empty, bool>();
             pat1.AddSingleElementArc(0, 1,
@@ -255,13 +254,13 @@ namespace SimpleTesting
                     .ToStreamEventObservable()
                     .Where(e => e.IsData)
                     .ToEnumerable()
-                    .ToArray()
-                    ;
+                    .ToArray();
             var expected = new StreamEvent<Empty>[] { StreamEvent.CreateInterval(3, 11, Empty.Default) };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
-        public static void CoreAfaMultiEvent04()
+        [TestMethod, TestCategory("Gated")]
+        public void CoreAfaMultiEvent04()
         {
             var pat1 = new Afa<long, Empty, bool>();
             pat1.AddSingleElementArc(0, 1,
@@ -295,13 +294,13 @@ namespace SimpleTesting
                     .ToStreamEventObservable()
                     .Where(e => e.IsData)
                     .ToEnumerable()
-                    .ToArray()
-                    ;
+                    .ToArray();
             var expected = new StreamEvent<Empty>[] { StreamEvent.CreateInterval(3, 11, Empty.Default) };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
-        public static void AfaDefinePattern01()
+        [TestMethod, TestCategory("Gated")]
+        public void AfaDefinePattern01()
         {
             var source1 = new StreamEvent<AfaPayload>[]
             {
@@ -332,10 +331,10 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(150, 1120, 14),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
-
         }
 
-        public static void AfaDefinePattern02()
+        [TestMethod, TestCategory("Gated")]
+        public void AfaDefinePattern02()
         {
             var source1 = new StreamEvent<AfaPayload>[]
             {
@@ -357,8 +356,7 @@ namespace SimpleTesting
                 .ToStreamEventObservable()
                 .Where(e => e.IsData)
                 .ToEnumerable()
-                .ToArray()
-                ;
+                .ToArray();
 
             var expected = new StreamEvent<int>[]
             {
@@ -366,10 +364,10 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(150, 1120, 14),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
-
         }
 
-        public static void AfaDefinePattern03()
+        [TestMethod, TestCategory("Gated")]
+        public void AfaDefinePattern03()
         {
             var source1 = new StreamEvent<AfaPayload>[]
             {
@@ -390,18 +388,17 @@ namespace SimpleTesting
                 .ToStreamEventObservable()
                 .Where(e => e.IsData)
                 .ToEnumerable()
-                .ToArray()
-                ;
+                .ToArray();
 
             var expected = new StreamEvent<int>[]
             {
                 StreamEvent.CreateInterval(110, 1100, 17),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
-
         }
 
-        public static void AfaPatternAiBi01()
+        [TestMethod, TestCategory("Gated")]
+        public void AfaPatternAiBi01()
         {
             var source1 = new StreamEvent<AfaPayload>[]
             {
@@ -422,8 +419,7 @@ namespace SimpleTesting
                 .ToStreamEventObservable()
                 .Where(e => e.IsData)
                 .ToEnumerable()
-                .ToArray()
-                ;
+                .ToArray();
             var expected = new StreamEvent<int>[]
             {
                 StreamEvent.CreateInterval(130, 1120, 1),
@@ -433,7 +429,8 @@ namespace SimpleTesting
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
-        public static void AfaPatternAiBi02()
+        [TestMethod, TestCategory("Gated")]
+        public void AfaPatternAiBi02()
         {
             var source1 = new StreamEvent<AfaPayload>[]
             {
@@ -453,10 +450,9 @@ namespace SimpleTesting
                     .SingleElement((ts, e, r) => e.Field1 == "B" && r == 1),
                     allowOverlappingInstances: false)
                 .ToStreamEventObservable()
-                .Where(e => e.IsData)
+                .Where(evt => evt.IsData)
                 .ToEnumerable()
-                .ToArray()
-                ;
+                .ToArray();
             var expected = new StreamEvent<int>[]
             {
                 StreamEvent.CreateInterval(150, 1100, 1),
@@ -464,39 +460,22 @@ namespace SimpleTesting
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
-        public static Register CreateOrAddToRegister(Payload2 p, Register r, bool isNegativeMatch)
+        [TestMethod, TestCategory("Gated")]
+        public void DAfa01()
         {
-            var ret = new Register();
-            if (r != null)
-            {
-                ret.IsNegative = ret.IsNegative || isNegativeMatch;
-                ret.MatchedPayloads = r.MatchedPayloads.Add(p);
-            }
-            else
-            {
-                ret.IsNegative = isNegativeMatch;
-                ret.MatchedPayloads = new FList<Payload2>() { p };
-            }
-            return ret;
-        }
-
-        public static void DAfa01()
-        {
-           // Config.CodegenOptions.BreakIntoCodeGen = Config.CodegenOptions.DebugFlags.Operators;
-            var sequence = new List<string>() { "A", "B", "C", "A", "A", "A", "B" };
-            var r = new Random(0);
-            var source = new List<Payload2>();
-
-            int count = 0;
-            source = sequence.Select(a => new Payload2() { Session = "1", Field1 = a, Tick = count++ }).ToList();
-
-            var trillSource = source.OrderBy(e => e.Tick)
+            var count = 0;
+            var source = new List<string>() { "A", "B", "C", "A", "A", "A", "B" }
+                .Select(a => new Payload2() { Session = "1", Field1 = a, Tick = count++ })
+                .OrderBy(e => e.Tick)
+                .ToList()
                 .Select(e => StreamEvent.CreateStart(e.Tick, e))
                 .ToObservable().ToStreamable(DisorderPolicy.Drop())
                 .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
-            Afa<Payload2, Register, bool> pattern3 = ARegex.SingleElement<Payload2, Register>((t, ev, reg) => ev.Field1 == "C", (t, ev, reg) => reg);
+            var pattern3 = ARegex.SingleElement<Payload2, Register>(
+                (t, ev, reg) => ev.Field1 == "C",
+                (t, ev, reg) => reg);
             var registers =
-                trillSource
+                source
                 .Detect(pattern3, StreamEvent.InfinitySyncTime, false, false)
                 .ToStreamEventObservable()
                 .Where(evt => evt.IsData)
@@ -505,94 +484,48 @@ namespace SimpleTesting
                 .ToList();
             Assert.IsTrue(registers.Count == 1 && registers[0] == null); // really just want to test that code gen didn't fail.
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void DAfa02()
+        {
+            var count = 0;
+            var source = new List<string>() { "A", "B", "C", "A", "A", "A", "B" }
+                .Select(a => new Payload2() { Session = "1", Field1 = a, Tick = count++ })
+                .OrderBy(e => e.Tick)
+                .Select(e => StreamEvent.CreateStart(e.Tick, e))
+                .ToList()
+                .ToObservable().ToStreamable(DisorderPolicy.Drop())
+                .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
+            var pattern3 = ARegex.SingleElement<Payload2, Register>(
+                (t, ev, reg) => ev.Field1 == "C",
+                (t, ev, reg) => Register.AggregateRegister(reg, ev, false));
+            var registers =
+                source
+                .Detect(pattern3, StreamEvent.InfinitySyncTime, false, false)
+                .Where(register => register.MatchedPayloads.Count > 0)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .Select(evt => evt.Payload)
+                .ToEnumerable()
+                .ToList();
+            Assert.IsTrue(registers.Count == 1 && registers[0].MatchedPayloads.Count == 1);
+        }
     }
 
     [TestClass]
-    public class AfaTestsWithoutCodegen : TestWithConfigSettingsAndMemoryLeakDetection
+    public class AfaTestsWithoutCodegen : AfaTests
     {
-        public AfaTestsWithoutCodegen() : base(new ConfigModifier()
-            .CodeGenAfa(false))
+        public AfaTestsWithoutCodegen() : base(new ConfigModifier().CodeGenAfa(false))
         { }
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaListWithoutCodegen01() => AfaTests.CoreAfaList01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaListWithoutCodegen02() => AfaTests.CoreAfaList02();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaMultiEventWithoutCodegen01() => AfaTests.CoreAfaMultiEvent01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaMultiEventWithoutCodegen02() => AfaTests.CoreAfaMultiEvent02();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaMultiEventWithoutCodegen03() => AfaTests.CoreAfaMultiEvent03();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaMultiEventWithoutCodegen04() => AfaTests.CoreAfaMultiEvent04();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaDefinePatternWithoutCodegen01() => AfaTests.AfaDefinePattern01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaDefinePatternWithoutCodegen02() => AfaTests.AfaDefinePattern02();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaDefinePatternWithoutCodegen03() => AfaTests.AfaDefinePattern03();
-
-        [TestMethod, TestCategory("Gated")]
-        public void DAfaWithoutCodegen01() => AfaTests.DAfa01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaDefinePatternAiBi01WithoutCodegen() => AfaTests.AfaPatternAiBi01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaPatternAiBi02WithoutCodegen() => AfaTests.AfaPatternAiBi02();
     }
+
     [TestClass]
-    public class AfaTestsWithCodegen : TestWithConfigSettingsAndMemoryLeakDetection
+    public class AfaTestsWithCodegen : AfaTests
     {
         public AfaTestsWithCodegen() : base(new ConfigModifier()
             .CodeGenAfa(true)
             .ForceRowBasedExecution(false)
             .DontFallBackToRowBasedExecution(true))
         { }
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaListWithCodegen01() => AfaTests.CoreAfaList01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaListWithCodegen02() => AfaTests.CoreAfaList02();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaMultiEventWithCodegen01() => AfaTests.CoreAfaMultiEvent01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaMultiEventWithCodegen02() => AfaTests.CoreAfaMultiEvent02();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaMultiEventWithCodegen03() => AfaTests.CoreAfaMultiEvent03();
-
-        [TestMethod, TestCategory("Gated")]
-        public void CoreAfaMultiEventWithCodegen04() => AfaTests.CoreAfaMultiEvent04();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaDefinePatternWithCodegen01() => AfaTests.AfaDefinePattern01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaDefinePatternWithCodegen02() => AfaTests.AfaDefinePattern02();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaDefinePatternWithCodegen03() => AfaTests.AfaDefinePattern03();
-
-        [TestMethod, TestCategory("Gated")]
-        public void DAfaWithCodegen01() => AfaTests.DAfa01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaDefinePatternAiBi01WithCodegen() => AfaTests.AfaPatternAiBi01();
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaPatternAiBi02WithCodegen() => AfaTests.AfaPatternAiBi02();
     }
 }
