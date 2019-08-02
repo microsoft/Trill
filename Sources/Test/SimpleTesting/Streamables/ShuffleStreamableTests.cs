@@ -9,7 +9,7 @@ using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Sharding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.ShuffleStreamable
 {
     [TestClass]
     public class ShuffleStreamableTestsRow : TestWithConfigSettingsAndMemoryLeakDetection

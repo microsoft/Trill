@@ -14,7 +14,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 using Microsoft.StreamProcessing.Serializer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.SimpleTests
 {
     public static class ClassWithNestedType1<T>
     {
@@ -80,39 +80,6 @@ namespace SimpleTesting
     internal class ClassImplementingNonGenericIComparer : System.Collections.IComparer
     {
         public int Compare(object x, object y) => 3;
-    }
-
-    public class SERListEqualityComparer : IEqualityComparer<StreamEvent<List<RankedEvent<char>>>>
-    {
-        public bool Equals(StreamEvent<List<RankedEvent<char>>> a, StreamEvent<List<RankedEvent<char>>> b)
-        {
-            if (a.SyncTime != b.SyncTime) return false;
-            if (a.OtherTime != b.OtherTime) return false;
-
-            if (a.Kind != b.Kind) return false;
-
-            if (a.Kind != StreamEventKind.Punctuation)
-            {
-                if (a.Payload.Count != b.Payload.Count) return false;
-
-                for (int j = 0; j < a.Payload.Count; j++)
-                {
-                    if (!a.Payload[j].Equals(b.Payload[j])) return false;
-                }
-            }
-
-            return true;
-        }
-
-        public int GetHashCode(StreamEvent<List<RankedEvent<char>>> obj)
-        {
-            int ret = (int)(obj.SyncTime ^ obj.OtherTime);
-            foreach (var l in obj.Payload)
-            {
-                ret ^= l.GetHashCode();
-            }
-            return ret;
-        }
     }
 
     public struct Payload

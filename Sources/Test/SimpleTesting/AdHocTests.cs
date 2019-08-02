@@ -19,7 +19,7 @@ using Microsoft.StreamProcessing.Serializer;
 using Microsoft.StreamProcessing.Sharding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.AdHoc
 {
     public static class Helpers
     {

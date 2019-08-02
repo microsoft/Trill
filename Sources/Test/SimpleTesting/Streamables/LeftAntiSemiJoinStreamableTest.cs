@@ -5,7 +5,7 @@
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.LeftAntiSemiJoin
 {
     [TestClass]
     public class LeftAntiSemiJoinStreamableTest : TestWithConfigSettingsAndMemoryLeakDetection

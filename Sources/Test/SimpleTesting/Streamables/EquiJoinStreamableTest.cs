@@ -8,7 +8,7 @@ using System.Reactive.Linq;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.EquiJoin
 {
     [TestClass]
     public class EquiJoinStreamableTest : TestWithConfigSettingsAndMemoryLeakDetection

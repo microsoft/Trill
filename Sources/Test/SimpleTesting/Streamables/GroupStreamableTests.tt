@@ -16,46 +16,8 @@ using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Sharding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.Group
 {
-    public struct StructWithProperty
-    {
-        public int P { get; set; }
-    }
-
-    public struct GameData
-    {
-        public int EventType; // 0: start game, 1: kill event, 2: end game
-        public int GameId;
-        public int UserId;
-        public ulong NumKills;
-    }
-
-    public struct ThresholdData
-    {
-        public ulong Threshold;
-        public int Medal;
-    }
-
-    internal static class StreamableInternal
-    {
-        /// <summary>
-        /// Convert a stream (with a Empty key) to a simple enumerable of the payloads.
-        /// </summary>
-        /// <typeparam name="TPayload"></typeparam>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public static IEnumerable<TPayload> ToPayloadEnumerable<TPayload>(this IStreamable<Empty, TPayload> source)
-        {
-            return source.ToAtemporalObservable().ToEnumerable();
-        }
-
-        public static IStreamable<TKey, StructTuple<TPayload, TPayload>> ComputeSignalChangeStream<TKey, TPayload>(this IStreamable<TKey, TPayload> input)
-        {
-            return
-                input.Multicast(xs => xs.ShiftEventLifetime(vs => vs + 1).Join(xs.AlterEventDuration(1), (l, r) => new StructTuple<TPayload, TPayload> { Item1 = l, Item2 = r }));
-        }
-    }
 <#
 foreach (var orientation in new [] { "Row", "Columnar" })
 foreach (var batch in new [] { string.Empty, "SmallBatch" })

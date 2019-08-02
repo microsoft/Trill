@@ -16,7 +16,7 @@ using System.Reactive.Subjects;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.IngressAndEgressTests
 {
 <#
 foreach (var orientation in new [] { "Row", "Columnar" })

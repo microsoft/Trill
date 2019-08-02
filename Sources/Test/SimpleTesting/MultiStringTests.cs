@@ -10,8 +10,9 @@ using System.Reactive.Linq;
 using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal.Collections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MultiString = Microsoft.StreamProcessing.Internal.Collections.MultiString;
 
-namespace SimpleTesting
+namespace SimpleTesting.MultiStringTests
 {
     [TestClass]
     public class MultiStringTests : TestWithConfigSettingsAndMemoryLeakDetection

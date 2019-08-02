@@ -10,7 +10,7 @@ using System.Runtime.Serialization;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.AfaTests
 {
     [DataContract]
     public class FList<T> : List<T>

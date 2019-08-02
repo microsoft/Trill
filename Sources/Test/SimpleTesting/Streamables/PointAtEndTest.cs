@@ -11,7 +11,7 @@ using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.PointAtEnd
 {
     [TestClass]
     public class PointAtEndTest : TestWithConfigSettingsAndMemoryLeakDetection

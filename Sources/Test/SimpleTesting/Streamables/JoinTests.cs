@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.Join
 {
     [TestClass]
     public class JoinTestsRowMultiString : TestWithConfigSettingsAndMemoryLeakDetection

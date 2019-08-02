@@ -10,7 +10,7 @@ using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.Stitch
 {
     [TestClass]
     public class StitchTest : TestWithConfigSettingsAndMemoryLeakDetection

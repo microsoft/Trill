@@ -190,6 +190,11 @@ namespace Microsoft.StreamProcessing
         SelectMany,
 
         /// <summary>
+        /// Represents an operator in a running query that applies a stateful function over payloads (and optionally start-time or key value) to each row of the data.
+        /// </summary>
+        StatefulSelect,
+
+        /// <summary>
         /// Represents an operator in a running query that alters event lifetimes.
         /// </summary>
         AlterLifetime,

@@ -9,7 +9,7 @@ using System.Reactive.Subjects;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.IngressAndEgressTests
 {
 
     [TestClass]

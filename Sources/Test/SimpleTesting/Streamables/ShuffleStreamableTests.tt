@@ -15,7 +15,7 @@ using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Sharding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.ShuffleStreamable
 {
 <#
 foreach (var orientation in new [] { "Row", "Columnar" })

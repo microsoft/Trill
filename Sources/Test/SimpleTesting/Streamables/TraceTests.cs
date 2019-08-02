@@ -11,7 +11,7 @@ using System.Reactive.Subjects;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.Trace
 {
     [TestClass]
     public class TraceTests : TestWithConfigSettingsAndMemoryLeakDetection

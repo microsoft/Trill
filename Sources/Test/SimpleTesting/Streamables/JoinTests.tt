@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.Join
 {
 <#
 foreach (var orientation in new [] { "Row", "Columnar" })

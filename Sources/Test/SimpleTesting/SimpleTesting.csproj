@@ -56,6 +56,8 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
+    <Compile Include="TestHelpers.cs" />
+    <Compile Include="Streamables\StatefulSelectTests.cs" />
     <Compile Include="Streamables\TraceTests.cs" />
     <Compile Include="Streamables\AfaTests.cs" />
     <Compile Include="Aggregates\AverageAggregate.cs" />

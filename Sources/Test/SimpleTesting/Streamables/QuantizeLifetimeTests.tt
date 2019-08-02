@@ -14,7 +14,7 @@ using System.Reactive.Linq;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.QuantizeLifetime
 {
 <#
 foreach (var orientation in new [] { "Row", "Columnar" })

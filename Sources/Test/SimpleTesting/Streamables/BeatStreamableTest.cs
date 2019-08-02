@@ -6,7 +6,7 @@ using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting
+namespace SimpleTesting.Beat
 {
     [TestClass]
     public class BeatStreamableTest : TestWithConfigSettingsAndMemoryLeakDetection

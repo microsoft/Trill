@@ -413,6 +413,21 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
+        /// Select that maintains a state object per key
+        /// </summary>
+        public static IStreamable<TKey, TResult> StatefulSelect<TKey, TSource, TState, TResult>(
+            this IStreamable<TKey, TSource> source,
+            Expression<Func<long, TState, TSource, TResult>> statefulSelect,
+            Expression<Func<TState>> initialState,
+            long stateTimeout)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsNotNull(statefulSelect, nameof(statefulSelect));
+            Invariant.IsNotNull(initialState, nameof(initialState));
+            return new StatefulSelectStreamable<TKey, TSource, TState, TResult>(source, statefulSelect, initialState, stateTimeout);
+        }
+
+        /// <summary>
         /// Stitch is the reverse of the 'Chop' operator: when it finds an END payload and a BEGIN payload at the same
         /// time, it removes both from the stream. The net effect is that if a value in a signal doesn't change, then the
         /// stream won't have new events. This is mostly useful for human eyes; mathemtically, the two should be identical
