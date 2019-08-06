@@ -22,6 +22,8 @@ namespace Microsoft.StreamProcessing
     {
         bool partitioned = partitionString == "Partitioned";
         string genericArguments = !partitioned ? "TPayload" : "TPartitionKey, TPayload";
+        string customIngressKey = partitioned ? "PartitionKey<TPartitionKey>" : "Empty";
+        string customIngressGenericArgs = (partitioned ? customIngressKey : "Empty") + ", TPayload";
         string ingress =
               (ingressType == "StreamEvent" ? partitionString + "StreamEvent<" : string.Empty)
             + (!partitioned || ingressType != "StreamEvent" ? "TPayload" : "TPartitionKey, TPayload")
@@ -182,7 +184,47 @@ namespace Microsoft.StreamProcessing
                 onCompletedPolicy);
         }
 
-<#      } #>
+<#          if (ingressType == "StreamEvent")
+            { #>
+        /// <summary>
+        /// Converts source observable to an IStreamable with custom ingress.
+        /// </summary>
+<#              if (hasContainer)
+                { #>
+        /// <param name="container">The query container to which to register the ingress point.</param>
+<#              } #>
+        /// <typeparam name="TSource">The type of the source observable</typeparam>
+<#              if (partitioned)
+                { #>
+        /// <typeparam name="TPartitionKey">The type of partition key for the stream.</typeparam>
+<#              } #>
+        /// <typeparam name="TPayload">The type of data for the stream.</typeparam>
+        /// <param name="sourceObservable">Source observable created by the client.</param>
+        /// <param name="pipeCreator"></param>
+<#              if (hasContainer)
+                { #>
+        /// <param name="identifier">If provided, a unique name to identify to point of ingress in the query.</param>
+<#              } #>
+        /// <returns>An IStreamable that can be used in queries.</returns>
+        public static IIngressStreamable<<#= customIngressGenericArgs #>> <#= (hasContainer ? "RegisterInput" : "ToStreamable") #><TSource, <#= genericArguments #>>(
+<#              if (hasContainer)
+                { #>
+            this QueryContainer container,
+<#              } #>
+            <# if (!hasContainer) { #>this <# } #>IObservable<TSource> sourceObservable,
+            Func<<#= partitionString #>CustomIngressStreamable<TSource, <#= genericArguments #>>, IStreamObserver<<#= customIngressGenericArgs #>>, <#= partitionString #>CustomIngressStreamable<TSource, <#= genericArguments #>>.CustomIngressPipe> pipeCreator<#
+            if (hasContainer) { #>,
+            string identifier = null<# } #>)
+        {
+            return ToCustomIngressStreamable(
+                sourceObservable,
+                pipeCreator,
+                <#= hasContainer ? "container" : "null" #>,
+                <#= hasContainer ? "identifier" : "null"#>);
+        }
+
+<#          }
+        } #>
         internal static I<#= !partitioned ? "Observable" : "Partitioned" #>IngressStreamable<<#= genericArguments #>> ToCheckpointable<#= infixMethodName #>Streamable<<#= genericArguments #>>(
             this IObservable<<#= ingress #>> streamEvents,
 <#  switch (ingressType)
@@ -254,6 +296,23 @@ namespace Microsoft.StreamProcessing
             return a;
         }
 
-<#  } // end foreach loops #>
+<#      if (ingressType == "StreamEvent") 
+        {
+#>
+        internal static IIngressStreamable<<#= customIngressGenericArgs #>> ToCustomIngressStreamable<TSource, <#= genericArguments #>>(
+            this IObservable<TSource> sourceObservable,
+            Func<<#= partitionString #>CustomIngressStreamable<TSource, <#= genericArguments #>>, IStreamObserver<<#= customIngressGenericArgs #>>, <#= partitionString #>CustomIngressStreamable<TSource, <#= genericArguments #>>.CustomIngressPipe> pipeCreator,
+            QueryContainer container,
+            string identifier)
+        {
+            return new <#= partitionString #>CustomIngressStreamable<TSource, <#= genericArguments #>>(
+                sourceObservable,
+                pipeCreator,
+                container,
+                identifier);
+        }
+
+<#      }
+    } // end foreach loops #>
     }
 }

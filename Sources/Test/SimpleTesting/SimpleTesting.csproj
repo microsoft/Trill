@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdHocTests.cs" />
+    <Compile Include="IngressEgress\CustomIngress.cs" />
     <Compile Include="Macros\AdjustColumns.cs">
       <DependentUpon>AdjustColumns.tt</DependentUpon>
       <DesignTime>True</DesignTime>

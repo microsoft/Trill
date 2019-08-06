@@ -47,6 +47,25 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
+        /// Converts source observable to an IStreamable with custom ingress.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source observable</typeparam>
+        /// <typeparam name="TPayload">The type of data for the stream.</typeparam>
+        /// <param name="sourceObservable">Source observable created by the client.</param>
+        /// <param name="pipeCreator"></param>
+        /// <returns>An IStreamable that can be used in queries.</returns>
+        public static IIngressStreamable<Empty, TPayload> ToStreamable<TSource, TPayload>(
+            this IObservable<TSource> sourceObservable,
+            Func<CustomIngressStreamable<TSource, TPayload>, IStreamObserver<Empty, TPayload>, CustomIngressStreamable<TSource, TPayload>.CustomIngressPipe> pipeCreator)
+        {
+            return ToCustomIngressStreamable(
+                sourceObservable,
+                pipeCreator,
+                null,
+                null);
+        }
+
+        /// <summary>
         /// Converts a sequence of StreamEvents to an IStreamable.
         /// The completion policy specifies what to do when the resulting stream completes.
         /// The disorder policy specifies what to do with out of order events.
@@ -86,6 +105,29 @@ namespace Microsoft.StreamProcessing
                 onCompletedPolicy);
         }
 
+        /// <summary>
+        /// Converts source observable to an IStreamable with custom ingress.
+        /// </summary>
+        /// <param name="container">The query container to which to register the ingress point.</param>
+        /// <typeparam name="TSource">The type of the source observable</typeparam>
+        /// <typeparam name="TPayload">The type of data for the stream.</typeparam>
+        /// <param name="sourceObservable">Source observable created by the client.</param>
+        /// <param name="pipeCreator"></param>
+        /// <param name="identifier">If provided, a unique name to identify to point of ingress in the query.</param>
+        /// <returns>An IStreamable that can be used in queries.</returns>
+        public static IIngressStreamable<Empty, TPayload> RegisterInput<TSource, TPayload>(
+            this QueryContainer container,
+            IObservable<TSource> sourceObservable,
+            Func<CustomIngressStreamable<TSource, TPayload>, IStreamObserver<Empty, TPayload>, CustomIngressStreamable<TSource, TPayload>.CustomIngressPipe> pipeCreator,
+            string identifier = null)
+        {
+            return ToCustomIngressStreamable(
+                sourceObservable,
+                pipeCreator,
+                container,
+                identifier);
+        }
+
         internal static IObservableIngressStreamable<TPayload> ToCheckpointableStreamable<TPayload>(
             this IObservable<StreamEvent<TPayload>> streamEvents,
             QueryContainer container,
@@ -113,6 +155,19 @@ namespace Microsoft.StreamProcessing
                 identifier);
 
             return a;
+        }
+
+        internal static IIngressStreamable<Empty, TPayload> ToCustomIngressStreamable<TSource, TPayload>(
+            this IObservable<TSource> sourceObservable,
+            Func<CustomIngressStreamable<TSource, TPayload>, IStreamObserver<Empty, TPayload>, CustomIngressStreamable<TSource, TPayload>.CustomIngressPipe> pipeCreator,
+            QueryContainer container,
+            string identifier)
+        {
+            return new CustomIngressStreamable<TSource, TPayload>(
+                sourceObservable,
+                pipeCreator,
+                container,
+                identifier);
         }
 
         /// <summary>
@@ -391,6 +446,26 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
+        /// Converts source observable to an IStreamable with custom ingress.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source observable</typeparam>
+        /// <typeparam name="TPartitionKey">The type of partition key for the stream.</typeparam>
+        /// <typeparam name="TPayload">The type of data for the stream.</typeparam>
+        /// <param name="sourceObservable">Source observable created by the client.</param>
+        /// <param name="pipeCreator"></param>
+        /// <returns>An IStreamable that can be used in queries.</returns>
+        public static IIngressStreamable<PartitionKey<TPartitionKey>, TPayload> ToStreamable<TSource, TPartitionKey, TPayload>(
+            this IObservable<TSource> sourceObservable,
+            Func<PartitionedCustomIngressStreamable<TSource, TPartitionKey, TPayload>, IStreamObserver<PartitionKey<TPartitionKey>, TPayload>, PartitionedCustomIngressStreamable<TSource, TPartitionKey, TPayload>.CustomIngressPipe> pipeCreator)
+        {
+            return ToCustomIngressStreamable(
+                sourceObservable,
+                pipeCreator,
+                null,
+                null);
+        }
+
+        /// <summary>
         /// Converts a sequence of PartitionedStreamEvents to an IStreamable.
         /// The completion policy specifies what to do when the resulting stream completes.
         /// The disorder policy specifies what to do with out of order events.
@@ -434,6 +509,30 @@ namespace Microsoft.StreamProcessing
                 onCompletedPolicy);
         }
 
+        /// <summary>
+        /// Converts source observable to an IStreamable with custom ingress.
+        /// </summary>
+        /// <param name="container">The query container to which to register the ingress point.</param>
+        /// <typeparam name="TSource">The type of the source observable</typeparam>
+        /// <typeparam name="TPartitionKey">The type of partition key for the stream.</typeparam>
+        /// <typeparam name="TPayload">The type of data for the stream.</typeparam>
+        /// <param name="sourceObservable">Source observable created by the client.</param>
+        /// <param name="pipeCreator"></param>
+        /// <param name="identifier">If provided, a unique name to identify to point of ingress in the query.</param>
+        /// <returns>An IStreamable that can be used in queries.</returns>
+        public static IIngressStreamable<PartitionKey<TPartitionKey>, TPayload> RegisterInput<TSource, TPartitionKey, TPayload>(
+            this QueryContainer container,
+            IObservable<TSource> sourceObservable,
+            Func<PartitionedCustomIngressStreamable<TSource, TPartitionKey, TPayload>, IStreamObserver<PartitionKey<TPartitionKey>, TPayload>, PartitionedCustomIngressStreamable<TSource, TPartitionKey, TPayload>.CustomIngressPipe> pipeCreator,
+            string identifier = null)
+        {
+            return ToCustomIngressStreamable(
+                sourceObservable,
+                pipeCreator,
+                container,
+                identifier);
+        }
+
         internal static IPartitionedIngressStreamable<TPartitionKey, TPayload> ToCheckpointableStreamable<TPartitionKey, TPayload>(
             this IObservable<PartitionedStreamEvent<TPartitionKey, TPayload>> streamEvents,
             QueryContainer container,
@@ -466,6 +565,19 @@ namespace Microsoft.StreamProcessing
                 identifier);
 
             return a;
+        }
+
+        internal static IIngressStreamable<PartitionKey<TPartitionKey>, TPayload> ToCustomIngressStreamable<TSource, TPartitionKey, TPayload>(
+            this IObservable<TSource> sourceObservable,
+            Func<PartitionedCustomIngressStreamable<TSource, TPartitionKey, TPayload>, IStreamObserver<PartitionKey<TPartitionKey>, TPayload>, PartitionedCustomIngressStreamable<TSource, TPartitionKey, TPayload>.CustomIngressPipe> pipeCreator,
+            QueryContainer container,
+            string identifier)
+        {
+            return new PartitionedCustomIngressStreamable<TSource, TPartitionKey, TPayload>(
+                sourceObservable,
+                pipeCreator,
+                container,
+                identifier);
         }
 
         /// <summary>
