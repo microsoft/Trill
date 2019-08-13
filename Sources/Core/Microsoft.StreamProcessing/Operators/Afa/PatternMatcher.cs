@@ -392,6 +392,13 @@ namespace Microsoft.StreamProcessing
                     extraFinalStates.Add(oldFinal);
                     int oldMax = result.MaxState;
 
+                    // If the next pattern start state is also a final state, add it directly, as it will not necessarily have a transition entry
+                    if (nextPattern.finalStates.Contains(nextPattern.StartState))
+                    {
+                        if (!result.finalStates.Contains(oldFinal))
+                            result.finalStates.Add(oldFinal);
+                    }
+
                     foreach (var kvp1 in nextPattern.transitionInfo)
                     {
                         foreach (var kvp2 in kvp1.Value)
