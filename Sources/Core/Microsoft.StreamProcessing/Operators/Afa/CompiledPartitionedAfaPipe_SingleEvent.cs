@@ -191,14 +191,14 @@ namespace Microsoft.StreamProcessing
                                                                 var tentativeOutputEntry = this.tentativeOutput.entries[partitionIndex].value;
 
                                                                 int ind = tentativeOutputEntry.Insert(src_hash[i]);
-                                                                tentativeOutputEntry.Values[ind].other = state.PatternStartTimestamp + this.MaxDuration;
+                                                                tentativeOutputEntry.Values[ind].other = this.MaxDuration == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : state.PatternStartTimestamp + this.MaxDuration;
                                                                 tentativeOutputEntry.Values[ind].key = srckey[i];
                                                                 tentativeOutputEntry.Values[ind].payload = newReg;
                                                             }
                                                             else
                                                             {
                                                                 dest_vsync[this.iter] = synctime;
-                                                                dest_vother[this.iter] = state.PatternStartTimestamp + this.MaxDuration;
+                                                                dest_vother[this.iter] = this.MaxDuration == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : state.PatternStartTimestamp + this.MaxDuration;
                                                                 this.batch[this.iter] = newReg;
                                                                 destkey[this.iter] = srckey[i];
                                                                 dest_hash[this.iter] = src_hash[i];
@@ -277,14 +277,14 @@ namespace Microsoft.StreamProcessing
                                                         var tentativeOutputEntry = this.tentativeOutput.entries[partitionIndex].value;
 
                                                         int ind = tentativeOutputEntry.Insert(src_hash[i]);
-                                                        tentativeOutputEntry.Values[ind].other = synctime + this.MaxDuration;
+                                                        tentativeOutputEntry.Values[ind].other = this.MaxDuration == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : synctime + this.MaxDuration;
                                                         tentativeOutputEntry.Values[ind].key = srckey[i];
                                                         tentativeOutputEntry.Values[ind].payload = newReg;
                                                     }
                                                     else
                                                     {
                                                         dest_vsync[this.iter] = synctime;
-                                                        dest_vother[this.iter] = synctime + this.MaxDuration;
+                                                        dest_vother[this.iter] = this.MaxDuration == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : synctime + this.MaxDuration;
                                                         this.batch[this.iter] = newReg;
                                                         destkey[this.iter] = srckey[i];
                                                         dest_hash[this.iter] = src_hash[i];

@@ -515,20 +515,21 @@ namespace SimpleTesting
         public void AfaZeroOrOne()
         {
             var source = new StreamEvent<string>[]
-            {
-                StreamEvent.CreateStart(0, "A"),
-                StreamEvent.CreateStart(1, "C"),
-                StreamEvent.CreateStart(2, "B"),
-                StreamEvent.CreateStart(3, "B"),
-                StreamEvent.CreateStart(4, "C"),
-                StreamEvent.CreateStart(5, "A"),
-                StreamEvent.CreateStart(6, "B"),
-                StreamEvent.CreateStart(7, "B"),
-                StreamEvent.CreateStart(8, "B"),
-                StreamEvent.CreateStart(9, "A"),
-            }.ToObservable()
+                {
+                    StreamEvent.CreateStart(0, "A"),
+                    StreamEvent.CreateStart(1, "C"),
+                    StreamEvent.CreateStart(2, "B"),
+                    StreamEvent.CreateStart(3, "B"),
+                    StreamEvent.CreateStart(4, "C"),
+                    StreamEvent.CreateStart(5, "A"),
+                    StreamEvent.CreateStart(6, "B"),
+                    StreamEvent.CreateStart(7, "B"),
+                    StreamEvent.CreateStart(8, "B"),
+                    StreamEvent.CreateStart(9, "A"),
+                }
+                .ToObservable()
                 .ToStreamable()
-                .AlterEventDuration(2);
+                .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
 
             var afa = ARegex.Concat(
                 ARegex.SingleElement<string, string>(
@@ -550,10 +551,10 @@ namespace SimpleTesting
                 .ToArray();
             var expected = new StreamEvent<string>[]
             {
-                StreamEvent.CreateInterval(0, 2, "A"),
-                StreamEvent.CreateInterval(5, 7, "A"),
-                StreamEvent.CreateInterval(6, 7, "AB"),
-                StreamEvent.CreateInterval(9, 11, "A"),
+                StreamEvent.CreateStart(0, "A"),
+                StreamEvent.CreateStart(5, "A"),
+                StreamEvent.CreateStart(6, "AB"),
+                StreamEvent.CreateStart(9, "A"),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
         }

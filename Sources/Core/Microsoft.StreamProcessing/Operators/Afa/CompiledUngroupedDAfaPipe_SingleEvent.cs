@@ -154,14 +154,14 @@ namespace Microsoft.StreamProcessing
                                                     if (!this.IsSyncTimeSimultaneityFree)
                                                     {
                                                         int ind = this.tentativeOutput.Insert();
-                                                        this.tentativeOutput.Values[ind].other = this.activeState_PatternStartTimestamp + this.MaxDuration;
+                                                        this.tentativeOutput.Values[ind].other = this.MaxDuration == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : this.activeState_PatternStartTimestamp + this.MaxDuration;
                                                         this.tentativeOutput.Values[ind].key = srckey[i];
                                                         this.tentativeOutput.Values[ind].payload = this.activeState_register;
                                                     }
                                                     else
                                                     {
                                                         dest_vsync[this.iter] = synctime;
-                                                        dest_vother[this.iter] = this.activeState_PatternStartTimestamp + this.MaxDuration;
+                                                        dest_vother[this.iter] = this.MaxDuration == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : this.activeState_PatternStartTimestamp + this.MaxDuration;
                                                         this.batch[this.iter] = this.activeState_register;
                                                         destkey[this.iter] = srckey[i];
                                                         dest_hash[this.iter] = src_hash[i];
@@ -215,14 +215,14 @@ namespace Microsoft.StreamProcessing
                                             if (!this.IsSyncTimeSimultaneityFree)
                                             {
                                                 int ind = this.tentativeOutput.Insert();
-                                                this.tentativeOutput.Values[ind].other = synctime + this.MaxDuration;
+                                                this.tentativeOutput.Values[ind].other = this.MaxDuration == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : synctime + this.MaxDuration;
                                                 this.tentativeOutput.Values[ind].key = srckey[i];
                                                 this.tentativeOutput.Values[ind].payload = this.activeState_register;
                                             }
                                             else
                                             {
                                                 dest_vsync[this.iter] = synctime;
-                                                dest_vother[this.iter] = synctime + this.MaxDuration;
+                                                dest_vother[this.iter] = this.MaxDuration == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : synctime + this.MaxDuration;
                                                 this.batch[this.iter] = this.activeState_register;
                                                 destkey[this.iter] = srckey[i];
                                                 dest_hash[this.iter] = src_hash[i];

@@ -14,7 +14,7 @@ protected virtual void IfFinalStateProduceOutput(int indent, int node, string in
         {
 #>
 int ind = tentativeOutput.Insert(<#= insertArgument #>);
-tentativeOutput.Values[ind].other = <#= otherTime #> + MaxDuration;
+tentativeOutput.Values[ind].other = this.MaxDuration == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : <#= otherTime #> + MaxDuration;
 tentativeOutput.Values[ind].key = <#= keyValue #>;
 tentativeOutput.Values[ind].payload = newReg;
 <#+
