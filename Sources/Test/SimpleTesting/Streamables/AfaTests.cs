@@ -557,6 +557,105 @@ namespace SimpleTesting
             };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PatternRepetition()
+        {
+            foreach (var regex in new bool[] { true, false })
+            {
+                // (B{2,3})
+                const int minRepeat = 2;
+                const int maxRepeat = 3;
+                var source = new StreamEvent<string>[]
+                {
+                    StreamEvent.CreateStart(0, "A"),
+                    StreamEvent.CreateStart(1, "B"), // Shouldn't match
+                    StreamEvent.CreateStart(2, "C"),
+                    StreamEvent.CreateStart(3, "B"),
+                    StreamEvent.CreateStart(4, "B"), // First match (BB)
+                    StreamEvent.CreateStart(5, "A"),
+                    StreamEvent.CreateStart(6, "B"),
+                    StreamEvent.CreateStart(7, "B"), // Second match (BB)
+                    StreamEvent.CreateStart(8, "B"), // Third match (BBB)
+                    StreamEvent.CreateStart(9, "B"), // Fourth element excluded from previous matches
+                    StreamEvent.CreateStart(10, "C"),
+                }.ToObservable()
+                    .ToStreamable()
+                    .AlterEventDuration(4);
+
+                var expected = new List<StreamEvent<string>>
+                {
+                    StreamEvent.CreateInterval(4, 7, "BB"),
+                    StreamEvent.CreateInterval(7, 10, "BB"),
+                    StreamEvent.CreateInterval(8, 10, "BBB"),
+                };
+
+                Afa<string, int, bool> repeatPattern;
+                if (regex)
+                {
+                    expected.Add(StreamEvent.CreateInterval(9, 12, "BB")); // Bug? should not allow overlapping...
+
+                    // Counts the number of repeated elements
+                    var singleElement = ARegex.SingleElement<string, int>(
+                        condition: (time, @event, state) => @event == "B",
+                        aggregator: (time, @event, state) => state + 1);
+
+                    // Start with min repeat
+                    var currentRepeat = singleElement;
+                    for (int i = 1; i < minRepeat; i++)
+                    {
+                        currentRepeat = ARegex.Concat(currentRepeat, singleElement);
+                    }
+
+                    // Or every number between min and max
+                    repeatPattern = currentRepeat;
+                    for (int i = minRepeat; i < maxRepeat; i++)
+                    {
+                        currentRepeat = ARegex.Concat(currentRepeat, singleElement);
+                        repeatPattern = ARegex.Or(repeatPattern, currentRepeat);
+                    }
+                }
+                else // Arcs
+                {
+                    repeatPattern = new Afa<string, int, bool>();
+
+                    // [0-minRepeat) counting arc
+                    repeatPattern.AddSingleElementArc(
+                        fromState: 0,
+                        toState: 0,
+                        fence: (ts, ev, reg) => ev == "B" && reg + 1 < minRepeat,
+                        transfer: (ts, ev, reg) => reg + 1);
+
+                    // minRepat -> transition to final state
+                    repeatPattern.AddSingleElementArc(
+                        fromState: 0,
+                        toState: 1,
+                        fence: (ts, ev, reg) => ev == "B" && reg + 1 == minRepeat,
+                        transfer: (ts, ev, reg) => reg + 1);
+                    repeatPattern.AddFinalState(1);
+
+                    // (minRepeat-maxRepeat] arc (final state)
+                    repeatPattern.AddSingleElementArc(
+                        fromState: 1,
+                        toState: 1,
+                        fence: (ts, ev, reg) => ev == "B" && reg + 1 <= maxRepeat,
+                        transfer: (ts, ev, reg) => reg + 1);
+                }
+
+                var result = source
+                    .Detect(
+                        repeatPattern,
+                        allowOverlappingInstances: false,
+                        isDeterministic: false)
+                    .Select(i => new string('B', i))
+                    .ToStreamEventObservable()
+                    .Where(evt => evt.IsData)
+                    .ToEnumerable()
+                    .ToArray();
+
+                Assert.IsTrue(result.SequenceEqual(expected));
+            }
+        }
     }
 
     [TestClass]
