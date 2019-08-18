@@ -55,6 +55,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> Deaccumulate()
             => (state, timestamp, input) => state; // never invoked, hence not implemented
 
+        public Expression<Func<MinMaxState<T>, MinMaxState<T>, MinMaxState<T>>> Sum()
+            => (leftSet, rightSet) => leftSet; // never invoked, hence not implemented
+
         public Expression<Func<MinMaxState<T>, MinMaxState<T>, MinMaxState<T>>> Difference()
             => (leftSet, rightSet) => Difference(leftSet, rightSet);
 

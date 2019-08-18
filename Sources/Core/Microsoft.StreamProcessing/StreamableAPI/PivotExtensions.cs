@@ -78,6 +78,11 @@ namespace Microsoft.StreamProcessing
 
             var state1 = Expression.Parameter(typeof(TState[]), "state1");
             var state2 = Expression.Parameter(typeof(TState[]), "state2");
+            var sum = Expression.Lambda<Func<TState[], TState[], TState[]>>(
+                Expression.NewArrayInit(
+                    typeof(TState),
+                    aggArray.Select((a, i) => a.Sum().ReplaceParametersInBody(Expression.ArrayIndex(state1, Expression.Constant(i)), Expression.ArrayIndex(state1, Expression.Constant(i))))), state1, state2);
+
             var difference = Expression.Lambda<Func<TState[], TState[], TState[]>>(
                 Expression.NewArrayInit(
                     typeof(TState),
@@ -87,7 +92,7 @@ namespace Microsoft.StreamProcessing
                 Expression.NewArrayInit(
                     typeof(TAggValue),
                     aggArray.Select((a, i) => a.ComputeResult().ReplaceParametersInBody(Expression.ArrayIndex(state1, Expression.Constant(i))))), state1);
-            var newAgg = GeneratedAggregate.Create(initialState, accumulator, deaccumulator, difference, resultSelector);
+            var newAgg = GeneratedAggregate.Create(initialState, accumulator, deaccumulator, sum, difference, resultSelector);
 
             if (initializer.Body as NewExpression == null) throw new ArgumentException("Initializer must return a constructor expression.", nameof(initializer));
 

@@ -55,6 +55,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Core\Microsoft.StreamProcessing.Provider\Microsoft.StreamProcessing.Provider.csproj">
+      <Project>{e225184c-b9ae-4f22-9a03-96c5346e3dcf}</Project>
+      <Name>Microsoft.StreamProcessing.Provider</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Core\Microsoft.StreamProcessing\Microsoft.StreamProcessing.csproj">
       <Project>{29810b58-a929-4127-83df-5004d94c8641}</Project>
       <Name>Microsoft.StreamProcessing</Name>

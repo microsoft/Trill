@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         var typeName = sumTypes.TypeName;
 #>
 
-    internal sealed class Product<#= typeFriendlyName #>Aggregate : ISummableAggregate<<#= typeName #>, <#= typeName #>, <#= typeName #>>
+    internal sealed class Product<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>, <#= typeName #>, <#= typeName #>>
     {
         public Expression<Func<<#= typeName #>>> InitialState() => () => 0;
 

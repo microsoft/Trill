@@ -9,7 +9,7 @@ using System.Numerics;
 namespace Microsoft.StreamProcessing.Aggregates
 {
 
-    internal sealed class SumSByteAggregate : ISummableAggregate<sbyte, sbyte, sbyte>
+    internal sealed class SumSByteAggregate : IAggregate<sbyte, sbyte, sbyte>
     {
         public Expression<Func<sbyte>> InitialState() => () => 0;
 
@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<sbyte, sbyte>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumByteAggregate : ISummableAggregate<byte, byte, byte>
+    internal sealed class SumByteAggregate : IAggregate<byte, byte, byte>
     {
         public Expression<Func<byte>> InitialState() => () => 0;
 
@@ -47,7 +47,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<byte, byte>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumShortAggregate : ISummableAggregate<short, short, short>
+    internal sealed class SumShortAggregate : IAggregate<short, short, short>
     {
         public Expression<Func<short>> InitialState() => () => 0;
 
@@ -66,7 +66,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<short, short>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumUShortAggregate : ISummableAggregate<ushort, ushort, ushort>
+    internal sealed class SumUShortAggregate : IAggregate<ushort, ushort, ushort>
     {
         public Expression<Func<ushort>> InitialState() => () => 0;
 
@@ -85,7 +85,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<ushort, ushort>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumIntAggregate : ISummableAggregate<int, int, int>
+    internal sealed class SumIntAggregate : IAggregate<int, int, int>
     {
         public Expression<Func<int>> InitialState() => () => 0;
 
@@ -104,7 +104,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<int, int>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumUIntAggregate : ISummableAggregate<uint, uint, uint>
+    internal sealed class SumUIntAggregate : IAggregate<uint, uint, uint>
     {
         public Expression<Func<uint>> InitialState() => () => 0;
 
@@ -123,7 +123,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<uint, uint>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumLongAggregate : ISummableAggregate<long, long, long>
+    internal sealed class SumLongAggregate : IAggregate<long, long, long>
     {
         public Expression<Func<long>> InitialState() => () => 0;
 
@@ -142,7 +142,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<long, long>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumULongAggregate : ISummableAggregate<ulong, ulong, ulong>
+    internal sealed class SumULongAggregate : IAggregate<ulong, ulong, ulong>
     {
         public Expression<Func<ulong>> InitialState() => () => 0;
 
@@ -161,7 +161,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<ulong, ulong>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumFloatAggregate : ISummableAggregate<float, float, float>
+    internal sealed class SumFloatAggregate : IAggregate<float, float, float>
     {
         public Expression<Func<float>> InitialState() => () => 0;
 
@@ -180,7 +180,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<float, float>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumDoubleAggregate : ISummableAggregate<double, double, double>
+    internal sealed class SumDoubleAggregate : IAggregate<double, double, double>
     {
         public Expression<Func<double>> InitialState() => () => 0;
 
@@ -199,7 +199,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<double, double>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumDecimalAggregate : ISummableAggregate<decimal, decimal, decimal>
+    internal sealed class SumDecimalAggregate : IAggregate<decimal, decimal, decimal>
     {
         public Expression<Func<decimal>> InitialState() => () => 0;
 
@@ -218,7 +218,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<decimal, decimal>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumBigIntegerAggregate : ISummableAggregate<BigInteger, BigInteger, BigInteger>
+    internal sealed class SumBigIntegerAggregate : IAggregate<BigInteger, BigInteger, BigInteger>
     {
         public Expression<Func<BigInteger>> InitialState() => () => 0;
 
@@ -237,7 +237,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<BigInteger, BigInteger>> ComputeResult() => sum => sum;
     }
 
-    internal sealed class SumComplexAggregate : ISummableAggregate<Complex, Complex, Complex>
+    internal sealed class SumComplexAggregate : IAggregate<Complex, Complex, Complex>
     {
         public Expression<Func<Complex>> InitialState() => () => 0;
 

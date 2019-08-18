@@ -49,6 +49,8 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<TState, long, DiscriminatedUnion<TLeft, TRight>, TState>> Deaccumulate()
             => MergeMethods(this.binary.DeaccumulateLeft(), this.binary.DeaccumulateRight());
 
+        public Expression<Func<TState, TState, TState>> Sum() => this.binary.Sum();
+
         public Expression<Func<TState, TState, TState>> Difference() => this.binary.Difference();
 
         public Expression<Func<TState>> InitialState() => this.binary.InitialState();

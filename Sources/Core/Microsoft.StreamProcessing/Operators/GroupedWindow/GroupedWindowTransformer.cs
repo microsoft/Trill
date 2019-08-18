@@ -274,6 +274,7 @@ namespace Microsoft.StreamProcessing
                 expandedCode = template.TransformText();
 
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(typeof(Empty), typeof(TKey), typeof(TInput), typeof(TState), typeof(TOutput), typeof(FastDictionaryGenerator3)));
+                assemblyReferences.Add(typeof(IAggregate<,,>).GetTypeInfo().Assembly);
                 assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<Empty, TInput>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<Empty, TResult>());

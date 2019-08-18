@@ -75,6 +75,12 @@ namespace Microsoft.StreamProcessing.Aggregates
 <#= IterateCommaLine("                    Item$ = CallInliner.Call(!duplicate[$$] ? aggregate$.Deaccumulate() : (s, a, b) => s, oldState.Item$, timestamp, input)", count) #>
                 };
 
+            Expression<Func<StructTuple<<#= IterateComma("TState$", count) #>>, StructTuple<<#= IterateComma("TState$", count) #>>, StructTuple<<#= IterateComma("TState$", count) #>>>> newSum =
+                (leftState, rightState) => new StructTuple<<#= IterateComma("TState$", count) #>>
+                {
+<#= IterateCommaLine("                    Item$ = CallInliner.Call(!duplicate[$$] ? aggregate$.Sum() : (l, r) => l, leftState.Item$, rightState.Item$)", count) #>
+                };
+
             Expression<Func<StructTuple<<#= IterateComma("TState$", count) #>>, StructTuple<<#= IterateComma("TState$", count) #>>, StructTuple<<#= IterateComma("TState$", count) #>>>> newDifference =
                 (leftState, rightState) => new StructTuple<<#= IterateComma("TState$", count) #>>
                 {
@@ -91,6 +97,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }

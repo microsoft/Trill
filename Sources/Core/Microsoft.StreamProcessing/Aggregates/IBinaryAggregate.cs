@@ -47,6 +47,12 @@ namespace Microsoft.StreamProcessing.Aggregates
         Expression<Func<TState, long, TRight, TState>> DeaccumulateRight();
 
         /// <summary>
+        /// Provides an expression that describes how to take two different aggregate states and add one to the other.
+        /// </summary>
+        /// <returns>An expression that describes how to take two different aggregate states and add one t0 the other.</returns>
+        Expression<Func<TState, TState, TState>> Sum();
+
+        /// <summary>
         /// Provides an expression that describes how to take two different aggregate states and subtract one from the other.
         /// </summary>
         /// <returns>An expression that describes how to take two different aggregate states and subtract one from the other.</returns>

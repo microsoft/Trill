@@ -1315,6 +1315,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.StreamProcessing.Provider\Microsoft.StreamProcessing.Provider.csproj" />
+  </ItemGroup>
+
 <!--  <ItemGroup>
     <ProjectReference Include="..\Microsoft.StreamProcessing.Provider\Microsoft.StreamProcessing.Provider.csproj" />
   </ItemGroup> -->

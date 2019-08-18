@@ -9,7 +9,7 @@ using System.Numerics;
 namespace Microsoft.StreamProcessing.Aggregates
 {
 
-    internal sealed class ProductSByteAggregate : ISummableAggregate<sbyte, sbyte, sbyte>
+    internal sealed class ProductSByteAggregate : IAggregate<sbyte, sbyte, sbyte>
     {
         public Expression<Func<sbyte>> InitialState() => () => 0;
 
@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<sbyte, sbyte>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductByteAggregate : ISummableAggregate<byte, byte, byte>
+    internal sealed class ProductByteAggregate : IAggregate<byte, byte, byte>
     {
         public Expression<Func<byte>> InitialState() => () => 0;
 
@@ -47,7 +47,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<byte, byte>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductShortAggregate : ISummableAggregate<short, short, short>
+    internal sealed class ProductShortAggregate : IAggregate<short, short, short>
     {
         public Expression<Func<short>> InitialState() => () => 0;
 
@@ -66,7 +66,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<short, short>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductUShortAggregate : ISummableAggregate<ushort, ushort, ushort>
+    internal sealed class ProductUShortAggregate : IAggregate<ushort, ushort, ushort>
     {
         public Expression<Func<ushort>> InitialState() => () => 0;
 
@@ -85,7 +85,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<ushort, ushort>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductIntAggregate : ISummableAggregate<int, int, int>
+    internal sealed class ProductIntAggregate : IAggregate<int, int, int>
     {
         public Expression<Func<int>> InitialState() => () => 0;
 
@@ -104,7 +104,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<int, int>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductUIntAggregate : ISummableAggregate<uint, uint, uint>
+    internal sealed class ProductUIntAggregate : IAggregate<uint, uint, uint>
     {
         public Expression<Func<uint>> InitialState() => () => 0;
 
@@ -123,7 +123,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<uint, uint>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductLongAggregate : ISummableAggregate<long, long, long>
+    internal sealed class ProductLongAggregate : IAggregate<long, long, long>
     {
         public Expression<Func<long>> InitialState() => () => 0;
 
@@ -142,7 +142,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<long, long>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductULongAggregate : ISummableAggregate<ulong, ulong, ulong>
+    internal sealed class ProductULongAggregate : IAggregate<ulong, ulong, ulong>
     {
         public Expression<Func<ulong>> InitialState() => () => 0;
 
@@ -161,7 +161,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<ulong, ulong>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductFloatAggregate : ISummableAggregate<float, float, float>
+    internal sealed class ProductFloatAggregate : IAggregate<float, float, float>
     {
         public Expression<Func<float>> InitialState() => () => 0;
 
@@ -180,7 +180,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<float, float>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductDoubleAggregate : ISummableAggregate<double, double, double>
+    internal sealed class ProductDoubleAggregate : IAggregate<double, double, double>
     {
         public Expression<Func<double>> InitialState() => () => 0;
 
@@ -199,7 +199,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<double, double>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductDecimalAggregate : ISummableAggregate<decimal, decimal, decimal>
+    internal sealed class ProductDecimalAggregate : IAggregate<decimal, decimal, decimal>
     {
         public Expression<Func<decimal>> InitialState() => () => 0;
 
@@ -218,7 +218,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<decimal, decimal>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductBigIntegerAggregate : ISummableAggregate<BigInteger, BigInteger, BigInteger>
+    internal sealed class ProductBigIntegerAggregate : IAggregate<BigInteger, BigInteger, BigInteger>
     {
         public Expression<Func<BigInteger>> InitialState() => () => 0;
 
@@ -237,7 +237,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public Expression<Func<BigInteger, BigInteger>> ComputeResult() => product => product;
     }
 
-    internal sealed class ProductComplexAggregate : ISummableAggregate<Complex, Complex, Complex>
+    internal sealed class ProductComplexAggregate : IAggregate<Complex, Complex, Complex>
     {
         public Expression<Func<Complex>> InitialState() => () => 0;
 

@@ -9,7 +9,7 @@ using Microsoft.StreamProcessing.Internal;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
-    internal abstract class SortedMultisetAggregateBase<T, R> : ISummableAggregate<T, SortedMultiSet<T>, R>
+    internal abstract class SortedMultisetAggregateBase<T, R> : IAggregate<T, SortedMultiSet<T>, R>
     {
         protected SortedMultisetAggregateBase(IComparerExpression<T> comparer, QueryContainer container)
         {

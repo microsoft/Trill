@@ -52,8 +52,24 @@ namespace Microsoft.StreamProcessing
         Expression<Func<TState, TResult>> ComputeResult();
     }
 
-    internal static class AggregateExtensions
+    /// <summary>
+    /// TODO: Determine if this class should be made internal
+    /// </summary>
+    public static class AggregateExtensions
     {
+        /// <summary>
+        /// Given two aggregates, determines whether they are identical in how they manage state. Specifically:
+        /// - The have the same state type
+        /// - They have the same expressions for state creation, accumulation, deaccumulation, summation, and difference
+        /// </summary>
+        /// <typeparam name="TInput"></typeparam>
+        /// <typeparam name="TState1">The state type of the left aggregate</typeparam>
+        /// <typeparam name="TState2">The state type of the right aggregate</typeparam>
+        /// <typeparam name="TResult1">The result type of the left aggregate</typeparam>
+        /// <typeparam name="TResult2">The result type of the right aggregate</typeparam>
+        /// <param name="left">The first of two aggregates to test for identical state management</param>
+        /// <param name="right">The second of two aggregates to test for identical state management</param>
+        /// <returns>True if the two aggregates have the same state management operations (are the same aggregate except for the logic for returning values), false otherwise</returns>
         public static bool HasSameStateAs<TInput, TState1, TState2, TResult1, TResult2>(this IAggregate<TInput, TState1, TResult1> left, IAggregate<TInput, TState2, TResult2> right)
             => typeof(TState1) == typeof(TState2)
                 && left.Accumulate().ExpressionEquals(right.Accumulate())

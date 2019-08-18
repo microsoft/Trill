@@ -78,6 +78,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: aggregate.InitialState(),
                 accumulate: aggregate.Accumulate().TransformInput3(transform),
                 deaccumulate: aggregate.Deaccumulate().TransformInput3(transform),
+                sum: aggregate.Sum(),
                 difference: aggregate.Difference(),
                 computeResult: aggregate.ComputeResult());
         }
@@ -104,6 +105,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: aggregate.InitialState(),
                 accumulate: aggregate.Accumulate(),
                 deaccumulate: aggregate.Deaccumulate(),
+                sum: aggregate.Sum(),
                 difference: aggregate.Difference(),
                 computeResult: aggregate.ComputeResult().TransformOutput(transform));
         }
@@ -140,6 +142,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: aggregate.InitialState(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: aggregate.Sum(),
                 difference: aggregate.Difference(),
                 computeResult: aggregate.ComputeResult());
         }
@@ -163,6 +166,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: aggregate.InitialState(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: aggregate.Sum(),
                 difference: aggregate.Difference(),
                 computeResult: aggregate.ComputeResult());
         }
@@ -183,6 +187,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     initialState: aggregate.InitialState(),
                     accumulate: AddSkipNullClassLogic(aggregate.Accumulate()),
                     deaccumulate: AddSkipNullClassLogic(aggregate.Deaccumulate()),
+                    sum: aggregate.Sum(),
                     difference: aggregate.Difference(),
                     computeResult: aggregate.ComputeResult())
                 : inputType.IsGenericType && inputType.GetGenericTypeDefinition() == typeof(Nullable<>)
@@ -190,6 +195,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                     initialState: aggregate.InitialState(),
                     accumulate: AddSkipNullValueLogic(aggregate.Accumulate()),
                     deaccumulate: AddSkipNullValueLogic(aggregate.Deaccumulate()),
+                    sum: aggregate.Sum(),
                     difference: aggregate.Difference(),
                     computeResult: aggregate.ComputeResult())
                 : aggregate;
@@ -252,6 +258,13 @@ namespace Microsoft.StreamProcessing.Aggregates
                     State = CallInliner.Call(aggregate.Deaccumulate(), oldState.State, timestamp, input)
                 };
 
+            Expression<Func<NullOutputWrapper<TState>, NullOutputWrapper<TState>, NullOutputWrapper<TState>>> newSum =
+                (leftState, rightState) => new NullOutputWrapper<TState>
+                {
+                    Count = leftState.Count + rightState.Count,
+                    State = CallInliner.Call(aggregate.Sum(), leftState.State, rightState.State)
+                };
+
             Expression<Func<NullOutputWrapper<TState>, NullOutputWrapper<TState>, NullOutputWrapper<TState>>> newDifference =
                 (leftState, rightState) => new NullOutputWrapper<TState>
                 {
@@ -266,6 +279,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -302,6 +316,13 @@ namespace Microsoft.StreamProcessing.Aggregates
                     State = CallInliner.Call(aggregate.Deaccumulate(), oldState.State, timestamp, input)
                 };
 
+            Expression<Func<NullOutputWrapper<TState>, NullOutputWrapper<TState>, NullOutputWrapper<TState>>> newSum =
+                (leftState, rightState) => new NullOutputWrapper<TState>
+                {
+                    Count = leftState.Count + rightState.Count,
+                    State = CallInliner.Call(aggregate.Sum(), leftState.State, rightState.State)
+                };
+
             Expression<Func<NullOutputWrapper<TState>, NullOutputWrapper<TState>, NullOutputWrapper<TState>>> newDifference =
                 (leftState, rightState) => new NullOutputWrapper<TState>
                 {
@@ -316,6 +337,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }

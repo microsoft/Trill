@@ -27,7 +27,16 @@ namespace Microsoft.StreamProcessing.Aggregates
             return Expression.Lambda<Func<List<T>, long, T, List<T>>>(block, temp.Parameters);
         }
 
+        public Expression<Func<List<T>, List<T>, List<T>>> Sum() => (leftSet, rightSet) => SetUnion(leftSet, rightSet);
+
         public Expression<Func<List<T>, List<T>, List<T>>> Difference() => (leftSet, rightSet) => SetExcept(leftSet, rightSet);
+
+        private static List<T> SetUnion(List<T> left, List<T> right)
+        {
+            var newList = new List<T>(left);
+            foreach (var t in right) newList.Add(t);
+            return newList;
+        }
 
         private static List<T> SetExcept(List<T> left, List<T> right)
         {

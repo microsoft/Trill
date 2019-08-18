@@ -55,6 +55,12 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Deaccumulate() : (s, a, b) => s, oldState.Item1, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1>, StructTuple<TState1>, StructTuple<TState1>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1)
+                };
+
             Expression<Func<StructTuple<TState1>, StructTuple<TState1>, StructTuple<TState1>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1>
                 {
@@ -71,6 +77,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -127,6 +134,13 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Deaccumulate() : (s, a, b) => s, oldState.Item2, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2>, StructTuple<TState1, TState2>, StructTuple<TState1, TState2>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2)
+                };
+
             Expression<Func<StructTuple<TState1, TState2>, StructTuple<TState1, TState2>, StructTuple<TState1, TState2>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2>
                 {
@@ -145,6 +159,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -218,6 +233,14 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Deaccumulate() : (s, a, b) => s, oldState.Item3, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3>, StructTuple<TState1, TState2, TState3>, StructTuple<TState1, TState2, TState3>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3>, StructTuple<TState1, TState2, TState3>, StructTuple<TState1, TState2, TState3>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3>
                 {
@@ -238,6 +261,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -332,6 +356,15 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Deaccumulate() : (s, a, b) => s, oldState.Item4, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4>, StructTuple<TState1, TState2, TState3, TState4>, StructTuple<TState1, TState2, TState3, TState4>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4>, StructTuple<TState1, TState2, TState3, TState4>, StructTuple<TState1, TState2, TState3, TState4>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4>
                 {
@@ -354,6 +387,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -473,6 +507,16 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Deaccumulate() : (s, a, b) => s, oldState.Item5, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5>, StructTuple<TState1, TState2, TState3, TState4, TState5>, StructTuple<TState1, TState2, TState3, TState4, TState5>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5>, StructTuple<TState1, TState2, TState3, TState4, TState5>, StructTuple<TState1, TState2, TState3, TState4, TState5>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5>
                 {
@@ -497,6 +541,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -645,6 +690,17 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Deaccumulate() : (s, a, b) => s, oldState.Item6, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>
                 {
@@ -671,6 +727,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -852,6 +909,18 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Deaccumulate() : (s, a, b) => s, oldState.Item7, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6),
+                    Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Sum() : (l, r) => l, leftState.Item7, rightState.Item7)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>
                 {
@@ -880,6 +949,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -1098,6 +1168,19 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item8 = CallInliner.Call(!duplicate[7] ? aggregate8.Deaccumulate() : (s, a, b) => s, oldState.Item8, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6),
+                    Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Sum() : (l, r) => l, leftState.Item7, rightState.Item7),
+                    Item8 = CallInliner.Call(!duplicate[7] ? aggregate8.Sum() : (l, r) => l, leftState.Item8, rightState.Item8)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>
                 {
@@ -1128,6 +1211,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -1387,6 +1471,20 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item9 = CallInliner.Call(!duplicate[8] ? aggregate9.Deaccumulate() : (s, a, b) => s, oldState.Item9, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6),
+                    Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Sum() : (l, r) => l, leftState.Item7, rightState.Item7),
+                    Item8 = CallInliner.Call(!duplicate[7] ? aggregate8.Sum() : (l, r) => l, leftState.Item8, rightState.Item8),
+                    Item9 = CallInliner.Call(!duplicate[8] ? aggregate9.Sum() : (l, r) => l, leftState.Item9, rightState.Item9)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>
                 {
@@ -1419,6 +1517,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -1723,6 +1822,21 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item10 = CallInliner.Call(!duplicate[9] ? aggregate10.Deaccumulate() : (s, a, b) => s, oldState.Item10, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6),
+                    Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Sum() : (l, r) => l, leftState.Item7, rightState.Item7),
+                    Item8 = CallInliner.Call(!duplicate[7] ? aggregate8.Sum() : (l, r) => l, leftState.Item8, rightState.Item8),
+                    Item9 = CallInliner.Call(!duplicate[8] ? aggregate9.Sum() : (l, r) => l, leftState.Item9, rightState.Item9),
+                    Item10 = CallInliner.Call(!duplicate[9] ? aggregate10.Sum() : (l, r) => l, leftState.Item10, rightState.Item10)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>
                 {
@@ -1757,6 +1871,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -2110,6 +2225,22 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item11 = CallInliner.Call(!duplicate[10] ? aggregate11.Deaccumulate() : (s, a, b) => s, oldState.Item11, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6),
+                    Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Sum() : (l, r) => l, leftState.Item7, rightState.Item7),
+                    Item8 = CallInliner.Call(!duplicate[7] ? aggregate8.Sum() : (l, r) => l, leftState.Item8, rightState.Item8),
+                    Item9 = CallInliner.Call(!duplicate[8] ? aggregate9.Sum() : (l, r) => l, leftState.Item9, rightState.Item9),
+                    Item10 = CallInliner.Call(!duplicate[9] ? aggregate10.Sum() : (l, r) => l, leftState.Item10, rightState.Item10),
+                    Item11 = CallInliner.Call(!duplicate[10] ? aggregate11.Sum() : (l, r) => l, leftState.Item11, rightState.Item11)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>
                 {
@@ -2146,6 +2277,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -2552,6 +2684,23 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item12 = CallInliner.Call(!duplicate[11] ? aggregate12.Deaccumulate() : (s, a, b) => s, oldState.Item12, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6),
+                    Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Sum() : (l, r) => l, leftState.Item7, rightState.Item7),
+                    Item8 = CallInliner.Call(!duplicate[7] ? aggregate8.Sum() : (l, r) => l, leftState.Item8, rightState.Item8),
+                    Item9 = CallInliner.Call(!duplicate[8] ? aggregate9.Sum() : (l, r) => l, leftState.Item9, rightState.Item9),
+                    Item10 = CallInliner.Call(!duplicate[9] ? aggregate10.Sum() : (l, r) => l, leftState.Item10, rightState.Item10),
+                    Item11 = CallInliner.Call(!duplicate[10] ? aggregate11.Sum() : (l, r) => l, leftState.Item11, rightState.Item11),
+                    Item12 = CallInliner.Call(!duplicate[11] ? aggregate12.Sum() : (l, r) => l, leftState.Item12, rightState.Item12)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>
                 {
@@ -2590,6 +2739,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -3053,6 +3203,24 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item13 = CallInliner.Call(!duplicate[12] ? aggregate13.Deaccumulate() : (s, a, b) => s, oldState.Item13, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6),
+                    Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Sum() : (l, r) => l, leftState.Item7, rightState.Item7),
+                    Item8 = CallInliner.Call(!duplicate[7] ? aggregate8.Sum() : (l, r) => l, leftState.Item8, rightState.Item8),
+                    Item9 = CallInliner.Call(!duplicate[8] ? aggregate9.Sum() : (l, r) => l, leftState.Item9, rightState.Item9),
+                    Item10 = CallInliner.Call(!duplicate[9] ? aggregate10.Sum() : (l, r) => l, leftState.Item10, rightState.Item10),
+                    Item11 = CallInliner.Call(!duplicate[10] ? aggregate11.Sum() : (l, r) => l, leftState.Item11, rightState.Item11),
+                    Item12 = CallInliner.Call(!duplicate[11] ? aggregate12.Sum() : (l, r) => l, leftState.Item12, rightState.Item12),
+                    Item13 = CallInliner.Call(!duplicate[12] ? aggregate13.Sum() : (l, r) => l, leftState.Item13, rightState.Item13)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>
                 {
@@ -3093,6 +3261,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -3617,6 +3786,25 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item14 = CallInliner.Call(!duplicate[13] ? aggregate14.Deaccumulate() : (s, a, b) => s, oldState.Item14, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6),
+                    Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Sum() : (l, r) => l, leftState.Item7, rightState.Item7),
+                    Item8 = CallInliner.Call(!duplicate[7] ? aggregate8.Sum() : (l, r) => l, leftState.Item8, rightState.Item8),
+                    Item9 = CallInliner.Call(!duplicate[8] ? aggregate9.Sum() : (l, r) => l, leftState.Item9, rightState.Item9),
+                    Item10 = CallInliner.Call(!duplicate[9] ? aggregate10.Sum() : (l, r) => l, leftState.Item10, rightState.Item10),
+                    Item11 = CallInliner.Call(!duplicate[10] ? aggregate11.Sum() : (l, r) => l, leftState.Item11, rightState.Item11),
+                    Item12 = CallInliner.Call(!duplicate[11] ? aggregate12.Sum() : (l, r) => l, leftState.Item12, rightState.Item12),
+                    Item13 = CallInliner.Call(!duplicate[12] ? aggregate13.Sum() : (l, r) => l, leftState.Item13, rightState.Item13),
+                    Item14 = CallInliner.Call(!duplicate[13] ? aggregate14.Sum() : (l, r) => l, leftState.Item14, rightState.Item14)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>
                 {
@@ -3659,6 +3847,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }
@@ -4248,6 +4437,26 @@ namespace Microsoft.StreamProcessing.Aggregates
                     Item15 = CallInliner.Call(!duplicate[14] ? aggregate15.Deaccumulate() : (s, a, b) => s, oldState.Item15, timestamp, input)
                 };
 
+            Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>>> newSum =
+                (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>
+                {
+                    Item1 = CallInliner.Call(!duplicate[0] ? aggregate1.Sum() : (l, r) => l, leftState.Item1, rightState.Item1),
+                    Item2 = CallInliner.Call(!duplicate[1] ? aggregate2.Sum() : (l, r) => l, leftState.Item2, rightState.Item2),
+                    Item3 = CallInliner.Call(!duplicate[2] ? aggregate3.Sum() : (l, r) => l, leftState.Item3, rightState.Item3),
+                    Item4 = CallInliner.Call(!duplicate[3] ? aggregate4.Sum() : (l, r) => l, leftState.Item4, rightState.Item4),
+                    Item5 = CallInliner.Call(!duplicate[4] ? aggregate5.Sum() : (l, r) => l, leftState.Item5, rightState.Item5),
+                    Item6 = CallInliner.Call(!duplicate[5] ? aggregate6.Sum() : (l, r) => l, leftState.Item6, rightState.Item6),
+                    Item7 = CallInliner.Call(!duplicate[6] ? aggregate7.Sum() : (l, r) => l, leftState.Item7, rightState.Item7),
+                    Item8 = CallInliner.Call(!duplicate[7] ? aggregate8.Sum() : (l, r) => l, leftState.Item8, rightState.Item8),
+                    Item9 = CallInliner.Call(!duplicate[8] ? aggregate9.Sum() : (l, r) => l, leftState.Item9, rightState.Item9),
+                    Item10 = CallInliner.Call(!duplicate[9] ? aggregate10.Sum() : (l, r) => l, leftState.Item10, rightState.Item10),
+                    Item11 = CallInliner.Call(!duplicate[10] ? aggregate11.Sum() : (l, r) => l, leftState.Item11, rightState.Item11),
+                    Item12 = CallInliner.Call(!duplicate[11] ? aggregate12.Sum() : (l, r) => l, leftState.Item12, rightState.Item12),
+                    Item13 = CallInliner.Call(!duplicate[12] ? aggregate13.Sum() : (l, r) => l, leftState.Item13, rightState.Item13),
+                    Item14 = CallInliner.Call(!duplicate[13] ? aggregate14.Sum() : (l, r) => l, leftState.Item14, rightState.Item14),
+                    Item15 = CallInliner.Call(!duplicate[14] ? aggregate15.Sum() : (l, r) => l, leftState.Item15, rightState.Item15)
+                };
+
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>>> newDifference =
                 (leftState, rightState) => new StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>
                 {
@@ -4292,6 +4501,7 @@ namespace Microsoft.StreamProcessing.Aggregates
                 initialState: newInitialState.InlineCalls(),
                 accumulate: newAccumulate.InlineCalls(),
                 deaccumulate: newDeaccumulate.InlineCalls(),
+                sum: newSum.InlineCalls(),
                 difference: newDifference.InlineCalls(),
                 computeResult: newComputeResult.InlineCalls());
         }

@@ -10,7 +10,7 @@ using Microsoft.StreamProcessing.Internal;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
-    internal abstract class MinMaxAggregateBase<T> : ISummableAggregate<T, MinMaxState<T>, T>
+    internal abstract class MinMaxAggregateBase<T> : IAggregate<T, MinMaxState<T>, T>
     {
         protected MinMaxAggregateBase(QueryContainer container) : this(ComparerExpression<T>.Default, container) { }
 
