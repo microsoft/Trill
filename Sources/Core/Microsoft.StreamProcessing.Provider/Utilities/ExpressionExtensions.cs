@@ -14,6 +14,9 @@ namespace Microsoft.StreamProcessing
     {
         public static bool ExpressionEquals(this Expression source, Expression other)
             => EqualityComparer.IsEqual(source, other);
+
+        public static Expression ReplaceParametersInBody(this LambdaExpression lambda, params Expression[] expressions)
+            => ParameterSubstituter.Replace(lambda.Parameters, lambda.Body, expressions);
     }
 
     internal sealed class EqualityComparer : ExpressionVisitor
@@ -180,4 +183,25 @@ namespace Microsoft.StreamProcessing
             }
         }
     }
+
+    internal sealed class ParameterSubstituter : ExpressionVisitor
+    {
+        private readonly Dictionary<ParameterExpression, Expression> arguments;
+
+        public static Expression Replace(ReadOnlyCollection<ParameterExpression> parameters, Expression expression, params Expression[] substitutes)
+        {
+            var dictionary = new Dictionary<ParameterExpression, Expression>();
+            for (int i = 0; i < Math.Min(parameters.Count, substitutes.Length); i++) dictionary.Add(parameters[i], substitutes[i]);
+            return new ParameterSubstituter(dictionary).Visit(expression);
+        }
+
+        private ParameterSubstituter(Dictionary<ParameterExpression, Expression> arguments)
+            => this.arguments = new Dictionary<ParameterExpression, Expression>(arguments);
+
+        protected override Expression VisitParameter(ParameterExpression node)
+            => this.arguments.TryGetValue(node, out var replacement)
+                ? replacement
+                : base.VisitParameter(node);
+    }
+
 }

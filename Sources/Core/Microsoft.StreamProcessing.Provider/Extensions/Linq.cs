@@ -4,16 +4,11 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing.Provider
 {
-    /// <summary>
-    ///
-    /// </summary>
-    public struct Empty
-    { }
-
     /// <summary>
     /// The extension methods over interface IQStreamable
     /// </summary>
@@ -68,7 +63,7 @@ namespace Microsoft.StreamProcessing.Provider
         /// <returns>A stream of windowed groups, each of which corresponds to a unique key value, containing all elements that share that same key value.</returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="source" /> or <paramref name="keySelector" /> is null.</exception>
-        public static IQStreamable<IGroupedWindow<TKey, TSource>> GroupBy<TSource, TKey>(
+        public static IQStreamable<IGrouping<TKey, TSource>> GroupBy<TSource, TKey>(
             this IQStreamable<TSource> source,
             Expression<Func<TSource, TKey>> keySelector)
             => GroupBy(source, keySelector, element => element);

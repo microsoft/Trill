@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing.Provider
@@ -25,13 +26,35 @@ namespace Microsoft.StreamProcessing.Provider
         /// <param name="elementSelector">A function to map each source element to an element in the group.</param>
         /// <param name="resultSelector">A function to create a result value from each group.</param>
         /// <returns>A stream of windowed groups, each of which corresponds to a unique key value, containing all projected elements that share that same key value.</returns>
-        public static IQStreamable<IGroupedWindow<TKey, TElement>> GroupBy<TSource, TKey, TElement, TResult>(
+        public static IQStreamable<TResult> GroupBy<TSource, TKey, TElement, TResult>(
             this IQStreamable<TSource> source,
             Expression<Func<TSource, TKey>> keySelector,
             Expression<Func<TSource, TElement>> elementSelector,
-            Expression<Func<TKey, IWindow<TElement>, TResult>> resultSelector)
+            Expression<Func<TKey, IEnumerable<TElement>, TResult>> resultSelector)
+        {
+            var groupedParameter = Expression.Parameter(typeof(IGrouping<TKey, TElement>));
+            return source.GroupBy(keySelector, elementSelector).Select(
+                Expression.Lambda<Func<IGrouping<TKey, TElement>, TResult>>(
+                    resultSelector.ReplaceParametersInBody(
+                        Expression.PropertyOrField(groupedParameter, "Key"),
+                        groupedParameter),
+                    groupedParameter));
+        }
 
-            // => source.GroupBy(keySelector, elementSelector).Select(g => resultSelector(g.Key, g.Window));
-            => throw new NotImplementedException();
+        /// <summary>
+        /// Aggregates the elements of a stream according to snapshot semantics via the provided aggregation function.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements in the source stream.</typeparam>
+        /// <typeparam name="TResult">The type of the value returned by the <paramref name="resultSelector"/>.</typeparam>
+        /// <param name="source">A stream whose elements are to be aggregated.</param>
+        /// <param name="resultSelector">A function to create a result value for every timestamp.</param>
+        /// <returns>A stream of aggregated data.</returns>
+        public static IQStreamable<TResult> Aggregate<TSource, TResult>(
+            this IQStreamable<TSource> source,
+            Expression<Func<IEnumerable<TSource>, TResult>> resultSelector)
+            => source.GroupBy(
+                o => Empty.Default,
+                o => o,
+                Expression.Lambda<Func<Empty, IEnumerable<TSource>, TResult>>(resultSelector.Body, Expression.Parameter(typeof(Empty)), resultSelector.Parameters[0]));
     }
 }

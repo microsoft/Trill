@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.StreamProcessing.Provider
 {
@@ -27,7 +28,7 @@ namespace Microsoft.StreamProcessing.Provider
                         where t.Item2 < 10
                         let f = t2.Item1
                         group t by t.Item1 into g
-                        select g.Window.Count();
+                        select g.Count();
         }
 
         private void TestMethod2()
@@ -39,7 +40,7 @@ namespace Microsoft.StreamProcessing.Provider
                         // join t0 in test0 on t.Item1 equals t0.Item1
                         where t.Item2 < 10
                         group o by t.Item1 into g
-                        select g.Window.Count();
+                        select g.Count();
         }
 
     }

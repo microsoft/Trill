@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -79,11 +80,11 @@ namespace Microsoft.StreamProcessing.Provider
         /// <param name="keySelector">A function to extract the key for each element.</param>
         /// <param name="elementSelector">A function to determine the element type of the window.</param>
         /// <returns>A stream of windowed groups, each of which corresponds to a unique key value, containing all projected elements that share that same key value.</returns>
-        public static IQStreamable<IGroupedWindow<TKey, TElement>> GroupBy<TSource, TKey, TElement>(
+        public static IQStreamable<IGrouping<TKey, TElement>> GroupBy<TSource, TKey, TElement>(
             this IQStreamable<TSource> source,
             Expression<Func<TSource, TKey>> keySelector,
             Expression<Func<TSource, TElement>> elementSelector)
-            => source.Provider.CreateQuery<IGroupedWindow<TKey, TElement>>(
+            => source.Provider.CreateQuery<IGrouping<TKey, TElement>>(
                 Expression.Call(
                     null,
                     ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource), typeof(TKey), typeof(TElement)),
