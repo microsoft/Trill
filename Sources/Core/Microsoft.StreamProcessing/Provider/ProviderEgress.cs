@@ -3,15 +3,15 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing.Provider
 {
-    /// <summary>
-    /// The extension methods over interface IQStreamable
-    /// </summary>
-    public static partial class QStreamableStatic
+    internal static class ProviderEgress
     {
+        public static IObservable<TOutput> ToTemporalObservable<TPayload, TOutput>(
+            this IQStreamable<TPayload> streamable,
+            Expression<Func<long, long, TPayload, TOutput>> selector)
+            => throw new NotImplementedException();
     }
 }

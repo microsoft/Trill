@@ -8,7 +8,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.StreamProcessing.Provider;
 using Microsoft.StreamProcessing.Serializer;
 
 namespace Microsoft.StreamProcessing
@@ -18,6 +20,8 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     public sealed class QueryContainer
     {
+        private static readonly InOrderProvider provider = new InOrderProvider();
+
         private readonly object sentinel = new object();
 
         /// <summary>
@@ -140,6 +144,20 @@ namespace Microsoft.StreamProcessing
                 return process;
             }
         }
+
+        /// <summary>
+        /// Temporary - will move to more robust ingress file
+        /// </summary>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <param name="observable"></param>
+        /// <param name="startEdgeSelector"></param>
+        /// <param name="endEdgeSelector"></param>
+        /// <returns></returns>
+        public IQStreamable<TPayload> RegisterStream<TPayload>(
+            IObservable<TPayload> observable,
+            Expression<Func<TPayload, long>> startEdgeSelector,
+            Expression<Func<TPayload, long>> endEdgeSelector)
+            => throw new NotImplementedException();
     }
 
     /// <summary>
