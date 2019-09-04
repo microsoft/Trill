@@ -3,6 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 #if CODEGEN_TIMING
 using System.Diagnostics;
@@ -183,7 +184,7 @@ namespace Microsoft.StreamProcessing
             return assembly;
         }
 
-        public static Dictionary<Assembly, MetadataReference> metadataReferenceCache = new Dictionary<Assembly, MetadataReference>();
+        public static ConcurrentDictionary<Assembly, MetadataReference> metadataReferenceCache = new ConcurrentDictionary<Assembly, MetadataReference>();
         private static readonly InteractiveAssemblyLoader loader = new InteractiveAssemblyLoader();
 
         internal static Assembly EmitCompilationAndLoadAssembly(CSharpCompilation compilation, bool makeAssemblyDebuggable, out string errorMessages)
@@ -223,7 +224,7 @@ namespace Microsoft.StreamProcessing
 
                         loader.RegisterDependency(assembly);
                         var aref = MetadataReference.CreateFromStream(stream);
-                        metadataReferenceCache.Add(assembly, aref);
+                        metadataReferenceCache.TryAdd(assembly, aref);
                     }
                 }
             }

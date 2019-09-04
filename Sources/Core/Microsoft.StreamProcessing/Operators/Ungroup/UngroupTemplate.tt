@@ -249,9 +249,4 @@ internal sealed class <#= className #><#= genericParameters #> :
         tmp.Seal();
         this.Observer.OnNext(tmp);
     }
-
-    public void OnError(Exception error)
-    {
-        Observer.OnError(error);
-    }
 }

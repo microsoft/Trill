@@ -68,15 +68,17 @@ namespace SimpleTesting.PartitionedIngressAndEgress
                     var lowWatermarkPreSnap = t - lag;
                     var lowWatermarkArrivalTime = LowWatermarkArrivalTime(lowWatermarkPreSnap);
                     var lowWatermarkSnapped = lowWatermarkPreSnap.SnapToLeftBoundary(period);
+                    var lowWatermarkQuantizedForPunctuation = lowWatermarkPreSnap.SnapToLeftBoundary((long)this.punctuationPolicy.generationPeriod);
                     var lowWatermark = PartitionedStreamEvent.CreateLowWatermark<int, int>(lowWatermarkSnapped);
 
-                    expectedLowWatermarks.Add(new LowWatermarkAndArrival(lowWatermark, lowWatermarkArrivalTime));
+                    expectedLowWatermarks.Add(new LowWatermarkAndArrival(lowWatermark, lowWatermarkQuantizedForPunctuation, lowWatermarkArrivalTime));
                     last = lowWatermarkSnapped;
                 }
 
                 expectedLowWatermarks.Add(
                     new LowWatermarkAndArrival(
                         PartitionedStreamEvent.CreateLowWatermark<int, int>(StreamEvent.InfinitySyncTime),
+                        StreamEvent.InfinitySyncTime,
                         StreamEvent.InfinitySyncTime));
 
                 var expectedLowWatermarkEvents = expectedLowWatermarks.Select(kvp => kvp.LowWatermark).ToList();
@@ -108,7 +110,7 @@ namespace SimpleTesting.PartitionedIngressAndEgress
 
                         if (interruptingWatermarks.Any())
                         {
-                            last = (int)interruptingWatermarks.Last().LowWatermark.StartTime;
+                            last = (int)interruptingWatermarks.Last().QuantizedForPunctuationGeneration;
                             if (t - last < (uint)this.punctuationPolicy.generationPeriod)
                             {
                                 continue;
@@ -147,12 +149,14 @@ namespace SimpleTesting.PartitionedIngressAndEgress
 
         private struct LowWatermarkAndArrival
         {
-            public LowWatermarkAndArrival(PartitionedStreamEvent<int, int> lowWatermark, long arrivalTime)
+            public LowWatermarkAndArrival(PartitionedStreamEvent<int, int> lowWatermark, long quantizedForPunctuation, long arrivalTime)
             {
                 this.LowWatermark = lowWatermark;
                 this.ArrivalTime = arrivalTime;
+                this.QuantizedForPunctuationGeneration = quantizedForPunctuation;
             }
             public readonly PartitionedStreamEvent<int, int> LowWatermark;
+            public readonly long QuantizedForPunctuationGeneration;
             public readonly long ArrivalTime;
         }
 

@@ -39,9 +39,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Internal.Collections;
@@ -336,8 +338,7 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            this.currentTime = moveTo;
+            UpdateCurrentTime(moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -366,8 +367,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -497,7 +501,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -540,7 +559,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -703,8 +722,7 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            this.currentTime = moveTo;
+            UpdateCurrentTime(moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -733,8 +751,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -859,7 +880,22 @@ namespace Microsoft.StreamProcessing
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, Empty.Default);
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -902,7 +938,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -1068,8 +1104,7 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            this.currentTime = moveTo;
+            UpdateCurrentTime(moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -1098,8 +1133,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
                 }
             }
 
@@ -1229,7 +1267,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -1272,7 +1325,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -1372,8 +1425,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -1503,7 +1559,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -1520,7 +1591,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -1635,8 +1706,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -1761,7 +1835,22 @@ namespace Microsoft.StreamProcessing
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, Empty.Default);
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -1778,7 +1867,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -1896,8 +1985,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
                 }
             }
 
@@ -2027,7 +2119,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -2044,7 +2151,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -2205,8 +2312,7 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            this.currentTime = moveTo;
+            UpdateCurrentTime(moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -2227,8 +2333,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -2269,7 +2378,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -2312,7 +2436,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -2488,8 +2612,7 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            this.currentTime = moveTo;
+            UpdateCurrentTime(moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -2510,8 +2633,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -2547,7 +2673,22 @@ namespace Microsoft.StreamProcessing
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, Empty.Default);
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -2590,7 +2731,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -2768,8 +2909,7 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            this.currentTime = moveTo;
+            UpdateCurrentTime(moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -2790,8 +2930,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
                 }
             }
 
@@ -2832,7 +2975,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -2875,7 +3033,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -2986,8 +3144,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -3028,7 +3189,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -3045,7 +3221,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -3171,8 +3347,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -3208,7 +3387,22 @@ namespace Microsoft.StreamProcessing
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, Empty.Default);
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -3225,7 +3419,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -3353,8 +3547,11 @@ namespace Microsoft.StreamProcessing
                 if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeSnapped));
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
                 }
             }
 
@@ -3395,7 +3592,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (this.currentTime < value.SyncTime) this.currentTime = value.SyncTime;
+            UpdateCurrentTime(value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(long time, bool fromEvent = true)
+        {
+            if (this.currentTime < time)
+            {
+                this.currentTime = time;
+            }
+#if DEBUG
+            if (fromEvent && this.lastEventTime < time)
+            {
+                this.lastEventTime = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -3412,7 +3624,7 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            this.currentTime = Math.Max(syncTime, this.currentTime);
+            UpdateCurrentTime(syncTime);
             this.lastPunctuationTime = Math.Max(
                 syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
                 this.lastPunctuationTime);
@@ -3504,7 +3716,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -3512,13 +3724,17 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom)) moveFrom = this.lowWatermark;
+            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom) || moveFrom < this.lowWatermark.rawValue)
+            {
+                moveFrom = this.lowWatermark.rawValue;
+            }
+
             if (!this.partitionHighWatermarks.ContainsKey(value.PartitionKey))
             {
-                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark);
+                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark.rawValue);
 
-                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
-                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark, new HashSet<TKey> { value.PartitionKey });
+                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark.rawValue, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
+                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark.rawValue, new HashSet<TKey> { value.PartitionKey });
             }
             long moveTo = moveFrom;
 
@@ -3552,7 +3768,7 @@ namespace Microsoft.StreamProcessing
 
             if (value.IsPunctuation)
             {
-                moveTo = value.SyncTime;
+                moveTo = Math.Max(moveFrom, value.SyncTime);
             }
 
             if (moveTo > moveFrom)
@@ -3564,7 +3780,7 @@ namespace Microsoft.StreamProcessing
                     while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= moveTo)
                     {
                         resultEvent = this.priorityQueueSorter.Dequeue();
-                        Process(ref resultEvent, updateCurrentTime: false);
+                        Process(ref resultEvent);
                     }
                 }
                 else
@@ -3578,7 +3794,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= moveTo)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                     }
 
@@ -3597,18 +3813,14 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime))
-                this.currentTime.Add(value.PartitionKey, moveTo);
-            else if (oldCurrentTime < moveTo)
-                this.currentTime[value.PartitionKey] = moveTo;
+            UpdateCurrentTime(value.PartitionKey, moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
             "Microsoft.StyleCop.CSharp.DocumentationRules",
             "SA1028:CodeMustNotContainTrailingWhitespace",
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
-        private void Process(ref PartitionedStreamEvent<TKey, TPayload> value, bool updateCurrentTime = true)
+        private void Process(ref PartitionedStreamEvent<TKey, TPayload> value)
         {
             Contract.Assume(value.SyncTime != value.OtherTime);
 
@@ -3622,39 +3834,43 @@ namespace Microsoft.StreamProcessing
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                // We should always have a currentTime entry if we are not updating it
-                if (!updateCurrentTime) throw new IngressException("Partition expected to have a valid currentTime!");
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (updateCurrentTime && current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
                 // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey])
-                    this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
+                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
 
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TPayload>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -3791,8 +4007,22 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -3801,7 +4031,7 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -3810,7 +4040,7 @@ namespace Microsoft.StreamProcessing
                 while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= syncTime)
                 {
                     resultEvent = this.priorityQueueSorter.Dequeue();
-                    Process(ref resultEvent, updateCurrentTime: false);
+                    Process(ref resultEvent);
                 }
             }
             else
@@ -3830,7 +4060,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= syncTime)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                         if (!recheck) this.impatienceSorter.Return(entry.key, streamEvents);
                     }
@@ -3839,17 +4069,16 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
 
                 // Gather keys whose high watermarks are before the new low watermark
                 var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
                 foreach (var keyValuePair in this.highWatermarkToPartitionsMap)
                 {
                     // Since highWatermarkToPartitionsMap is sorted, we can stop as soon as we reach the threshold
-                    if (keyValuePair.Key >= this.lowWatermark) break;
+                    if (keyValuePair.Key >= this.lowWatermark.rawValue) break;
 
                     expiredWatermarkKVPs.Add(keyValuePair);
                 }
@@ -3866,6 +4095,9 @@ namespace Microsoft.StreamProcessing
                         this.lastPunctuationTime.Remove(expiredKey);
                         this.partitionHighWatermarks.Remove(expiredKey);
                         this.currentTime.Remove(expiredKey);
+#if DEBUG
+                        this.lastEventTime.Remove(expiredKey);
+#endif
                     }
                 }
             }
@@ -3983,7 +4215,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -3991,13 +4223,17 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom)) moveFrom = this.lowWatermark;
+            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom) || moveFrom < this.lowWatermark.rawValue)
+            {
+                moveFrom = this.lowWatermark.rawValue;
+            }
+
             if (!this.partitionHighWatermarks.ContainsKey(value.PartitionKey))
             {
-                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark);
+                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark.rawValue);
 
-                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
-                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark, new HashSet<TKey> { value.PartitionKey });
+                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark.rawValue, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
+                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark.rawValue, new HashSet<TKey> { value.PartitionKey });
             }
             long moveTo = moveFrom;
 
@@ -4031,7 +4267,7 @@ namespace Microsoft.StreamProcessing
 
             if (value.IsPunctuation)
             {
-                moveTo = value.SyncTime;
+                moveTo = Math.Max(moveFrom, value.SyncTime);
             }
 
             if (moveTo > moveFrom)
@@ -4043,7 +4279,7 @@ namespace Microsoft.StreamProcessing
                     while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= moveTo)
                     {
                         resultEvent = this.priorityQueueSorter.Dequeue();
-                        Process(ref resultEvent, updateCurrentTime: false);
+                        Process(ref resultEvent);
                     }
                 }
                 else
@@ -4057,7 +4293,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= moveTo)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                     }
 
@@ -4076,18 +4312,14 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime))
-                this.currentTime.Add(value.PartitionKey, moveTo);
-            else if (oldCurrentTime < moveTo)
-                this.currentTime[value.PartitionKey] = moveTo;
+            UpdateCurrentTime(value.PartitionKey, moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
             "Microsoft.StyleCop.CSharp.DocumentationRules",
             "SA1028:CodeMustNotContainTrailingWhitespace",
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
-        private void Process(ref PartitionedStreamEvent<TKey, TPayload> value, bool updateCurrentTime = true)
+        private void Process(ref PartitionedStreamEvent<TKey, TPayload> value)
         {
             Contract.Assume(value.SyncTime != value.OtherTime);
 
@@ -4101,39 +4333,43 @@ namespace Microsoft.StreamProcessing
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                // We should always have a currentTime entry if we are not updating it
-                if (!updateCurrentTime) throw new IngressException("Partition expected to have a valid currentTime!");
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (updateCurrentTime && current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
                 // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey])
-                    this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
+                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
 
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TPayload>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -4265,8 +4501,22 @@ namespace Microsoft.StreamProcessing
                 this.action(value.SyncTime, value.OtherTime, value.Payload, new PartitionKey<TKey>(value.PartitionKey));
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -4275,7 +4525,7 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -4284,7 +4534,7 @@ namespace Microsoft.StreamProcessing
                 while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= syncTime)
                 {
                     resultEvent = this.priorityQueueSorter.Dequeue();
-                    Process(ref resultEvent, updateCurrentTime: false);
+                    Process(ref resultEvent);
                 }
             }
             else
@@ -4304,7 +4554,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= syncTime)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                         if (!recheck) this.impatienceSorter.Return(entry.key, streamEvents);
                     }
@@ -4313,17 +4563,16 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
 
                 // Gather keys whose high watermarks are before the new low watermark
                 var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
                 foreach (var keyValuePair in this.highWatermarkToPartitionsMap)
                 {
                     // Since highWatermarkToPartitionsMap is sorted, we can stop as soon as we reach the threshold
-                    if (keyValuePair.Key >= this.lowWatermark) break;
+                    if (keyValuePair.Key >= this.lowWatermark.rawValue) break;
 
                     expiredWatermarkKVPs.Add(keyValuePair);
                 }
@@ -4340,6 +4589,9 @@ namespace Microsoft.StreamProcessing
                         this.lastPunctuationTime.Remove(expiredKey);
                         this.partitionHighWatermarks.Remove(expiredKey);
                         this.currentTime.Remove(expiredKey);
+#if DEBUG
+                        this.lastEventTime.Remove(expiredKey);
+#endif
                     }
                 }
             }
@@ -4460,7 +4712,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -4468,13 +4720,17 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom)) moveFrom = this.lowWatermark;
+            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom) || moveFrom < this.lowWatermark.rawValue)
+            {
+                moveFrom = this.lowWatermark.rawValue;
+            }
+
             if (!this.partitionHighWatermarks.ContainsKey(value.PartitionKey))
             {
-                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark);
+                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark.rawValue);
 
-                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
-                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark, new HashSet<TKey> { value.PartitionKey });
+                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark.rawValue, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
+                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark.rawValue, new HashSet<TKey> { value.PartitionKey });
             }
             long moveTo = moveFrom;
 
@@ -4508,7 +4764,7 @@ namespace Microsoft.StreamProcessing
 
             if (value.IsPunctuation)
             {
-                moveTo = value.SyncTime;
+                moveTo = Math.Max(moveFrom, value.SyncTime);
             }
 
             if (moveTo > moveFrom)
@@ -4520,7 +4776,7 @@ namespace Microsoft.StreamProcessing
                     while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= moveTo)
                     {
                         resultEvent = this.priorityQueueSorter.Dequeue();
-                        Process(ref resultEvent, updateCurrentTime: false);
+                        Process(ref resultEvent);
                     }
                 }
                 else
@@ -4534,7 +4790,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= moveTo)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                     }
 
@@ -4553,18 +4809,14 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime))
-                this.currentTime.Add(value.PartitionKey, moveTo);
-            else if (oldCurrentTime < moveTo)
-                this.currentTime[value.PartitionKey] = moveTo;
+            UpdateCurrentTime(value.PartitionKey, moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
             "Microsoft.StyleCop.CSharp.DocumentationRules",
             "SA1028:CodeMustNotContainTrailingWhitespace",
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
-        private void Process(ref PartitionedStreamEvent<TKey, TResult> value, bool updateCurrentTime = true)
+        private void Process(ref PartitionedStreamEvent<TKey, TResult> value)
         {
             Contract.Assume(value.SyncTime != value.OtherTime);
 
@@ -4578,39 +4830,43 @@ namespace Microsoft.StreamProcessing
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                // We should always have a currentTime entry if we are not updating it
-                if (!updateCurrentTime) throw new IngressException("Partition expected to have a valid currentTime!");
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (updateCurrentTime && current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
                 // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey])
-                    this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
+                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
 
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TResult>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -4747,8 +5003,22 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -4757,7 +5027,7 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -4766,7 +5036,7 @@ namespace Microsoft.StreamProcessing
                 while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= syncTime)
                 {
                     resultEvent = this.priorityQueueSorter.Dequeue();
-                    Process(ref resultEvent, updateCurrentTime: false);
+                    Process(ref resultEvent);
                 }
             }
             else
@@ -4786,7 +5056,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= syncTime)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                         if (!recheck) this.impatienceSorter.Return(entry.key, streamEvents);
                     }
@@ -4795,17 +5065,16 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
 
                 // Gather keys whose high watermarks are before the new low watermark
                 var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
                 foreach (var keyValuePair in this.highWatermarkToPartitionsMap)
                 {
                     // Since highWatermarkToPartitionsMap is sorted, we can stop as soon as we reach the threshold
-                    if (keyValuePair.Key >= this.lowWatermark) break;
+                    if (keyValuePair.Key >= this.lowWatermark.rawValue) break;
 
                     expiredWatermarkKVPs.Add(keyValuePair);
                 }
@@ -4822,6 +5091,9 @@ namespace Microsoft.StreamProcessing
                         this.lastPunctuationTime.Remove(expiredKey);
                         this.partitionHighWatermarks.Remove(expiredKey);
                         this.currentTime.Remove(expiredKey);
+#if DEBUG
+                        this.lastEventTime.Remove(expiredKey);
+#endif
                     }
                 }
             }
@@ -4924,7 +5196,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -4938,37 +5210,43 @@ namespace Microsoft.StreamProcessing
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
                 // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey])
-                    this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
+                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
 
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TPayload>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -5105,8 +5383,22 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -5115,14 +5407,13 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
             }
 
             // Add LowWatermark to batch
@@ -5227,7 +5518,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -5241,37 +5532,43 @@ namespace Microsoft.StreamProcessing
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
                 // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey])
-                    this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
+                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
 
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TPayload>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -5403,8 +5700,22 @@ namespace Microsoft.StreamProcessing
                 this.action(value.SyncTime, value.OtherTime, value.Payload, new PartitionKey<TKey>(value.PartitionKey));
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -5413,14 +5724,13 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
             }
 
             // Add LowWatermark to batch
@@ -5528,7 +5838,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -5542,37 +5852,43 @@ namespace Microsoft.StreamProcessing
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
                 // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey])
-                    this.lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
+                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
 
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TResult>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -5709,8 +6025,22 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -5719,14 +6049,13 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
             }
 
             // Add LowWatermark to batch
@@ -5835,7 +6164,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -5843,13 +6172,17 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom)) moveFrom = this.lowWatermark;
+            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom) || moveFrom < this.lowWatermark.rawValue)
+            {
+                moveFrom = this.lowWatermark.rawValue;
+            }
+
             if (!this.partitionHighWatermarks.ContainsKey(value.PartitionKey))
             {
-                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark);
+                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark.rawValue);
 
-                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
-                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark, new HashSet<TKey> { value.PartitionKey });
+                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark.rawValue, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
+                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark.rawValue, new HashSet<TKey> { value.PartitionKey });
             }
             long moveTo = moveFrom;
 
@@ -5886,7 +6219,7 @@ namespace Microsoft.StreamProcessing
                     while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= moveTo)
                     {
                         resultEvent = this.priorityQueueSorter.Dequeue();
-                        Process(ref resultEvent, updateCurrentTime: false);
+                        Process(ref resultEvent);
                     }
                 }
                 else
@@ -5900,7 +6233,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= moveTo)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                     }
 
@@ -5919,36 +6252,30 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime))
-                this.currentTime.Add(value.PartitionKey, moveTo);
-            else if (oldCurrentTime < moveTo)
-                this.currentTime[value.PartitionKey] = moveTo;
+            UpdateCurrentTime(value.PartitionKey, moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
             "Microsoft.StyleCop.CSharp.DocumentationRules",
             "SA1028:CodeMustNotContainTrailingWhitespace",
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
-        private void Process(ref PartitionedStreamEvent<TKey, TPayload> value, bool updateCurrentTime = true)
+        private void Process(ref PartitionedStreamEvent<TKey, TPayload> value)
         {
             // Update global high water mark if necessary
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                // We should always have a currentTime entry if we are not updating it
-                if (!updateCurrentTime) throw new IngressException("Partition expected to have a valid currentTime!");
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (updateCurrentTime && current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
@@ -5957,14 +6284,20 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TPayload>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -6005,8 +6338,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -6015,7 +6362,7 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -6024,7 +6371,7 @@ namespace Microsoft.StreamProcessing
                 while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= syncTime)
                 {
                     resultEvent = this.priorityQueueSorter.Dequeue();
-                    Process(ref resultEvent, updateCurrentTime: false);
+                    Process(ref resultEvent);
                 }
             }
             else
@@ -6044,7 +6391,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= syncTime)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                         if (!recheck) this.impatienceSorter.Return(entry.key, streamEvents);
                     }
@@ -6053,17 +6400,16 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
 
                 // Gather keys whose high watermarks are before the new low watermark
                 var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
                 foreach (var keyValuePair in this.highWatermarkToPartitionsMap)
                 {
                     // Since highWatermarkToPartitionsMap is sorted, we can stop as soon as we reach the threshold
-                    if (keyValuePair.Key >= this.lowWatermark) break;
+                    if (keyValuePair.Key >= this.lowWatermark.rawValue) break;
 
                     expiredWatermarkKVPs.Add(keyValuePair);
                 }
@@ -6080,6 +6426,9 @@ namespace Microsoft.StreamProcessing
                         this.lastPunctuationTime.Remove(expiredKey);
                         this.partitionHighWatermarks.Remove(expiredKey);
                         this.currentTime.Remove(expiredKey);
+#if DEBUG
+                        this.lastEventTime.Remove(expiredKey);
+#endif
                     }
                 }
             }
@@ -6216,7 +6565,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -6224,13 +6573,17 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom)) moveFrom = this.lowWatermark;
+            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom) || moveFrom < this.lowWatermark.rawValue)
+            {
+                moveFrom = this.lowWatermark.rawValue;
+            }
+
             if (!this.partitionHighWatermarks.ContainsKey(value.PartitionKey))
             {
-                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark);
+                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark.rawValue);
 
-                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
-                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark, new HashSet<TKey> { value.PartitionKey });
+                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark.rawValue, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
+                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark.rawValue, new HashSet<TKey> { value.PartitionKey });
             }
             long moveTo = moveFrom;
 
@@ -6267,7 +6620,7 @@ namespace Microsoft.StreamProcessing
                     while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= moveTo)
                     {
                         resultEvent = this.priorityQueueSorter.Dequeue();
-                        Process(ref resultEvent, updateCurrentTime: false);
+                        Process(ref resultEvent);
                     }
                 }
                 else
@@ -6281,7 +6634,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= moveTo)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                     }
 
@@ -6300,36 +6653,30 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime))
-                this.currentTime.Add(value.PartitionKey, moveTo);
-            else if (oldCurrentTime < moveTo)
-                this.currentTime[value.PartitionKey] = moveTo;
+            UpdateCurrentTime(value.PartitionKey, moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
             "Microsoft.StyleCop.CSharp.DocumentationRules",
             "SA1028:CodeMustNotContainTrailingWhitespace",
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
-        private void Process(ref PartitionedStreamEvent<TKey, TPayload> value, bool updateCurrentTime = true)
+        private void Process(ref PartitionedStreamEvent<TKey, TPayload> value)
         {
             // Update global high water mark if necessary
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                // We should always have a currentTime entry if we are not updating it
-                if (!updateCurrentTime) throw new IngressException("Partition expected to have a valid currentTime!");
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (updateCurrentTime && current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
@@ -6338,14 +6685,20 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TPayload>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -6381,8 +6734,22 @@ namespace Microsoft.StreamProcessing
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, new PartitionKey<TKey>(value.PartitionKey));
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -6391,7 +6758,7 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -6400,7 +6767,7 @@ namespace Microsoft.StreamProcessing
                 while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= syncTime)
                 {
                     resultEvent = this.priorityQueueSorter.Dequeue();
-                    Process(ref resultEvent, updateCurrentTime: false);
+                    Process(ref resultEvent);
                 }
             }
             else
@@ -6420,7 +6787,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= syncTime)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                         if (!recheck) this.impatienceSorter.Return(entry.key, streamEvents);
                     }
@@ -6429,17 +6796,16 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
 
                 // Gather keys whose high watermarks are before the new low watermark
                 var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
                 foreach (var keyValuePair in this.highWatermarkToPartitionsMap)
                 {
                     // Since highWatermarkToPartitionsMap is sorted, we can stop as soon as we reach the threshold
-                    if (keyValuePair.Key >= this.lowWatermark) break;
+                    if (keyValuePair.Key >= this.lowWatermark.rawValue) break;
 
                     expiredWatermarkKVPs.Add(keyValuePair);
                 }
@@ -6456,6 +6822,9 @@ namespace Microsoft.StreamProcessing
                         this.lastPunctuationTime.Remove(expiredKey);
                         this.partitionHighWatermarks.Remove(expiredKey);
                         this.currentTime.Remove(expiredKey);
+#if DEBUG
+                        this.lastEventTime.Remove(expiredKey);
+#endif
                     }
                 }
             }
@@ -6594,7 +6963,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -6602,13 +6971,17 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom)) moveFrom = this.lowWatermark;
+            if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom) || moveFrom < this.lowWatermark.rawValue)
+            {
+                moveFrom = this.lowWatermark.rawValue;
+            }
+
             if (!this.partitionHighWatermarks.ContainsKey(value.PartitionKey))
             {
-                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark);
+                this.partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark.rawValue);
 
-                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
-                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark, new HashSet<TKey> { value.PartitionKey });
+                if (this.highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark.rawValue, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
+                else this.highWatermarkToPartitionsMap.Add(this.lowWatermark.rawValue, new HashSet<TKey> { value.PartitionKey });
             }
             long moveTo = moveFrom;
 
@@ -6645,7 +7018,7 @@ namespace Microsoft.StreamProcessing
                     while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= moveTo)
                     {
                         resultEvent = this.priorityQueueSorter.Dequeue();
-                        Process(ref resultEvent, updateCurrentTime: false);
+                        Process(ref resultEvent);
                     }
                 }
                 else
@@ -6659,7 +7032,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= moveTo)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                     }
 
@@ -6678,36 +7051,30 @@ namespace Microsoft.StreamProcessing
             if (this.priorityQueueSorter != null) this.priorityQueueSorter.Enqueue(value);
             else this.impatienceSorter.Enqueue(ref value);
 
-            // Move currentTime forward
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime))
-                this.currentTime.Add(value.PartitionKey, moveTo);
-            else if (oldCurrentTime < moveTo)
-                this.currentTime[value.PartitionKey] = moveTo;
+            UpdateCurrentTime(value.PartitionKey, moveTo, fromEvent: false);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
             "Microsoft.StyleCop.CSharp.DocumentationRules",
             "SA1028:CodeMustNotContainTrailingWhitespace",
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
-        private void Process(ref PartitionedStreamEvent<TKey, TResult> value, bool updateCurrentTime = true)
+        private void Process(ref PartitionedStreamEvent<TKey, TResult> value)
         {
             // Update global high water mark if necessary
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                // We should always have a currentTime entry if we are not updating it
-                if (!updateCurrentTime) throw new IngressException("Partition expected to have a valid currentTime!");
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (updateCurrentTime && current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
@@ -6716,14 +7083,20 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TResult>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -6764,8 +7137,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -6774,7 +7161,7 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Process events queued for reorderLatency up to the LowWatermark syncTime
             if (this.priorityQueueSorter != null)
@@ -6783,7 +7170,7 @@ namespace Microsoft.StreamProcessing
                 while ((!this.priorityQueueSorter.IsEmpty()) && this.priorityQueueSorter.Peek().SyncTime <= syncTime)
                 {
                     resultEvent = this.priorityQueueSorter.Dequeue();
-                    Process(ref resultEvent, updateCurrentTime: false);
+                    Process(ref resultEvent);
                 }
             }
             else
@@ -6803,7 +7190,7 @@ namespace Microsoft.StreamProcessing
                         while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= syncTime)))
                         {
                             resultEvent = streamEvents.Dequeue();
-                            Process(ref resultEvent, updateCurrentTime: false);
+                            Process(ref resultEvent);
                         }
                         if (!recheck) this.impatienceSorter.Return(entry.key, streamEvents);
                     }
@@ -6812,17 +7199,16 @@ namespace Microsoft.StreamProcessing
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
 
                 // Gather keys whose high watermarks are before the new low watermark
                 var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
                 foreach (var keyValuePair in this.highWatermarkToPartitionsMap)
                 {
                     // Since highWatermarkToPartitionsMap is sorted, we can stop as soon as we reach the threshold
-                    if (keyValuePair.Key >= this.lowWatermark) break;
+                    if (keyValuePair.Key >= this.lowWatermark.rawValue) break;
 
                     expiredWatermarkKVPs.Add(keyValuePair);
                 }
@@ -6839,6 +7225,9 @@ namespace Microsoft.StreamProcessing
                         this.lastPunctuationTime.Remove(expiredKey);
                         this.partitionHighWatermarks.Remove(expiredKey);
                         this.currentTime.Remove(expiredKey);
+#if DEBUG
+                        this.lastEventTime.Remove(expiredKey);
+#endif
                     }
                 }
             }
@@ -6960,7 +7349,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -6972,17 +7361,17 @@ namespace Microsoft.StreamProcessing
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
@@ -6991,14 +7380,20 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TPayload>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -7039,8 +7434,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -7049,14 +7458,13 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
             }
 
             // Add LowWatermark to batch
@@ -7180,7 +7588,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -7192,17 +7600,17 @@ namespace Microsoft.StreamProcessing
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
@@ -7211,14 +7619,20 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TPayload>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -7254,8 +7668,22 @@ namespace Microsoft.StreamProcessing
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, new PartitionKey<TKey>(value.PartitionKey));
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -7264,14 +7692,13 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
             }
 
             // Add LowWatermark to batch
@@ -7397,7 +7824,7 @@ namespace Microsoft.StreamProcessing
                 value.SyncTime > this.lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - this.lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - this.baselineLowWatermarkForPolicy) >= this.lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= this.lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
@@ -7409,17 +7836,17 @@ namespace Microsoft.StreamProcessing
             this.highWatermark = Math.Max(this.highWatermark, value.SyncTime);
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !this.lastPunctuationTime.ContainsKey(value.PartitionKey))
-                this.lastPunctuationTime.Add(value.PartitionKey, this.lowWatermark);
+                UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
             // Retrieve current time for this partition, updating currentTime if necessary
             if (!this.currentTime.TryGetValue(value.PartitionKey, out long current))
             {
-                current = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
             }
-            else if (current < this.lowWatermark)
+            else if (current < this.lowWatermark.rawValue)
             {
-                current = this.lowWatermark;
-                this.currentTime[value.PartitionKey] = this.lowWatermark;
+                current = this.lowWatermark.rawValue;
+                UpdateCurrentTime(value.PartitionKey, this.lowWatermark.rawValue);
             }
 
             var outOfOrder = value.SyncTime < current;
@@ -7428,14 +7855,20 @@ namespace Microsoft.StreamProcessing
                 // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
                 // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
                 // (if necessary) when that timestamp was seen.
-                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                // punctuations for all partitions
-                ulong delta = (ulong)(value.SyncTime - Math.Max(this.lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0 && delta >= this.punctuationGenerationPeriod)
+                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
                 {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-                    OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, TResult>(value.PartitionKey, punctuationTimeSnapped));
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
                 }
             }
 
@@ -7476,8 +7909,22 @@ namespace Microsoft.StreamProcessing
                 else FlushContents();
             }
 
-            if (!this.currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-                this.currentTime[value.PartitionKey] = value.SyncTime;
+            UpdateCurrentTime(value.PartitionKey, value.SyncTime);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateCurrentTime(TKey partitionKey, long time, bool fromEvent = true)
+        {
+            if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+            {
+                this.currentTime[partitionKey] = time;
+            }
+#if DEBUG
+            if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+            {
+                this.lastEventTime[partitionKey] = time;
+            }
+#endif
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -7486,14 +7933,13 @@ namespace Microsoft.StreamProcessing
             Justification = "T4 generation with PushIndent violates Trailing Whitespace rule")]
         private void GenerateAndProcessLowWatermark(long syncTime)
         {
-            if (syncTime <= this.lowWatermark) return;
+            if (syncTime <= this.lowWatermark.rawValue) return;
 
             // Update cached global times
             this.highWatermark = Math.Max(syncTime, this.highWatermark);
-            if (this.lowWatermark < syncTime)
+            if (this.lowWatermark.rawValue < syncTime)
             {
-                this.lowWatermark = syncTime;
-                this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+                UpdateLowWatermark(syncTime);
             }
 
             // Add LowWatermark to batch

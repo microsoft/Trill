@@ -221,6 +221,9 @@ namespace Microsoft.StreamProcessing
         {
             foreach (var pKey in this.processQueue)
             {
+                // Partition is no longer clean if we are processing it. If it is still clean, it will be added below.
+                this.cleanKeys.Remove(pKey);
+
                 PooledElasticCircularBuffer<LEntry> leftWorking = null;
                 PooledElasticCircularBuffer<REntry> rightWorking = null;
                 this.leftQueue.Lookup(pKey, out int index);
@@ -400,7 +403,7 @@ namespace Microsoft.StreamProcessing
                 {
                     this.seenKeys.Remove(p);
 
-                    this.leftQueue.Lookup(p, out int index);
+                    this.leftQueue.Lookup(p, out var index);
                     this.leftQueue.entries[index].value.Dispose();
                     this.leftQueue.Remove(p);
                     this.rightQueue.entries[index].value.Dispose();

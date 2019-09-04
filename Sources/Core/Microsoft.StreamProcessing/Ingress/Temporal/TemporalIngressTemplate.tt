@@ -157,7 +157,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
                 value.SyncTime > lowWatermarkTimestampLag)
             {
                 var newLowWatermark = value.SyncTime - lowWatermarkTimestampLag;
-                if ((ulong)(newLowWatermark - baselineLowWatermarkForPolicy) >= lowWatermarkGenerationPeriod)
+                if ((ulong)(newLowWatermark - this.lowWatermark.quantizedForLowWatermarkGeneration) >= lowWatermarkGenerationPeriod)
                 {
                     // SyncTime is sufficiently high to generate a new watermark, but first snap it to the nearest generationPeriod boundary
                     var newLowWatermarkSnapped = newLowWatermark.SnapToLeftBoundary((long)lowWatermarkGenerationPeriod);
@@ -165,14 +165,17 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
                 }
             }
 
-        long moveFrom;
-        if (!currentTime.TryGetValue(value.PartitionKey, out moveFrom)) moveFrom = lowWatermark;
+        if (!this.currentTime.TryGetValue(value.PartitionKey, out long moveFrom) || moveFrom < this.lowWatermark.rawValue)
+        {
+            moveFrom = this.lowWatermark.rawValue;
+        }
+
         if (!partitionHighWatermarks.ContainsKey(value.PartitionKey))
         {
-            partitionHighWatermarks.Add(value.PartitionKey, lowWatermark);
+            partitionHighWatermarks.Add(value.PartitionKey, this.lowWatermark.rawValue);
 
-            if (highWatermarkToPartitionsMap.TryGetValue(lowWatermark, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
-            else highWatermarkToPartitionsMap.Add(lowWatermark, new HashSet<TKey> { value.PartitionKey });
+            if (highWatermarkToPartitionsMap.TryGetValue(this.lowWatermark.rawValue, out HashSet<TKey> keySet)) keySet.Add(value.PartitionKey);
+            else highWatermarkToPartitionsMap.Add(this.lowWatermark.rawValue, new HashSet<TKey> { value.PartitionKey });
         }
 <#      }
         else
@@ -188,12 +191,6 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
             return;
         }
 
-<#      if (ingressType == "StreamEvent")
-        { #>
-        if (value.IsData)
-        {
-<#          PushIndent("    ");
-        } #>
         var oldTime = <#= highWatermark #>;
         if (value.SyncTime > oldTime)
         {
@@ -201,23 +198,35 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
 
 <#          if (partitioned)
             { #>
-            var oldSet = highWatermarkToPartitionsMap[oldTime];
-            if (oldSet.Count <= 1) highWatermarkToPartitionsMap.Remove(oldTime);
+            var oldSet = this.highWatermarkToPartitionsMap[oldTime];
+            if (oldSet.Count <= 1) this.highWatermarkToPartitionsMap.Remove(oldTime);
             else oldSet.Remove(value.PartitionKey);
 
-            if (highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
-            else highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
+            if (this.highWatermarkToPartitionsMap.TryGetValue(value.SyncTime, out HashSet<TKey> set)) set.Add(value.PartitionKey);
+            else this.highWatermarkToPartitionsMap.Add(value.SyncTime, new HashSet<TKey> { value.PartitionKey });
 
+<#          }
+            if (ingressType == "StreamEvent" && partitioned)
+            {
+                PushIndent("    "); #>
+        if (value.IsData)
+        {
+            // moveTo for punctuations is updated below
 <#          } #>
-            moveTo = value.SyncTime - reorderLatency;
+            moveTo = value.SyncTime - this.reorderLatency;
             if (moveTo < StreamEvent.MinSyncTime) moveTo = StreamEvent.MinSyncTime;
             if (moveTo < moveFrom) moveTo = moveFrom;
             }
-<#      if (ingressType == "StreamEvent")
-        {
-            PopIndent(); #>
+<#          if (ingressType == "StreamEvent" && partitioned)
+            {
+                PopIndent(); #>
         }
-<#      } #>
+
+        if (value.IsPunctuation)
+        {
+            moveTo = Math.Max(moveFrom, value.SyncTime);
+        }
+<#          } #>
 
         if (moveTo > moveFrom)
         {
@@ -228,7 +237,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
                 while ((!priorityQueueSorter.IsEmpty()) && priorityQueueSorter.Peek().SyncTime <= moveTo)
                 {
                     resultEvent = priorityQueueSorter.Dequeue();
-                    Process(ref resultEvent<#if (partitioned) {#>, updateCurrentTime : false<#}#>);
+                    Process(ref resultEvent);
                 }
             }
             else
@@ -242,7 +251,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
                     while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= moveTo)))
                     {
                         resultEvent = streamEvents.Dequeue();
-                        Process(ref resultEvent<#if (partitioned) {#>, updateCurrentTime : false<#}#>);
+                        Process(ref resultEvent);
                     }
                 }
 
@@ -261,25 +270,10 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
         if (priorityQueueSorter != null) priorityQueueSorter.Enqueue(value);
         else impatienceSorter.Enqueue(ref value);
 
-        // Move currentTime forward
-<#      if (!partitioned)
-        { #>
-        currentTime = moveTo;
-<#      }
-        else
-        { #>
-        if (!currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime))
-            currentTime.Add(value.PartitionKey, moveTo);
-        else if (oldCurrentTime < moveTo)
-            currentTime[value.PartitionKey] = moveTo;
-<#      } #>
-        }
+        UpdateCurrentTime(<# if (partitioned) { #>value.PartitionKey, <# } #>moveTo<# if (partitioned) { #>, fromEvent: false<# } #>);
+    }
 
-    private void Process(ref <#= baseStructure #> value<#
-        if (partitioned)
-        {
-                #>, bool updateCurrentTime = true<#
-        }       #>)
+    private void Process(ref <#= baseStructure #> value)
     {
         Contract.EnsuresOnThrow<IngressException>(true);
 <#  }
@@ -309,20 +303,15 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
         highWatermark = Math.Max(highWatermark, value.SyncTime);
 
         if (punctuationPolicyType == PeriodicPunctuationPolicyType.Time && !lastPunctuationTime.ContainsKey(value.PartitionKey))
-            lastPunctuationTime.Add(value.PartitionKey, lowWatermark);
+            UpdatePunctuation(value.PartitionKey, this.lowWatermark.rawValue, this.lowWatermark.quantizedForPunctuationGeneration);
 
         // Retrieve current time for this partition, updating currentTime if necessary
         long current;
         if (!currentTime.TryGetValue(value.PartitionKey, out current))
         {
-<#          if (latencyOption == "WithLatency")
-            {#>
-            // We should always have a currentTime entry if we are not updating it
-            if (!updateCurrentTime) throw new IngressException("Partition expected to have a valid currentTime!");
-<#          }#>
             current = lowWatermark;
         }
-        else if (<#if (latencyOption == "WithLatency") {#>updateCurrentTime && <#}#>current < lowWatermark)
+        else if (current < lowWatermark)
         {
             current = lowWatermark;
             currentTime[value.PartitionKey] = lowWatermark;
@@ -335,8 +324,8 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
 <#  if (ingressType == "StreamEvent" && partitioned)
     { #>
             // Track punctuation
-            if (value.IsPunctuation && value.SyncTime > lastPunctuationTime[value.PartitionKey])
-                lastPunctuationTime[value.PartitionKey] = value.SyncTime;
+            if (value.IsPunctuation && value.SyncTime > lastPunctuationTime[value.PartitionKey].lastPunctuation)
+                UpdatePunctuation(value.PartitionKey, value.SyncTime);
 
 <#  } #>
             // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
@@ -348,20 +337,29 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
             if (!outOfOrder && delta >= punctuationGenerationPeriod)
             {
                 // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)punctuationGenerationPeriod);
-                OnPunctuation(StreamEvent.CreatePunctuation<<#= fusionOption == "Disordered" ? TResult : TPayload #>>(punctuationTimeSnapped));
+                var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)punctuationGenerationPeriod);
+#if DEBUG
+                Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                OnPunctuation(StreamEvent.CreatePunctuation<<#= fusionOption == "Disordered" ? TResult : TPayload #>>(punctuationTimeQuantized));
             }
 <#  }
     else
     { #>
-            // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-            // punctuations for all partitions
-            ulong delta = (ulong)(value.SyncTime - Math.Max(lastPunctuationTime[value.PartitionKey], this.baselineLowWatermarkForPolicy));
-            if (!outOfOrder && punctuationGenerationPeriod > 0 && delta >= punctuationGenerationPeriod)
+            if (!outOfOrder && this.punctuationGenerationPeriod > 0)
             {
-                // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                var punctuationTimeSnapped = value.SyncTime.SnapToLeftBoundary((long)punctuationGenerationPeriod);
-                OnPunctuation(PartitionedStreamEvent.CreatePunctuation<TKey, <#= fusionOption == "Disordered" ? TResult : TPayload #>>(value.PartitionKey, punctuationTimeSnapped));
+                // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                // punctuations for all partitions
+                var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                }
             }
 <#  }  #>
         }
@@ -515,20 +513,37 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
         }
 <#      } #>
 
+        UpdateCurrentTime(<# if (partitioned) { #>value.PartitionKey, <# } #>value.SyncTime);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void UpdateCurrentTime(<# if (partitioned) { #>TKey partitionKey, <# } #>long time<# if (partitioned) { #>, bool fromEvent = true<# } #>)
+    {
 <#      if (!partitioned)
         { #>
-        if (currentTime < value.SyncTime) currentTime = value.SyncTime;
+        if (this.currentTime < time)
+        {
+            this.currentTime = time;
+        }
 <#      }
         else
         { #>
-        if (!currentTime.TryGetValue(value.PartitionKey, out long oldCurrentTime) || oldCurrentTime < value.SyncTime)
-            currentTime[value.PartitionKey] = value.SyncTime;
-<#      } #>
+        if (!this.currentTime.TryGetValue(partitionKey, out long oldCurrentTime) || oldCurrentTime < time)
+        {
+            this.currentTime[partitionKey] = time;
+        }
+#if DEBUG
+        if (fromEvent && (!this.lastEventTime.TryGetValue(partitionKey, out long oldEventTime) || oldEventTime < time))
+        {
+            this.lastEventTime[partitionKey] = time;
+        }
+#endif
+<#      }#>
     }
 
     private void GenerateAndProcess<#= globalPunctuation #>(long syncTime)
     {
-        if (syncTime <= <#= partitioned ? "lowWatermark" : "lastPunctuationTime" #>) return;
+        if (syncTime <= <#= partitioned ? "this.lowWatermark.rawValue" : "this.lastPunctuationTime" #>) return;
 
 <#      if (!partitioned)
         { #>
@@ -550,7 +565,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
             while ((!priorityQueueSorter.IsEmpty()) && priorityQueueSorter.Peek().SyncTime <= syncTime)
             {
                 resultEvent = priorityQueueSorter.Dequeue();
-                Process(ref resultEvent<#if (partitioned) {#>, updateCurrentTime : false<#}#>);
+                Process(ref resultEvent);
             }
         }
         else
@@ -578,7 +593,7 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
                 while ((streamEvents.Count > 0) && ((!recheck) || (streamEvents.PeekFirst().SyncTime <= syncTime)))
                 {
                     resultEvent = streamEvents.Dequeue();
-                    Process(ref resultEvent<#if (partitioned) {#>, updateCurrentTime : false<#}#>);
+                    Process(ref resultEvent);
                 }
                 if (!recheck) impatienceSorter.Return(<#= !partitioned ? string.Empty : "entry.key , " #> streamEvents);
             }
@@ -594,17 +609,16 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
         highWatermark = Math.Max(syncTime, highWatermark);
 <#      if (partitioned)
         { #>
-        if (lowWatermark < syncTime)
+        if (this.lowWatermark.rawValue < syncTime)
         {
-            lowWatermark = syncTime;
-            this.baselineLowWatermarkForPolicy = syncTime.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+            UpdateLowWatermark(syncTime)
 
             // Gather keys whose high watermarks are before the new low watermark
             var expiredWatermarkKVPs = new List<KeyValuePair<long, HashSet<TKey>>>();
             foreach (var keyValuePair in highWatermarkToPartitionsMap)
             {
                 // Since highWatermarkToPartitionsMap is sorted, we can stop as soon as we reach the threshold
-                if (keyValuePair.Key >= lowWatermark) break;
+                if (keyValuePair.Key >= this.lowWatermark.rawValue) break;
 
                 expiredWatermarkKVPs.Add(keyValuePair);
             }
@@ -613,21 +627,24 @@ internal sealed class <#= className #><#= genericParameters #> : <#= partitionSt
             foreach (var expiredWatermarkKVP in expiredWatermarkKVPs)
             {
                 var expiredWatermark = expiredWatermarkKVP.Key;
-                highWatermarkToPartitionsMap.Remove(expiredWatermark);
+                this.highWatermarkToPartitionsMap.Remove(expiredWatermark);
 
                 var expiredKeys = expiredWatermarkKVP.Value;
                 foreach (var expiredKey in expiredKeys)
                 {
-                    lastPunctuationTime.Remove(expiredKey);
-                    partitionHighWatermarks.Remove(expiredKey);
-                    currentTime.Remove(expiredKey);
+                    this.lastPunctuationTime.Remove(expiredKey);
+                    this.partitionHighWatermarks.Remove(expiredKey);
+                    this.currentTime.Remove(expiredKey);
+#if DEBUG
+                    this.lastEventTime.Remove(expiredKey);
+#endif
                 }
             }
         }
 <#      }
         else
         { #>
-        currentTime = Math.Max(syncTime, currentTime);
+        UpdateCurrentTime(syncTime);
         this.lastPunctuationTime = Math.Max(
             syncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
             this.lastPunctuationTime);
