@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class Product<#= typeFriendlyName #>Aggregate : IAggregate<<#= typeName #>, <#= typeName #>, <#= typeName #>>
     {
-        public Expression<Func<<#= typeName #>>> InitialState() => () => 0;
+        public Expression<Func<<#= typeName #>>> InitialState() => () => 1;
 
         public Expression<Func<<#= typeName #>, long, <#= typeName #>, <#= typeName #>>> Accumulate()
             => (oldProduct, timestamp, input) => (<#= typeName #>)(oldProduct * input);

@@ -11,7 +11,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductSByteAggregate : IAggregate<sbyte, sbyte, sbyte>
     {
-        public Expression<Func<sbyte>> InitialState() => () => 0;
+        public Expression<Func<sbyte>> InitialState() => () => 1;
 
         public Expression<Func<sbyte, long, sbyte, sbyte>> Accumulate()
             => (oldProduct, timestamp, input) => (sbyte)(oldProduct * input);
@@ -30,7 +30,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductByteAggregate : IAggregate<byte, byte, byte>
     {
-        public Expression<Func<byte>> InitialState() => () => 0;
+        public Expression<Func<byte>> InitialState() => () => 1;
 
         public Expression<Func<byte, long, byte, byte>> Accumulate()
             => (oldProduct, timestamp, input) => (byte)(oldProduct * input);
@@ -49,7 +49,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductShortAggregate : IAggregate<short, short, short>
     {
-        public Expression<Func<short>> InitialState() => () => 0;
+        public Expression<Func<short>> InitialState() => () => 1;
 
         public Expression<Func<short, long, short, short>> Accumulate()
             => (oldProduct, timestamp, input) => (short)(oldProduct * input);
@@ -68,7 +68,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductUShortAggregate : IAggregate<ushort, ushort, ushort>
     {
-        public Expression<Func<ushort>> InitialState() => () => 0;
+        public Expression<Func<ushort>> InitialState() => () => 1;
 
         public Expression<Func<ushort, long, ushort, ushort>> Accumulate()
             => (oldProduct, timestamp, input) => (ushort)(oldProduct * input);
@@ -87,7 +87,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductIntAggregate : IAggregate<int, int, int>
     {
-        public Expression<Func<int>> InitialState() => () => 0;
+        public Expression<Func<int>> InitialState() => () => 1;
 
         public Expression<Func<int, long, int, int>> Accumulate()
             => (oldProduct, timestamp, input) => (int)(oldProduct * input);
@@ -106,7 +106,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductUIntAggregate : IAggregate<uint, uint, uint>
     {
-        public Expression<Func<uint>> InitialState() => () => 0;
+        public Expression<Func<uint>> InitialState() => () => 1;
 
         public Expression<Func<uint, long, uint, uint>> Accumulate()
             => (oldProduct, timestamp, input) => (uint)(oldProduct * input);
@@ -125,7 +125,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductLongAggregate : IAggregate<long, long, long>
     {
-        public Expression<Func<long>> InitialState() => () => 0;
+        public Expression<Func<long>> InitialState() => () => 1;
 
         public Expression<Func<long, long, long, long>> Accumulate()
             => (oldProduct, timestamp, input) => (long)(oldProduct * input);
@@ -144,7 +144,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductULongAggregate : IAggregate<ulong, ulong, ulong>
     {
-        public Expression<Func<ulong>> InitialState() => () => 0;
+        public Expression<Func<ulong>> InitialState() => () => 1;
 
         public Expression<Func<ulong, long, ulong, ulong>> Accumulate()
             => (oldProduct, timestamp, input) => (ulong)(oldProduct * input);
@@ -163,7 +163,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductFloatAggregate : IAggregate<float, float, float>
     {
-        public Expression<Func<float>> InitialState() => () => 0;
+        public Expression<Func<float>> InitialState() => () => 1;
 
         public Expression<Func<float, long, float, float>> Accumulate()
             => (oldProduct, timestamp, input) => (float)(oldProduct * input);
@@ -182,7 +182,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductDoubleAggregate : IAggregate<double, double, double>
     {
-        public Expression<Func<double>> InitialState() => () => 0;
+        public Expression<Func<double>> InitialState() => () => 1;
 
         public Expression<Func<double, long, double, double>> Accumulate()
             => (oldProduct, timestamp, input) => (double)(oldProduct * input);
@@ -201,7 +201,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductDecimalAggregate : IAggregate<decimal, decimal, decimal>
     {
-        public Expression<Func<decimal>> InitialState() => () => 0;
+        public Expression<Func<decimal>> InitialState() => () => 1;
 
         public Expression<Func<decimal, long, decimal, decimal>> Accumulate()
             => (oldProduct, timestamp, input) => (decimal)(oldProduct * input);
@@ -220,7 +220,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductBigIntegerAggregate : IAggregate<BigInteger, BigInteger, BigInteger>
     {
-        public Expression<Func<BigInteger>> InitialState() => () => 0;
+        public Expression<Func<BigInteger>> InitialState() => () => 1;
 
         public Expression<Func<BigInteger, long, BigInteger, BigInteger>> Accumulate()
             => (oldProduct, timestamp, input) => (BigInteger)(oldProduct * input);
@@ -239,7 +239,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class ProductComplexAggregate : IAggregate<Complex, Complex, Complex>
     {
-        public Expression<Func<Complex>> InitialState() => () => 0;
+        public Expression<Func<Complex>> InitialState() => () => 1;
 
         public Expression<Func<Complex, long, Complex, Complex>> Accumulate()
             => (oldProduct, timestamp, input) => (Complex)(oldProduct * input);
