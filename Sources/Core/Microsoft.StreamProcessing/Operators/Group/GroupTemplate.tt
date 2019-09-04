@@ -259,9 +259,4 @@ internal sealed class <#= className #><#= genericParameters #> :
 
         this.Observer.OnNext(resultBatch);
     }
-
-    public void OnError(Exception error)
-    {
-        Observer.OnError(error);
-    }
 }

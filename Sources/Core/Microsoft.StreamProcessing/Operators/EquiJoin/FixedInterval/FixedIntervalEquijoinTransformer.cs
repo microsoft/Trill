@@ -20,8 +20,6 @@ namespace Microsoft.StreamProcessing
         private IEnumerable<MyFieldInfo> rightFields;
         private IEnumerable<MyFieldInfo> resultFields;
         private Func<string, string, string> keyComparerEquals;
-        private Func<string, string, string> leftComparerEquals;
-        private Func<string, string, string> rightComparerEquals;
         private Func<string, string, string, string> leftBatchSelector;
         private Func<string, string, string, string> rightBatchSelector;
         private Func<string, string, string> activeSelector;
@@ -85,22 +83,6 @@ namespace Microsoft.StreamProcessing
                 {
                     template.keyComparerEquals =
                         (left, right) => $"keyComparerEquals({left}, {right})";
-                }
-                #endregion
-
-                #region Left Payload Equals
-                {
-                    var leftPayloadComparer = stream.Left.Properties.PayloadEqualityComparer.GetEqualsExpr();
-                    var newLambda = Extensions.TransformFunction<TKey, TLeft>(leftPayloadComparer, "leftIndex", 0);
-                    template.leftComparerEquals = (left, right) => newLambda.Inline(left, right);
-                }
-                #endregion
-
-                #region Right Payload Equals
-                {
-                    var rightPayloadComparer = stream.Right.Properties.PayloadEqualityComparer.GetEqualsExpr();
-                    var newLambda = Extensions.TransformFunction<TKey, TRight>(rightPayloadComparer, "rightIndex", 0);
-                    template.rightComparerEquals = (left, right) => newLambda.Inline(left, right);
                 }
                 #endregion
 

@@ -557,6 +557,63 @@ namespace SimpleTesting
             };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AfaZeroOrOneInsideOr()
+        {
+            var source = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateStart(0, "A"),
+                StreamEvent.CreateStart(1, "C"),
+                StreamEvent.CreateStart(2, "B"),
+                StreamEvent.CreateStart(3, "B"),
+                StreamEvent.CreateStart(4, "C"),
+                StreamEvent.CreateStart(5, "A"),
+                StreamEvent.CreateStart(6, "B"),
+                StreamEvent.CreateStart(7, "B"),
+                StreamEvent.CreateStart(8, "B"),
+                StreamEvent.CreateStart(9, "A"),
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(3);
+
+            // Create Regex for "A (C? | BB)
+            var afa = ARegex.Concat(
+                ARegex.SingleElement<string, string>(
+                    (time, @event, state) => @event == "A",
+                    (time, @event, state) => @event),
+                ARegex.Or(
+                    ARegex.ZeroOrOne(
+                        ARegex.SingleElement<string, string>(
+                            (time, @event, state) => @event == "C",
+                            (time, @event, state) => state + @event)),
+                    ARegex.Concat(
+                        ARegex.SingleElement<string, string>(
+                            (time, @event, state) => @event == "B",
+                            (time, @event, state) => state + @event),
+                        ARegex.SingleElement<string, string>(
+                            (time, @event, state) => @event == "B",
+                            (time, @event, state) => state + @event))));
+
+            var result = source
+                .Detect(
+                    afa,
+                    allowOverlappingInstances: false,
+                    isDeterministic: false)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateInterval(0, 3, "A"),
+                StreamEvent.CreateInterval(1, 3, "AC"),
+                StreamEvent.CreateInterval(5, 8, "A"),
+                StreamEvent.CreateInterval(7, 8, "ABB"),
+                StreamEvent.CreateInterval(9, 12, "A"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
     }
 
     [TestClass]
