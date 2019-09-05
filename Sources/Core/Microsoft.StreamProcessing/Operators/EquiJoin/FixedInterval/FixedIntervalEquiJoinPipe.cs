@@ -12,6 +12,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
 namespace Microsoft.StreamProcessing
 {
     [DataContract]
+    [KnownType(typeof(EndPointHeap))]
+    [KnownType(typeof(EndPointQueue))]
     internal sealed class FixedIntervalEquiJoinPipe<TKey, TLeft, TRight, TResult> : BinaryPipe<TKey, TLeft, TRight, TResult>
     {
         private readonly Func<TLeft, TRight, TResult> selector;
@@ -27,10 +29,28 @@ namespace Microsoft.StreamProcessing
 
         [DataMember]
         private StreamMessage<TKey, TResult> output;
+
+        /// <summary>
+        /// Stores left intervals valid for <see cref="currTime"/>.
+        /// FastMap visibility is not used.
+        /// </summary>
         [DataMember]
         private FastMap<ActiveInterval<TLeft>> leftIntervalMap = new FastMap<ActiveInterval<TLeft>>();
+
+        /// <summary>
+        /// Stores right intervals valid for <see cref="currTime"/>.
+        /// FastMap visibility is not used.
+        /// </summary>
         [DataMember]
         private FastMap<ActiveInterval<TRight>> rightIntervalMap = new FastMap<ActiveInterval<TRight>>();
+
+        /// <summary>
+        /// Stores end edges for the current join intervals, i.e. after <see cref="currTime"/>.
+        /// Left intervals have a positive index, right intervals have a negative index.
+        /// </summary>
+        [DataMember]
+        private IEndPointOrderer endPointHeap;
+
         [DataMember]
         private long nextLeftTime = long.MinValue;
         [DataMember]
@@ -53,6 +73,15 @@ namespace Microsoft.StreamProcessing
 
             this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparer.Compile();
+
+            if (this.leftDuration == this.rightDuration)
+            {
+                this.endPointHeap = new EndPointQueue();
+            }
+            else
+            {
+                this.endPointHeap = new EndPointHeap();
+            }
 
             this.pool = MemoryManager.GetMemoryPool<TKey, TResult>(stream.Properties.IsColumnar);
             this.pool.Get(out this.output);
@@ -244,76 +273,42 @@ namespace Microsoft.StreamProcessing
         {
             if (time != this.currTime)
             {
-                LeaveTime();
                 this.currTime = time;
+                ReachTime();
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessLeftEvent(long start, ref TKey key, TLeft payload, int hash)
         {
-            bool processable = this.nextRightTime > start;
-            if (processable)
-            {
-                int index = this.leftIntervalMap.Insert(hash);
-                this.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
-                CreateOutputForStartInterval(start, ref key, ref payload, hash);
-            }
-            else
-            {
-                int index = this.leftIntervalMap.InsertInvisible(hash);
-                this.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
-            }
+            int index = this.leftIntervalMap.Insert(hash);
+            this.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
+            CreateOutputForStartInterval(start, ref key, ref payload, hash);
+            this.endPointHeap.Insert(start + this.leftDuration, index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessRightEvent(long start, ref TKey key, TRight payload, int hash)
         {
-            bool processable = this.nextLeftTime > start;
-            if (processable)
-            {
-                int index = this.rightIntervalMap.Insert(hash);
-                this.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
-
-                CreateOutputForStartInterval(start, ref key, ref payload, hash);
-            }
-            else
-            {
-                int index = this.rightIntervalMap.InsertInvisible(hash);
-                this.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
-            }
+            int index = this.rightIntervalMap.Insert(hash);
+            this.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
+            CreateOutputForStartInterval(start, ref key, ref payload, hash);
+            this.endPointHeap.Insert(start + this.rightDuration, ~index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void LeaveTime()
+        private void ReachTime()
         {
-            int index;
-            int hash;
-
-            var leftIntervals = this.leftIntervalMap.TraverseInvisible();
-            while (leftIntervals.Next(out index, out hash))
+            while (this.endPointHeap.TryGetNextInclusive(this.currTime, out long endTime, out int index))
             {
-                var intrvl = this.leftIntervalMap.Values[index];
-                CreateOutputForStartInterval(
-                    this.currTime,
-                    ref intrvl.Key,
-                    ref intrvl.Payload,
-                    hash);
-
-                leftIntervals.MakeVisible();
-            }
-
-            var rightIntervals = this.rightIntervalMap.TraverseInvisible();
-            while (rightIntervals.Next(out index, out hash))
-            {
-                var intrvl = this.rightIntervalMap.Values[index];
-                CreateOutputForStartInterval(
-                    this.currTime,
-                    ref intrvl.Key,
-                    ref intrvl.Payload,
-                    hash);
-
-                rightIntervals.MakeVisible();
+                if (index >= 0)
+                {
+                    this.leftIntervalMap.Remove(index);
+                }
+                else
+                {
+                    this.rightIntervalMap.Remove(~index);
+                }
             }
         }
 

@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Microsoft.StreamProcessing.Internal.Collections;
 
@@ -160,6 +161,16 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         protected long currentTime = StreamEvent.MinSyncTime;
 
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// Used for debug purposes only - very close to currentTime, but is only updated due to real events/punctuations/low watermarks processed, and not the reorder buffer latency
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long lastEventTime = StreamEvent.MinSyncTime;
+#endif
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -308,6 +319,18 @@ namespace Microsoft.StreamProcessing.Internal
                 FlushContents();
             }
         }
+
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected long LastEventTime()
+        {
+            return this.lastEventTime;
+        }
+#endif
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -651,6 +674,16 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         protected long currentTime = StreamEvent.MinSyncTime;
 
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// Used for debug purposes only - very close to currentTime, but is only updated due to real events/punctuations/low watermarks processed, and not the reorder buffer latency
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected long lastEventTime = StreamEvent.MinSyncTime;
+#endif
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -799,6 +832,18 @@ namespace Microsoft.StreamProcessing.Internal
                 FlushContents();
             }
         }
+
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected long LastEventTime()
+        {
+            return this.lastEventTime;
+        }
+#endif
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1085,6 +1130,8 @@ namespace Microsoft.StreamProcessing.Internal
     /// <typeparam name="TPayload"></typeparam>
     /// <typeparam name="TResult"></typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1008:OpeningParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
     public abstract class DisorderedPartitionedSubscriptionBase<TKey, TIngressStructure, TPayload, TResult> : Pipe<PartitionKey<TKey>, TResult>, IIngressStreamObserver
     {
         private readonly string errorMessages;
@@ -1167,6 +1214,16 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         protected Dictionary<TKey, long> currentTime = new Dictionary<TKey, long>();
 
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// Used for debug purposes only - very close to currentTime, but is only updated due to real events/punctuations/low watermarks processed, and not the reorder buffer latency
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected Dictionary<TKey, long> lastEventTime = new Dictionary<TKey, long>();
+#endif
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1178,7 +1235,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
-        protected Dictionary<TKey, long> lastPunctuationTime = new Dictionary<TKey, long>();
+        protected Dictionary<TKey, (long lastPunctuation, long lastPunctuationQuantized)> lastPunctuationTime = new Dictionary<TKey, (long, long)>();
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1207,10 +1264,14 @@ namespace Microsoft.StreamProcessing.Internal
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Tracks the three possible low watermark values:
+        /// 1. rawValue - the raw low watermark value
+        /// 2. quantizedForLowWatermarkGeneration - raw low watermark value quantized for low watermark generation
+        /// 2. quanitzedForPunctuationGeneration - raw low watermark value quantized for punctuation generation
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected long lowWatermark = 0;
+        protected (long rawValue, long quantizedForLowWatermarkGeneration, long quantizedForPunctuationGeneration) lowWatermark = (0, 0, 0);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1335,9 +1396,7 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                this.lastPunctuationTime[value.PartitionKey] = Math.Max(
-                    value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
-                    this.lastPunctuationTime[value.PartitionKey]);
+                UpdatePunctuation(value.PartitionKey, value.SyncTime);
             }
 
             var count = this.currentBatch.Count;
@@ -1349,6 +1408,63 @@ namespace Microsoft.StreamProcessing.Internal
                 else FlushContents();
             }
         }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="partitionKey"></param>
+        /// <param name="time"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdatePunctuation(TKey partitionKey, long time)
+        {
+            this.lastPunctuationTime[partitionKey] = (time, time.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="partitionKey"></param>
+        /// <param name="time"></param>
+        /// <param name="timeQuantized"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdatePunctuation(TKey partitionKey, long time, long timeQuantized)
+        {
+            this.lastPunctuationTime[partitionKey] = (time, timeQuantized);
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="time"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdateLowWatermark(long time)
+        {
+            this.lowWatermark.rawValue = time;
+            if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time)
+            {
+                this.lowWatermark.quantizedForLowWatermarkGeneration = time.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+            }
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                this.lowWatermark.quantizedForPunctuationGeneration = time.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+            }
+        }
+
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="partitionKey"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected long LastEventTime(TKey partitionKey)
+        {
+            return this.lastEventTime.ContainsKey(partitionKey) ? this.lastEventTime[partitionKey] : 0;
+        }
+#endif
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1635,6 +1751,8 @@ namespace Microsoft.StreamProcessing.Internal
     /// <typeparam name="TPayload"></typeparam>
     /// <typeparam name="TResult"></typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1008:OpeningParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
     public abstract class PartitionedSubscriptionBase<TKey, TIngressStructure, TPayload, TResult> : Pipe<PartitionKey<TKey>, TResult>, IIngressStreamObserver
     {
         private readonly string errorMessages;
@@ -1717,6 +1835,16 @@ namespace Microsoft.StreamProcessing.Internal
         [DataMember]
         protected Dictionary<TKey, long> currentTime = new Dictionary<TKey, long>();
 
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// Used for debug purposes only - very close to currentTime, but is only updated due to real events/punctuations/low watermarks processed, and not the reorder buffer latency
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected Dictionary<TKey, long> lastEventTime = new Dictionary<TKey, long>();
+#endif
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -1728,7 +1856,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
-        protected Dictionary<TKey, long> lastPunctuationTime = new Dictionary<TKey, long>();
+        protected Dictionary<TKey, (long lastPunctuation, long lastPunctuationQuantized)> lastPunctuationTime = new Dictionary<TKey, (long, long)>();
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1757,10 +1885,14 @@ namespace Microsoft.StreamProcessing.Internal
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Tracks the three possible low watermark values:
+        /// 1. rawValue - the raw low watermark value
+        /// 2. quantizedForLowWatermarkGeneration - raw low watermark value quantized for low watermark generation
+        /// 2. quanitzedForPunctuationGeneration - raw low watermark value quantized for punctuation generation
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected long lowWatermark = 0;
+        protected (long rawValue, long quantizedForLowWatermarkGeneration, long quantizedForPunctuationGeneration) lowWatermark = (0, 0, 0);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1885,9 +2017,7 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                this.lastPunctuationTime[value.PartitionKey] = Math.Max(
-                    value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
-                    this.lastPunctuationTime[value.PartitionKey]);
+                UpdatePunctuation(value.PartitionKey, value.SyncTime);
             }
 
             var count = this.currentBatch.Count;
@@ -1899,6 +2029,63 @@ namespace Microsoft.StreamProcessing.Internal
                 else FlushContents();
             }
         }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="partitionKey"></param>
+        /// <param name="time"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdatePunctuation(TKey partitionKey, long time)
+        {
+            this.lastPunctuationTime[partitionKey] = (time, time.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="partitionKey"></param>
+        /// <param name="time"></param>
+        /// <param name="timeQuantized"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdatePunctuation(TKey partitionKey, long time, long timeQuantized)
+        {
+            this.lastPunctuationTime[partitionKey] = (time, timeQuantized);
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="time"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdateLowWatermark(long time)
+        {
+            this.lowWatermark.rawValue = time;
+            if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time)
+            {
+                this.lowWatermark.quantizedForLowWatermarkGeneration = time.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+            }
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                this.lowWatermark.quantizedForPunctuationGeneration = time.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+            }
+        }
+
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="partitionKey"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected long LastEventTime(TKey partitionKey)
+        {
+            return this.lastEventTime.ContainsKey(partitionKey) ? this.lastEventTime[partitionKey] : 0;
+        }
+#endif
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

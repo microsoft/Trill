@@ -13,10 +13,13 @@ using Microsoft.StreamProcessing.Internal.Collections;
 namespace Microsoft.StreamProcessing
 {
     [DataContract]
+    [KnownType(typeof(EndPointHeap))]
+    [KnownType(typeof(EndPointQueue))]
     internal sealed class PartitionedFixedIntervalEquiJoinPipeCompound<TGroupKey, TLeft, TRight, TResult, TPartitionKey> : BinaryPipe<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TLeft, TRight, TResult>, IBinaryObserver
     {
         private readonly Func<TLeft, TRight, TResult> selector;
         private readonly MemoryPool<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TResult> pool;
+        private readonly Func<IEndPointOrderer> endpointGenerator;
 
         [SchemaSerialization]
         private readonly Expression<Func<TGroupKey, TGroupKey, bool>> keyComparer;
@@ -65,6 +68,11 @@ namespace Microsoft.StreamProcessing
             this.keyComparer = EqualityComparerExpression<TGroupKey>.Default.GetEqualsExpr();
             this.keyComparerEquals = this.keyComparer.Compile();
 
+            if (this.leftDuration == this.rightDuration)
+                this.endpointGenerator = () => new EndPointQueue();
+            else
+                this.endpointGenerator = () => new EndPointHeap();
+
             this.pool = MemoryManager.GetMemoryPool<CompoundGroupKey<PartitionKey<TPartitionKey>, TGroupKey>, TResult>(stream.Properties.IsColumnar);
             this.pool.Get(out this.output);
             this.output.Allocate();
@@ -89,7 +97,7 @@ namespace Microsoft.StreamProcessing
             if (!this.partitionData.Lookup(pKey, out int index))
             {
                 this.partitionData.Insert(
-                    ref index, pKey, new PartitionEntry { key = pKey });
+                    ref index, pKey, new PartitionEntry { endPointHeap = this.endpointGenerator(), key = pKey });
             }
         }
 
@@ -201,6 +209,9 @@ namespace Microsoft.StreamProcessing
         {
             foreach (var pKey in this.processQueue)
             {
+                // Partition is no longer clean if we are processing it. If it is still clean, it will be added below.
+                this.cleanKeys.Remove(pKey);
+
                 Queue<LEntry> leftWorking = null;
                 Queue<REntry> rightWorking = null;
 
@@ -286,7 +297,14 @@ namespace Microsoft.StreamProcessing
                         leftEntry = leftWorking.Peek();
                         partition.nextLeftTime = leftEntry.Sync;
                         partition.nextRightTime = Math.Max(partition.nextRightTime, this.lastRightCTI);
-                        if (partition.nextLeftTime > partition.nextRightTime) break;
+                        if (partition.nextLeftTime > partition.nextRightTime)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, right), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextRightTime)
+                                UpdateTime(partition, partition.nextRightTime);
+                            break;
+                        }
 
                         UpdateTime(partition, partition.nextLeftTime);
 
@@ -319,7 +337,14 @@ namespace Microsoft.StreamProcessing
                         rightEntry = rightWorking.Peek();
                         partition.nextRightTime = rightEntry.Sync;
                         partition.nextLeftTime = Math.Max(partition.nextLeftTime, this.lastLeftCTI);
-                        if (partition.nextLeftTime < partition.nextRightTime) break;
+                        if (partition.nextLeftTime < partition.nextRightTime)
+                        {
+                            // If we have not yet reached the lesser of the two sides (in this case, left), and we don't
+                            // have input from that side, reach that time now. This can happen with low watermarks.
+                            if (partition.currTime < partition.nextLeftTime)
+                                UpdateTime(partition, partition.nextLeftTime);
+                            break;
+                        }
 
                         UpdateTime(partition, partition.nextRightTime);
 
@@ -353,7 +378,7 @@ namespace Microsoft.StreamProcessing
                         if (partition.nextRightTime < this.lastRightCTI) partition.nextRightTime = this.lastRightCTI;
 
                         UpdateTime(partition, Math.Min(this.lastLeftCTI, this.lastRightCTI));
-                        this.cleanKeys.Add(pKey);
+                        if (partition.IsClean()) this.cleanKeys.Add(pKey);
                         break;
                     }
                 }
@@ -366,15 +391,9 @@ namespace Microsoft.StreamProcessing
                 this.emitCTI = false;
                 foreach (var p in this.cleanKeys)
                 {
-                    this.leftQueue.Lookup(p, out int index);
-                    var l = this.leftQueue.entries[index];
-                    var r = this.rightQueue.entries[index];
-                    if (l.value.Count == 0 && r.value.Count == 0)
-                    {
-                        this.seenKeys.Remove(p);
-                        this.leftQueue.Remove(p);
-                        this.rightQueue.Remove(p);
-                    }
+                    this.seenKeys.Remove(p);
+                    this.leftQueue.Remove(p);
+                    this.rightQueue.Remove(p);
                 }
 
                 this.cleanKeys.Clear();
@@ -388,70 +407,42 @@ namespace Microsoft.StreamProcessing
         {
             if (time > partition.currTime)
             {
-                LeaveTime(partition);
                 partition.currTime = time;
+                ReachTime(partition);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessLeftEvent(PartitionEntry partition, long start, ref TGroupKey key, TLeft payload, int hash)
         {
-            bool processable = partition.nextRightTime > start;
-            if (processable)
-            {
-                int index = partition.leftIntervalMap.Insert(hash);
-                partition.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
-                CreateOutputForStartInterval(partition, start, ref key, ref payload, hash);
-            }
-            else
-            {
-                int index = partition.leftIntervalMap.InsertInvisible(hash);
-                partition.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
-            }
+            int index = partition.leftIntervalMap.Insert(hash);
+            partition.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
+            CreateOutputForStartInterval(partition, start, ref key, ref payload, hash);
+            partition.endPointHeap.Insert(start + this.leftDuration, index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessRightEvent(PartitionEntry partition, long start, ref TGroupKey key, TRight payload, int hash)
         {
-            bool processable = partition.nextLeftTime > start;
-            if (processable)
-            {
-                int index = partition.rightIntervalMap.Insert(hash);
-                partition.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
-                CreateOutputForStartInterval(partition, start, ref key, ref payload, hash);
-            }
-            else
-            {
-                int index = partition.rightIntervalMap.InsertInvisible(hash);
-                partition.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
-            }
+            int index = partition.rightIntervalMap.Insert(hash);
+            partition.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
+            CreateOutputForStartInterval(partition, start, ref key, ref payload, hash);
+            partition.endPointHeap.Insert(start + this.rightDuration, ~index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void LeaveTime(PartitionEntry partition)
+        private void ReachTime(PartitionEntry partition)
         {
-            var leftIntervals = partition.leftIntervalMap.TraverseInvisible();
-            while (leftIntervals.Next(out int index, out int hash))
+            while (partition.endPointHeap.TryGetNextInclusive(partition.currTime, out long endPointTime, out int index))
             {
-                CreateOutputForStartInterval(
-                    partition,
-                    partition.currTime,
-                    ref partition.leftIntervalMap.Values[index].Key,
-                    ref partition.leftIntervalMap.Values[index].Payload,
-                    hash);
-                leftIntervals.MakeVisible();
-            }
-
-            var rightIntervals = partition.rightIntervalMap.TraverseInvisible();
-            while (rightIntervals.Next(out int index, out int hash))
-            {
-                CreateOutputForStartInterval(
-                    partition,
-                    partition.currTime,
-                    ref partition.rightIntervalMap.Values[index].Key,
-                    ref partition.rightIntervalMap.Values[index].Payload,
-                    hash);
-                rightIntervals.MakeVisible();
+                if (index >= 0)
+                {
+                    partition.leftIntervalMap.Remove(index);
+                }
+                else
+                {
+                    partition.rightIntervalMap.Remove(~index);
+                }
             }
         }
 
@@ -692,11 +683,15 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public FastMap<ActiveInterval<TRight>> rightIntervalMap = new FastMap<ActiveInterval<TRight>>();
             [DataMember]
+            public IEndPointOrderer endPointHeap;
+            [DataMember]
             public long nextLeftTime = long.MinValue;
             [DataMember]
             public long nextRightTime = long.MinValue;
             [DataMember]
             public long currTime = long.MinValue;
+
+            public bool IsClean() => this.leftIntervalMap.IsEmpty && this.rightIntervalMap.IsEmpty;
         }
     }
 }
