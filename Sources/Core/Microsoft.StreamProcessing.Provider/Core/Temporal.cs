@@ -82,9 +82,10 @@ namespace Microsoft.StreamProcessing.Provider
         /// <param name="source">Input stream</param>
         /// <param name="windowSize">Window size</param>
         /// <param name="period">Period (or hop size)</param>
+        /// <param name="progress">Interval at which to create partial results, or zero to generate results only at period boundaries</param>
         /// <param name="offset">Offset from the start of time</param>
         /// <returns>Result (output) stream</returns>
-        public static IQStreamable<TSource> QuantizeLifetime<TSource>(this IQStreamable<TSource> source, long windowSize, long period, long offset = 0)
+        public static IQStreamable<TSource> QuantizeLifetime<TSource>(this IQStreamable<TSource> source, long windowSize, long period, long progress = 0, long offset = 0)
             => source.Provider.CreateQuery<TSource>(
                 Expression.Call(
                     null,
@@ -92,6 +93,7 @@ namespace Microsoft.StreamProcessing.Provider
                     (source ?? throw new ArgumentNullException(nameof(source))).Expression,
                     Expression.Constant(windowSize, typeof(long)),
                     Expression.Constant(period, typeof(long)),
+                    Expression.Constant(progress, typeof(long)),
                     Expression.Constant(offset, typeof(long))));
 
         /// <summary>

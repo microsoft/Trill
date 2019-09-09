@@ -21,7 +21,12 @@ namespace Microsoft.StreamProcessing.Provider
 
         protected override Expression VisitJoinCall(Expression left, Expression right, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector, LambdaExpression resultSelector) => throw new NotImplementedException();
 
-        protected override Expression VisitQuantizeLifetimeCall(Expression argument, long windowSize, long period, long offset) => throw new NotImplementedException();
+        protected override Expression VisitQuantizeLifetimeCall(Expression argument, long width, long skip, long progress, long offset)
+            => VisitUnaryStreamProcessingMethod(nameof(GenerateQuantizeLifetimeCall), argument, width, skip, progress, offset);
+
+        private static Expression<Func<IStreamable<TKey, TPayload>, IStreamable<TKey, TPayload>>> GenerateQuantizeLifetimeCall<TKey, TPayload>(
+            long width, long skip, long progress, long offset)
+            => (stream) => new QuantizeLifetimeStreamable<TKey, TPayload>(stream, width, skip, progress, offset);
 
         protected override Expression VisitSelectCall(Expression argument, LambdaExpression selectExpression, bool includeStartEdge) => throw new NotImplementedException();
 
@@ -34,14 +39,18 @@ namespace Microsoft.StreamProcessing.Provider
         protected override Expression VisitUnionCall(Expression left, Expression right) => throw new NotImplementedException();
 
         protected override Expression VisitWhereCall(Expression argument, LambdaExpression whereExpression)
-            => (GetType()
-                .GetMethod("GenerateWhereCall")
-                .MakeGenericMethod(argument.Type.GetGenericArguments()).Invoke(null, Array.Empty<object>()) as LambdaExpression)
-                .ReplaceParametersInBody(Visit(argument), Expression.Constant(whereExpression));
+            => VisitUnaryStreamProcessingMethod(nameof(GenerateWhereCall), argument, whereExpression);
 
-        private static Expression<Func<IStreamable<TKey, TPayload>, Expression<Func<TPayload, bool>>, IStreamable<TKey, TPayload>>> GenerateWhereCall<TKey, TPayload>()
-            => (s, p) => new WhereStreamable<TKey, TPayload>(s, p);
+        private static Expression<Func<IStreamable<TKey, TPayload>, IStreamable<TKey, TPayload>>> GenerateWhereCall<TKey, TPayload>(
+            Expression<Func<TPayload, bool>> predicate)
+            => (s) => new WhereStreamable<TKey, TPayload>(s, predicate);
 
         protected override Expression VisitWhereNotExistsCall(Expression left, Expression right, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector) => throw new NotImplementedException();
+
+        private Expression VisitUnaryStreamProcessingMethod(string methodName, Expression argument, params object[] parameters)
+            => (GetType()
+                .GetMethod(methodName)
+                .MakeGenericMethod(argument.Type.GetGenericArguments()).Invoke(null, parameters) as LambdaExpression)
+                .ReplaceParametersInBody(Visit(argument));
     }
 }

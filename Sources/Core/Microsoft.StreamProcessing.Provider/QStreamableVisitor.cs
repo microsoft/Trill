@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing.Provider
         private static readonly MethodInfo ChopMethod = GetUnaryMethodInfo(s => s.Chop(0, 0));
         private static readonly MethodInfo ClipDurationMethod = GetUnaryMethodInfo(s => s.ClipDuration(0));
         private static readonly MethodInfo ExtendDurationMethod = GetUnaryMethodInfo(s => s.ExtendDuration(0));
-        private static readonly MethodInfo QuantizeLifetimeMethod = GetUnaryMethodInfo(s => s.QuantizeLifetime(0, 0, 0));
+        private static readonly MethodInfo QuantizeLifetimeMethod = GetUnaryMethodInfo(s => s.QuantizeLifetime(0, 0, 0, 0));
         private static readonly MethodInfo SetDurationMethod = GetUnaryMethodInfo(s => s.SetDuration(0));
         private static readonly MethodInfo StitchMethod = GetUnaryMethodInfo(s => s.Stitch());
 
@@ -50,7 +50,7 @@ namespace Microsoft.StreamProcessing.Provider
             if (method == ChopMethod) return VisitChopCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value, (long)((ConstantExpression)node.Arguments[2]).Value);
             if (method == ClipDurationMethod) return VisitClipDurationCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value);
             if (method == ExtendDurationMethod) return VisitExtendDurationCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value);
-            if (method == QuantizeLifetimeMethod) return VisitQuantizeLifetimeCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value, (long)((ConstantExpression)node.Arguments[2]).Value, (long)((ConstantExpression)node.Arguments[3]).Value);
+            if (method == QuantizeLifetimeMethod) return VisitQuantizeLifetimeCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value, (long)((ConstantExpression)node.Arguments[2]).Value, (long)((ConstantExpression)node.Arguments[3]).Value, (long)((ConstantExpression)node.Arguments[3]).Value);
             if (method == SetDurationMethod) return VisitSetDurationCall(node.Arguments[0], (long)((ConstantExpression)node.Arguments[1]).Value);
             if (method == StitchMethod) return VisitStitchCall(node.Arguments[0]);
 
@@ -105,9 +105,10 @@ namespace Microsoft.StreamProcessing.Provider
         /// <param name="argument">The expression representing the streamable this method is called on.</param>
         /// <param name="windowSize">Window size</param>
         /// <param name="period">Period (or hop size)</param>
+        /// <param name="progress">Interval at which to create partial results</param>
         /// <param name="offset">Offset from the start of time</param>
         /// <returns>The modified expression.</returns>
-        protected abstract Expression VisitQuantizeLifetimeCall(Expression argument, long windowSize, long period, long offset);
+        protected abstract Expression VisitQuantizeLifetimeCall(Expression argument, long windowSize, long period, long progress, long offset);
 
         /// <summary>
         /// Visits an IQStreamable Set Duration call.
