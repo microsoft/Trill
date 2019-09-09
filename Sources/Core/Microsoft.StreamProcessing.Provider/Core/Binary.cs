@@ -47,29 +47,25 @@ namespace Microsoft.StreamProcessing.Provider
         /// <typeparam name="TLeft">The type of the elements in the left source stream.</typeparam>
         /// <typeparam name="TRight">The type of the elements in the right source stream.</typeparam>
         /// <typeparam name="TKey">The type of the elements forming the join key.</typeparam>
-        /// <typeparam name="TResult">The type of the elements in the result sequence, obtained by invoking the result selector function for source elements with overlapping duration.</typeparam>
         /// <param name="left">The left stream to join elements for.</param>
         /// <param name="right">The right stream to join elements for.</param>
         /// <param name="leftSelector">A function to select the join key of each element of the left stream.</param>
         /// <param name="rightSelector">A function to select the join key of each element of the right stream.</param>
-        /// <param name="resultSelector">A function invoked to compute a result element for any two overlapping elements of the left and right observable sequences.</param>
         /// <returns>A stream that contains result elements computed from source elements that have an overlapping lifespan.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="left" /> or <paramref name="right" /> or <paramref name="leftSelector" /> or <paramref name="rightSelector" /> or <paramref name="resultSelector" /> is null.</exception>
-        public static IQStreamable<TResult> Join<TLeft, TRight, TKey, TResult>(
+        /// <exception cref="ArgumentNullException"><paramref name="left" /> or <paramref name="right" /> or <paramref name="leftSelector" /> or <paramref name="rightSelector" /> is null.</exception>
+        public static IQStreamable<ValueTuple<TLeft, TRight>> Join<TLeft, TRight, TKey>(
             this IQStreamable<TLeft> left,
             IQStreamable<TRight> right,
             Expression<Func<TLeft, TKey>> leftSelector,
-            Expression<Func<TRight, TKey>> rightSelector,
-            Expression<Func<TLeft, TRight, TResult>> resultSelector)
-            => left.Provider.CreateQuery<TResult>(
+            Expression<Func<TRight, TKey>> rightSelector)
+            => left.Provider.CreateQuery<ValueTuple<TLeft, TRight>>(
                 Expression.Call(
                     null,
-                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TLeft), typeof(TRight), typeof(TKey), typeof(TResult)),
+                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TLeft), typeof(TRight), typeof(TKey)),
                     (left ?? throw new ArgumentNullException(nameof(left))).Expression,
                     (right ?? throw new ArgumentNullException(nameof(right))).Expression,
                     leftSelector ?? throw new ArgumentNullException(nameof(leftSelector)),
-                    rightSelector ?? throw new ArgumentNullException(nameof(rightSelector)),
-                    resultSelector ?? throw new ArgumentNullException(nameof(resultSelector))));
+                    rightSelector ?? throw new ArgumentNullException(nameof(rightSelector))));
 
         /// <summary>
         /// Performs a union of the elements of two streams.
