@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reactive.Linq" Version="4.1.5" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
+    <ProjectReference Include="..\..\Core\Microsoft.StreamProcessing\Microsoft.StreamProcessing.csproj" />
+    <ProjectReference Include="..\..\Core\Microsoft.StreamProcessing.Provider\Microsoft.StreamProcessing.Provider.csproj" />
+  </ItemGroup>
+
+</Project>
