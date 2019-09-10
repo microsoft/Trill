@@ -3,17 +3,13 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
-    internal static class NaiveAggregate
-    {
-        public static NaiveAggregate<TInput, TOutput> Generate<TInput, TOutput>(Expression<Func<List<TInput>, TOutput>> resultConstructor)
-            => new NaiveAggregate<TInput, TOutput>(resultConstructor);
-    }
-
     internal sealed class NaiveAggregate<TInput, TOutput> : ListAggregateBase<TInput, TOutput>
     {
         private readonly Expression<Func<List<TInput>, TOutput>> createResult;
@@ -22,5 +18,21 @@ namespace Microsoft.StreamProcessing.Aggregates
             => this.createResult = resultConstructor;
 
         public override Expression<Func<List<TInput>, TOutput>> ComputeResult() => createResult;
+    }
+
+    internal sealed class NaiveGrouping<TKey, TPayload> : IGrouping<TKey, TPayload>
+    {
+        public NaiveGrouping(TKey groupingKey, IList<TPayload> collection)
+        {
+            this.Key = groupingKey;
+            this.Collection = collection;
+        }
+
+        public TKey Key { get; }
+
+        private IList<TPayload> Collection { get; }
+
+        public IEnumerator<TPayload> GetEnumerator() => this.Collection.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => this.Collection.GetEnumerator();
     }
 }

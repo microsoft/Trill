@@ -3,9 +3,10 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using Microsoft.StreamProcessing.Aggregates;
 
 namespace Microsoft.StreamProcessing.Provider
 {
@@ -25,7 +26,13 @@ namespace Microsoft.StreamProcessing.Provider
             long maximumDuration)
             => (stream) => new ExtendLifetimeStreamable<Empty, TPayload>(stream, maximumDuration);
 
-        protected override Expression VisitClipDurationByEventCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector) => throw new NotImplementedException();
+        protected override Expression VisitClipDurationByEventCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector)
+            => VisitBinaryStreamProcessingMethod(nameof(GenerateClipDurationByEventCall), left, right, leftType, rightType, keyType, leftKeySelector, rightKeySelector);
+
+        private static Expression<Func<IStreamable<Empty, TLeft>, IStreamable<Empty, TRight>, IStreamable<Empty, TLeft>>> GenerateClipDurationByEventCall<TLeft, TRight, TKey>(
+            Expression<Func<TLeft, TKey>> leftSelector,
+            Expression<Func<TRight, TKey>> rightSelector)
+            => (left, right) => left.ClipEventDuration(right, leftSelector, rightSelector);
 
         protected override Expression VisitExtendDurationCall(Expression argument, Type elementType, long duration)
             => VisitUnaryStreamProcessingMethod(nameof(GenerateExtendDurationCall), argument, elementType, duration);
@@ -34,9 +41,27 @@ namespace Microsoft.StreamProcessing.Provider
             long duration)
             => (stream) => new ExtendLifetimeStreamable<Empty, TPayload>(stream, duration);
 
-        protected override Expression VisitGroupByCall(Expression argument, Type inputType, Type keyType, Type outputType, LambdaExpression keySelector, LambdaExpression elementSelector) => throw new NotImplementedException();
+        protected override Expression VisitGroupByCall(Expression argument, Type inputType, Type keyType, Type outputType, LambdaExpression keySelector, LambdaExpression elementSelector)
+            => (GetType()
+                .GetMethod(nameof(GenerateGroupByCall))
+                .MakeGenericMethod(inputType, keyType, outputType).Invoke(null, new object[] { keySelector, elementSelector }) as LambdaExpression)
+                .ReplaceParametersInBody(Visit(argument));
 
-        protected override Expression VisitJoinCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector) => throw new NotImplementedException();
+        private static Expression<Func<IStreamable<Empty, TPayload>, IStreamable<Empty, NaiveGrouping<TKey, TElement>>>> GenerateGroupByCall<TPayload, TKey, TElement>(
+            Expression<Func<TPayload, TKey>> keySelector,
+            Expression<Func<TPayload, TElement>> elementSelector)
+            => (stream) => stream.GroupAggregate(
+                keySelector,
+                new NaiveAggregate<TElement, List<TElement>>(o => o).Wrap(elementSelector),
+                (g, l) => new NaiveGrouping<TKey, TElement>(g.Key, l));
+
+        protected override Expression VisitJoinCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector)
+            => VisitBinaryStreamProcessingMethod(nameof(GenerateJoinCall), left, right, leftType, rightType, keyType, leftKeySelector, rightKeySelector);
+
+        private static Expression<Func<IStreamable<Empty, TLeft>, IStreamable<Empty, TRight>, IStreamable<Empty, ValueTuple<TLeft, TRight>>>> GenerateJoinCall<TLeft, TRight, TKey>(
+            Expression<Func<TLeft, TKey>> leftSelector,
+            Expression<Func<TRight, TKey>> rightSelector)
+            => (left, right) => left.Join(right, leftSelector, rightSelector, (l, r) => ValueTuple.Create(l, r));
 
         protected override Expression VisitQuantizeLifetimeCall(Expression argument, Type elementType, long width, long skip, long progress, long offset)
             => VisitUnaryStreamProcessingMethod(nameof(GenerateQuantizeLifetimeCall), argument, elementType, width, skip, progress, offset);
@@ -90,7 +115,14 @@ namespace Microsoft.StreamProcessing.Provider
         private static Expression<Func<IStreamable<Empty, TPayload>, IStreamable<Empty, TPayload>>> GenerateStitchCall<TPayload>()
             => (stream) => new StitchStreamable<Empty, TPayload>(stream);
 
-        protected override Expression VisitUnionCall(Expression left, Expression right, Type elementType) => throw new NotImplementedException();
+        protected override Expression VisitUnionCall(Expression left, Expression right, Type elementType)
+            => (GetType()
+                .GetMethod(nameof(GenerateUnionCall))
+                .MakeGenericMethod(elementType).Invoke(null, Array.Empty<object>()) as LambdaExpression)
+                .ReplaceParametersInBody(Visit(left), Visit(right));
+
+        private static Expression<Func<IStreamable<Empty, TPayload>, IStreamable<Empty, TPayload>, IStreamable<Empty, TPayload>>> GenerateUnionCall<TPayload>()
+            => (left, right) => left.Union(right);
 
         protected override Expression VisitWhereCall(Expression argument, Type elementType, LambdaExpression whereExpression)
             => VisitUnaryStreamProcessingMethod(nameof(GenerateWhereCall), argument, elementType, whereExpression);
@@ -99,7 +131,13 @@ namespace Microsoft.StreamProcessing.Provider
             Expression<Func<TPayload, bool>> predicate)
             => (s) => new WhereStreamable<Empty, TPayload>(s, predicate);
 
-        protected override Expression VisitWhereNotExistsCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector) => throw new NotImplementedException();
+        protected override Expression VisitWhereNotExistsCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector)
+            => VisitBinaryStreamProcessingMethod(nameof(GenerateWhereNotExistsCall), left, right, leftType, rightType, keyType, leftKeySelector, rightKeySelector);
+
+        private static Expression<Func<IStreamable<Empty, TLeft>, IStreamable<Empty, TRight>, IStreamable<Empty, TLeft>>> GenerateWhereNotExistsCall<TLeft, TRight, TKey>(
+            Expression<Func<TLeft, TKey>> leftSelector,
+            Expression<Func<TRight, TKey>> rightSelector)
+            => (left, right) => left.WhereNotExists(right, leftSelector, rightSelector);
 
         private Expression VisitUnaryStreamProcessingMethod(string methodName, Expression argument, Type elementType, params object[] parameters)
             => (GetType()
@@ -113,5 +151,11 @@ namespace Microsoft.StreamProcessing.Provider
                 .GetMethod(methodName)
                 .MakeGenericMethod(inputElementType, outputElementType).Invoke(null, parameters) as LambdaExpression)
                 .ReplaceParametersInBody(Visit(argument));
+
+        private Expression VisitBinaryStreamProcessingMethod(string methodName, Expression leftInput, Expression rightInput, Type leftInputType, Type rightInputType, Type keyInputType, params object[] parameters)
+            => (GetType()
+                .GetMethod(methodName)
+                .MakeGenericMethod(leftInputType, rightInputType, keyInputType).Invoke(null, parameters) as LambdaExpression)
+                .ReplaceParametersInBody(Visit(leftInput), Visit(rightInput));
     }
 }
