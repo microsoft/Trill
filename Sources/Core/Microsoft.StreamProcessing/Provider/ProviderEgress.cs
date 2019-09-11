@@ -12,6 +12,7 @@ namespace Microsoft.StreamProcessing.Provider
         public static IObservable<TOutput> ToTemporalObservable<TPayload, TOutput>(
             this IQStreamable<TPayload> streamable,
             Expression<Func<long, long, TPayload, TOutput>> selector)
-            => throw new NotImplementedException();
+            => streamable.Provider.Execute<IStreamable<Empty, TPayload>>(streamable.Expression)
+                .ToTemporalObservable(selector);
     }
 }

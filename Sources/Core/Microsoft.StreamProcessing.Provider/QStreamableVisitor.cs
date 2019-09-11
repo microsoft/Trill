@@ -39,6 +39,21 @@ namespace Microsoft.StreamProcessing.Provider
         private static MethodInfo GetMethodInfo(Expression<Func<IQStreamable<object>, IQStreamable<object>, IQStreamable<ValueTuple<object, object>>>> expression)
             => ((MethodCallExpression)expression.Body).Method.GetGenericMethodDefinition();
 
+        /// <inheritdoc/>
+        public override Expression Visit(Expression node)
+        {
+            if (node is ConstantExpression constant)
+            {
+                var type = constant.Value.GetType();
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(OpaqueQStreamable<>))
+                {
+                    var property = type.GetProperty("ContentExpression");
+                    return (Expression)property.GetMethod.Invoke(constant.Value, Array.Empty<object>());
+                }
+            }
+            return base.Visit(node);
+        }
+
         /// <summary>
         /// Visits the children of the System.Linq.Expressions.MethodCallExpression.
         /// </summary>
@@ -236,6 +251,15 @@ namespace Microsoft.StreamProcessing.Provider
             => new QStreamable<TElement>(expression, this);
 
         /// <summary>
+        /// This method represents creating the very first link in the chain of new IQStreamable queries.
+        /// </summary>
+        /// <typeparam name="TElement">The type of the underlying payload.</typeparam>
+        /// <param name="expression">The expression representing the ingress point of the streaming query that has been created.</param>
+        /// <returns>A new IQStreamable object from which the query can continue to be built or evaluated.</returns>
+        public IQStreamable<TElement> CreateOpaqueQuery<TElement>(Expression expression)
+            => new OpaqueQStreamable<TElement>(expression, this);
+
+        /// <summary>
         /// The method that is called when it is time to evaluate the constructed query.
         /// </summary>
         /// <typeparam name="TResult">The type of the result of the streaming query.</typeparam>
@@ -243,5 +267,24 @@ namespace Microsoft.StreamProcessing.Provider
         /// <returns>The result of evaluating the query expression.</returns>
         public TResult Execute<TResult>(Expression expression)
             => Expression.Lambda<Func<TResult>>(Visit(expression)).Compile()();
+
+        private sealed class OpaqueQStreamable<TPayload> : IQStreamable<TPayload>
+        {
+            internal OpaqueQStreamable(Expression contentExpression, IQStreamableProvider provider)
+            {
+                this.ContentExpression = contentExpression;
+                this.Expression = Expression.Constant(this);
+                this.Provider = provider;
+            }
+
+            public Expression ContentExpression { get; }
+
+            public Expression Expression { get; }
+
+            /// <summary>
+            /// The assigned provider whose job it is to evaluate the query once it is constructed.
+            /// </summary>
+            public IQStreamableProvider Provider { get; }
+        }
     }
 }
