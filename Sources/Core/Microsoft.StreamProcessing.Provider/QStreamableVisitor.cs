@@ -11,7 +11,7 @@ namespace Microsoft.StreamProcessing.Provider
     /// <summary>
     /// An augmented expression visitor that requires implementors to provide transformations for the method API for IQStreamable
     /// </summary>
-    public abstract class QStreamableVisitor : ExpressionVisitor
+    public abstract class QStreamableVisitor : ExpressionVisitor, IQStreamableProvider
     {
         private static readonly MethodInfo ChopMethod = GetMethodInfo(s => s.Chop(0, 0));
         private static readonly MethodInfo ClipDurationMethod = GetMethodInfo(s => s.ClipDuration(0));
@@ -225,5 +225,23 @@ namespace Microsoft.StreamProcessing.Provider
         /// <param name="rightKeySelector">A function to extract the join key from the right input.</param>
         /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
         protected abstract Expression VisitWhereNotExistsCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector);
+
+        /// <summary>
+        /// This method represents a link in the chain for building new IQStreamable queries.
+        /// </summary>
+        /// <typeparam name="TElement">The type of the underlying payload.</typeparam>
+        /// <param name="expression">The expression representing the streaming query that has been created.</param>
+        /// <returns>A new IQStreamable object from which the query can continue to be built or evaluated.</returns>
+        public IQStreamable<TElement> CreateQuery<TElement>(Expression expression)
+            => new QStreamable<TElement>(expression, this);
+
+        /// <summary>
+        /// The method that is called when it is time to evaluate the constructed query.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result of the streaming query.</typeparam>
+        /// <param name="expression">The expression to be evaluated and run.</param>
+        /// <returns>The result of evaluating the query expression.</returns>
+        public TResult Execute<TResult>(Expression expression)
+            => Expression.Lambda<Func<TResult>>(Visit(expression)).Compile()();
     }
 }

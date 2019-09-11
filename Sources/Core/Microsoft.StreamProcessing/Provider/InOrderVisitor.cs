@@ -4,14 +4,17 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.StreamProcessing.Aggregates;
 
 namespace Microsoft.StreamProcessing.Provider
 {
-    internal class InOrderProviderVisitor : QStreamableVisitor
+    internal sealed class InOrderVisitor : QStreamableVisitor
     {
+        public static InOrderVisitor Instance = new InOrderVisitor();
+
+        private InOrderVisitor() { }
+
         protected override Expression VisitChopCall(Expression argument, Type elementType, long period, long offset)
             => VisitUnaryStreamProcessingMethod(nameof(GenerateChopCall), argument, elementType, period, offset);
 

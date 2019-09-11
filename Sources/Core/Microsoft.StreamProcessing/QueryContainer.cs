@@ -20,8 +20,6 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     public sealed class QueryContainer
     {
-        private static readonly InOrderProvider provider = new InOrderProvider();
-
         private readonly object sentinel = new object();
 
         /// <summary>
@@ -157,7 +155,7 @@ namespace Microsoft.StreamProcessing
             IObservable<TPayload> observable,
             Expression<Func<TPayload, long>> startEdgeSelector,
             Expression<Func<TPayload, long>> endEdgeSelector)
-            => throw new NotImplementedException();
+            => InOrderVisitor.Instance.CreateQuery<TPayload>(null);
     }
 
     /// <summary>
