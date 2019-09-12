@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.StreamProcessing.Aggregates;
 
@@ -46,17 +47,17 @@ namespace Microsoft.StreamProcessing.Provider
 
         protected override Expression VisitGroupByCall(Expression argument, Type inputType, Type keyType, Type outputType, LambdaExpression keySelector, LambdaExpression elementSelector)
             => (GetType()
-                .GetMethod(nameof(GenerateGroupByCall))
+                .GetMethod(nameof(GenerateGroupByCall), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
                 .MakeGenericMethod(inputType, keyType, outputType).Invoke(null, new object[] { keySelector, elementSelector }) as LambdaExpression)
                 .ReplaceParametersInBody(Visit(argument));
 
-        private static Expression<Func<IStreamable<Empty, TPayload>, IStreamable<Empty, NaiveGrouping<TKey, TElement>>>> GenerateGroupByCall<TPayload, TKey, TElement>(
+        private static Expression<Func<IStreamable<Empty, TPayload>, IStreamable<Empty, IGrouping<TKey, TElement>>>> GenerateGroupByCall<TPayload, TKey, TElement>(
             Expression<Func<TPayload, TKey>> keySelector,
             Expression<Func<TPayload, TElement>> elementSelector)
             => (stream) => stream.GroupAggregate(
                 keySelector,
                 new NaiveAggregate<TElement, List<TElement>>(o => o).Wrap(elementSelector),
-                (g, l) => new NaiveGrouping<TKey, TElement>(g.Key, l));
+                (g, l) => (IGrouping<TKey, TElement>)new NaiveGrouping<TKey, TElement>(g.Key, l));
 
         protected override Expression VisitJoinCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector)
             => VisitBinaryStreamProcessingMethod(nameof(GenerateJoinCall), left, right, leftType, rightType, keyType, leftKeySelector, rightKeySelector);
@@ -120,7 +121,7 @@ namespace Microsoft.StreamProcessing.Provider
 
         protected override Expression VisitUnionCall(Expression left, Expression right, Type elementType)
             => (GetType()
-                .GetMethod(nameof(GenerateUnionCall))
+                .GetMethod(nameof(GenerateUnionCall), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
                 .MakeGenericMethod(elementType).Invoke(null, Array.Empty<object>()) as LambdaExpression)
                 .ReplaceParametersInBody(Visit(left), Visit(right));
 
@@ -144,20 +145,20 @@ namespace Microsoft.StreamProcessing.Provider
 
         private Expression VisitUnaryStreamProcessingMethod(string methodName, Expression argument, Type elementType, params object[] parameters)
             => (GetType()
-                .GetMethod(methodName)
+                .GetMethod(methodName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
                 .MakeGenericMethod(elementType).Invoke(null, parameters) as LambdaExpression)
                 .ReplaceParametersInBody(Visit(argument));
 
         private Expression VisitSelectStreamProcessingMethod(
             string methodName, Expression argument, Type inputElementType, Type outputElementType, params object[] parameters)
             => (GetType()
-                .GetMethod(methodName)
+                .GetMethod(methodName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
                 .MakeGenericMethod(inputElementType, outputElementType).Invoke(null, parameters) as LambdaExpression)
                 .ReplaceParametersInBody(Visit(argument));
 
         private Expression VisitBinaryStreamProcessingMethod(string methodName, Expression leftInput, Expression rightInput, Type leftInputType, Type rightInputType, Type keyInputType, params object[] parameters)
             => (GetType()
-                .GetMethod(methodName)
+                .GetMethod(methodName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
                 .MakeGenericMethod(leftInputType, rightInputType, keyInputType).Invoke(null, parameters) as LambdaExpression)
                 .ReplaceParametersInBody(Visit(leftInput), Visit(rightInput));
     }

@@ -73,17 +73,31 @@ namespace Microsoft.StreamProcessing.Provider
             if (method == SetDurationMethod) return VisitSetDurationCall(node.Arguments[0], genericTypes[0], (long)((ConstantExpression)node.Arguments[1]).Value);
             if (method == StitchMethod) return VisitStitchCall(node.Arguments[0], genericTypes[0]);
 
-            if (method == GroupByMethod) return VisitGroupByCall(node.Arguments[0], genericTypes[0], genericTypes[1], genericTypes[2], (LambdaExpression)node.Arguments[1], (LambdaExpression)node.Arguments[2]);
-            if (method == SelectMethod) return VisitSelectCall(node.Arguments[0], genericTypes[0], genericTypes[1], (LambdaExpression)node.Arguments[1], false);
-            if (method == SelectManyMethod) return VisitSelectManyCall(node.Arguments[0], genericTypes[0], genericTypes[1], (LambdaExpression)node.Arguments[1], false);
-            if (method == WhereMethod) return VisitWhereCall(node.Arguments[0], genericTypes[0], (LambdaExpression)node.Arguments[1]);
+            if (method == GroupByMethod) return VisitGroupByCall(node.Arguments[0], genericTypes[0], genericTypes[1], genericTypes[2], (LambdaExpression)UnnestExpressionConstants(node.Arguments[1]), (LambdaExpression)UnnestExpressionConstants(node.Arguments[2]));
+            if (method == SelectMethod) return VisitSelectCall(node.Arguments[0], genericTypes[0], genericTypes[1], (LambdaExpression)UnnestExpressionConstants(node.Arguments[1]), false);
+            if (method == SelectManyMethod) return VisitSelectManyCall(node.Arguments[0], genericTypes[0], genericTypes[1], (LambdaExpression)UnnestExpressionConstants(node.Arguments[1]), false);
+            if (method == WhereMethod) return VisitWhereCall(node.Arguments[0], genericTypes[0], (LambdaExpression)UnnestExpressionConstants(node.Arguments[1]));
 
-            if (method == ClipDurationBinaryMethod) return VisitClipDurationByEventCall(node.Arguments[0], node.Arguments[1], genericTypes[0], genericTypes[1], genericTypes[2], (LambdaExpression)node.Arguments[2], (LambdaExpression)node.Arguments[3]);
-            if (method == JoinMethod) return VisitJoinCall(node.Arguments[0], node.Arguments[1], genericTypes[0], genericTypes[1], genericTypes[2], (LambdaExpression)node.Arguments[2], (LambdaExpression)node.Arguments[3]);
+            if (method == ClipDurationBinaryMethod) return VisitClipDurationByEventCall(node.Arguments[0], node.Arguments[1], genericTypes[0], genericTypes[1], genericTypes[2], (LambdaExpression)UnnestExpressionConstants(node.Arguments[2]), (LambdaExpression)UnnestExpressionConstants(node.Arguments[3]));
+            if (method == JoinMethod) return VisitJoinCall(node.Arguments[0], node.Arguments[1], genericTypes[0], genericTypes[1], genericTypes[2], (LambdaExpression)UnnestExpressionConstants(node.Arguments[2]), (LambdaExpression)UnnestExpressionConstants(node.Arguments[3]));
             if (method == UnionMethod) return VisitUnionCall(node.Arguments[0], node.Arguments[1], genericTypes[0]);
-            if (method == WhereNotExistsMethod) return VisitWhereNotExistsCall(node.Arguments[0], node.Arguments[1], genericTypes[0], genericTypes[1], genericTypes[2], (LambdaExpression)node.Arguments[2], (LambdaExpression)node.Arguments[3]);
+            if (method == WhereNotExistsMethod) return VisitWhereNotExistsCall(node.Arguments[0], node.Arguments[1], genericTypes[0], genericTypes[1], genericTypes[2], (LambdaExpression)UnnestExpressionConstants(node.Arguments[2]), (LambdaExpression)UnnestExpressionConstants(node.Arguments[3]));
 
             return VisitNonStreamingMethodCall(node);
+        }
+
+        private Expression UnnestExpressionConstants(Expression input)
+        {
+            switch (input.NodeType)
+            {
+                case ExpressionType.Constant:
+                    var constant = (ConstantExpression)input;
+                    return typeof(Expression).IsAssignableFrom(constant.Type) ? (Expression)constant.Value : input;
+                case ExpressionType.Quote:
+                    var unary = (UnaryExpression)input;
+                    return typeof(Expression).IsAssignableFrom(unary.Operand.Type) ? unary.Operand : input;
+                default: return input;
+            }
         }
 
         /// <summary>

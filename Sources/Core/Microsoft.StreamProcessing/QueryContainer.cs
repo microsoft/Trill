@@ -157,7 +157,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TPayload, long>> endEdgeSelector)
         {
             Expression<Func<IObservable<TPayload>, IStreamable<Empty, TPayload>>> ingress =
-                (o) => o.ToTemporalStreamable(startEdgeSelector, endEdgeSelector, null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.EndOfStream);
+                (o) => this.RegisterTemporalInput(o, startEdgeSelector, endEdgeSelector, null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.EndOfStream, Guid.NewGuid().ToString());
             return InOrderVisitor.Instance.CreateOpaqueQuery<TPayload>(ingress.ReplaceParametersInBody(Expression.Constant(observable))); ;
         }
     }

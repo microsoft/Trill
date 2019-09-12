@@ -93,7 +93,7 @@ namespace Microsoft.StreamProcessing.Provider
                     (source ?? throw new ArgumentNullException(nameof(source))).Expression,
                     Expression.Constant(windowSize, typeof(long)),
                     Expression.Constant(period, typeof(long)),
-                    Expression.Constant(progress, typeof(long)),
+                    Expression.Constant(progress <= 0 ? period : progress, typeof(long)),
                     Expression.Constant(offset, typeof(long))));
 
         /// <summary>

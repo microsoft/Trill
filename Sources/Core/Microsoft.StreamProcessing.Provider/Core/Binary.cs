@@ -38,8 +38,8 @@ namespace Microsoft.StreamProcessing.Provider
                     ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TLeft), typeof(TRight), typeof(TKey)),
                     (left ?? throw new ArgumentNullException(nameof(left))).Expression,
                     (right ?? throw new ArgumentNullException(nameof(right))).Expression,
-                    leftSelector ?? throw new ArgumentNullException(nameof(leftSelector)),
-                    rightSelector ?? throw new ArgumentNullException(nameof(rightSelector))));
+                    Expression.Constant(leftSelector ?? throw new ArgumentNullException(nameof(leftSelector))),
+                    Expression.Constant(rightSelector ?? throw new ArgumentNullException(nameof(rightSelector)))));
 
         /// <summary>
         /// Joins the elements of two streams based on overlapping lifespans.
@@ -64,8 +64,8 @@ namespace Microsoft.StreamProcessing.Provider
                     ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TLeft), typeof(TRight), typeof(TKey)),
                     (left ?? throw new ArgumentNullException(nameof(left))).Expression,
                     (right ?? throw new ArgumentNullException(nameof(right))).Expression,
-                    leftSelector ?? throw new ArgumentNullException(nameof(leftSelector)),
-                    rightSelector ?? throw new ArgumentNullException(nameof(rightSelector))));
+                    Expression.Constant(leftSelector ?? throw new ArgumentNullException(nameof(leftSelector))),
+                    Expression.Constant(rightSelector ?? throw new ArgumentNullException(nameof(rightSelector)))));
 
         /// <summary>
         /// Performs a union of the elements of two streams.
@@ -108,7 +108,7 @@ namespace Microsoft.StreamProcessing.Provider
                     ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TLeft), typeof(TRight), typeof(TKey)),
                     (left ?? throw new ArgumentNullException(nameof(left))).Expression,
                     (right ?? throw new ArgumentNullException(nameof(right))).Expression,
-                    leftSelector ?? throw new ArgumentNullException(nameof(leftSelector)),
-                    rightSelector ?? throw new ArgumentNullException(nameof(rightSelector))));
+                    Expression.Constant(leftSelector ?? throw new ArgumentNullException(nameof(leftSelector))),
+                    Expression.Constant(rightSelector ?? throw new ArgumentNullException(nameof(rightSelector)))));
     }
 }

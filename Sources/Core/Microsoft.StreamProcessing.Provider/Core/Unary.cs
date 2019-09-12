@@ -31,7 +31,7 @@ namespace Microsoft.StreamProcessing.Provider
                     null,
                     ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource), typeof(TResult)),
                     (source ?? throw new ArgumentNullException(nameof(source))).Expression,
-                    selector ?? throw new ArgumentNullException(nameof(selector))));
+                    Expression.Constant(selector ?? throw new ArgumentNullException(nameof(selector)))));
 
         /// <summary>
         /// Projects each element of a stream into a new form where each input element returns zero to many output elements.
@@ -51,7 +51,7 @@ namespace Microsoft.StreamProcessing.Provider
                     null,
                     ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource), typeof(TResult)),
                     (source ?? throw new ArgumentNullException(nameof(source))).Expression,
-                    selector ?? throw new ArgumentNullException(nameof(selector))));
+                    Expression.Constant(selector ?? throw new ArgumentNullException(nameof(selector)))));
 
         /// <summary>
         /// Filters the elements of a stream based on a predicate.
@@ -68,7 +68,7 @@ namespace Microsoft.StreamProcessing.Provider
                     null,
                     ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource)),
                     (source ?? throw new ArgumentNullException(nameof(source))).Expression,
-                    predicate ?? throw new ArgumentNullException(nameof(predicate))));
+                    Expression.Constant(predicate ?? throw new ArgumentNullException(nameof(predicate)))));
 
         /// <summary>
         /// Groups the elements of a stream according to a specified key selector function.
@@ -89,7 +89,7 @@ namespace Microsoft.StreamProcessing.Provider
                     null,
                     ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource), typeof(TKey), typeof(TElement)),
                     (source ?? throw new ArgumentNullException(nameof(source))).Expression,
-                    elementSelector ?? throw new ArgumentNullException(nameof(elementSelector)),
-                    keySelector ?? throw new ArgumentNullException(nameof(keySelector))));
+                    Expression.Constant(keySelector ?? throw new ArgumentNullException(nameof(keySelector))),
+                    Expression.Constant(elementSelector ?? throw new ArgumentNullException(nameof(elementSelector)))));
     }
 }
