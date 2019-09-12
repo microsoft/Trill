@@ -95,7 +95,7 @@ namespace Microsoft.StreamProcessing.Provider
                     return typeof(Expression).IsAssignableFrom(constant.Type) ? (Expression)constant.Value : input;
                 case ExpressionType.Quote:
                     var unary = (UnaryExpression)input;
-                    return typeof(Expression).IsAssignableFrom(unary.Operand.Type) ? unary.Operand : input;
+                    return typeof(Expression).IsAssignableFrom(unary.Type) ? unary.Operand : input;
                 default: return input;
             }
         }

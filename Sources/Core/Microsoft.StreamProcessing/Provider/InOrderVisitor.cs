@@ -33,10 +33,8 @@ namespace Microsoft.StreamProcessing.Provider
         protected override Expression VisitClipDurationByEventCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector)
             => VisitBinaryStreamProcessingMethod(nameof(GenerateClipDurationByEventCall), left, right, leftType, rightType, keyType, leftKeySelector, rightKeySelector);
 
-        private static Expression<Func<IStreamable<Empty, TLeft>, IStreamable<Empty, TRight>, IStreamable<Empty, TLeft>>> GenerateClipDurationByEventCall<TLeft, TRight, TKey>(
-            Expression<Func<TLeft, TKey>> leftSelector,
-            Expression<Func<TRight, TKey>> rightSelector)
-            => (left, right) => left.ClipEventDuration(right, leftSelector, rightSelector);
+        private static Expression<Func<IStreamable<Empty, TLeft>, IStreamable<Empty, TRight>, Expression<Func<TLeft, TKey>>, Expression<Func<TRight, TKey>>, IStreamable<Empty, TLeft>>> GenerateClipDurationByEventCall<TLeft, TRight, TKey>()
+            => (left, right, leftSelector, rightSelector) => left.ClipEventDuration(right, leftSelector, rightSelector);
 
         protected override Expression VisitExtendDurationCall(Expression argument, Type elementType, long duration)
             => VisitUnaryStreamProcessingMethod(nameof(GenerateExtendDurationCall), argument, elementType, duration);
@@ -48,13 +46,11 @@ namespace Microsoft.StreamProcessing.Provider
         protected override Expression VisitGroupByCall(Expression argument, Type inputType, Type keyType, Type outputType, LambdaExpression keySelector, LambdaExpression elementSelector)
             => (GetType()
                 .GetMethod(nameof(GenerateGroupByCall), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                .MakeGenericMethod(inputType, keyType, outputType).Invoke(null, new object[] { keySelector, elementSelector }) as LambdaExpression)
-                .ReplaceParametersInBody(Visit(argument));
+                .MakeGenericMethod(inputType, keyType, outputType).Invoke(null, Array.Empty<object>()) as LambdaExpression)
+                .ReplaceParametersInBody(Visit(argument), Expression.Constant(keySelector), Expression.Constant(elementSelector));
 
-        private static Expression<Func<IStreamable<Empty, TPayload>, IStreamable<Empty, IGrouping<TKey, TElement>>>> GenerateGroupByCall<TPayload, TKey, TElement>(
-            Expression<Func<TPayload, TKey>> keySelector,
-            Expression<Func<TPayload, TElement>> elementSelector)
-            => (stream) => stream.GroupAggregate(
+        private static Expression<Func<IStreamable<Empty, TPayload>, Expression<Func<TPayload, TKey>>, Expression<Func<TPayload, TElement>>, IStreamable<Empty, IGrouping<TKey, TElement>>>> GenerateGroupByCall<TPayload, TKey, TElement>()
+            => (stream, keySelector, elementSelector) => stream.GroupAggregate(
                 keySelector,
                 new NaiveAggregate<TElement, List<TElement>>(o => o).Wrap(elementSelector),
                 (g, l) => (IGrouping<TKey, TElement>)new NaiveGrouping<TKey, TElement>(g.Key, l));
@@ -62,10 +58,8 @@ namespace Microsoft.StreamProcessing.Provider
         protected override Expression VisitJoinCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector)
             => VisitBinaryStreamProcessingMethod(nameof(GenerateJoinCall), left, right, leftType, rightType, keyType, leftKeySelector, rightKeySelector);
 
-        private static Expression<Func<IStreamable<Empty, TLeft>, IStreamable<Empty, TRight>, IStreamable<Empty, ValueTuple<TLeft, TRight>>>> GenerateJoinCall<TLeft, TRight, TKey>(
-            Expression<Func<TLeft, TKey>> leftSelector,
-            Expression<Func<TRight, TKey>> rightSelector)
-            => (left, right) => left.Join(right, leftSelector, rightSelector, (l, r) => ValueTuple.Create(l, r));
+        private static Expression<Func<IStreamable<Empty, TLeft>, IStreamable<Empty, TRight>, Expression<Func<TLeft, TKey>>, Expression<Func<TRight, TKey>>, IStreamable<Empty, ValueTuple<TLeft, TRight>>>> GenerateJoinCall<TLeft, TRight, TKey>()
+            => (left, right, leftSelector, rightSelector) => left.Join(right, leftSelector, rightSelector, (l, r) => ValueTuple.Create(l, r));
 
         protected override Expression VisitQuantizeLifetimeCall(Expression argument, Type elementType, long width, long skip, long progress, long offset)
             => VisitUnaryStreamProcessingMethod(nameof(GenerateQuantizeLifetimeCall), argument, elementType, width, skip, progress, offset);
@@ -75,36 +69,36 @@ namespace Microsoft.StreamProcessing.Provider
             => (stream) => new QuantizeLifetimeStreamable<Empty, TPayload>(stream, width, skip, progress, offset);
 
         protected override Expression VisitSelectCall(Expression argument, Type inputElementType, Type outputElementType, LambdaExpression selectExpression, bool includeStartEdge)
-            => VisitSelectStreamProcessingMethod(
-                includeStartEdge ? nameof(GenerateSelectWithStartEdgeCall) : nameof(GenerateSelectCall),
-                argument,
-                inputElementType,
-                outputElementType,
-                selectExpression);
+        {
+            var visitedArgument = Visit(argument);
 
-        private static Expression<Func<IStreamable<Empty, TInput>, IStreamable<Empty, TOutput>>> GenerateSelectCall<TInput, TOutput>(
-            Expression<Func<TInput, TOutput>> selector)
-            => (stream) => stream.Select(selector);
+            return VisitSelectStreamProcessingMethod(
+                           includeStartEdge ? nameof(GenerateSelectWithStartEdgeCall) : nameof(GenerateSelectCall),
+                           visitedArgument,
+                           inputElementType,
+                           outputElementType,
+                           selectExpression);
+        }
 
-        private static Expression<Func<IStreamable<Empty, TInput>, IStreamable<Empty, TOutput>>> GenerateSelectWithStartEdgeCall<TInput, TOutput>(
-            Expression<Func<long, TInput, TOutput>> selector)
-            => (stream) => stream.Select(selector);
+        private static Expression<Func<IStreamable<Empty, TInput>, Expression<Func<TInput, TOutput>>, IStreamable<Empty, TOutput>>> GenerateSelectCall<TInput, TOutput>()
+            => (stream, selector) => stream.Select(selector);
+
+        private static Expression<Func<IStreamable<Empty, TInput>, Expression<Func<long, TInput, TOutput>>, IStreamable<Empty, TOutput>>> GenerateSelectWithStartEdgeCall<TInput, TOutput>()
+            => (stream, selector) => stream.Select(selector);
 
         protected override Expression VisitSelectManyCall(Expression argument, Type inputElementType, Type outputElementType, LambdaExpression selectExpression, bool includeStartEdge)
             => VisitSelectStreamProcessingMethod(
                 includeStartEdge ? nameof(GenerateSelectManyWithStartEdgeCall) : nameof(GenerateSelectManyCall),
-                argument,
+                Visit(argument),
                 inputElementType,
                 outputElementType,
                 selectExpression);
 
-        private static Expression<Func<IStreamable<Empty, TInput>, IStreamable<Empty, TOutput>>> GenerateSelectManyCall<TInput, TOutput>(
-            Expression<Func<TInput, IEnumerable<TOutput>>> selector)
-            => (stream) => stream.SelectMany(selector);
+        private static Expression<Func<IStreamable<Empty, TInput>, Expression<Func<TInput, IEnumerable<TOutput>>>, IStreamable<Empty, TOutput>>> GenerateSelectManyCall<TInput, TOutput>()
+            => (stream, selector) => stream.SelectMany(selector);
 
-        private static Expression<Func<IStreamable<Empty, TInput>, IStreamable<Empty, TOutput>>> GenerateSelectManyWithStartEdgeCall<TInput, TOutput>(
-            Expression<Func<long, TInput, IEnumerable<TOutput>>> selector)
-            => (stream) => stream.SelectMany(selector);
+        private static Expression<Func<IStreamable<Empty, TInput>, Expression<Func<long, TInput, IEnumerable<TOutput>>>, IStreamable<Empty, TOutput>>> GenerateSelectManyWithStartEdgeCall<TInput, TOutput>()
+            => (stream, selector) => stream.SelectMany(selector);
 
         protected override Expression VisitSetDurationCall(Expression argument, Type elementType, long duration)
             => VisitUnaryStreamProcessingMethod(nameof(GenerateSetDurationCall), argument, elementType, duration);
@@ -138,10 +132,8 @@ namespace Microsoft.StreamProcessing.Provider
         protected override Expression VisitWhereNotExistsCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector)
             => VisitBinaryStreamProcessingMethod(nameof(GenerateWhereNotExistsCall), left, right, leftType, rightType, keyType, leftKeySelector, rightKeySelector);
 
-        private static Expression<Func<IStreamable<Empty, TLeft>, IStreamable<Empty, TRight>, IStreamable<Empty, TLeft>>> GenerateWhereNotExistsCall<TLeft, TRight, TKey>(
-            Expression<Func<TLeft, TKey>> leftSelector,
-            Expression<Func<TRight, TKey>> rightSelector)
-            => (left, right) => left.WhereNotExists(right, leftSelector, rightSelector);
+        private static Expression<Func<IStreamable<Empty, TLeft>, IStreamable<Empty, TRight>, Expression<Func<TLeft, TKey>>, Expression<Func<TRight, TKey>>, IStreamable<Empty, TLeft>>> GenerateWhereNotExistsCall<TLeft, TRight, TKey>()
+            => (left, right, leftSelector, rightSelector) => left.WhereNotExists(right, leftSelector, rightSelector);
 
         private Expression VisitUnaryStreamProcessingMethod(string methodName, Expression argument, Type elementType, params object[] parameters)
             => (GetType()
@@ -150,16 +142,16 @@ namespace Microsoft.StreamProcessing.Provider
                 .ReplaceParametersInBody(Visit(argument));
 
         private Expression VisitSelectStreamProcessingMethod(
-            string methodName, Expression argument, Type inputElementType, Type outputElementType, params object[] parameters)
+            string methodName, Expression visitedArgument, Type inputElementType, Type outputElementType, Expression selectExpression)
             => (GetType()
                 .GetMethod(methodName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                .MakeGenericMethod(inputElementType, outputElementType).Invoke(null, parameters) as LambdaExpression)
-                .ReplaceParametersInBody(Visit(argument));
+                .MakeGenericMethod(inputElementType, outputElementType).Invoke(null, Array.Empty<object>()) as LambdaExpression)
+                .ReplaceParametersInBody(visitedArgument, Expression.Constant(selectExpression));
 
-        private Expression VisitBinaryStreamProcessingMethod(string methodName, Expression leftInput, Expression rightInput, Type leftInputType, Type rightInputType, Type keyInputType, params object[] parameters)
+        private Expression VisitBinaryStreamProcessingMethod(string methodName, Expression leftInput, Expression rightInput, Type leftInputType, Type rightInputType, Type keyInputType, Expression leftSelector, Expression rightSelector)
             => (GetType()
                 .GetMethod(methodName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                .MakeGenericMethod(leftInputType, rightInputType, keyInputType).Invoke(null, parameters) as LambdaExpression)
-                .ReplaceParametersInBody(Visit(leftInput), Visit(rightInput));
+                .MakeGenericMethod(leftInputType, rightInputType, keyInputType).Invoke(null, Array.Empty<object>()) as LambdaExpression)
+                .ReplaceParametersInBody(Visit(leftInput), Visit(rightInput), Expression.Constant(leftSelector), Expression.Constant(rightSelector));
     }
 }
