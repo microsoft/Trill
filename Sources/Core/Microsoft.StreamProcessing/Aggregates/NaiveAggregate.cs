@@ -22,7 +22,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
     internal sealed class NaiveGrouping<TKey, TPayload> : IGrouping<TKey, TPayload>
     {
-        public NaiveGrouping(TKey groupingKey, IList<TPayload> collection)
+        public NaiveGrouping(TKey groupingKey, IEnumerable<TPayload> collection)
         {
             this.Key = groupingKey;
             this.Collection = collection;
@@ -30,7 +30,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public TKey Key { get; }
 
-        private IList<TPayload> Collection { get; }
+        private IEnumerable<TPayload> Collection { get; }
 
         public IEnumerator<TPayload> GetEnumerator() => this.Collection.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => this.Collection.GetEnumerator();

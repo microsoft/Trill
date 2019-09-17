@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.StreamProcessing.Aggregates;
 
 namespace Microsoft.StreamProcessing.Provider
@@ -52,8 +53,31 @@ namespace Microsoft.StreamProcessing.Provider
         private static Expression<Func<IStreamable<Empty, TPayload>, Expression<Func<TPayload, TKey>>, Expression<Func<TPayload, TElement>>, IStreamable<Empty, IGrouping<TKey, TElement>>>> GenerateGroupByCall<TPayload, TKey, TElement>()
             => (stream, keySelector, elementSelector) => stream.GroupAggregate(
                 keySelector,
-                new NaiveAggregate<TElement, List<TElement>>(o => o).Wrap(elementSelector),
+                new NaiveAggregate<TElement, IEnumerable<TElement>>(o => o).Wrap(elementSelector),
                 (g, l) => (IGrouping<TKey, TElement>)new NaiveGrouping<TKey, TElement>(g.Key, l));
+
+        private static readonly MethodInfo GroupApplyMethodInfo = ((MethodCallExpression)GenerateGroupByCall<object, object, object>().Body).Method.GetGenericMethodDefinition();
+
+        private static bool IsNaiveGrouping(Expression expression)
+        {
+            if (!(expression is MethodCallExpression methodExpression)) return false;
+            if (methodExpression.Method.GetGenericMethodDefinition() != GroupApplyMethodInfo) return false;
+            if (methodExpression.Arguments.Count != 4) return false;
+            var constructor = methodExpression.Arguments[3];
+
+            // Unnest a quote to get the argument
+            if (constructor.NodeType != ExpressionType.Quote) return false;
+            constructor = ((UnaryExpression)constructor).Operand;
+
+            var groupExpression = ((LambdaExpression)constructor).Body;
+            if (groupExpression.NodeType != ExpressionType.Convert) return false;
+
+            var unaryExpression = (UnaryExpression)groupExpression;
+            return unaryExpression.Type.IsGenericType
+                && unaryExpression.Type.GetGenericTypeDefinition() == typeof(IGrouping<,>)
+                && unaryExpression.Operand.Type.IsGenericType
+                && unaryExpression.Operand.Type.GetGenericTypeDefinition() == typeof(NaiveGrouping<,>);
+        }
 
         protected override Expression VisitJoinCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector)
             => VisitBinaryStreamProcessingMethod(nameof(GenerateJoinCall), left, right, leftType, rightType, keyType, leftKeySelector, rightKeySelector);
@@ -71,6 +95,27 @@ namespace Microsoft.StreamProcessing.Provider
         protected override Expression VisitSelectCall(Expression argument, Type inputElementType, Type outputElementType, LambdaExpression selectExpression, bool includeStartEdge)
         {
             var visitedArgument = Visit(argument);
+
+            // Combine Select with previous element if it was a naive grouping and is being aggregated
+            if (!includeStartEdge
+                && inputElementType.IsGenericType
+                && inputElementType.GetGenericTypeDefinition() == typeof(IGrouping<,>)
+                && IsNaiveGrouping(visitedArgument))
+            {
+                var groupAggregateExpression = (MethodCallExpression)visitedArgument;
+                var genericMethodArguments = groupAggregateExpression.Method.GetGenericArguments();
+                genericMethodArguments[genericMethodArguments.Length - 1] = outputElementType;
+                var newGroupAggregateMethod = groupAggregateExpression.Method
+                    .GetGenericMethodDefinition().MakeGenericMethod(genericMethodArguments);
+
+                return Expression.Call(
+                    groupAggregateExpression.Object,
+                    newGroupAggregateMethod,
+                    groupAggregateExpression.Arguments[0],
+                    groupAggregateExpression.Arguments[1],
+                    groupAggregateExpression.Arguments[2],
+                    Expression.Constant(GroupByFirstPassVisitor.CreateConstructorFromSelect(selectExpression)));
+            }
 
             return VisitSelectStreamProcessingMethod(
                            includeStartEdge ? nameof(GenerateSelectWithStartEdgeCall) : nameof(GenerateSelectCall),
