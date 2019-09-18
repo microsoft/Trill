@@ -282,16 +282,15 @@ namespace Microsoft.StreamProcessing
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
                 }
-
-                // Update aggregate
-                partition.currentState.state = this.difference(partition.currentState.state, ecqState.state);
                 partition.currentState.active -= ecqState.active;
-                (ecqState.state as IDisposable)?.Dispose();
 
                 if (ve < syncTime)
                 {
                     if (partition.currentState.active > 0)
                     {
+                        // Update aggregate
+                        partition.currentState.state = this.difference(partition.currentState.state, ecqState.state);
+
                         // Issue start edge
                         int c = this.batch.Count;
                         this.batch.vsync.col[c] = ve;
@@ -308,9 +307,15 @@ namespace Microsoft.StreamProcessing
                         partition.currentState = null;
                     }
                 }
-                else partition.held = true;
+                else
+                {
+                    // Update aggregate
+                    partition.currentState.state = this.difference(partition.currentState.state, ecqState.state);
+                    partition.held = true;
+                }
 
                 // Update timestamp
+                (ecqState.state as IDisposable)?.Dispose();
                 if (partition.currentState != null) partition.currentState.timestamp = ve;
             }
 

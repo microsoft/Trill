@@ -11,7 +11,7 @@ using Microsoft.StreamProcessing.Aggregates;
 
 namespace Microsoft.StreamProcessing.Provider
 {
-    internal sealed class InOrderVisitor : QStreamableVisitor
+    internal sealed partial class InOrderVisitor : QStreamableVisitor
     {
         public static InOrderVisitor Instance = new InOrderVisitor();
 
@@ -56,29 +56,6 @@ namespace Microsoft.StreamProcessing.Provider
                 new NaiveAggregate<TElement, IEnumerable<TElement>>(o => o).Wrap(elementSelector),
                 (g, l) => (IGrouping<TKey, TElement>)new NaiveGrouping<TKey, TElement>(g.Key, l));
 
-        private static readonly MethodInfo GroupApplyMethodInfo = ((MethodCallExpression)GenerateGroupByCall<object, object, object>().Body).Method.GetGenericMethodDefinition();
-
-        private static bool IsNaiveGrouping(Expression expression)
-        {
-            if (!(expression is MethodCallExpression methodExpression)) return false;
-            if (methodExpression.Method.GetGenericMethodDefinition() != GroupApplyMethodInfo) return false;
-            if (methodExpression.Arguments.Count != 4) return false;
-            var constructor = methodExpression.Arguments[3];
-
-            // Unnest a quote to get the argument
-            if (constructor.NodeType != ExpressionType.Quote) return false;
-            constructor = ((UnaryExpression)constructor).Operand;
-
-            var groupExpression = ((LambdaExpression)constructor).Body;
-            if (groupExpression.NodeType != ExpressionType.Convert) return false;
-
-            var unaryExpression = (UnaryExpression)groupExpression;
-            return unaryExpression.Type.IsGenericType
-                && unaryExpression.Type.GetGenericTypeDefinition() == typeof(IGrouping<,>)
-                && unaryExpression.Operand.Type.IsGenericType
-                && unaryExpression.Operand.Type.GetGenericTypeDefinition() == typeof(NaiveGrouping<,>);
-        }
-
         protected override Expression VisitJoinCall(Expression left, Expression right, Type leftType, Type rightType, Type keyType, LambdaExpression leftKeySelector, LambdaExpression rightKeySelector)
             => VisitBinaryStreamProcessingMethod(nameof(GenerateJoinCall), left, right, leftType, rightType, keyType, leftKeySelector, rightKeySelector);
 
@@ -94,32 +71,93 @@ namespace Microsoft.StreamProcessing.Provider
 
         protected override Expression VisitSelectCall(Expression argument, Type inputElementType, Type outputElementType, LambdaExpression selectExpression, bool includeStartEdge)
         {
-            var visitedArgument = Visit(argument);
-
             // Combine Select with previous element if it was a naive grouping and is being aggregated
             if (!includeStartEdge
                 && inputElementType.IsGenericType
                 && inputElementType.GetGenericTypeDefinition() == typeof(IGrouping<,>)
-                && IsNaiveGrouping(visitedArgument))
+                && argument is MethodCallExpression methodExpression
+                && methodExpression.Method.Name == "GroupBy")
             {
-                var groupAggregateExpression = (MethodCallExpression)visitedArgument;
-                var genericMethodArguments = groupAggregateExpression.Method.GetGenericArguments();
-                genericMethodArguments[genericMethodArguments.Length - 1] = outputElementType;
-                var newGroupAggregateMethod = groupAggregateExpression.Method
-                    .GetGenericMethodDefinition().MakeGenericMethod(genericMethodArguments);
+                var constructor = GroupByFirstPassVisitor.CreateConstructorFromSelect(selectExpression);
+                var rewritten = GroupBySecondPassVisitor.CreateAggregateProfile(
+                    constructor,
+                    out var createdAggregates,
+                    out var stateTypes,
+                    out var resultTypes);
 
-                return Expression.Call(
-                    groupAggregateExpression.Object,
-                    newGroupAggregateMethod,
-                    groupAggregateExpression.Arguments[0],
-                    groupAggregateExpression.Arguments[1],
-                    groupAggregateExpression.Arguments[2],
-                    Expression.Constant(GroupByFirstPassVisitor.CreateConstructorFromSelect(selectExpression)));
+                // If select expression cannot be manipulated into optimized aggregates, combine with GroupAggregate and do not optimize
+                if (createdAggregates.Count == 0)
+                {
+                    var groupAggregateExpression = (MethodCallExpression)Visit(argument);
+                    var genericMethodArguments = groupAggregateExpression.Method.GetGenericArguments();
+                    genericMethodArguments[genericMethodArguments.Length - 1] = outputElementType;
+                    var newGroupAggregateMethod = groupAggregateExpression.Method
+                        .GetGenericMethodDefinition().MakeGenericMethod(genericMethodArguments);
+
+                    return Expression.Call(
+                        groupAggregateExpression.Object,
+                        newGroupAggregateMethod,
+                        groupAggregateExpression.Arguments[0],
+                        groupAggregateExpression.Arguments[1],
+                        groupAggregateExpression.Arguments[2],
+                        Expression.Constant(constructor));
+                }
+
+                var baseExpressionConstant = (ConstantExpression)methodExpression.Arguments[0];
+                var keySelector = (ConstantExpression)methodExpression.Arguments[1];
+                var elementSelector = (ConstantExpression)methodExpression.Arguments[2];
+
+                // Need to apply the element selector to each aggregate via the Wrap method
+                // Wrap has four generic type arguments: new agg's input, old agg's input, state, result
+                var keySelectorExpression = (LambdaExpression)keySelector.Value;
+                var elementSelectorExpression = (LambdaExpression)elementSelector.Value;
+                var aggList = new List<Expression>();
+
+                for (int i = 0; i < createdAggregates.Count; i++)
+                    aggList.Add(Expression.New(createdAggregates[i]));
+
+                if (!elementSelectorExpression.Body.ExpressionEquals(elementSelectorExpression.Parameters[0]))
+                {
+                    // We have an non-identity function for the element selector, so we need to wrap inputs
+                    for (int i = 0; i < createdAggregates.Count; i++)
+                    {
+                        aggList[i] = Expression.Call(
+                            null, // static extension method
+                            GenerateWrapMethodInfo(
+                                elementSelectorExpression.Parameters[0].Type,
+                                elementSelectorExpression.Body.Type,
+                                stateTypes[i],
+                                resultTypes[i]),
+                            aggList[i],
+                            elementSelector);
+                    }
+                }
+
+                switch (createdAggregates.Count)
+                {
+                    case 1:
+                        return Expression.Call(
+                            null, // static extension method
+                            GenerateMethodInfoForGroupAggregate1(
+                                typeof(Empty), elementSelectorExpression.Parameters[0].Type, keySelectorExpression.Body.Type,
+                                stateTypes[0], resultTypes[0],
+                                outputElementType),
+                            Visit(baseExpressionConstant).Yield().Concat(
+                                keySelector.Yield()).Concat(
+                                aggList).Concat(
+                                rewritten.Yield()).ToArray());
+                    case 2:
+
+                        break;
+                    case 3:
+
+                        break;
+                }
             }
 
             return VisitSelectStreamProcessingMethod(
                            includeStartEdge ? nameof(GenerateSelectWithStartEdgeCall) : nameof(GenerateSelectCall),
-                           visitedArgument,
+                           Visit(argument),
                            inputElementType,
                            outputElementType,
                            selectExpression);

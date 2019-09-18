@@ -218,7 +218,15 @@ namespace Microsoft.StreamProcessing
                     baseType == typeof(Tuple<,,,,>) ||
                     baseType == typeof(Tuple<,,,,,>) ||
                     baseType == typeof(Tuple<,,,,,,>) ||
-                    baseType == typeof(Tuple<,,,,,,,>)) return true;
+                    baseType == typeof(Tuple<,,,,,,,>) ||
+                    baseType == typeof(ValueTuple<>) ||
+                    baseType == typeof(ValueTuple<,>) ||
+                    baseType == typeof(ValueTuple<,,>) ||
+                    baseType == typeof(ValueTuple<,,,>) ||
+                    baseType == typeof(ValueTuple<,,,,>) ||
+                    baseType == typeof(ValueTuple<,,,,,>) ||
+                    baseType == typeof(ValueTuple<,,,,,,>) ||
+                    baseType == typeof(ValueTuple<,,,,,,,>)) return true;
             }
 
             return false;

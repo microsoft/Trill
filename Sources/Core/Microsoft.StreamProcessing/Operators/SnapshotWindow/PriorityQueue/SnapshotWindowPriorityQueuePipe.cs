@@ -289,18 +289,15 @@ namespace Microsoft.StreamProcessing
                         this.batch.Count++;
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     }
-
-                    // Update aggregate
-                    heldState.state = this.difference(heldState.state, ecqState.entries[iter].value.state);
                     heldState.active -= ecqState.entries[iter].value.active;
-
-                    // Dispose state as it is not part of window anymore
-                    (ecqState.entries[iter].value.state as IDisposable)?.Dispose();
 
                     if (ve < syncTime)
                     {
                         if (heldState.active > 0)
                         {
+                            // Update aggregate
+                            heldState.state = this.difference(heldState.state, ecqState.entries[iter].value.state);
+
                             // Issue start edge
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = ve;
@@ -315,7 +312,14 @@ namespace Microsoft.StreamProcessing
                             this.aggregateByKey.Remove(ecqState.entries[iter].key);
                     }
                     else
+                    {
+                        // Update aggregate
+                        heldState.state = this.difference(heldState.state, ecqState.entries[iter].value.state);
                         this.heldAggregates.Add(index);
+                    }
+
+                    // Dispose state as it is not part of window anymore
+                    (ecqState.entries[iter].value.state as IDisposable)?.Dispose();
 
                     // Update timestamp
                     heldState.timestamp = ve;

@@ -459,17 +459,17 @@ using Microsoft.StreamProcessing.Aggregates;
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
-
-                        // Update aggregate
-                        heldState.state.state = ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(difference("heldState.state.state", "ecqState.states.entries[iter].value.state")));
-            this.Write(@";
                         heldState.state.active -= ecqState.states.entries[iter].value.active;
 
                         if (ecqState.timestamp < syncTime)
                         {
                             if (heldState.state.active > 0)
                             {
+                                // Update aggregate
+                                heldState.state.state = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(difference("heldState.state.state", "ecqState.states.entries[iter].value.state")));
+            this.Write(@";
+
                                 // Issue start edge
                                 int c = this.batch.Count;
                                 this.batch.vsync.col[c] = ecqState.timestamp;
@@ -479,32 +479,53 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write("\r\n                                this.batch.key.col[c] = ecqState.states.entries" +
                     "[iter].key;\r\n                                this.batch.hash.col[c] = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(inlinedKeyComparerGetHashCode("ecqState.states.entries[iter].key")));
-            this.Write(";\r\n                                this.batch.Count++;\r\n                         " +
-                    "       if (this.batch.Count == Config.DataBatchSize) FlushContents();\r\n         " +
-                    "                   }\r\n                            else\r\n                        " +
-                    "    {\r\n                                // remove from aggregateByKey\r\n          " +
-                    "                      this.aggregateByKey.Remove(ecqState.states.entries[iter].k" +
-                    "ey);\r\n                                currentState = null;\r\n                    " +
-                    "        }\r\n                        }\r\n                        else\r\n            " +
-                    "            {\r\n                            if (cachedState)\r\n                   " +
-                    "         {\r\n                                cachedState = false;\r\n              " +
-                    "                  if (heldState != currentState)\r\n                              " +
-                    "  {\r\n                                    this.heldAggregates.Clear();\r\n         " +
-                    "                           currentState = null;\r\n                               " +
-                    "     int index;\r\n                                    this.heldAggregates.Lookup(" +
-                    "ecqState.states.entries[iter].key, out index);\r\n                                " +
-                    "    this.heldAggregates.Insert(ref index, ecqState.states.entries[iter].key, hel" +
-                    "dState);\r\n                                }\r\n                            }\r\n    " +
-                    "                        else\r\n                            {\r\n                   " +
-                    "             int index;\r\n                                this.heldAggregates.Loo" +
-                    "kup(ecqState.states.entries[iter].key, out index);\r\n                            " +
-                    "    this.heldAggregates.Insert(ref index, ecqState.states.entries[iter].key, hel" +
-                    "dState);\r\n                            }\r\n                        }\r\n\r\n          " +
-                    "              // Update timestamp\r\n                        heldState.timestamp =" +
-                    " ecqState.timestamp;\r\n                    }\r\n                }\r\n\r\n              " +
-                    "  // Since sync time changed, set this.lastSyncTime\r\n                this.lastSy" +
-                    "ncTime = syncTime;\r\n            }\r\n\r\n            if (currentState == null || cur" +
-                    "rentHash != col_hash[i] || !");
+            this.Write(@";
+                                this.batch.Count++;
+                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            }
+                            else
+                            {
+                                // remove from aggregateByKey
+                                this.aggregateByKey.Remove(ecqState.states.entries[iter].key);
+                                currentState = null;
+                            }
+                        }
+                        else
+                        {
+                            // Update aggregate
+                            heldState.state.state = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(difference("heldState.state.state", "ecqState.states.entries[iter].value.state")));
+            this.Write(@";
+                            if (cachedState)
+                            {
+                                cachedState = false;
+                                if (heldState != currentState)
+                                {
+                                    this.heldAggregates.Clear();
+                                    currentState = null;
+                                    int index;
+                                    this.heldAggregates.Lookup(ecqState.states.entries[iter].key, out index);
+                                    this.heldAggregates.Insert(ref index, ecqState.states.entries[iter].key, heldState);
+                                }
+                            }
+                            else
+                            {
+                                int index;
+                                this.heldAggregates.Lookup(ecqState.states.entries[iter].key, out index);
+                                this.heldAggregates.Insert(ref index, ecqState.states.entries[iter].key, heldState);
+                            }
+                        }
+
+                        // Update timestamp
+                        heldState.timestamp = ecqState.timestamp;
+                    }
+                }
+
+                // Since sync time changed, set this.lastSyncTime
+                this.lastSyncTime = syncTime;
+            }
+
+            if (currentState == null || currentHash != col_hash[i] || !");
             this.Write(this.ToStringHelper.ToStringWithCulture(inlinedKeyComparerEquals("currentKey", "key_i")));
             this.Write(@")
             {
@@ -758,18 +779,21 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write("\r\n                        this.batch.key.col[c] = ecqState.states.entries[iter].k" +
                     "ey;\r\n                        this.batch.hash.col[c] = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(inlinedKeyComparerGetHashCode("ecqState.states.entries[iter].key")));
-            this.Write(";\r\n                        this.batch.Count++;\r\n                        if (this." +
-                    "batch.Count == Config.DataBatchSize) FlushContents();\r\n                    }\r\n\r\n" +
-                    "                    // Update aggregate\r\n                    heldState.state.sta" +
-                    "te = ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(difference("heldState.state.state", "ecqState.states.entries[iter].value.state")));
             this.Write(@";
+                        this.batch.Count++;
+                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                    }
                     heldState.state.active -= ecqState.states.entries[iter].value.active;
 
                     if (ecqState.timestamp < syncTime)
                     {
                         if (heldState.state.active > 0)
                         {
+                            // Update aggregate
+                            heldState.state.state = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(difference("heldState.state.state", "ecqState.states.entries[iter].value.state")));
+            this.Write(@";
+
                             // Issue start edge
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = ecqState.timestamp;
@@ -792,6 +816,10 @@ using Microsoft.StreamProcessing.Aggregates;
                     }
                     else
                     {
+                        // Update aggregate
+                        heldState.state.state = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(difference("heldState.state.state", "ecqState.states.entries[iter].value.state")));
+            this.Write(@";
                         int index;
                         this.heldAggregates.Lookup(ecqState.states.entries[iter].key, out index);
                         this.heldAggregates.Insert(ref index, ecqState.states.entries[iter].key, heldState);

@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification="Used to avoid creating redundant readonly property.")]
         public readonly Expression<Func<TInnerKey, TInnerResult, TResult>> ResultSelector;
-        private IStreamable<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> Source;
+        private readonly IStreamable<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> Source;
 
         public UngroupStreamable(
             IEqualityComparerExpression<TOuterKey> comparer,
@@ -33,12 +33,9 @@ namespace Microsoft.StreamProcessing
         }
 
         public override IDisposable Subscribe(IStreamObserver<TOuterKey, TResult> observer)
-        {
-            if (this.Properties.IsColumnar && CanGenerateColumnar())
-                return this.Source.Subscribe(GetPipe(observer));
-            else
-                return this.Source.Subscribe(CreatePipe(observer));
-        }
+            => this.Properties.IsColumnar && CanGenerateColumnar()
+                ? this.Source.Subscribe(GetPipe(observer))
+                : this.Source.Subscribe(CreatePipe(observer));
 
         internal IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> CreatePipe(
             IStreamObserver<TOuterKey, TResult> observer)
@@ -98,7 +95,7 @@ namespace Microsoft.StreamProcessing
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification="Used to avoid creating redundant readonly property.")]
         public readonly Expression<Func<TInnerKey, TInnerResult, TResult>> ResultSelector;
-        private IStreamable<TInnerKey, TInnerResult> Source;
+        private readonly IStreamable<TInnerKey, TInnerResult> Source;
 
         public UngroupStreamable(
             IStreamable<TInnerKey, TInnerResult> source,
@@ -113,12 +110,9 @@ namespace Microsoft.StreamProcessing
         }
 
         public override IDisposable Subscribe(IStreamObserver<Empty, TResult> observer)
-        {
-            if (this.Properties.IsColumnar && CanGenerateColumnar())
-                return this.Source.Subscribe(GetPipe(observer));
-            else
-                return this.Source.Subscribe(CreatePipe(observer));
-        }
+            => this.Properties.IsColumnar && CanGenerateColumnar()
+                ? this.Source.Subscribe(GetPipe(observer))
+                : this.Source.Subscribe(CreatePipe(observer));
 
         internal IStreamObserver<TInnerKey, TInnerResult> CreatePipe(
             IStreamObserver<Empty, TResult> observer)

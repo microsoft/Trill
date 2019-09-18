@@ -29,7 +29,7 @@ namespace Microsoft.StreamProcessing
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification="Used to avoid creating redundant readonly property.")]
         public readonly Expression<Func<TInnerKey, TInnerResult, TResult>> ResultSelector;
-        private IStreamable<<#= innerKey #>, TInnerResult> Source;
+        private readonly IStreamable<<#= innerKey #>, TInnerResult> Source;
 
         public UngroupStreamable(
             <#= i == 0 ? @"IEqualityComparerExpression<TOuterKey> comparer,
@@ -45,12 +45,9 @@ namespace Microsoft.StreamProcessing
         }
 
         public override IDisposable Subscribe(IStreamObserver<<#= outerKey #>, TResult> observer)
-        {
-            if (this.Properties.IsColumnar && CanGenerateColumnar())
-                return this.Source.Subscribe(GetPipe(observer));
-            else
-                return this.Source.Subscribe(CreatePipe(observer));
-        }
+            => this.Properties.IsColumnar && CanGenerateColumnar()
+                ? this.Source.Subscribe(GetPipe(observer))
+                : this.Source.Subscribe(CreatePipe(observer));
 
         internal IStreamObserver<<#= innerKey #>, TInnerResult> CreatePipe(
             IStreamObserver<<#= outerKey #>, TResult> observer)
