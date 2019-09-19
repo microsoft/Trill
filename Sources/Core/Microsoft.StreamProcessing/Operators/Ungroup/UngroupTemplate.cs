@@ -173,8 +173,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(resultBatchClassType));
             this.Write(this.ToStringHelper.ToStringWithCulture(resultBatchGenericParameters));
             this.Write(";\r\n\r\n");
- foreach (var f in this.computedFields.Keys) { 
-            this.Write("\r\n        outPool.Get(out resultBatch.");
+ foreach (var f in (this.projectionReturningResultInstance != null ? this.destinationFields : this.computedFields.Keys)) { 
+            this.Write("        outPool.Get(out resultBatch.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));
             this.Write(");\r\n");
  } 
@@ -199,7 +199,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
  if (resultType.CanContainNull()) { 
             this.Write("\r\n        outPool.GetBV(out resultBatch._nullnessvector);\r\n");
  } 
-            this.Write("\r\n        fixed (long *srcbv = batch.bitvector.col) {\r\n");
+            this.Write("        fixed (long *srcbv = batch.bitvector.col) {\r\n");
  if (!ungroupingToUnit) { 
             this.Write("        fixed (int *desthash = tmp.hash.col) {\r\n");
  } 

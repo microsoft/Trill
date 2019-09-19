@@ -67,18 +67,20 @@ namespace Microsoft.StreamProcessing
         private ColumnarRepresentation innerResultRepresentation;
         private IEnumerable<Tuple<MyFieldInfo, MyFieldInfo>> swingingFields;
         private IDictionary<MyFieldInfo, Expression> computedFields;
+        private string projectionReturningResultInstance;
         private ParameterExpression keyParameter;
-        private string TOuterKey;
-        private string TInnerKey;
-        private string TInnerResult;
-        private string TResult;
-        private string resultBatchClassType;
-        private string inputBatchClassType;
-        private string inputBatchGenericParameters;
-        private string resultBatchGenericParameters;
-        private string genericParameters;
-        private int numberOfGenericParameters;
+        private readonly string TOuterKey;
+        private readonly string TInnerKey;
+        private readonly string TInnerResult;
+        private readonly string TResult;
+        private readonly string resultBatchClassType;
+        private readonly string inputBatchClassType;
+        private readonly string inputBatchGenericParameters;
+        private readonly string resultBatchGenericParameters;
+        private readonly string genericParameters;
+        private readonly int numberOfGenericParameters;
         private IEnumerable<MyFieldInfo> unassignedFields;
+        private IEnumerable<MyFieldInfo> destinationFields;
 
         internal static Tuple<Type, string> Generate<TOuterKey, TInnerKey, TInnerResult, TResult>(Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelector)
             => GenerateInternal<TOuterKey, TInnerKey, TInnerResult, TResult>(resultSelector, false);
@@ -138,7 +140,9 @@ namespace Microsoft.StreamProcessing
                     swingingFields = result.SwingingFields,
                     computedFields = result.ComputedFields,
                     unassignedFields = result.UnmentionedFields,
-                    keyParameter = resultSelector.Parameters.First()
+                    projectionReturningResultInstance = result.ProjectionReturningResultInstance,
+                    keyParameter = resultSelector.Parameters.First(),
+                    destinationFields = resultRepresentation.AllFields,
                 };
 
                 expandedCode = template.TransformText();

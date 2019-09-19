@@ -106,8 +106,7 @@ internal sealed class <#= className #><#= genericParameters #> :
 
         <#= resultBatchClassType #><#= resultBatchGenericParameters #> resultBatch = tmp as <#= resultBatchClassType #><#= resultBatchGenericParameters #>;
 
-<# foreach (var f in this.computedFields.Keys) { #>
-
+<# foreach (var f in (this.projectionReturningResultInstance != null ? this.destinationFields : this.computedFields.Keys)) { #>
         outPool.Get(out resultBatch.<#= f.Name #>);
 <# } #>
 
@@ -134,7 +133,6 @@ internal sealed class <#= className #><#= genericParameters #> :
 
         outPool.GetBV(out resultBatch._nullnessvector);
 <# } #>
-
         fixed (long *srcbv = batch.bitvector.col) {
 <# if (!ungroupingToUnit) { #>
         fixed (int *desthash = tmp.hash.col) {

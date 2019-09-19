@@ -22,18 +22,18 @@ namespace Microsoft.StreamProcessing.Provider
         private readonly ParameterExpression windowParameter;
         private readonly List<Expression> seenAggregates = new List<Expression>();
         private readonly List<ParameterExpression> createdParameters = new List<ParameterExpression>();
-        private readonly List<Type> createdAggregates = new List<Type>();
+        private readonly List<Expression> createdAggregates = new List<Expression>();
         private readonly List<Type> aggregateStateTypes = new List<Type>();
         private readonly List<Type> aggregateResultTypes = new List<Type>();
         private bool foundUnknown = false;
 
         public static LambdaExpression CreateAggregateProfile(
             LambdaExpression constructorExpression,
-            out List<Type> createdAggregates,
+            out List<Expression> createdAggregates,
             out List<Type> aggregateStateTypes,
             out List<Type> aggregateResultTypes)
         {
-            createdAggregates = new List<Type>();
+            createdAggregates = new List<Expression>();
             aggregateStateTypes = new List<Type>();
             aggregateResultTypes = new List<Type>();
 
@@ -78,7 +78,7 @@ namespace Microsoft.StreamProcessing.Provider
                 this.seenAggregates.Add(node);
                 var genericArguments = aggregateInterface.GetGenericArguments();
                 var newParameter = Expression.Parameter(genericArguments[2]);
-                this.createdAggregates.Add(aggType);
+                this.createdAggregates.Add(Expression.New(aggType));
                 this.createdParameters.Add(newParameter);
                 this.aggregateStateTypes.Add(genericArguments[1]);
                 this.aggregateResultTypes.Add(genericArguments[2]);

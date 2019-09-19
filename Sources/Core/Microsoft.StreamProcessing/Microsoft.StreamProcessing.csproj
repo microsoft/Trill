@@ -362,6 +362,10 @@
     <None Update="ProductAggregateTemplate.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
+    <None Update="Provider\InOrderVisitorGroupAggregate.tt">
+      <LastGenOutput>InOrderVisitorGroupAggregate.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
     <None Update="RowToColumnTemplate.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
@@ -1105,6 +1109,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>MapDefinition.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Provider\InOrderVisitorGroupAggregate.cs">
+      <DependentUpon>InOrderVisitorGroupAggregate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
     </Compile>
     <Compile Update="Serializer\GeneratedSubtypes\FastDictionaryGenerator.cs">
       <DependentUpon>FastDictionaryGenerator.tt</DependentUpon>

@@ -1,0 +1,129 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using Microsoft.StreamProcessing.Aggregates;
+
+namespace Microsoft.StreamProcessing.Provider
+{
+    internal sealed partial class InOrderVisitor : QStreamableVisitor
+    {
+        private static MethodInfo GenerateWrapMethodInfo(Type newInputType, Type initialInputType, Type stateType, Type resultType)
+        {
+            Expression<Func<IAggregate<int, int, int>, Expression<Func<int, int>>, IAggregate<int, int, int>>> wrap
+                = (a, f) => a.Wrap(f);
+            return ((MethodCallExpression)wrap.Body).Method
+                .GetGenericMethodDefinition()
+                .MakeGenericMethod(newInputType, initialInputType, stateType, resultType);
+        }
+<# for (int i = 1; i <= 15; i++) { #>
+
+        private static MethodInfo GenerateMethodInfoForGroupAggregate<#= i #>(
+            Type inputGroupType, Type inputPayloadType, Type newGroupType,
+<# for (int j = 1; j <= i; j++) { #>
+            Type state<#= j #>Type, Type result<#= j #>Type,
+<# } #>
+            Type overallResultType)
+        {
+            Expression<Func<IStreamable<Empty, int>, IStreamable<Empty, int>>> groupAgg =
+                o => o.GroupAggregate(
+                    i => i,
+<# for (int j = 1; j <= i; j++) { #>
+                    new CountAggregate<int>(),
+<# } #>
+                    (g, <#= String.Join(", ", Enumerable.Range(0, i).Select(o => "c" + (o + 1))) #>) => g.Key);
+            return ((MethodCallExpression)groupAgg.Body).Method.GetGenericMethodDefinition()
+                .MakeGenericMethod(
+                    inputGroupType, inputPayloadType, newGroupType,
+<# for (int j = 1; j <= i; j++) { #>
+                    state<#= j #>Type, result<#= j #>Type,
+<# } #>
+                    overallResultType);
+        }
+<# } #>
+
+        private Expression VisitSelectCallForGroupBy(Expression argument, Type outputElementType, LambdaExpression selectExpression)
+        {
+            var methodExpression = (MethodCallExpression)argument;
+            var constructor = GroupByFirstPassVisitor.CreateConstructorFromSelect(selectExpression);
+            var rewritten = GroupBySecondPassVisitor.CreateAggregateProfile(
+                constructor,
+                out var createdAggregates,
+                out var stateTypes,
+                out var resultTypes);
+
+            if (createdAggregates.Count > 0)
+            {
+                var baseExpressionConstant = (ConstantExpression)methodExpression.Arguments[0];
+                var keySelector = (ConstantExpression)methodExpression.Arguments[1];
+                var elementSelector = (ConstantExpression)methodExpression.Arguments[2];
+
+                // Need to apply the element selector to each aggregate via the Wrap method
+                // Wrap has four generic type arguments: new agg's input, old agg's input, state, result
+                var keySelectorExpression = (LambdaExpression)keySelector.Value;
+                var elementSelectorExpression = (LambdaExpression)elementSelector.Value;
+
+                if (!elementSelectorExpression.Body.ExpressionEquals(elementSelectorExpression.Parameters[0]))
+                {
+                    // We have an non-identity function for the element selector, so we need to wrap inputs
+                    for (int i = 0; i < createdAggregates.Count; i++)
+                    {
+                        createdAggregates[i] = Expression.Call(
+                            null, // static extension method
+                            GenerateWrapMethodInfo(
+                                elementSelectorExpression.Parameters[0].Type,
+                                elementSelectorExpression.Body.Type,
+                                stateTypes[i],
+                                resultTypes[i]),
+                            createdAggregates[i],
+                            elementSelector);
+                    }
+                }
+
+                switch (createdAggregates.Count)
+                {
+<# for (int i = 1; i <= 15; i++) { #>
+                    case <#= i #>:
+                        return Expression.Call(
+                            null, // static extension method
+                            GenerateMethodInfoForGroupAggregate<#= i #>(
+                                typeof(Empty), elementSelectorExpression.Parameters[0].Type, keySelectorExpression.Body.Type,
+<# for (int j = 0; j < i; j++) { #>
+                                stateTypes[<#= j #>], resultTypes[<#= j #>],
+<# } #>
+                                outputElementType),
+                            Visit(baseExpressionConstant).Yield().Concat(
+                                keySelector.Yield()).Concat(
+                                createdAggregates).Concat(
+                                rewritten.Yield()).ToArray());
+<# } #>
+                }
+            }
+
+            // Fallback: Simply fuse the select operation into the GroupAggregate result constructor
+            var groupAggregateExpression = (MethodCallExpression)Visit(argument);
+            var genericMethodArguments = groupAggregateExpression.Method.GetGenericArguments();
+            genericMethodArguments[genericMethodArguments.Length - 1] = outputElementType;
+            var newGroupAggregateMethod = groupAggregateExpression.Method
+                .GetGenericMethodDefinition().MakeGenericMethod(genericMethodArguments);
+
+            return Expression.Call(
+                groupAggregateExpression.Object,
+                newGroupAggregateMethod,
+                groupAggregateExpression.Arguments[0],
+                groupAggregateExpression.Arguments[1],
+                groupAggregateExpression.Arguments[2],
+                Expression.Constant(constructor));
+        }
+    }
+}
