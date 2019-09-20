@@ -129,7 +129,7 @@ namespace ProviderTesting
             queryContainer.Restore();
             results.Wait();
 
-            Assert.IsTrue(new int[] { 34, 33, 33 }.SequenceEqual(output));
+            Assert.IsTrue(new int[] { 33, 34, 33 }.SequenceEqual(output));
         }
 
 
