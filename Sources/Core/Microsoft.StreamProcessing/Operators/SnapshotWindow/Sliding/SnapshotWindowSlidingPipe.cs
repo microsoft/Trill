@@ -274,7 +274,7 @@ namespace Microsoft.StreamProcessing
             /* Process the ECQ up until the new sync time */
             while (this.ecq.Count > 0 && this.ecq.PeekFirst().timestamp <= syncTime)
             {
-                EcqState ecqState = this.ecq.Dequeue();
+                var ecqState = this.ecq.Dequeue();
                 int iter = FastDictionary<TKey, TState>.IteratorStart;
 
                 while (ecqState.states.Iterate(ref iter))
@@ -295,17 +295,16 @@ namespace Microsoft.StreamProcessing
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     }
 
-                    // Update aggregate
-                    heldState.state = this.difference(heldState.state, ecqState.states.entries[iter].value.state);
                     heldState.active -= ecqState.states.entries[iter].value.active;
-
-                    // Dispose state as it is not part of window anymore
                     (ecqState.states.entries[iter].value.state as IDisposable)?.Dispose();
 
                     if (ecqState.timestamp < syncTime)
                     {
                         if (heldState.active > 0)
                         {
+                            // Update aggregate
+                            heldState.state = this.difference(heldState.state, ecqState.states.entries[iter].value.state);
+
                             // Issue start edge
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = ecqState.timestamp;
@@ -320,7 +319,11 @@ namespace Microsoft.StreamProcessing
                             this.aggregateByKey.Remove(ecqState.states.entries[iter].key);
                     }
                     else
+                    {
+                        // Update aggregate
+                        heldState.state = this.difference(heldState.state, ecqState.states.entries[iter].value.state);
                         this.heldAggregates.Add(index);
+                    }
 
                     // Update timestamp
                     heldState.timestamp = ecqState.timestamp;

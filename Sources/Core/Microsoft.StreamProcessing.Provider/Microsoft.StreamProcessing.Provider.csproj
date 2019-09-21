@@ -29,5 +29,20 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Extensions\FromEnumerable.cs">
+      <DependentUpon>FromEnumerable.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Extensions\FromEnumerable.tt">
+      <LastGenOutput>FromEnumerable.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+  </ItemGroup>
   
 </Project>

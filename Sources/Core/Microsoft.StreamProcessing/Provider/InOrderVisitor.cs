@@ -71,14 +71,31 @@ namespace Microsoft.StreamProcessing.Provider
 
         protected override Expression VisitSelectCall(Expression argument, Type inputElementType, Type outputElementType, LambdaExpression selectExpression, bool includeStartEdge)
         {
-            // Combine Select with previous element if it was a naive grouping and is being aggregated
-            if (!includeStartEdge
-                && inputElementType.IsGenericType
-                && inputElementType.GetGenericTypeDefinition() == typeof(IGrouping<,>)
-                && argument is MethodCallExpression methodExpression
-                && methodExpression.Method.Name == "GroupBy")
+            if (!includeStartEdge && argument is MethodCallExpression methodExpression && inputElementType.IsGenericType)
             {
-                return VisitSelectCallForGroupBy(argument, outputElementType, selectExpression);
+                if (inputElementType.GetGenericTypeDefinition() == typeof(IGrouping<,>)
+                    && methodExpression.Method.Name == "GroupBy")
+                {
+                    // Combine Select with previous element if it was a naive grouping and is being aggregated
+                    return VisitSelectCallForGroupBy(argument, outputElementType, selectExpression);
+                }
+
+                else if (inputElementType.GetGenericTypeDefinition() == typeof(ValueTuple<,>)
+                    && methodExpression.Method.Name == "Join")
+                {
+                    // Combine Select with previous element if it was a join with a naive result constructor
+                    var visited = (MethodCallExpression)Visit(argument);
+
+                    if (JoinFirstPassVisitor.TryCreateConstructorFromSelect(selectExpression, out var result))
+                    {
+                        var joinTypeArgs = visited.Method.GetGenericArguments();
+                        joinTypeArgs[4] = outputElementType;
+                        var newJoinMethod = visited.Method.GetGenericMethodDefinition().MakeGenericMethod(joinTypeArgs);
+                        var joinArgs = visited.Arguments.ToArray();
+                        joinArgs[4] = result;
+                        return Expression.Call(null, newJoinMethod, joinArgs);
+                    }
+                }
             }
 
             return VisitSelectStreamProcessingMethod(

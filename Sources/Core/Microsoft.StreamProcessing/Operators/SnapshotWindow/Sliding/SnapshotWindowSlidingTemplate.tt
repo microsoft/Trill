@@ -285,14 +285,15 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                                 if (this.batch.Count == Config.DataBatchSize) FlushContents();
                             }
 
-                            // Update aggregate
-                            heldState.state.state = <#= difference("heldState.state.state", "ecqState.states.entries[iter].value.state.state") #>;
                             heldState.state.active -= ecqState.states.entries[iter].value.state.active;
 
                             if (ecqState.timestamp < syncTime)
                             {
                                 if (heldState.state.active > 0) //(!isEmpty(heldState.state))
                                 {
+                                    // Update aggregate
+                                    heldState.state.state = <#= difference("heldState.state.state", "ecqState.states.entries[iter].value.state.state") #>;
+
                                     // Issue start edge
                                     int c = this.batch.Count;
                                     this.batch.vsync.col[c] = ecqState.timestamp;
@@ -312,6 +313,9 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                             }
                             else
                             {
+                                // Update aggregate
+                                heldState.state.state = <#= difference("heldState.state.state", "ecqState.states.entries[iter].value.state.state") #>;
+
                                 if (cachedState)
                                 {
                                     cachedState = false;
@@ -597,14 +601,15 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                         if (this.batch.Count == Config.DataBatchSize) FlushContents();
                     }
 
-                    // Update aggregate
-                    heldState.state.state = <#= difference("heldState.state.state", "ecqState.states.entries[iter].value.state.state") #>;
                     heldState.state.active -= ecqState.states.entries[iter].value.state.active;
 
                     if (ecqState.timestamp < syncTime)
                     {
                         if (heldState.state.active > 0) //(!isEmpty(heldState.state))
                         {
+                            // Update aggregate
+                            heldState.state.state = <#= difference("heldState.state.state", "ecqState.states.entries[iter].value.state.state") #>;
+
                             // Issue start edge
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = ecqState.timestamp;
@@ -624,6 +629,9 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                     }
                     else
                     {
+                        // Update aggregate
+                        heldState.state.state = <#= difference("heldState.state.state", "ecqState.states.entries[iter].value.state.state") #>;
+
                         int index;
                         this.heldAggregates.Lookup(ecqState.states.entries[iter].key, out index);
                         this.heldAggregates.Insert(ref index, ecqState.states.entries[iter].key, heldState);

@@ -1,0 +1,83 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Collections" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Linq" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Microsoft.StreamProcessing.Provider
+{
+    public static partial class QStreamableStatic
+    {
+<#
+    foreach (var method in typeof(Enumerable).GetMethods()
+        .Where(m =>
+        {
+            if (m.ReturnType.IsArray) return false;
+            if (m.ReturnType.IsGenericType) return false;
+
+            var p = m.GetParameters();
+            if (p.Length == 0) return false;
+            if (!p[0].ParameterType.IsGenericType) return false;
+            for (int i = 1; i < p.Length; i++)
+            {
+                if (typeof(IEnumerable).IsAssignableFrom(p[1].ParameterType)) return false;
+            }
+            return true;
+        }))
+        {
+            var returnType = method.ReturnType;
+            var name = method.Name;
+            var genericArguments = method.GetGenericArguments();
+            var genericArgumentsText = string.Join(", ", genericArguments.Select(a => a.ToString()));
+            var parameters = method.GetParameters();
+            var enumerableType = parameters[0].ParameterType.GenericTypeArguments[0]; // Should be valid - IEnumerable<T>
+#>
+        /// <summary>
+        ///
+        /// </summary>
+<# foreach (var genericArg in genericArguments) { #>
+        /// <typeparam name="<#= genericArg.ToString() #>"></typeparam>
+<# } #>
+        /// <param name="input"></param>
+<# foreach (var parameter in parameters.Skip(1)) { #>
+        /// <param name="<#= parameter.Name #>"></param>
+<# } #>
+        /// <returns></returns>
+        public static IQStreamable<<#= ToFriendlyName(returnType.ToString()) #>> <#= name #><#= genericArguments.Any() ? "<" +  genericArgumentsText + ">" : string.Empty #>(
+            this IQStreamable<<#= ToFriendlyName(enumerableType.ToString()) #>> input<# foreach (var parameter in parameters.Skip(1)) { #>,
+            <#= ToFriendlyName(parameter.ParameterType.ToString()) #> <#= parameter.Name #><# } #>)
+            => input.Aggregate(e => e.<#= name #>(<#= string.Join(", ", parameters.Skip(1).Select(p => p.Name)) #>));
+
+<#
+        }
+#>
+    }
+}
+<#+
+    private string ToFriendlyName(string input)
+    {
+        input = input
+            .Replace("System.Boolean", "bool")
+            .Replace("System.Int32", "int")
+            .Replace("System.Int64", "long")
+            .Replace("System.Single", "float")
+            .Replace("System.Double", "double")
+            .Replace("System.Decimal", "decimal")
+            .Replace("Func`2[", "Func<")
+            .Replace("Func`3[", "Func<")
+            .Replace("Collections.Generic.IEqualityComparer`1[", "IEqualityComparer<")
+            .Replace("]", ">")
+            .Replace(",", ", ")
+            .Replace("System.", string.Empty)
+            ;
+        return input;
+    }
+#>

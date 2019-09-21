@@ -159,26 +159,6 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write("> accumulate;\r\n    ");
  } 
             this.Write("\r\n    ");
- if (this.useCompiledDeaccumulate) { 
-            this.Write("    private readonly Func<");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TState));
-            this.Write(", long, ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TInput));
-            this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TState));
-            this.Write("> deaccumulate;\r\n    ");
- } 
-            this.Write("\r\n    ");
- if (this.useCompiledDifference) { 
-            this.Write("    private readonly Func<");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TState));
-            this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TState));
-            this.Write(", ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TState));
-            this.Write("> difference;\r\n    ");
- } 
-            this.Write("\r\n    ");
  if (this.useCompiledComputeResult) { 
             this.Write("    private readonly Func<");
             this.Write(this.ToStringHelper.ToStringWithCulture(TState));
@@ -234,14 +214,6 @@ using Microsoft.StreamProcessing.Aggregates;
             this.Write("        ");
  if (this.useCompiledAccumulate) { 
             this.Write("        accumulate = aggregate.Accumulate().Compile();\r\n        ");
- } 
-            this.Write("        ");
- if (this.useCompiledDeaccumulate) { 
-            this.Write("        deaccumulate = aggregate.Deaccumulate().Compile();\r\n        ");
- } 
-            this.Write("        ");
- if (this.useCompiledDifference) { 
-            this.Write("        difference = aggregate.Difference().Compile();\r\n        ");
  } 
             this.Write("        ");
  if (this.useCompiledComputeResult) { 

@@ -34,14 +34,10 @@ namespace Microsoft.StreamProcessing
 
         private string initialState;
         private Func<string, string, string> accumulate;
-        private Func<string, string, string> deaccumulate;
-        private Func<string, string, string> difference;
         private Func<string, string> computeResult;
         private bool useCompiledInitialState;
         private bool useCompiledComputeResult;
         private bool useCompiledAccumulate;
-        private bool useCompiledDeaccumulate;
-        private bool useCompiledDifference;
         private bool isUngrouped;
 
         private GroupedWindowTemplate(string className) : base(className) { }
@@ -161,46 +157,6 @@ namespace Microsoft.StreamProcessing
                     }
                 }
 
-                var deaccumulateLambda = stream.Aggregate.Deaccumulate();
-                if (ConstantExpressionFinder.IsClosedExpression(deaccumulateLambda))
-                {
-                    var deaccumulateTransformedLambda = Extensions.TransformFunction<TKey, TInput>(deaccumulateLambda, 2);
-                    template.deaccumulate = (stateArg, longArg) => deaccumulateTransformedLambda.Inline(stateArg, longArg);
-                    assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(deaccumulateLambda));
-                }
-                else
-                {
-                    if (Config.CodegenOptions.SuperStrictColumnar)
-                    {
-                        throw new InvalidOperationException("Code Generation couldn't inline a lambda!");
-                    }
-                    else
-                    {
-                        template.useCompiledDeaccumulate = true;
-                        template.deaccumulate = (s1, s2) => $"deaccumulate({s1}, {s2}, batch[i]);";
-                    }
-                }
-
-                var differenceLambda = stream.Aggregate.Difference();
-                if (ConstantExpressionFinder.IsClosedExpression(differenceLambda))
-                {
-                    template.difference = (stateArg1, stateArg2) => differenceLambda.Inline(stateArg1, stateArg2);
-                    assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(differenceLambda));
-                }
-                else
-                {
-                    if (Config.CodegenOptions.SuperStrictColumnar)
-                    {
-                        errorMessages = "Code Generation for GroupedWindow: couldn't inline the deaccumulate lambda!";
-                        throw new InvalidOperationException(errorMessages);
-                    }
-                    else
-                    {
-                        template.useCompiledDifference = true;
-                        template.deaccumulate = (s1, s2) => $"difference({s1}, {s2});";
-                    }
-                }
-
                 var computeResultLambda = stream.Aggregate.ComputeResult();
                 if (ConstantExpressionFinder.IsClosedExpression(computeResultLambda))
                 {
@@ -274,7 +230,6 @@ namespace Microsoft.StreamProcessing
                 expandedCode = template.TransformText();
 
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(typeof(Empty), typeof(TKey), typeof(TInput), typeof(TState), typeof(TOutput), typeof(FastDictionaryGenerator3)));
-                assemblyReferences.Add(typeof(IAggregate<,,>).GetTypeInfo().Assembly);
                 assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<Empty, TInput>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<Empty, TResult>());

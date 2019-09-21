@@ -186,12 +186,7 @@ namespace Microsoft.StreamProcessing
                                 this.batch.key.col[c] = colkey[i];
                                 this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
                                 this.batch.Count++;
-                                if (this.batch.Count == Config.DataBatchSize)
-                                {
-                                    this.batch.iter = batch.iter;
-                                    FlushContents();
-                                    this.batch.iter = batch.iter;
-                                }
+                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
                             }
                             heldState.timestamp = syncTime;
                         }
@@ -358,17 +353,16 @@ namespace Microsoft.StreamProcessing
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
 
-                        // Update aggregate
-                        heldState.state = this.difference(heldState.state, ecqState.states.entries[iter].value.state);
                         heldState.active -= ecqState.states.entries[iter].value.active;
-
-                        // Dispose state as it is not part of window anymore
                         (ecqState.states.entries[iter].value.state as IDisposable)?.Dispose();
 
                         if (ecqState.timestamp < syncTime)
                         {
                             if (heldState.active > 0)
                             {
+                                // Update aggregate
+                                heldState.state = this.difference(heldState.state, ecqState.states.entries[iter].value.state);
+
                                 // Issue start edge
                                 int c = this.batch.Count;
                                 this.batch.vsync.col[c] = ecqState.timestamp;
@@ -382,7 +376,12 @@ namespace Microsoft.StreamProcessing
                             else
                                 this.aggregateByKey.Remove(ecqState.states.entries[iter].key);
                         }
-                        else partition.heldAggregates.Add(index);
+                        else
+                        {
+                            // Update aggregate
+                            heldState.state = this.difference(heldState.state, ecqState.states.entries[iter].value.state);
+                            partition.heldAggregates.Add(index);
+                        }
 
                         // Update timestamp
                         heldState.timestamp = ecqState.timestamp;

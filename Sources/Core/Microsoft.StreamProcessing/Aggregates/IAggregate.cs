@@ -5,7 +5,7 @@
 using System;
 using System.Linq.Expressions;
 
-namespace Microsoft.StreamProcessing
+namespace Microsoft.StreamProcessing.Aggregates
 {
     /// <summary>
     /// Interface used by all aggregates.
@@ -55,7 +55,7 @@ namespace Microsoft.StreamProcessing
     /// <summary>
     /// TODO: Determine if this class should be made internal
     /// </summary>
-    public static class AggregateExtensions
+    public static partial class AggregateExtensions
     {
         /// <summary>
         /// Given two aggregates, determines whether they are identical in how they manage state. Specifically:

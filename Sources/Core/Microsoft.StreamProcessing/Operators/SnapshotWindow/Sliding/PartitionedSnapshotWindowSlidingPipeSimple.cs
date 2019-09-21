@@ -273,7 +273,7 @@ namespace Microsoft.StreamProcessing
             /* Process the ECQ up until the new sync time */
             while (partition.ecq.Count > 0 && partition.ecq.PeekFirst().timestamp <= syncTime)
             {
-                HeldState<TState> ecqState = partition.ecq.Dequeue();
+                var ecqState = partition.ecq.Dequeue();
                 if (partition.currentState.active > 0)
                 {
                     // Issue end edge
@@ -287,8 +287,6 @@ namespace Microsoft.StreamProcessing
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
                 }
 
-                // Update aggregate
-                partition.currentState.state = this.difference(partition.currentState.state, ecqState.state);
                 partition.currentState.active -= ecqState.active;
                 (ecqState.state as IDisposable)?.Dispose();
 
@@ -296,6 +294,9 @@ namespace Microsoft.StreamProcessing
                 {
                     if (partition.currentState.active > 0)
                     {
+                        // Update aggregate
+                        partition.currentState.state = this.difference(partition.currentState.state, ecqState.state);
+
                         // Issue start edge
                         int c = this.batch.Count;
                         this.batch.vsync.col[c] = ecqState.timestamp;
@@ -312,7 +313,12 @@ namespace Microsoft.StreamProcessing
                         partition.currentState = null;
                     }
                 }
-                else partition.held = true;
+                else
+                {
+                    // Update aggregate
+                    partition.currentState.state = this.difference(partition.currentState.state, ecqState.state);
+                    partition.held = true;
+                }
 
                 // Update timestamp
                 if (partition.currentState != null) partition.currentState.timestamp = ecqState.timestamp;

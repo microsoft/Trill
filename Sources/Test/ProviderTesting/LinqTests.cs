@@ -132,8 +132,6 @@ namespace ProviderTesting
             Assert.IsTrue(new int[] { 33, 34, 33 }.SequenceEqual(output));
         }
 
-
-
         [TestMethod]
         public void AggregateProduct()
         {

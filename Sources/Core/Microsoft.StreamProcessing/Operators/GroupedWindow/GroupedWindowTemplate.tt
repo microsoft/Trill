@@ -39,14 +39,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<Micro
     private readonly Func<<#= TState #>, long, <#= TInput #>, <#= TState #>> accumulate;
     <# } #>
 
-    <# if (this.useCompiledDeaccumulate) { #>
-    private readonly Func<<#= TState #>, long, <#= TInput #>, <#= TState #>> deaccumulate;
-    <# } #>
-
-    <# if (this.useCompiledDifference) { #>
-    private readonly Func<<#= TState #>, <#= TState #>, <#= TState #>> difference;
-    <# } #>
-
     <# if (this.useCompiledComputeResult) { #>
     private readonly Func<<#= TState #>, <#= TOutput #>> computeResult;
     <# } #>
@@ -91,12 +83,6 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<Micro
         <# } #>
         <# if (this.useCompiledAccumulate) { #>
         accumulate = aggregate.Accumulate().Compile();
-        <# } #>
-        <# if (this.useCompiledDeaccumulate) { #>
-        deaccumulate = aggregate.Deaccumulate().Compile();
-        <# } #>
-        <# if (this.useCompiledDifference) { #>
-        difference = aggregate.Difference().Compile();
         <# } #>
         <# if (this.useCompiledComputeResult) { #>
         computeResult = aggregate.ComputeResult().Compile();
