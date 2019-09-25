@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
         public IEnumerable<Tuple<MyFieldInfo, MyFieldInfo>> SwingingFields;
         public IDictionary<MyFieldInfo, Expression> ComputedFields;
         public IEnumerable<MyFieldInfo> UnmentionedFields;
-        public string ProjectionReturningResultInstance;
+        public Expression ProjectionReturningResultInstance;
         public IEnumerable<string> MultiStringOperations;
         public bool NeedsSourceInstance;
     }
@@ -38,7 +38,7 @@ namespace Microsoft.StreamProcessing
         private readonly ColumnarRepresentation resultTypeInformation;
         private readonly bool noSwingingFields;
         private readonly Dictionary<ParameterExpression, SelectParameterInformation> parameterInformation;
-        private readonly string ProjectionReturningResultInstance;
+        private readonly Expression ProjectionReturningResultInstance;
         private readonly List<string> multiStringOperations;
         private readonly List<MyFieldInfo> multiStringResultFields;
         private readonly bool doMultiStringTransform;
@@ -171,7 +171,7 @@ namespace Microsoft.StreamProcessing
             // That expression will be passed to the setter for the indexer on the generated batch.
             // REVIEW: this is where something should be signalled so the user knows it isn't as fast as it could be.
             var transformedBody2 = Visit(body);
-            this.ProjectionReturningResultInstance = transformedBody2.ExpressionToCSharp();
+            this.ProjectionReturningResultInstance = transformedBody2;
             return;
         }
 

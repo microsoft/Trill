@@ -67,6 +67,13 @@ namespace Microsoft.StreamProcessing
         private ColumnarRepresentation innerResultRepresentation;
         private IEnumerable<Tuple<MyFieldInfo, MyFieldInfo>> swingingFields;
         private IDictionary<MyFieldInfo, Expression> computedFields;
+
+        /// <summary>
+        /// Needed when the projection function cannot be split into separate assignments to the columns
+        /// of the result batch.
+        /// </summary>
+        private Expression ProjectionReturningResultInstance = null;
+
         private ParameterExpression keyParameter;
         private string TOuterKey;
         private string TInnerKey;
@@ -138,6 +145,7 @@ namespace Microsoft.StreamProcessing
                     swingingFields = result.SwingingFields,
                     computedFields = result.ComputedFields,
                     unassignedFields = result.UnmentionedFields,
+                    ProjectionReturningResultInstance = result.ProjectionReturningResultInstance,
                     keyParameter = resultSelector.Parameters.First()
                 };
 

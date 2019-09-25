@@ -123,5 +123,33 @@ namespace SimpleTesting
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void TestAggregateByKey4()
+        {
+            var input = new[]
+            {
+                StreamEvent.CreateStart(0, 100),
+                StreamEvent.CreateStart(0, 105),
+                StreamEvent.CreateStart(0, 104),
+                StreamEvent.CreateStart(0, 200),
+                StreamEvent.CreateStart(0, 201),
+                StreamEvent.CreateStart(0, 300),
+                StreamEvent.CreateStart(0, 302),
+                StreamEvent.CreateStart(0, 303),
+                StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+            }.ToStreamable();
+            var output = input.GroupAggregate(s => true, w => w.Count(), (g, c) => System.ValueTuple.Create(g.Key, c));
+
+            var correct = new[]
+            {
+                StreamEvent.CreateStart(0, System.ValueTuple.Create(true, (ulong)8)),
+                StreamEvent.CreatePunctuation<System.ValueTuple<bool, ulong>>(StreamEvent.InfinitySyncTime)
+            };
+
+            Assert.IsTrue(output.IsEquivalentTo(correct));
+        }
+
+
     }
 }
