@@ -74,6 +74,11 @@ namespace Microsoft.StreamProcessing.Provider
             this.zeroParameterAggregates.Add(GetMethodInfoForSumFloat(), ExpressionForSumFloatAggregate);
             this.zeroParameterAggregates.Add(GetMethodInfoForSumDouble(), ExpressionForSumDoubleAggregate);
             this.zeroParameterAggregates.Add(GetMethodInfoForSumDecimal(), ExpressionForSumDecimalAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumInt(), ExpressionForNullableSumIntAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumLong(), ExpressionForNullableSumLongAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumFloat(), ExpressionForNullableSumFloatAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumDouble(), ExpressionForNullableSumDoubleAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumDecimal(), ExpressionForNullableSumDecimalAggregate);
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -242,6 +247,86 @@ namespace Microsoft.StreamProcessing.Provider
             get
             {
                 Expression<Func<IAggregate<decimal, decimal, decimal>>> expression = () => new SumDecimalAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumInt()
+        {
+            Expression<Func<IEnumerable<int?>, int?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumIntAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<int?, NullOutputWrapper<int>, int?>>> expression
+                    = () => new SumIntAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumLong()
+        {
+            Expression<Func<IEnumerable<long?>, long?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumLongAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<long?, NullOutputWrapper<long>, long?>>> expression
+                    = () => new SumLongAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumFloat()
+        {
+            Expression<Func<IEnumerable<float?>, float?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumFloatAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<float?, NullOutputWrapper<float>, float?>>> expression
+                    = () => new SumFloatAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumDouble()
+        {
+            Expression<Func<IEnumerable<double?>, double?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumDoubleAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<double?, NullOutputWrapper<double>, double?>>> expression
+                    = () => new SumDoubleAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumDecimal()
+        {
+            Expression<Func<IEnumerable<decimal?>, decimal?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumDecimalAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<decimal?, NullOutputWrapper<decimal>, decimal?>>> expression
+                    = () => new SumDecimalAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
                 return expression.Body;
             }
         }
