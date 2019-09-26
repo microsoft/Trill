@@ -36,4 +36,16 @@ var sumTypesToGenerate = new[]
     new { InputTypeFriendlyName = "BigInteger", TypeName = "BigInteger" },
     new { InputTypeFriendlyName = "Complex", TypeName = "Complex" }
 };
+
+var sumTypesNotBuiltIn = new[]
+{
+    new { InputTypeFriendlyName = "SByte", TypeName = "sbyte" },
+    new { InputTypeFriendlyName = "Byte", TypeName = "byte" },
+    new { InputTypeFriendlyName = "Short", TypeName = "short" },
+    new { InputTypeFriendlyName = "UShort", TypeName = "ushort" },
+    new { InputTypeFriendlyName = "UInt", TypeName = "uint" },
+    new { InputTypeFriendlyName = "ULong", TypeName = "ulong" },
+    new { InputTypeFriendlyName = "BigInteger", TypeName = "BigInteger" },
+    new { InputTypeFriendlyName = "Complex", TypeName = "Complex" }
+};
 #>

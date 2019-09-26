@@ -3,6 +3,8 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 
@@ -254,5 +256,84 @@ namespace Microsoft.StreamProcessing.Aggregates
             => (leftSum, rightSum) => (Complex)(leftSum + rightSum);
 
         public Expression<Func<Complex, Complex>> ComputeResult() => sum => sum;
+    }
+
+    /// <summary>
+    /// Extension methods to allow more aggregates
+    /// </summary>
+    public static partial class AggregateExtensions
+    {
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSByteAggregate))]
+        public static sbyte Sum(this IEnumerable<sbyte> enumerable)
+            => enumerable.Aggregate((sbyte)0, (s, i) => (sbyte)(s + i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumByteAggregate))]
+        public static byte Sum(this IEnumerable<byte> enumerable)
+            => enumerable.Aggregate((byte)0, (s, i) => (byte)(s + i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumShortAggregate))]
+        public static short Sum(this IEnumerable<short> enumerable)
+            => enumerable.Aggregate((short)0, (s, i) => (short)(s + i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumUShortAggregate))]
+        public static ushort Sum(this IEnumerable<ushort> enumerable)
+            => enumerable.Aggregate((ushort)0, (s, i) => (ushort)(s + i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumUIntAggregate))]
+        public static uint Sum(this IEnumerable<uint> enumerable)
+            => enumerable.Aggregate((uint)0, (s, i) => (uint)(s + i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumULongAggregate))]
+        public static ulong Sum(this IEnumerable<ulong> enumerable)
+            => enumerable.Aggregate((ulong)0, (s, i) => (ulong)(s + i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumBigIntegerAggregate))]
+        public static BigInteger Sum(this IEnumerable<BigInteger> enumerable)
+            => enumerable.Aggregate((BigInteger)0, (s, i) => (BigInteger)(s + i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumComplexAggregate))]
+        public static Complex Sum(this IEnumerable<Complex> enumerable)
+            => enumerable.Aggregate((Complex)0, (s, i) => (Complex)(s + i));
+
     }
 }

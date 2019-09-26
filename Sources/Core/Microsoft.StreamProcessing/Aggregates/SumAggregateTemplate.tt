@@ -4,6 +4,8 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 
@@ -38,4 +40,30 @@ namespace Microsoft.StreamProcessing.Aggregates
 <#
     }
 #>
+
+    /// <summary>
+    /// Extension methods to allow more aggregates
+    /// </summary>
+    public static partial class AggregateExtensions
+    {
+<#
+    // Create product aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesNotBuiltIn)
+    {
+        var typeName = sumTypes.TypeName;
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+#>
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(Sum<#= typeFriendlyName #>Aggregate))]
+        public static <#= typeName #> Sum(this IEnumerable<<#= typeName #>> enumerable)
+            => enumerable.Aggregate((<#= typeName #>)0, (s, i) => (<#= typeName #>)(s + i));
+
+<#
+    }
+#>
+    }
 }
