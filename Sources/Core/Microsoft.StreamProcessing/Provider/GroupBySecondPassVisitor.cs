@@ -103,7 +103,47 @@ namespace Microsoft.StreamProcessing.Provider
                         e => e.IsGenericType && e.GetGenericTypeDefinition() == typeof(IAggregate<,,>));
                     if (aggregateInterface == null) throw new InvalidOperationException("AggregateAttribute constructor should have verified that aggregate class must implement IAggregate interface.");
 
-                    aggregateExpression = Expression.New(aggType);
+                    // Type test: input type to aggregate must be the same as the element type of the enumerable,
+                    // and the output type of the aggregate must be the same as the output of the enumerable method
+                    if (aggregateInterface.GenericTypeArguments[0] == stateParameter.Type.GenericTypeArguments[0]
+                        && aggregateInterface.GenericTypeArguments[2] == method.ReturnType)
+                    {
+                        aggregateExpression = Expression.New(aggType);
+                    }
+
+                    // One fallback alternative: if the input and output are both nullable, and their base types
+                    // match the types as stated above, we can create the nullable version of the aggregate
+                    else if (method.GetParameters()[0].ParameterType.GenericTypeArguments[0].IsGenericType
+                        && method.GetParameters()[0].ParameterType.GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(Nullable<>)
+                        && method.ReturnType.IsGenericType
+                        && method.ReturnType.GetGenericTypeDefinition() == typeof(Nullable<>)
+                        && aggregateInterface.GenericTypeArguments[0] == method.GetParameters()[0].ParameterType.GenericTypeArguments[0].GenericTypeArguments[0]
+                        && aggregateInterface.GenericTypeArguments[2] == method.ReturnType.GenericTypeArguments[0])
+                    {
+                        aggregateExpression = CreateNullableAggregateLambda(aggregateInterface.GenericTypeArguments)
+                            .ReplaceParametersInBody(Expression.New(aggType));
+                        aggregateInterface = aggregateExpression.Type;
+                    }
+
+                    // Otherwise, we need to alert the user to the issue
+                    else
+                    {
+                        throw new InvalidOperationException(
+                            string.Format(
+                                "The type signature of the aggregate does not match the input and output types for the attached method." + Environment.NewLine
+                                + "Method Name: {0}" + Environment.NewLine
+                                + "Aggregate Type: {1}" + Environment.NewLine
+                                + "Input Type Expected: {2}" + Environment.NewLine
+                                + "Input Type of Aggregate: {3}" + Environment.NewLine
+                                + "Output Type Expected: {4}" + Environment.NewLine
+                                + "Output Type of Aggregage: {5}",
+                                method.Name,
+                                aggType.FullName,
+                                method.GetParameters()[0].ParameterType.FullName,
+                                aggregateInterface.GenericTypeArguments[0].FullName,
+                                method.ReturnType.FullName,
+                                aggregateInterface.GenericTypeArguments[2].FullName));
+                    }
                 }
 
                 // Case 2: Method is a supported built-in extension method on IEnumerable with a type argument
@@ -145,6 +185,17 @@ namespace Microsoft.StreamProcessing.Provider
             if (node == stateParameter) this.foundUnknown = true;
             return base.VisitParameter(node);
         }
+
+        private static LambdaExpression CreateNullableAggregateLambda(Type[] aggregateTypes)
+            => (LambdaExpression)typeof(GroupBySecondPassVisitor)
+            .GetMethod(nameof(CreateNullableAggregate), BindingFlags.Static | BindingFlags.NonPublic)
+            .MakeGenericMethod(aggregateTypes)
+            .Invoke(null, Array.Empty<object>());
+
+        private static Expression<Func<IAggregate<TInput, TState, TOutput>, IAggregate<TInput?, NullOutputWrapper<TState>, TOutput?>>> CreateNullableAggregate<TInput, TState, TOutput>()
+            where TInput : struct
+            where TOutput : struct
+            => aggregate => aggregate.MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
 
         private static Func<Type, Expression> GetCreateMethodForType(string name)
             => type => (Expression)typeof(GroupBySecondPassVisitor)

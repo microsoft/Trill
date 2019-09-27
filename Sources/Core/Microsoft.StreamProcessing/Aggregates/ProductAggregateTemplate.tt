@@ -62,6 +62,15 @@ namespace Microsoft.StreamProcessing.Aggregates
         public static <#= typeName #> Product(this IEnumerable<<#= typeName #>> enumerable)
             => enumerable.Aggregate((<#= typeName #>)1, (s, i) => (<#= typeName #>)(s * i));
 
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(Product<#= typeFriendlyName #>Aggregate))]
+        public static <#= typeName #>? Product(this IEnumerable<<#= typeName #>?> enumerable)
+            => enumerable.Aggregate((<#= typeName #>)1, (s, i) => i == null ? s : (<#= typeName #>)(s * i));
+
 <#
     }
 #>

@@ -139,8 +139,6 @@ namespace ProviderTesting
             var inputObservable = input.ToObservable();
             var output = new List<ValueTuple<string, long>>();
 
-
-
             var queryContainer = new QueryContainer();
             var qstreamable = queryContainer.RegisterStream(inputObservable, o => 0, o => 1);
             var qstreamableCount =
@@ -148,15 +146,12 @@ namespace ProviderTesting
                 group t by (t % 10).ToString() into g
                 select ValueTuple.Create(g.Key, g.Product());
 
-
-
             var results = qstreamableCount
                 .ToTemporalObservable((start, end, payload) => payload)
                 .ForEachAsync(o => output.Add(o));
 
             queryContainer.Restore();
             results.Wait();
-
 
             // Validate against the same IEnumerable query
             var expected =
@@ -167,16 +162,12 @@ namespace ProviderTesting
             Assert.IsTrue(expected.SequenceEqual(output.OrderBy(o => o.Item1)));
         }
 
-
-
         [TestMethod]
         public void AggregateSum()
         {
             var input = Enumerable.Range(0, 100).Select(i => (long)i);
             var inputObservable = input.ToObservable();
             var output = new List<ValueTuple<string, long>>();
-
-
 
             var queryContainer = new QueryContainer();
             var qstreamable = queryContainer.RegisterStream(inputObservable, o => 0, o => 1);
@@ -185,15 +176,12 @@ namespace ProviderTesting
                 group t by (t % 10).ToString() into g
                 select ValueTuple.Create(g.Key, g.Sum());
 
-
-
             var results = qstreamableCount
                 .ToTemporalObservable((start, end, payload) => payload)
                 .ForEachAsync(o => output.Add(o));
 
             queryContainer.Restore();
             results.Wait();
-
 
             // Validate against the same IEnumerable query
             var expected =
@@ -204,7 +192,65 @@ namespace ProviderTesting
             Assert.IsTrue(expected.SequenceEqual(output.OrderBy(o => o.Item1)));
         }
 
+        [TestMethod]
+        public void AggregateNullableProduct()
+        {
+            var input = Enumerable.Range(0, 100).Select(i => (long?)i);
+            var inputObservable = input.ToObservable();
+            var output = new List<ValueTuple<string, long?>>();
 
+            var queryContainer = new QueryContainer();
+            var qstreamable = queryContainer.RegisterStream(inputObservable, o => 0, o => 1);
+            var qstreamableCount =
+                from t in qstreamable
+                group t by (t % 10).ToString() into g
+                select ValueTuple.Create(g.Key, g.Product());
+
+            var results = qstreamableCount
+                .ToTemporalObservable((start, end, payload) => payload)
+                .ForEachAsync(o => output.Add(o));
+
+            queryContainer.Restore();
+            results.Wait();
+
+            // Validate against the same IEnumerable query
+            var expected =
+                (from t in input
+                 group t by (t % 10).ToString() into g
+                 select ValueTuple.Create(g.Key, g.Product()))
+                .ToList();
+            Assert.IsTrue(expected.SequenceEqual(output.OrderBy(o => o.Item1)));
+        }
+
+        [TestMethod]
+        public void AggregateNullableSum()
+        {
+            var input = Enumerable.Range(0, 100).Select(i => (long?)i);
+            var inputObservable = input.ToObservable();
+            var output = new List<ValueTuple<string, long?>>();
+
+            var queryContainer = new QueryContainer();
+            var qstreamable = queryContainer.RegisterStream(inputObservable, o => 0, o => 1);
+            var qstreamableCount =
+                from t in qstreamable
+                group t by (t % 10).ToString() into g
+                select ValueTuple.Create(g.Key, g.Sum());
+
+            var results = qstreamableCount
+                .ToTemporalObservable((start, end, payload) => payload)
+                .ForEachAsync(o => output.Add(o));
+
+            queryContainer.Restore();
+            results.Wait();
+
+            // Validate against the same IEnumerable query
+            var expected =
+                (from t in input
+                 group t by (t % 10).ToString() into g
+                 select ValueTuple.Create(g.Key, g.Sum()))
+                .ToList();
+            Assert.IsTrue(expected.SequenceEqual(output.OrderBy(o => o.Item1)));
+        }
 
         [TestMethod]
         public void QuantizeLifetime()
