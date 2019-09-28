@@ -277,9 +277,27 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// </summary>
         /// <param name="enumerable">The sequence to multiply</param>
         /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductSByteAggregate))]
+        public static sbyte? Product(this IEnumerable<sbyte?> enumerable)
+            => enumerable.Aggregate((sbyte)1, (s, i) => i == null ? s : (sbyte)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
         [Aggregate(typeof(ProductByteAggregate))]
         public static byte Product(this IEnumerable<byte> enumerable)
             => enumerable.Aggregate((byte)1, (s, i) => (byte)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductByteAggregate))]
+        public static byte? Product(this IEnumerable<byte?> enumerable)
+            => enumerable.Aggregate((byte)1, (s, i) => i == null ? s : (byte)(s * i));
 
         /// <summary>
         /// Performs a multiplication of all elements in a sequence
@@ -295,9 +313,27 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// </summary>
         /// <param name="enumerable">The sequence to multiply</param>
         /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductShortAggregate))]
+        public static short? Product(this IEnumerable<short?> enumerable)
+            => enumerable.Aggregate((short)1, (s, i) => i == null ? s : (short)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
         [Aggregate(typeof(ProductUShortAggregate))]
         public static ushort Product(this IEnumerable<ushort> enumerable)
             => enumerable.Aggregate((ushort)1, (s, i) => (ushort)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductUShortAggregate))]
+        public static ushort? Product(this IEnumerable<ushort?> enumerable)
+            => enumerable.Aggregate((ushort)1, (s, i) => i == null ? s : (ushort)(s * i));
 
         /// <summary>
         /// Performs a multiplication of all elements in a sequence
@@ -313,9 +349,27 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// </summary>
         /// <param name="enumerable">The sequence to multiply</param>
         /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductIntAggregate))]
+        public static int? Product(this IEnumerable<int?> enumerable)
+            => enumerable.Aggregate((int)1, (s, i) => i == null ? s : (int)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
         [Aggregate(typeof(ProductUIntAggregate))]
         public static uint Product(this IEnumerable<uint> enumerable)
             => enumerable.Aggregate((uint)1, (s, i) => (uint)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductUIntAggregate))]
+        public static uint? Product(this IEnumerable<uint?> enumerable)
+            => enumerable.Aggregate((uint)1, (s, i) => i == null ? s : (uint)(s * i));
 
         /// <summary>
         /// Performs a multiplication of all elements in a sequence
@@ -331,9 +385,27 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// </summary>
         /// <param name="enumerable">The sequence to multiply</param>
         /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductLongAggregate))]
+        public static long? Product(this IEnumerable<long?> enumerable)
+            => enumerable.Aggregate((long)1, (s, i) => i == null ? s : (long)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
         [Aggregate(typeof(ProductULongAggregate))]
         public static ulong Product(this IEnumerable<ulong> enumerable)
             => enumerable.Aggregate((ulong)1, (s, i) => (ulong)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductULongAggregate))]
+        public static ulong? Product(this IEnumerable<ulong?> enumerable)
+            => enumerable.Aggregate((ulong)1, (s, i) => i == null ? s : (ulong)(s * i));
 
         /// <summary>
         /// Performs a multiplication of all elements in a sequence
@@ -349,9 +421,27 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// </summary>
         /// <param name="enumerable">The sequence to multiply</param>
         /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductFloatAggregate))]
+        public static float? Product(this IEnumerable<float?> enumerable)
+            => enumerable.Aggregate((float)1, (s, i) => i == null ? s : (float)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
         [Aggregate(typeof(ProductDoubleAggregate))]
         public static double Product(this IEnumerable<double> enumerable)
             => enumerable.Aggregate((double)1, (s, i) => (double)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductDoubleAggregate))]
+        public static double? Product(this IEnumerable<double?> enumerable)
+            => enumerable.Aggregate((double)1, (s, i) => i == null ? s : (double)(s * i));
 
         /// <summary>
         /// Performs a multiplication of all elements in a sequence
@@ -367,6 +457,15 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// </summary>
         /// <param name="enumerable">The sequence to multiply</param>
         /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductDecimalAggregate))]
+        public static decimal? Product(this IEnumerable<decimal?> enumerable)
+            => enumerable.Aggregate((decimal)1, (s, i) => i == null ? s : (decimal)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
         [Aggregate(typeof(ProductBigIntegerAggregate))]
         public static BigInteger Product(this IEnumerable<BigInteger> enumerable)
             => enumerable.Aggregate((BigInteger)1, (s, i) => (BigInteger)(s * i));
@@ -376,9 +475,27 @@ namespace Microsoft.StreamProcessing.Aggregates
         /// </summary>
         /// <param name="enumerable">The sequence to multiply</param>
         /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductBigIntegerAggregate))]
+        public static BigInteger? Product(this IEnumerable<BigInteger?> enumerable)
+            => enumerable.Aggregate((BigInteger)1, (s, i) => i == null ? s : (BigInteger)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
         [Aggregate(typeof(ProductComplexAggregate))]
         public static Complex Product(this IEnumerable<Complex> enumerable)
             => enumerable.Aggregate((Complex)1, (s, i) => (Complex)(s * i));
+
+        /// <summary>
+        /// Performs a multiplication of all elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence to multiply</param>
+        /// <returns>The product of all of the elements in the sequence</returns>
+        [Aggregate(typeof(ProductComplexAggregate))]
+        public static Complex? Product(this IEnumerable<Complex?> enumerable)
+            => enumerable.Aggregate((Complex)1, (s, i) => i == null ? s : (Complex)(s * i));
 
     }
 }

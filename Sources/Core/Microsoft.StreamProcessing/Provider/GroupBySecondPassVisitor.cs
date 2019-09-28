@@ -27,6 +27,8 @@ namespace Microsoft.StreamProcessing.Provider
         private readonly List<Type> aggregateStateTypes = new List<Type>();
         private readonly List<Type> aggregateResultTypes = new List<Type>();
 
+        private readonly Dictionary<MethodInfo, Expression> zeroParameterAggregates
+            = new Dictionary<MethodInfo, Expression>();
         private readonly Dictionary<MethodInfo, Func<Type, Expression>> oneParameterAggregates
             = new Dictionary<MethodInfo, Func<Type, Expression>>();
         private bool foundUnknown = false;
@@ -66,6 +68,17 @@ namespace Microsoft.StreamProcessing.Provider
 
             this.oneParameterAggregates.Add(GetMethodInfoForCount(), GetCreateMethodForType(nameof(CreateExpressionForCountAggregate)));
             this.oneParameterAggregates.Add(GetMethodInfoForLongCount(), GetCreateMethodForType(nameof(CreateExpressionForLongCountAggregate)));
+
+            this.zeroParameterAggregates.Add(GetMethodInfoForSumInt(), ExpressionForSumIntAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForSumLong(), ExpressionForSumLongAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForSumFloat(), ExpressionForSumFloatAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForSumDouble(), ExpressionForSumDoubleAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForSumDecimal(), ExpressionForSumDecimalAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumInt(), ExpressionForNullableSumIntAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumLong(), ExpressionForNullableSumLongAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumFloat(), ExpressionForNullableSumFloatAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumDouble(), ExpressionForNullableSumDoubleAggregate);
+            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumDecimal(), ExpressionForNullableSumDecimalAggregate);
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -90,7 +103,47 @@ namespace Microsoft.StreamProcessing.Provider
                         e => e.IsGenericType && e.GetGenericTypeDefinition() == typeof(IAggregate<,,>));
                     if (aggregateInterface == null) throw new InvalidOperationException("AggregateAttribute constructor should have verified that aggregate class must implement IAggregate interface.");
 
-                    aggregateExpression = Expression.New(aggType);
+                    // Type test: input type to aggregate must be the same as the element type of the enumerable,
+                    // and the output type of the aggregate must be the same as the output of the enumerable method
+                    if (aggregateInterface.GenericTypeArguments[0] == stateParameter.Type.GenericTypeArguments[0]
+                        && aggregateInterface.GenericTypeArguments[2] == method.ReturnType)
+                    {
+                        aggregateExpression = Expression.New(aggType);
+                    }
+
+                    // One fallback alternative: if the input and output are both nullable, and their base types
+                    // match the types as stated above, we can create the nullable version of the aggregate
+                    else if (method.GetParameters()[0].ParameterType.GenericTypeArguments[0].IsGenericType
+                        && method.GetParameters()[0].ParameterType.GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(Nullable<>)
+                        && method.ReturnType.IsGenericType
+                        && method.ReturnType.GetGenericTypeDefinition() == typeof(Nullable<>)
+                        && aggregateInterface.GenericTypeArguments[0] == method.GetParameters()[0].ParameterType.GenericTypeArguments[0].GenericTypeArguments[0]
+                        && aggregateInterface.GenericTypeArguments[2] == method.ReturnType.GenericTypeArguments[0])
+                    {
+                        aggregateExpression = CreateNullableAggregateLambda(aggregateInterface.GenericTypeArguments)
+                            .ReplaceParametersInBody(Expression.New(aggType));
+                        aggregateInterface = aggregateExpression.Type;
+                    }
+
+                    // Otherwise, we need to alert the user to the issue
+                    else
+                    {
+                        throw new InvalidOperationException(
+                            string.Format(
+                                "The type signature of the aggregate does not match the input and output types for the attached method." + Environment.NewLine
+                                + "Method Name: {0}" + Environment.NewLine
+                                + "Aggregate Type: {1}" + Environment.NewLine
+                                + "Input Type Expected: {2}" + Environment.NewLine
+                                + "Input Type of Aggregate: {3}" + Environment.NewLine
+                                + "Output Type Expected: {4}" + Environment.NewLine
+                                + "Output Type of Aggregage: {5}",
+                                method.Name,
+                                aggType.FullName,
+                                method.GetParameters()[0].ParameterType.FullName,
+                                aggregateInterface.GenericTypeArguments[0].FullName,
+                                method.ReturnType.FullName,
+                                aggregateInterface.GenericTypeArguments[2].FullName));
+                    }
                 }
 
                 // Case 2: Method is a supported built-in extension method on IEnumerable with a type argument
@@ -102,7 +155,16 @@ namespace Microsoft.StreamProcessing.Provider
                     aggregateInterface = aggregateExpression.Type;
                 }
 
-                if (aggregateExpression != null)
+                // Case 3: Method is a supported built-in extension method on IEnumerable without a type argument
+                else if (!method.IsGenericMethod && this.zeroParameterAggregates.TryGetValue(
+                    method,
+                    out aggregateExpression))
+                {
+                    aggregateInterface = aggregateExpression.Type.GetInterfaces()
+                        .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IAggregate<,,>)); ;
+                }
+
+                if (aggregateInterface != null)
                 {
                     this.seenAggregates.Add(node);
                     var genericArguments = aggregateInterface.GetGenericArguments();
@@ -123,6 +185,17 @@ namespace Microsoft.StreamProcessing.Provider
             if (node == stateParameter) this.foundUnknown = true;
             return base.VisitParameter(node);
         }
+
+        private static LambdaExpression CreateNullableAggregateLambda(Type[] aggregateTypes)
+            => (LambdaExpression)typeof(GroupBySecondPassVisitor)
+            .GetMethod(nameof(CreateNullableAggregate), BindingFlags.Static | BindingFlags.NonPublic)
+            .MakeGenericMethod(aggregateTypes)
+            .Invoke(null, Array.Empty<object>());
+
+        private static Expression<Func<IAggregate<TInput, TState, TOutput>, IAggregate<TInput?, NullOutputWrapper<TState>, TOutput?>>> CreateNullableAggregate<TInput, TState, TOutput>()
+            where TInput : struct
+            where TOutput : struct
+            => aggregate => aggregate.MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
 
         private static Func<Type, Expression> GetCreateMethodForType(string name)
             => type => (Expression)typeof(GroupBySecondPassVisitor)
@@ -152,6 +225,161 @@ namespace Microsoft.StreamProcessing.Provider
         {
             Expression<Func<IAggregate<T, ulong, long>>> expression = () => new CountAggregate<T>().TransformOutput(o => (long)o);
             return expression.Body;
+        }
+
+        private static MethodInfo GetMethodInfoForSumInt()
+        {
+            Expression<Func<IEnumerable<int>, int>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForSumIntAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<int, int, int>>> expression = () => new SumIntAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForSumLong()
+        {
+            Expression<Func<IEnumerable<long>, long>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForSumLongAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<long, long, long>>> expression = () => new SumLongAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForSumFloat()
+        {
+            Expression<Func<IEnumerable<float>, float>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForSumFloatAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<float, float, float>>> expression = () => new SumFloatAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForSumDouble()
+        {
+            Expression<Func<IEnumerable<double>, double>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForSumDoubleAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<double, double, double>>> expression = () => new SumDoubleAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForSumDecimal()
+        {
+            Expression<Func<IEnumerable<decimal>, decimal>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForSumDecimalAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<decimal, decimal, decimal>>> expression = () => new SumDecimalAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumInt()
+        {
+            Expression<Func<IEnumerable<int?>, int?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumIntAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<int?, NullOutputWrapper<int>, int?>>> expression
+                    = () => new SumIntAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumLong()
+        {
+            Expression<Func<IEnumerable<long?>, long?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumLongAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<long?, NullOutputWrapper<long>, long?>>> expression
+                    = () => new SumLongAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumFloat()
+        {
+            Expression<Func<IEnumerable<float?>, float?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumFloatAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<float?, NullOutputWrapper<float>, float?>>> expression
+                    = () => new SumFloatAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumDouble()
+        {
+            Expression<Func<IEnumerable<double?>, double?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumDoubleAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<double?, NullOutputWrapper<double>, double?>>> expression
+                    = () => new SumDoubleAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSumDecimal()
+        {
+            Expression<Func<IEnumerable<decimal?>, decimal?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSumDecimalAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<decimal?, NullOutputWrapper<decimal>, decimal?>>> expression
+                    = () => new SumDecimalAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
         }
     }
 }
