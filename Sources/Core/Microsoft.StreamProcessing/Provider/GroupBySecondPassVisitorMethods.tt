@@ -1,0 +1,90 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using Microsoft.StreamProcessing.Aggregates;
+
+namespace Microsoft.StreamProcessing.Provider
+{
+    internal sealed partial class GroupBySecondPassVisitor : ExpressionVisitor
+    {
+<# foreach (var typeName in new [] { "Int", "Long", "Float", "Double", "Decimal" }) {
+        var type = typeName.ToLower();
+        var sumType = type == "int" ? "long" : type;
+        var resultType = type == "int" ? "double" : type == "long" ? "double" : type; #>
+        private static MethodInfo GetMethodInfoForSum<#= typeName #>()
+        {
+            Expression<Func<IEnumerable<<#= type #>>, <#= type #>>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForSum<#= typeName #>Aggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<<#= type #>, <#= type #>, <#= type #>>>> expression = () => new Sum<#= typeName #>Aggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableSum<#= typeName #>()
+        {
+            Expression<Func<IEnumerable<<#= type #>?>, <#= type #>?>> expression = (e) => e.Sum();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableSum<#= typeName #>Aggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<<#= type #>?, NullOutputWrapper<<#= type #>>, <#= type #>?>>> expression
+                    = () => new Sum<#= typeName #>Aggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForAverage<#= typeName #>()
+        {
+            Expression<Func<IEnumerable<<#= type #>>, <#= resultType #>>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForAverage<#= typeName #>Aggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<<#= type #>, AverageState<<#= sumType #>>, <#= resultType #>>>> expression = () => new Average<#= typeName #>Aggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableAverage<#= typeName #>()
+        {
+            Expression<Func<IEnumerable<<#= type #>?>, <#= resultType #>?>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableAverage<#= typeName #>Aggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<<#= type #>?, AverageState<<#= sumType #>>, <#= resultType #>?>>> expression
+                    = () => new AverageNullable<#= typeName #>Aggregate();
+                return expression.Body;
+            }
+        }
+
+<# } #>
+    }
+}

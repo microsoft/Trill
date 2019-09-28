@@ -362,6 +362,10 @@
     <None Update="ProductAggregateTemplate.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
+    <None Update="Provider\GroupBySecondPassVisitorMethods.tt">
+      <LastGenOutput>GroupBySecondPassVisitorMethods.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
     <None Update="Provider\InOrderVisitorGroupAggregate.tt">
       <LastGenOutput>InOrderVisitorGroupAggregate.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -1112,6 +1116,11 @@
     </Compile>
     <Compile Update="Provider\InOrderVisitorGroupAggregate.cs">
       <DependentUpon>InOrderVisitorGroupAggregate.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Provider\GroupBySecondPassVisitorMethods.cs">
+      <DependentUpon>GroupBySecondPassVisitorMethods.tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>

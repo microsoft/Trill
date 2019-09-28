@@ -843,8 +843,9 @@ namespace SimpleTesting
         {
             const int key = 0; // Just use one key as the key and payload
             const long duration = 5;
-            PartitionedStreamEvent<int, int> CreateInterval(long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
-            PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+
+            static PartitionedStreamEvent<int, int> CreateInterval(long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+            static PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
 
             var leftData = new PartitionedStreamEvent<int, int>[]
             {
@@ -961,11 +962,11 @@ namespace SimpleTesting
             using (new ConfigModifier().DataBatchSize(4).Modify())
             {
                 const long duration = 5;
-                PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
-                PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
-                PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
-                PartitionedStreamEvent<int, int> CreatePunctuation(int key, long time) => PartitionedStreamEvent.CreatePunctuation<int, int>(key, time);
-                PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+                static PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
+                static PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
+                static PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                static PartitionedStreamEvent<int, int> CreatePunctuation(int key, long time) => PartitionedStreamEvent.CreatePunctuation<int, int>(key, time);
+                static PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
 
                 var left = new Subject<PartitionedStreamEvent<int, int>>();
                 var right = new Subject<PartitionedStreamEvent<int, int>>();
@@ -1048,11 +1049,11 @@ namespace SimpleTesting
             using (new ConfigModifier().DataBatchSize(4).Modify())
             {
                 const long duration = 5;
-                PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
-                PartitionedStreamEvent<int, int> CreateEnd(int key, long time, long originalStart) => PartitionedStreamEvent.CreateEnd(key, time, originalStart, key);
-                PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
-                PartitionedStreamEvent<int, int> CreatePunctuation(int key, long time) => PartitionedStreamEvent.CreatePunctuation<int, int>(key, time);
-                PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+                static PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
+                static PartitionedStreamEvent<int, int> CreateEnd(int key, long time, long originalStart) => PartitionedStreamEvent.CreateEnd(key, time, originalStart, key);
+                static PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                static PartitionedStreamEvent<int, int> CreatePunctuation(int key, long time) => PartitionedStreamEvent.CreatePunctuation<int, int>(key, time);
+                static PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
 
                 var left = new Subject<PartitionedStreamEvent<int, int>>();
                 var right = new Subject<PartitionedStreamEvent<int, int>>();
@@ -1133,11 +1134,11 @@ namespace SimpleTesting
             using (new ConfigModifier().DataBatchSize(4).Modify())
             {
                 const long duration = 5;
-                PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
-                PartitionedStreamEvent<int, int> CreateEnd(int key, long time, long originalStart) => PartitionedStreamEvent.CreateEnd(key, time, originalStart, key);
-                PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
-                PartitionedStreamEvent<int, int> CreatePunctuation(int key, long time) => PartitionedStreamEvent.CreatePunctuation<int, int>(key, time);
-                PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
+                static PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
+                static PartitionedStreamEvent<int, int> CreateEnd(int key, long time, long originalStart) => PartitionedStreamEvent.CreateEnd(key, time, originalStart, key);
+                static PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                static PartitionedStreamEvent<int, int> CreatePunctuation(int key, long time) => PartitionedStreamEvent.CreatePunctuation<int, int>(key, time);
+                static PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
 
                 var left = new Subject<PartitionedStreamEvent<int, int>>();
                 var right = new Subject<PartitionedStreamEvent<int, int>>();
