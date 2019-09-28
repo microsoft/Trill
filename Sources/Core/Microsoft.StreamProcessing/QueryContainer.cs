@@ -21,6 +21,7 @@ namespace Microsoft.StreamProcessing
     public sealed class QueryContainer
     {
         private readonly object sentinel = new object();
+        private readonly InOrderVisitor visitor;
 
         /// <summary>
         /// ISurrogate to be used in serialization in checkpoints and serialized StreamMessage
@@ -50,7 +51,11 @@ namespace Microsoft.StreamProcessing
         /// Creates a new instance of a query container for use in checkpointable queries.
         /// </summary>
         /// <param name="surrogate">An object that offers serialization surrogacy.</param>
-        public QueryContainer(ISurrogate surrogate) => this.Surrogate = surrogate;
+        public QueryContainer(ISurrogate surrogate)
+        {
+            this.visitor = new InOrderVisitor(this);
+            this.Surrogate = surrogate;
+        }
 
         internal void RegisterIngressSite(string identifier)
         {
@@ -158,7 +163,7 @@ namespace Microsoft.StreamProcessing
         {
             Expression<Func<IObservable<TPayload>, IStreamable<Empty, TPayload>>> ingress =
                 (o) => this.RegisterTemporalInput(o, startEdgeSelector, endEdgeSelector, null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.EndOfStream, Guid.NewGuid().ToString());
-            return InOrderVisitor.Instance.CreateOpaqueQuery<TPayload>(ingress.ReplaceParametersInBody(Expression.Constant(observable))); ;
+            return visitor.CreateOpaqueQuery<TPayload>(ingress.ReplaceParametersInBody(Expression.Constant(observable))); ;
         }
     }
 

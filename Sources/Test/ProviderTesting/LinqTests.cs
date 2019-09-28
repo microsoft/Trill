@@ -39,15 +39,12 @@ namespace ProviderTesting
             var inputObservable = input.ToObservable();
             var output = new List<ValueTuple<long, long, string>>();
 
-
             var queryContainer = new QueryContainer();
             var qstreamable = queryContainer.RegisterStream(inputObservable, o => o.Item1, o => o.Item2);
             var qstreamableFiltered =
                 from t in qstreamable
                 where t.Item1 % 2 == 0
                 select t.Item3;
-
-
 
             var results = qstreamableFiltered
                 .ToTemporalObservable((start, end, payload) => ValueTuple.Create(start, end, payload))
@@ -64,16 +61,12 @@ namespace ProviderTesting
             Assert.IsTrue(expected.SequenceEqual(output));
         }
 
-
-
         [TestMethod]
         public void GroupBy()
         {
             var input = Enumerable.Range(1, 100);
             var inputObservable = input.ToObservable();
             var output = new List<int>();
-
-
 
             var queryContainer = new QueryContainer();
             var qstreamable = queryContainer.RegisterStream(inputObservable, o => 0, o => 1);
@@ -82,12 +75,9 @@ namespace ProviderTesting
                 group t by (t % 3) into g
                 select g.Key;
 
-
-
             var results = qstreamableCount
                 .ToTemporalObservable((start, end, payload) => payload)
                 .ForEachAsync(o => output.Add(o));
-
 
             queryContainer.Restore();
             results.Wait();
@@ -101,16 +91,12 @@ namespace ProviderTesting
             Assert.IsTrue(expected.SequenceEqual(output));
         }
 
-
-
         [TestMethod]
         public void AggregateCount()
         {
             var input = Enumerable.Range(1, 100);
             var inputObservable = input.ToObservable();
             var output = new List<int>();
-
-
 
             var queryContainer = new QueryContainer();
             var qstreamable = queryContainer.RegisterStream(inputObservable, o => 0, o => 1);
@@ -119,12 +105,9 @@ namespace ProviderTesting
                 group t by (t % 3) into g
                 select g.Count();
 
-
-
             var results = qstreamableCount
                 .ToTemporalObservable((start, end, payload) => payload)
                 .ForEachAsync(o => output.Add(o));
-
 
             queryContainer.Restore();
             results.Wait();
@@ -193,6 +176,36 @@ namespace ProviderTesting
         }
 
         [TestMethod]
+        public void AggregateAverage()
+        {
+            var input = Enumerable.Range(0, 100).Select(i => (long)i);
+            var inputObservable = input.ToObservable();
+            var output = new List<ValueTuple<string, double>>();
+
+            var queryContainer = new QueryContainer();
+            var qstreamable = queryContainer.RegisterStream(inputObservable, o => 0, o => 1);
+            var qstreamableCount =
+                from t in qstreamable
+                group t by (t % 10).ToString() into g
+                select ValueTuple.Create(g.Key, g.Average());
+
+            var results = qstreamableCount
+                .ToTemporalObservable((start, end, payload) => payload)
+                .ForEachAsync(o => output.Add(o));
+
+            queryContainer.Restore();
+            results.Wait();
+
+            // Validate against the same IEnumerable query
+            var expected =
+                (from t in input
+                 group t by (t % 10).ToString() into g
+                 select ValueTuple.Create(g.Key, g.Average()))
+                .ToList();
+            Assert.IsTrue(expected.SequenceEqual(output.OrderBy(o => o.Item1)));
+        }
+
+        [TestMethod]
         public void AggregateNullableProduct()
         {
             var input = Enumerable.Range(0, 100).Select(i => (long?)i);
@@ -253,13 +266,41 @@ namespace ProviderTesting
         }
 
         [TestMethod]
+        public void AggregateNullableAverage()
+        {
+            var input = Enumerable.Range(0, 100).Select(i => (long?)i);
+            var inputObservable = input.ToObservable();
+            var output = new List<ValueTuple<string, double?>>();
+
+            var queryContainer = new QueryContainer();
+            var qstreamable = queryContainer.RegisterStream(inputObservable, o => 0, o => 1);
+            var qstreamableCount =
+                from t in qstreamable
+                group t by (t % 10).ToString() into g
+                select ValueTuple.Create(g.Key, g.Average());
+
+            var results = qstreamableCount
+                .ToTemporalObservable((start, end, payload) => payload)
+                .ForEachAsync(o => output.Add(o));
+
+            queryContainer.Restore();
+            results.Wait();
+
+            // Validate against the same IEnumerable query
+            var expected =
+                (from t in input
+                 group t by (t % 10).ToString() into g
+                 select ValueTuple.Create(g.Key, g.Average()))
+                .ToList();
+            Assert.IsTrue(expected.SequenceEqual(output.OrderBy(o => o.Item1)));
+        }
+
+        [TestMethod]
         public void QuantizeLifetime()
         {
             var input = Enumerable.Range(0, 100);
             var inputObservable = input.ToObservable();
             var output = new List<ValueTuple<long, long, int>>();
-
-
 
             var queryContainer = new QueryContainer();
             var qstreamable = queryContainer.RegisterStream(inputObservable, o => o, o => o + 1);
@@ -267,15 +308,12 @@ namespace ProviderTesting
                 from t in qstreamable.QuantizeLifetime(windowSize: 10, period: 10)
                 select t;
 
-
-
             var results = qstreamableCount
                 .ToTemporalObservable((start, end, payload) => ValueTuple.Create(start, end, payload))
                 .ForEachAsync(o => output.Add(o));
 
             queryContainer.Restore();
             results.Wait();
-
 
             // Validate against the same IEnumerable query
             var expected = input

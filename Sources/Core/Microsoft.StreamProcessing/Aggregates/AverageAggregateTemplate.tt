@@ -4,6 +4,8 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Runtime.Serialization;
@@ -104,4 +106,49 @@ namespace Microsoft.StreamProcessing.Aggregates
 <#
     }
 #>
+
+    /// <summary>
+    /// Extension methods to allow more aggregates
+    /// </summary>
+    public static partial class AggregateExtensions
+    {
+<#
+    // Create average aggregates.
+    foreach (var averageTypes in averageTypesNotBuiltIn)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName;
+#>
+        /// <summary>
+        /// Performs an average of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average</param>
+        /// <returns>The average of all of the elements in the sequence</returns>
+        [Aggregate(typeof(Average<#= typeFriendlyName #>Aggregate))]
+        public static <#= returnTypeName #> Average(this IEnumerable<<#= typeName #>> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (<#= sumTypeName #>)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (<#= sumTypeName #>)(s.Item2 + i)))
+                .Yield().Select(s => (<#= returnTypeName #>)s.Item1 / (<#= returnTypeName #>)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average</param>
+        /// <returns>The average of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullable<#= typeFriendlyName #>Aggregate))]
+        public static <#= returnTypeName #>? Average(this IEnumerable<<#= typeName #>?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (<#= sumTypeName #>)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (<#= sumTypeName #>)(s.Item2 + i)))
+                .Yield().Select(s => (<#= returnTypeName #>)s.Item1 / (<#= returnTypeName #>)s.Item2).First();
+
+<#
+    }
+#>
+    }
 }

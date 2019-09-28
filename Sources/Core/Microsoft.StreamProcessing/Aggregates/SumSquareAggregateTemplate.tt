@@ -4,6 +4,8 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 
@@ -38,4 +40,39 @@ namespace Microsoft.StreamProcessing.Aggregates
 <#
     }
 #>
+
+    /// <summary>
+    /// Extension methods to allow more aggregates
+    /// </summary>
+    public static partial class AggregateExtensions
+    {
+<#
+    // Create sum of squares aggregates (for non-nullable types).
+    foreach (var sumTypes in sumTypesToGenerate)
+    {
+        var typeName = sumTypes.TypeName;
+        var typeFriendlyName = sumTypes.InputTypeFriendlyName;
+#>
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquare<#= typeFriendlyName #>Aggregate))]
+        public static <#= typeName #> SumSquare(this IEnumerable<<#= typeName #>> enumerable)
+            => enumerable.Aggregate((<#= typeName #>)0, (s, i) => (<#= typeName #>)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquare<#= typeFriendlyName #>Aggregate))]
+        public static <#= typeName #>? SumSquare(this IEnumerable<<#= typeName #>?> enumerable)
+            => enumerable.Aggregate((<#= typeName #>)0, (s, i) => i == null ? s : (<#= typeName #>)(s + (i * i)));
+
+<#
+    }
+#>
+    }
 }

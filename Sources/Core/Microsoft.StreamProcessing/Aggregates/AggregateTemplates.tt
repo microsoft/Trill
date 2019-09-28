@@ -20,6 +20,18 @@ var averageTypesToGenerate = new[]
     new { InputTypeFriendlyName = "Complex", TypeName = "Complex", SumTypeName = "Complex", ReturnTypeName = "Complex" }
 };
 
+var averageTypesNotBuiltIn = new[]
+{
+    new { InputTypeFriendlyName = "SByte", TypeName = "sbyte", SumTypeName = "long", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Short", TypeName = "short", SumTypeName = "long", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Byte", TypeName = "byte", SumTypeName = "ulong", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "UShort", TypeName = "ushort", SumTypeName = "ulong", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "UInt", TypeName = "uint", SumTypeName = "ulong", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "ULong", TypeName = "ulong", SumTypeName = "ulong", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "BigInteger", TypeName = "BigInteger", SumTypeName = "BigInteger", ReturnTypeName = "double" },
+    new { InputTypeFriendlyName = "Complex", TypeName = "Complex", SumTypeName = "Complex", ReturnTypeName = "Complex" }
+};
+
 var sumTypesToGenerate = new[]
 {
     new { InputTypeFriendlyName = "SByte", TypeName = "sbyte" },

@@ -596,6 +596,7 @@ namespace Microsoft.StreamProcessing.Provider
             var methodExpression = (MethodCallExpression)argument;
             var constructor = GroupByFirstPassVisitor.CreateConstructorFromSelect(selectExpression);
             var rewritten = GroupBySecondPassVisitor.CreateAggregateProfile(
+                this.container,
                 constructor,
                 out var createdAggregates,
                 out var stateTypes,

@@ -3,6 +3,8 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 
@@ -254,5 +256,246 @@ namespace Microsoft.StreamProcessing.Aggregates
             => (leftSum, rightSum) => (Complex)(leftSum + rightSum);
 
         public Expression<Func<Complex, Complex>> ComputeResult() => sum => sum;
+    }
+
+    /// <summary>
+    /// Extension methods to allow more aggregates
+    /// </summary>
+    public static partial class AggregateExtensions
+    {
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareSByteAggregate))]
+        public static sbyte SumSquare(this IEnumerable<sbyte> enumerable)
+            => enumerable.Aggregate((sbyte)0, (s, i) => (sbyte)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareSByteAggregate))]
+        public static sbyte? SumSquare(this IEnumerable<sbyte?> enumerable)
+            => enumerable.Aggregate((sbyte)0, (s, i) => i == null ? s : (sbyte)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareByteAggregate))]
+        public static byte SumSquare(this IEnumerable<byte> enumerable)
+            => enumerable.Aggregate((byte)0, (s, i) => (byte)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareByteAggregate))]
+        public static byte? SumSquare(this IEnumerable<byte?> enumerable)
+            => enumerable.Aggregate((byte)0, (s, i) => i == null ? s : (byte)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareShortAggregate))]
+        public static short SumSquare(this IEnumerable<short> enumerable)
+            => enumerable.Aggregate((short)0, (s, i) => (short)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareShortAggregate))]
+        public static short? SumSquare(this IEnumerable<short?> enumerable)
+            => enumerable.Aggregate((short)0, (s, i) => i == null ? s : (short)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareUShortAggregate))]
+        public static ushort SumSquare(this IEnumerable<ushort> enumerable)
+            => enumerable.Aggregate((ushort)0, (s, i) => (ushort)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareUShortAggregate))]
+        public static ushort? SumSquare(this IEnumerable<ushort?> enumerable)
+            => enumerable.Aggregate((ushort)0, (s, i) => i == null ? s : (ushort)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareIntAggregate))]
+        public static int SumSquare(this IEnumerable<int> enumerable)
+            => enumerable.Aggregate((int)0, (s, i) => (int)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareIntAggregate))]
+        public static int? SumSquare(this IEnumerable<int?> enumerable)
+            => enumerable.Aggregate((int)0, (s, i) => i == null ? s : (int)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareUIntAggregate))]
+        public static uint SumSquare(this IEnumerable<uint> enumerable)
+            => enumerable.Aggregate((uint)0, (s, i) => (uint)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareUIntAggregate))]
+        public static uint? SumSquare(this IEnumerable<uint?> enumerable)
+            => enumerable.Aggregate((uint)0, (s, i) => i == null ? s : (uint)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareLongAggregate))]
+        public static long SumSquare(this IEnumerable<long> enumerable)
+            => enumerable.Aggregate((long)0, (s, i) => (long)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareLongAggregate))]
+        public static long? SumSquare(this IEnumerable<long?> enumerable)
+            => enumerable.Aggregate((long)0, (s, i) => i == null ? s : (long)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareULongAggregate))]
+        public static ulong SumSquare(this IEnumerable<ulong> enumerable)
+            => enumerable.Aggregate((ulong)0, (s, i) => (ulong)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareULongAggregate))]
+        public static ulong? SumSquare(this IEnumerable<ulong?> enumerable)
+            => enumerable.Aggregate((ulong)0, (s, i) => i == null ? s : (ulong)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareFloatAggregate))]
+        public static float SumSquare(this IEnumerable<float> enumerable)
+            => enumerable.Aggregate((float)0, (s, i) => (float)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareFloatAggregate))]
+        public static float? SumSquare(this IEnumerable<float?> enumerable)
+            => enumerable.Aggregate((float)0, (s, i) => i == null ? s : (float)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareDoubleAggregate))]
+        public static double SumSquare(this IEnumerable<double> enumerable)
+            => enumerable.Aggregate((double)0, (s, i) => (double)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareDoubleAggregate))]
+        public static double? SumSquare(this IEnumerable<double?> enumerable)
+            => enumerable.Aggregate((double)0, (s, i) => i == null ? s : (double)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareDecimalAggregate))]
+        public static decimal SumSquare(this IEnumerable<decimal> enumerable)
+            => enumerable.Aggregate((decimal)0, (s, i) => (decimal)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareDecimalAggregate))]
+        public static decimal? SumSquare(this IEnumerable<decimal?> enumerable)
+            => enumerable.Aggregate((decimal)0, (s, i) => i == null ? s : (decimal)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareBigIntegerAggregate))]
+        public static BigInteger SumSquare(this IEnumerable<BigInteger> enumerable)
+            => enumerable.Aggregate((BigInteger)0, (s, i) => (BigInteger)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareBigIntegerAggregate))]
+        public static BigInteger? SumSquare(this IEnumerable<BigInteger?> enumerable)
+            => enumerable.Aggregate((BigInteger)0, (s, i) => i == null ? s : (BigInteger)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareComplexAggregate))]
+        public static Complex SumSquare(this IEnumerable<Complex> enumerable)
+            => enumerable.Aggregate((Complex)0, (s, i) => (Complex)(s + (i * i)));
+
+        /// <summary>
+        /// Performs a summation of all squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the sum of squares</param>
+        /// <returns>The sum of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(SumSquareComplexAggregate))]
+        public static Complex? SumSquare(this IEnumerable<Complex?> enumerable)
+            => enumerable.Aggregate((Complex)0, (s, i) => i == null ? s : (Complex)(s + (i * i)));
+
     }
 }

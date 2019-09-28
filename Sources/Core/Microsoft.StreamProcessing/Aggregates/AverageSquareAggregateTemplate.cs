@@ -3,6 +3,8 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 
@@ -826,5 +828,350 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public Expression<Func<AverageState<Complex>, Complex?>> ComputeResult()
             => state => state.Count != 0 ? (Complex)state.Sum / state.Count : (Complex?)null;
+    }
+
+    /// <summary>
+    /// Extension methods to allow more aggregates
+    /// </summary>
+    public static partial class AggregateExtensions
+    {
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageSByteAggregate))]
+        public static double AverageSquare(this IEnumerable<sbyte> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (long)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (long)(s.Item2 + ((long)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableSByteAggregate))]
+        public static double? AverageSquare(this IEnumerable<sbyte?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (long)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (long)(s.Item2 + ((long)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageShortAggregate))]
+        public static double AverageSquare(this IEnumerable<short> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (long)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (long)(s.Item2 + ((long)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableShortAggregate))]
+        public static double? AverageSquare(this IEnumerable<short?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (long)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (long)(s.Item2 + ((long)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageIntAggregate))]
+        public static double AverageSquare(this IEnumerable<int> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (long)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (long)(s.Item2 + ((long)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableIntAggregate))]
+        public static double? AverageSquare(this IEnumerable<int?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (long)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (long)(s.Item2 + ((long)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageLongAggregate))]
+        public static double AverageSquare(this IEnumerable<long> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (long)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (long)(s.Item2 + ((long)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableLongAggregate))]
+        public static double? AverageSquare(this IEnumerable<long?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (long)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (long)(s.Item2 + ((long)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageByteAggregate))]
+        public static double AverageSquare(this IEnumerable<byte> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (ulong)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (ulong)(s.Item2 + ((ulong)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableByteAggregate))]
+        public static double? AverageSquare(this IEnumerable<byte?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (ulong)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (ulong)(s.Item2 + ((ulong)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageUShortAggregate))]
+        public static double AverageSquare(this IEnumerable<ushort> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (ulong)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (ulong)(s.Item2 + ((ulong)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableUShortAggregate))]
+        public static double? AverageSquare(this IEnumerable<ushort?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (ulong)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (ulong)(s.Item2 + ((ulong)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageUIntAggregate))]
+        public static double AverageSquare(this IEnumerable<uint> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (ulong)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (ulong)(s.Item2 + ((ulong)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableUIntAggregate))]
+        public static double? AverageSquare(this IEnumerable<uint?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (ulong)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (ulong)(s.Item2 + ((ulong)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageULongAggregate))]
+        public static double AverageSquare(this IEnumerable<ulong> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (ulong)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (ulong)(s.Item2 + ((ulong)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableULongAggregate))]
+        public static double? AverageSquare(this IEnumerable<ulong?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (ulong)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (ulong)(s.Item2 + ((ulong)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageFloatAggregate))]
+        public static float AverageSquare(this IEnumerable<float> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (float)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (float)(s.Item2 + ((float)i * i))))
+                .Yield().Select(s => (float)s.Item1 / (float)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableFloatAggregate))]
+        public static float? AverageSquare(this IEnumerable<float?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (float)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (float)(s.Item2 + ((float)i * i))))
+                .Yield().Select(s => (float)s.Item1 / (float)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageDoubleAggregate))]
+        public static double AverageSquare(this IEnumerable<double> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (double)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (double)(s.Item2 + ((double)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableDoubleAggregate))]
+        public static double? AverageSquare(this IEnumerable<double?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (double)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (double)(s.Item2 + ((double)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageDecimalAggregate))]
+        public static decimal AverageSquare(this IEnumerable<decimal> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (decimal)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (decimal)(s.Item2 + ((decimal)i * i))))
+                .Yield().Select(s => (decimal)s.Item1 / (decimal)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableDecimalAggregate))]
+        public static decimal? AverageSquare(this IEnumerable<decimal?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (decimal)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (decimal)(s.Item2 + ((decimal)i * i))))
+                .Yield().Select(s => (decimal)s.Item1 / (decimal)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageBigIntegerAggregate))]
+        public static double AverageSquare(this IEnumerable<BigInteger> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (BigInteger)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (BigInteger)(s.Item2 + ((BigInteger)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableBigIntegerAggregate))]
+        public static double? AverageSquare(this IEnumerable<BigInteger?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (BigInteger)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (BigInteger)(s.Item2 + ((BigInteger)i * i))))
+                .Yield().Select(s => (double)s.Item1 / (double)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageComplexAggregate))]
+        public static Complex AverageSquare(this IEnumerable<Complex> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (Complex)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (Complex)(s.Item2 + ((Complex)i * i))))
+                .Yield().Select(s => (Complex)s.Item1 / (Complex)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullableComplexAggregate))]
+        public static Complex? AverageSquare(this IEnumerable<Complex?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (Complex)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (Complex)(s.Item2 + ((Complex)i * i))))
+                .Yield().Select(s => (Complex)s.Item1 / (Complex)s.Item2).First();
+
     }
 }

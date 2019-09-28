@@ -19,6 +19,37 @@ namespace Microsoft.StreamProcessing.Provider
     /// </summary>
     internal sealed class GroupBySecondPassVisitor : ExpressionVisitor
     {
+        private static readonly Lazy<Dictionary<MethodInfo, Expression>> ZeroParameterAggregates
+            = new Lazy<Dictionary<MethodInfo, Expression>>(() => new Dictionary<MethodInfo, Expression>
+                {
+                    { GetMethodInfoForSumInt(), ExpressionForSumIntAggregate },
+                    { GetMethodInfoForSumLong(), ExpressionForSumLongAggregate },
+                    { GetMethodInfoForSumFloat(), ExpressionForSumFloatAggregate },
+                    { GetMethodInfoForSumDouble(), ExpressionForSumDoubleAggregate },
+                    { GetMethodInfoForSumDecimal(), ExpressionForSumDecimalAggregate },
+                    { GetMethodInfoForNullableSumInt(), ExpressionForNullableSumIntAggregate },
+                    { GetMethodInfoForNullableSumLong(), ExpressionForNullableSumLongAggregate },
+                    { GetMethodInfoForNullableSumFloat(), ExpressionForNullableSumFloatAggregate },
+                    { GetMethodInfoForNullableSumDouble(), ExpressionForNullableSumDoubleAggregate },
+                    { GetMethodInfoForNullableSumDecimal(), ExpressionForNullableSumDecimalAggregate },
+                    { GetMethodInfoForAverageInt(), ExpressionForAverageIntAggregate },
+                    { GetMethodInfoForAverageLong(), ExpressionForAverageLongAggregate },
+                    { GetMethodInfoForAverageFloat(), ExpressionForAverageFloatAggregate },
+                    { GetMethodInfoForAverageDouble(), ExpressionForAverageDoubleAggregate },
+                    { GetMethodInfoForAverageDecimal(), ExpressionForAverageDecimalAggregate },
+                    { GetMethodInfoForNullableAverageInt(), ExpressionForNullableAverageIntAggregate },
+                    { GetMethodInfoForNullableAverageLong(), ExpressionForNullableAverageLongAggregate },
+                    { GetMethodInfoForNullableAverageFloat(), ExpressionForNullableAverageFloatAggregate },
+                    { GetMethodInfoForNullableAverageDouble(), ExpressionForNullableAverageDoubleAggregate },
+                    { GetMethodInfoForNullableAverageDecimal(), ExpressionForNullableAverageDecimalAggregate },
+                });
+        private static readonly Lazy<Dictionary<MethodInfo, Func<Type, Expression>>> OneParameterAggregates
+            = new Lazy<Dictionary<MethodInfo, Func<Type, Expression>>>(() => new Dictionary<MethodInfo, Func<Type, Expression>>
+            {
+                { GetMethodInfoForCount(), GetCreateMethodForType(nameof(CreateExpressionForCountAggregate)) },
+                { GetMethodInfoForLongCount(), GetCreateMethodForType(nameof(CreateExpressionForLongCountAggregate)) },
+            });
+
         private readonly ParameterExpression stateParameter;
         private readonly ParameterExpression windowParameter;
         private readonly List<Expression> seenAggregates = new List<Expression>();
@@ -26,14 +57,12 @@ namespace Microsoft.StreamProcessing.Provider
         private readonly List<Expression> createdAggregates = new List<Expression>();
         private readonly List<Type> aggregateStateTypes = new List<Type>();
         private readonly List<Type> aggregateResultTypes = new List<Type>();
+        private readonly QueryContainer container;
 
-        private readonly Dictionary<MethodInfo, Expression> zeroParameterAggregates
-            = new Dictionary<MethodInfo, Expression>();
-        private readonly Dictionary<MethodInfo, Func<Type, Expression>> oneParameterAggregates
-            = new Dictionary<MethodInfo, Func<Type, Expression>>();
         private bool foundUnknown = false;
 
         public static LambdaExpression CreateAggregateProfile(
+            QueryContainer container,
             LambdaExpression constructorExpression,
             out List<Expression> createdAggregates,
             out List<Type> aggregateStateTypes,
@@ -46,7 +75,7 @@ namespace Microsoft.StreamProcessing.Provider
             // Expecting input like (GroupSelectorInput(K) key, IEnumerable(V) list) => f(key, list)
             // Producing input like (GroupSelectorInput(K) key, state1 s1, state2 s2, ...) => f(key, s1, s2, ...)
             var visitor = new GroupBySecondPassVisitor(
-                constructorExpression.Parameters[0], constructorExpression.Parameters[1]);
+                container, constructorExpression.Parameters[0], constructorExpression.Parameters[1]);
             var output = visitor.Visit(constructorExpression.Body);
 
             // If we have found any unsupported state references, return the original function
@@ -61,24 +90,11 @@ namespace Microsoft.StreamProcessing.Provider
             return Expression.Lambda(output, visitor.windowParameter.Yield().Concat(visitor.createdParameters).ToArray());
         }
 
-        private GroupBySecondPassVisitor(ParameterExpression windowParameter, ParameterExpression stateParameter)
+        private GroupBySecondPassVisitor(QueryContainer container, ParameterExpression windowParameter, ParameterExpression stateParameter)
         {
+            this.container = container;
             this.windowParameter = windowParameter;
             this.stateParameter = stateParameter;
-
-            this.oneParameterAggregates.Add(GetMethodInfoForCount(), GetCreateMethodForType(nameof(CreateExpressionForCountAggregate)));
-            this.oneParameterAggregates.Add(GetMethodInfoForLongCount(), GetCreateMethodForType(nameof(CreateExpressionForLongCountAggregate)));
-
-            this.zeroParameterAggregates.Add(GetMethodInfoForSumInt(), ExpressionForSumIntAggregate);
-            this.zeroParameterAggregates.Add(GetMethodInfoForSumLong(), ExpressionForSumLongAggregate);
-            this.zeroParameterAggregates.Add(GetMethodInfoForSumFloat(), ExpressionForSumFloatAggregate);
-            this.zeroParameterAggregates.Add(GetMethodInfoForSumDouble(), ExpressionForSumDoubleAggregate);
-            this.zeroParameterAggregates.Add(GetMethodInfoForSumDecimal(), ExpressionForSumDecimalAggregate);
-            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumInt(), ExpressionForNullableSumIntAggregate);
-            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumLong(), ExpressionForNullableSumLongAggregate);
-            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumFloat(), ExpressionForNullableSumFloatAggregate);
-            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumDouble(), ExpressionForNullableSumDoubleAggregate);
-            this.zeroParameterAggregates.Add(GetMethodInfoForNullableSumDecimal(), ExpressionForNullableSumDecimalAggregate);
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -147,7 +163,7 @@ namespace Microsoft.StreamProcessing.Provider
                 }
 
                 // Case 2: Method is a supported built-in extension method on IEnumerable with a type argument
-                else if (method.IsGenericMethod && this.oneParameterAggregates.TryGetValue(
+                else if (method.IsGenericMethod && OneParameterAggregates.Value.TryGetValue(
                     method.GetGenericMethodDefinition(),
                     out var create))
                 {
@@ -156,12 +172,12 @@ namespace Microsoft.StreamProcessing.Provider
                 }
 
                 // Case 3: Method is a supported built-in extension method on IEnumerable without a type argument
-                else if (!method.IsGenericMethod && this.zeroParameterAggregates.TryGetValue(
+                else if (!method.IsGenericMethod && ZeroParameterAggregates.Value.TryGetValue(
                     method,
                     out aggregateExpression))
                 {
                     aggregateInterface = aggregateExpression.Type.GetInterfaces()
-                        .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IAggregate<,,>)); ;
+                        .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IAggregate<,,>));
                 }
 
                 if (aggregateInterface != null)
@@ -378,6 +394,161 @@ namespace Microsoft.StreamProcessing.Provider
             {
                 Expression<Func<IAggregate<decimal?, NullOutputWrapper<decimal>, decimal?>>> expression
                     = () => new SumDecimalAggregate().MakeInputNullableAndSkipNulls().MakeOutputNullableAndOutputNullWhenEmpty();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForAverageInt()
+        {
+            Expression<Func<IEnumerable<int>, double>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForAverageIntAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<int, AverageState<long>, double>>> expression = () => new AverageIntAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForAverageLong()
+        {
+            Expression<Func<IEnumerable<long>, double>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForAverageLongAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<long, AverageState<long>, double>>> expression = () => new AverageLongAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForAverageFloat()
+        {
+            Expression<Func<IEnumerable<float>, float>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForAverageFloatAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<float, AverageState<float>, float>>> expression = () => new AverageFloatAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForAverageDouble()
+        {
+            Expression<Func<IEnumerable<double>, double>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForAverageDoubleAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<double, AverageState<double>, double>>> expression = () => new AverageDoubleAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForAverageDecimal()
+        {
+            Expression<Func<IEnumerable<decimal>, decimal>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForAverageDecimalAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<decimal, AverageState<decimal>, decimal>>> expression = () => new AverageDecimalAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableAverageInt()
+        {
+            Expression<Func<IEnumerable<int?>, double?>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableAverageIntAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<int?, AverageState<long>, double?>>> expression
+                    = () => new AverageNullableIntAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableAverageLong()
+        {
+            Expression<Func<IEnumerable<long?>, double?>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableAverageLongAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<long?, AverageState<long>, double?>>> expression
+                    = () => new AverageNullableLongAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableAverageFloat()
+        {
+            Expression<Func<IEnumerable<float?>, float?>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableAverageFloatAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<float?, AverageState<float>, float?>>> expression
+                    = () => new AverageNullableFloatAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableAverageDouble()
+        {
+            Expression<Func<IEnumerable<double?>, double?>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableAverageDoubleAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<double?, AverageState<double>, double?>>> expression
+                    = () => new AverageNullableDoubleAggregate();
+                return expression.Body;
+            }
+        }
+
+        private static MethodInfo GetMethodInfoForNullableAverageDecimal()
+        {
+            Expression<Func<IEnumerable<decimal?>, decimal?>> expression = (e) => e.Average();
+            return ((MethodCallExpression)expression.Body).Method;
+        }
+
+        private static Expression ExpressionForNullableAverageDecimalAggregate
+        {
+            get
+            {
+                Expression<Func<IAggregate<decimal?, AverageState<decimal>, decimal?>>> expression
+                    = () => new AverageNullableDecimalAggregate();
                 return expression.Body;
             }
         }

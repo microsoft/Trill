@@ -4,6 +4,8 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 
@@ -84,4 +86,49 @@ namespace Microsoft.StreamProcessing.Aggregates
 <#
     }
 #>
+
+    /// <summary>
+    /// Extension methods to allow more aggregates
+    /// </summary>
+    public static partial class AggregateExtensions
+    {
+<#
+    // Create average of squares aggregates.
+    foreach (var averageTypes in averageTypesToGenerate)
+    {
+        var typeFriendlyName = averageTypes.InputTypeFriendlyName;
+        var typeName = averageTypes.TypeName;
+        var sumTypeName = averageTypes.SumTypeName;
+        var returnTypeName = averageTypes.ReturnTypeName;
+#>
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(Average<#= typeFriendlyName #>Aggregate))]
+        public static <#= returnTypeName #> AverageSquare(this IEnumerable<<#= typeName #>> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (<#= sumTypeName #>)0),
+                    (s, i) => Tuple.Create(s.Item1 + 1, (<#= sumTypeName #>)(s.Item2 + ((<#= sumTypeName #>)i * i))))
+                .Yield().Select(s => (<#= returnTypeName #>)s.Item1 / (<#= returnTypeName #>)s.Item2).First();
+
+        /// <summary>
+        /// Performs an average of squares of elements in a sequence
+        /// </summary>
+        /// <param name="enumerable">The sequence from which to compute the average of squares</param>
+        /// <returns>The average of squares of all of the elements in the sequence</returns>
+        [Aggregate(typeof(AverageNullable<#= typeFriendlyName #>Aggregate))]
+        public static <#= returnTypeName #>? AverageSquare(this IEnumerable<<#= typeName #>?> enumerable)
+            => enumerable
+                .Aggregate(
+                    Tuple.Create(0, (<#= sumTypeName #>)0),
+                    (s, i) => i == null ? s : Tuple.Create(s.Item1 + 1, (<#= sumTypeName #>)(s.Item2 + ((<#= sumTypeName #>)i * i))))
+                .Yield().Select(s => (<#= returnTypeName #>)s.Item1 / (<#= returnTypeName #>)s.Item2).First();
+
+<#
+    }
+#>
+    }
 }
