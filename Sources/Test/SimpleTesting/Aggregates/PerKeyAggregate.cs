@@ -17,7 +17,6 @@ namespace SimpleTesting
     [TestClass]
     public class AggregateByKey : TestWithConfigSettingsAndMemoryLeakDetection
     {
-
         public AggregateByKey()
             : base(new ConfigModifier()
                         .ForceRowBasedExecution(false)
@@ -131,7 +130,7 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
-        public void TestAggregateByKey4()
+        public void TestAggregateByKeyTupleDecomposition()
         {
             var input = new[]
             {
@@ -147,7 +146,11 @@ namespace SimpleTesting
             }.ToStreamable();
 
             var output = new List<StreamEvent<(bool, ulong)>>();
-            input.GroupAggregate(s => true, w => w.Count(), (g, c) => ValueTuple.Create(g.Key, c)).ToStreamEventObservable().ForEachAsync(e => output.Add(e));
+            input
+                .GroupAggregate(s => true, w => w.Count(), (g, c) => ValueTuple.Create(g.Key, c))
+                .ToStreamEventObservable()
+                .ForEachAsync(e => output.Add(e))
+                .Wait();
 
             var correct = new[]
             {
