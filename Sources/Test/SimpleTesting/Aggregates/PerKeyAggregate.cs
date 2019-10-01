@@ -2,6 +2,7 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -146,12 +147,12 @@ namespace SimpleTesting
             }.ToStreamable();
 
             var output = new List<StreamEvent<(bool, ulong)>>();
-            input.GroupAggregate(s => true, w => w.Count(), (g, c) => System.ValueTuple.Create(g.Key, c)).ToStreamEventObservable().ForEachAsync(e => output.Add(e));
+            input.GroupAggregate(s => true, w => w.Count(), (g, c) => ValueTuple.Create(g.Key, c)).ToStreamEventObservable().ForEachAsync(e => output.Add(e));
 
             var correct = new[]
             {
-                StreamEvent.CreateStart(0, System.ValueTuple.Create(true, (ulong)8)),
-                StreamEvent.CreatePunctuation<System.ValueTuple<bool, ulong>>(StreamEvent.InfinitySyncTime)
+                StreamEvent.CreateStart(0, ValueTuple.Create(true, (ulong)8)),
+                StreamEvent.CreatePunctuation<ValueTuple<bool, ulong>>(StreamEvent.InfinitySyncTime)
             };
 
             Assert.IsTrue(correct.SequenceEqual(output));

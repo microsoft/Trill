@@ -167,6 +167,15 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
+            // Case: ValueTuple.Create or Tuple.Create can be transformed to simple columnar assignments
+            if (body is MethodCallExpression methodCallBody &&
+                (methodCallBody.Method.ReflectedType == typeof(ValueTuple) || methodCallBody.Method.ReflectedType == typeof(Tuple)) &&
+                methodCallBody.Method.Name == "Create")
+            {
+                TransformTupleCreateSelect(methodCallBody);
+                return;
+            }
+
             // Otherwise, degenerate case: need to just evaluate the expression (with source field access transformed to columnar).
             // That expression will be passed to the setter for the indexer on the generated batch.
             // REVIEW: this is where something should be signalled so the user knows it isn't as fast as it could be.
@@ -337,6 +346,36 @@ namespace Microsoft.StreamProcessing
 
                 var e = Visit(argument);
                 this.computedFields.Add(resultField, e);
+            }
+        }
+
+        /// <summary>
+        /// Transforms the lambda "(e_1, e_2, ..., e_n) => ValueTuple.Create(e_1, e_2, ..., e_n)"
+        /// </summary>
+        private void TransformTupleCreateSelect(MethodCallExpression methodCall)
+        {
+            Contract.Requires(methodCall != null);
+            Contract.Requires(methodCall.Arguments != null);
+
+            for (int i = 0; i < methodCall.Arguments.Count; i++)
+            {
+                var argument = methodCall.Arguments[i];
+                var resultField = this.resultTypeInformation.Fields[$"Item{i + 1}"];
+
+                // Special case for MultiString: right-hand side of the assignment could be a method call
+                // (or property, like Length) on a MultiString. This is optimized (but only if
+                // this.noSwingingFields is false) into a single call to the associated MultiString method
+                // that acts like a swinging field: it is done outside of the loop that operates on each row.
+                if (this.doMultiStringTransform && IsMultiStringCall(argument, out string s))
+                {
+                    this.multiStringResultFields.Add(resultField);
+                    this.multiStringOperations.Add($"resultBatch.{resultField.Name} = {s};");
+                }
+                else if (!HandleSimpleAssignments(argument, resultField))
+                {
+                    var e = Visit(argument);
+                    this.computedFields.Add(resultField, e);
+                }
             }
         }
 
