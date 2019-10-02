@@ -262,7 +262,7 @@ namespace Microsoft.StreamProcessing
                         sb.AppendLine($"var {resultSelector.Parameters.ElementAt(1).Name} = {aggregateResult};\n");
                         if (projectionResult.ProjectionReturningResultInstance != null)
                         {
-                            sb.AppendFormat($"this.batch[_c] = {projectionResult.ProjectionReturningResultInstance.ExpressionToCSharp()};\n");
+                            sb.AppendLine($"this.batch[_c] = {projectionResult.ProjectionReturningResultInstance.ExpressionToCSharp()};");
                         }
                         else
                         {
@@ -270,7 +270,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 var f = kv.Key;
                                 var e = kv.Value;
-                                sb.AppendFormat("this.batch.{0}.col[_c] = {1};\n", f.Name, e.ExpressionToCSharpStringWithParameterSubstitution(parameters));
+                                sb.AppendLine($"this.batch.{f.Name}.col[_c] = {e.ExpressionToCSharpStringWithParameterSubstitution(parameters)};");
                             }
                         }
 

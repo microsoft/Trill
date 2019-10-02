@@ -32,21 +32,22 @@ namespace Microsoft.StreamProcessing
             this.resultType = resultType;
 
             this.tm = new TypeMapper(keyType, leftType, rightType, resultType);
-            this.TKey = tm.CSharpNameFor(keyType);
-            this.TLeft = tm.CSharpNameFor(leftType);
-            this.TRight = tm.CSharpNameFor(rightType);
-            this.TResult = tm.CSharpNameFor(resultType);
+            this.TKey = this.tm.CSharpNameFor(keyType);
+            this.TLeft = this.tm.CSharpNameFor(leftType);
+            this.TRight = this.tm.CSharpNameFor(rightType);
+            this.TResult = this.tm.CSharpNameFor(resultType);
         }
 
         protected Tuple<Type, string> Generate<TKey, TPayload>() => GenerateInternal<TKey, TPayload, TPayload, TPayload>(2, null);
 
-        protected Tuple<Type, string> Generate<TKey, TLeft, TRight>(Expression expression = null)
-            => GenerateInternal<TKey, TLeft, TRight, TLeft>(3, expression);
+        protected Tuple<Type, string> Generate<TKey, TLeft, TRight>(Expression[] expressions = null)
+            => GenerateInternal<TKey, TLeft, TRight, TLeft>(3, expressions);
 
-        protected Tuple<Type, string> Generate<TKey, TLeft, TRight, TResult>(Expression expression = null)
-            => GenerateInternal<TKey, TLeft, TRight, TResult>(4, expression);
+        protected Tuple<Type, string> Generate<TKey, TLeft, TRight, TResult>(Expression[] expressions = null)
+            => GenerateInternal<TKey, TLeft, TRight, TResult>(4, expressions);
 
-        private Tuple<Type, string> GenerateInternal<TKey, TLeft, TRight, TResult>(int numParameters, Expression expression)
+        // TODO: use single expression instead of array?
+        private Tuple<Type, string> GenerateInternal<TKey, TLeft, TRight, TResult>(int numParameters, Expression[] expressions)
         {
             string errorMessages = null;
             try
@@ -58,10 +59,10 @@ namespace Microsoft.StreamProcessing
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TLeft>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TRight>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TResult>());
-                if (expression != null) assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(expression));
+                if (expressions != null) assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(expressions));
 
                 var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                if (keyType.IsAnonymousType())
+                if (this.keyType.IsAnonymousType())
                 {
                     if (errorMessages == null) errorMessages = string.Empty;
                     errorMessages += "\nCodegen Warning: The key type for a binary operator is an anonymous type (or contains an anonymous type), preventing the inlining of the key equality and hashcode functions. This may lead to poor performance.\n";

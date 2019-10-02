@@ -47,8 +47,46 @@ namespace SimpleTesting.ColumnarTests
 
         [TestMethod, TestCategory("Gated")]
         public void UngroupTemplate() => GroupWorker(group: false);
+
         [TestMethod, TestCategory("Gated")]
         public void GroupedWindowTemplate() => GroupWorker(group: false);
+
+        [TestMethod, TestCategory("Gated")]
+        public void EquiJoinTemplate() => EquiJoinWorker();
+
+        private void EquiJoinWorker()
+        {
+            var left = new[]
+            {
+                StreamEvent.CreateStart(0, 100),
+                StreamEvent.CreateStart(1, 110),
+                StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+            }.ToStreamable();
+
+            var right = new[]
+            {
+                StreamEvent.CreateStart(2, 200),
+                StreamEvent.CreateStart(3, 210),
+                StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+            }.ToStreamable();
+
+            var output = new List<StreamEvent<(int, int)>>();
+            left.Join(right, (l, r) => CreateValueTuple(l, r))
+                .ToStreamEventObservable()
+                .ForEachAsync(e => output.Add(e))
+                .Wait();
+
+            var correct = new[]
+            {
+                StreamEvent.CreateStart(2, ValueTuple.Create(110, 200)),
+                StreamEvent.CreateStart(2, ValueTuple.Create(100, 200)),
+                StreamEvent.CreateStart(3, ValueTuple.Create(110, 210)),
+                StreamEvent.CreateStart(3, ValueTuple.Create(100, 210)),
+                StreamEvent.CreatePunctuation<ValueTuple<int, int>>(StreamEvent.InfinitySyncTime)
+            };
+
+            Assert.IsTrue(correct.SequenceEqual(output));
+        }
 
         private void GroupWorker(bool group)
         {
