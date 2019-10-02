@@ -46,7 +46,11 @@ namespace SimpleTesting.ColumnarTests
         public void FusedIngress() => SelectWorker(selectMany: false, fuse: true);
 
         [TestMethod, TestCategory("Gated")]
-        public void UngroupTemplate()
+        public void UngroupTemplate() => GroupWorker(group: false);
+        [TestMethod, TestCategory("Gated")]
+        public void GroupedWindowTemplate() => GroupWorker(group: false);
+
+        private void GroupWorker(bool group)
         {
             var input = new[]
             {
@@ -60,6 +64,11 @@ namespace SimpleTesting.ColumnarTests
                 StreamEvent.CreateStart(0, 303),
                 StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
             }.ToStreamable();
+
+            if (group)
+            {
+                input = input.SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
+            }
 
             var output = new List<StreamEvent<(bool, ulong)>>();
             input
