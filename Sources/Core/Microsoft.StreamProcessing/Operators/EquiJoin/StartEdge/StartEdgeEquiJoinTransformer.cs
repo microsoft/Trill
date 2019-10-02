@@ -170,7 +170,7 @@ namespace Microsoft.StreamProcessing
                 }
                 #endregion
 
-                return template.Generate<TKey, TLeft, TRight, TResult>(new Expression[] { selector });
+                return template.Generate<TKey, TLeft, TRight, TResult>(selector);
             }
             catch
             {

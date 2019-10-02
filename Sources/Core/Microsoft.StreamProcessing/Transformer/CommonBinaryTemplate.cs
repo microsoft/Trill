@@ -40,14 +40,13 @@ namespace Microsoft.StreamProcessing
 
         protected Tuple<Type, string> Generate<TKey, TPayload>() => GenerateInternal<TKey, TPayload, TPayload, TPayload>(2, null);
 
-        protected Tuple<Type, string> Generate<TKey, TLeft, TRight>(Expression[] expressions = null)
-            => GenerateInternal<TKey, TLeft, TRight, TLeft>(3, expressions);
+        protected Tuple<Type, string> Generate<TKey, TLeft, TRight>(Expression expression = null)
+            => GenerateInternal<TKey, TLeft, TRight, TLeft>(3, expression);
 
-        protected Tuple<Type, string> Generate<TKey, TLeft, TRight, TResult>(Expression[] expressions = null)
-            => GenerateInternal<TKey, TLeft, TRight, TResult>(4, expressions);
+        protected Tuple<Type, string> Generate<TKey, TLeft, TRight, TResult>(Expression expression = null)
+            => GenerateInternal<TKey, TLeft, TRight, TResult>(4, expression);
 
-        // TODO: use single expression instead of array?
-        private Tuple<Type, string> GenerateInternal<TKey, TLeft, TRight, TResult>(int numParameters, Expression[] expressions)
+        private Tuple<Type, string> GenerateInternal<TKey, TLeft, TRight, TResult>(int numParameters, Expression expression)
         {
             string errorMessages = null;
             try
@@ -59,7 +58,7 @@ namespace Microsoft.StreamProcessing
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TLeft>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TRight>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TResult>());
-                if (expressions != null) assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(expressions));
+                if (expression != null) assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(expression));
 
                 var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
                 if (this.keyType.IsAnonymousType())

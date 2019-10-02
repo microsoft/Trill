@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Microsoft.StreamProcessing
@@ -78,7 +77,7 @@ namespace Microsoft.StreamProcessing
             template.leftFields = resultRepresentation.AllFields;
             template.noFields = resultRepresentation.noFields;
 
-            return template.Generate<TKey, TLeft, TRight>(new Expression[] { leftComparer });
+            return template.Generate<TKey, TLeft, TRight>(leftComparer);
         }
     }
 }

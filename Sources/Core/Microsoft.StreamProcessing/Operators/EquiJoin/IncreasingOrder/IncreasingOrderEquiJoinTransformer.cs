@@ -193,7 +193,7 @@ namespace Microsoft.StreamProcessing
                     Transformer.GetBatchClassName(template.keyType, template.resultType),
                     template.TKeyTResultGenericParameters);
 
-                return template.Generate<TKey, TLeft, TRight, TResult>(new Expression[] { selector });
+                return template.Generate<TKey, TLeft, TRight, TResult>(selector);
             }
             catch
             {
