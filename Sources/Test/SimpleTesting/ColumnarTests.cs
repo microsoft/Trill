@@ -4,9 +4,9 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reactive.Linq;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,6 +29,7 @@ namespace SimpleTesting.ColumnarTests
     /// See SelectTransformer.Transform and SelectTransformer.ProjectionReturningResultInstance.
     /// This class covers all consumers of SelectTransformer.Transform
     /// </summary>
+    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1008", Justification = "Reviewed.")]
     [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009", Justification = "Reviewed.")]
     [TestClass]
     public class GeneralProjectionFallbackTests : ColumnarTestBase
@@ -54,21 +55,33 @@ namespace SimpleTesting.ColumnarTests
         [TestMethod, TestCategory("Gated")]
         public void EquiJoinTemplate() => EquiJoinWorker();
 
-        private void EquiJoinWorker()
+        [TestMethod, TestCategory("Gated")]
+        public void StartEdgeEquiJoinTemplate() => EquiJoinWorker(constantDuration: StreamEvent.InfinitySyncTime);
+
+        [TestMethod, TestCategory("Gated")]
+        public void FixedIntervalEquiJoinTemplate() => EquiJoinWorker(constantDuration: 10);
+
+        private void EquiJoinWorker(long? constantDuration = null)
         {
             var left = new[]
             {
                 StreamEvent.CreateStart(0, 100),
-                StreamEvent.CreateStart(1, 110),
+                StreamEvent.CreateStart(0, 110),
                 StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
             }.ToStreamable();
 
             var right = new[]
             {
-                StreamEvent.CreateStart(2, 200),
-                StreamEvent.CreateStart(3, 210),
+                StreamEvent.CreateStart(0, 200),
+                StreamEvent.CreateStart(0, 210),
                 StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
             }.ToStreamable();
+
+            if (constantDuration.HasValue)
+            {
+                left = left.AlterEventDuration(constantDuration.Value);
+                right = right.AlterEventDuration(constantDuration.Value);
+            }
 
             var output = new List<StreamEvent<(int, int)>>();
             left.Join(right, (l, r) => CreateValueTuple(l, r))
@@ -78,12 +91,19 @@ namespace SimpleTesting.ColumnarTests
 
             var correct = new[]
             {
-                StreamEvent.CreateStart(2, ValueTuple.Create(110, 200)),
-                StreamEvent.CreateStart(2, ValueTuple.Create(100, 200)),
-                StreamEvent.CreateStart(3, ValueTuple.Create(110, 210)),
-                StreamEvent.CreateStart(3, ValueTuple.Create(100, 210)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(110, 200)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(100, 200)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(110, 210)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(100, 210)),
                 StreamEvent.CreatePunctuation<ValueTuple<int, int>>(StreamEvent.InfinitySyncTime)
             };
+
+            if (constantDuration.HasValue && constantDuration.Value != StreamEvent.InfinitySyncTime)
+            {
+                correct = correct
+                    .Select(e => e.IsPunctuation ? e : StreamEvent.CreateInterval(e.StartTime, e.StartTime + constantDuration.Value, e.Payload))
+                    .ToArray();
+            }
 
             Assert.IsTrue(correct.SequenceEqual(output));
         }
@@ -172,6 +192,12 @@ namespace SimpleTesting.ColumnarTests
             };
 
             Assert.IsTrue(correct.SequenceEqual(output));
+        }
+
+        private class EmptyKeyComparer : IEqualityComparerExpression<Empty>
+        {
+            public Expression<Func<Empty, Empty, bool>> GetEqualsExpr() => (l, r) => l == r;
+            public Expression<Func<Empty, int>> GetGetHashCodeExpr() => (value) => value.GetHashCode();
         }
     }
 }
