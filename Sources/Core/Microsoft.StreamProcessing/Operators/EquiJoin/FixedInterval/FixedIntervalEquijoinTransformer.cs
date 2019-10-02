@@ -112,23 +112,18 @@ namespace Microsoft.StreamProcessing
                         }
                         template.leftBatchSelector = (leftBatch, leftIndex, rightEvent) =>
                         {
+                            var parameterMap = new Dictionary<ParameterExpression, string>
+                            {
+                                { Expression.Variable(leftMessageType, "leftBatch"), leftBatch },
+                                { Expression.Variable(typeof(int), leftBatchIndexVariable), leftIndex },
+                                { selector.Parameters[1], rightEvent }
+                            };
                             if (projectionResult.ProjectionReturningResultInstance != null)
                             {
-                                var parameterMap = new Dictionary<ParameterExpression, string>
-                                {
-                                    { selector.Parameters[1], rightEvent },
-                                    { Expression.Variable(typeof(int), leftBatchIndexVariable), leftIndex },
-                                };
                                 return $"this.output[index] = {projectionResult.ProjectionReturningResultInstance.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)};";
                             }
                             else
                             {
-                                var parameterMap = new Dictionary<ParameterExpression, string>
-                                {
-                                    { Expression.Variable(leftMessageType, "leftBatch"), leftBatch },
-                                    { Expression.Variable(typeof(int), leftBatchIndexVariable), leftIndex },
-                                    { selector.Parameters[1], rightEvent }
-                                };
                                 var sb = new System.Text.StringBuilder();
                                 sb.AppendLine("{");
                                 foreach (var kv in projectionResult.ComputedFields)
@@ -165,23 +160,18 @@ namespace Microsoft.StreamProcessing
                         }
                         template.rightBatchSelector = (leftEvent, rightBatch, rightIndex) =>
                         {
+                            var parameterMap = new Dictionary<ParameterExpression, string>
+                            {
+                                { selector.Parameters[0], leftEvent },
+                                { Expression.Variable(rightMessageType, "rightBatch"), rightBatch },
+                                { Expression.Variable(typeof(int), rightBatchIndexVariable), rightIndex }
+                            };
                             if (projectionResult.ProjectionReturningResultInstance != null)
                             {
-                                var parameterMap = new Dictionary<ParameterExpression, string>
-                                {
-                                    { selector.Parameters[0], leftEvent },
-                                    { Expression.Variable(typeof(int), rightBatchIndexVariable), rightIndex },
-                                };
                                 return $"this.output[index] = {projectionResult.ProjectionReturningResultInstance.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)};";
                             }
                             else
                             {
-                                var parameterMap = new Dictionary<ParameterExpression, string>
-                                {
-                                    { selector.Parameters[0], leftEvent },
-                                    { Expression.Variable(rightMessageType, "rightBatch"), rightBatch },
-                                    { Expression.Variable(typeof(int), rightBatchIndexVariable), rightIndex }
-                                };
                                 var sb = new System.Text.StringBuilder();
                                 sb.AppendLine("{");
                                 foreach (var kv in projectionResult.ComputedFields)
