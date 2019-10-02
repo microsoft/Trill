@@ -18,15 +18,18 @@ using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Internal.Collections;
 
-<# if (this.keyType.Namespace != null) { #>
+<#  if (this.keyType.Namespace != null)
+    { #>
 using <#= this.keyType.Namespace #>;
-<# } #>
-<# if (this.payloadType.Namespace != null) { #>
+<#  }
+    if (this.payloadType.Namespace != null)
+    { #>
 using <#= this.payloadType.Namespace #>;
-<# } #>
-<# if (this.resultType.Namespace != null) { #>
+<#  }
+    if (this.resultType.Namespace != null)
+    { #>
 using <#= this.resultType.Namespace #>;
-<# } #>
+<#  } #>
 
 // TKey: <#= TKey #>
 // TPayload: <#= TPayload #>
@@ -34,6 +37,7 @@ using <#= this.resultType.Namespace #>;
 // Source Fields: <#= String.Join(",", this.fields.Select(f => f.OriginalName)) #>
 // Destination Fields: <#= String.Join(",", this.resultFields.Select(f => f.OriginalName)) #>
 // Computed Fields: <#= String.Join(",", this.computedFields.Keys.Select(f => f.OriginalName)) #>
+// ProjectionReturningResultInstance: <#= this.projectionReturningResultInstance.ExpressionToCSharp() #>
 
 [DataContract]
 internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TResult #>>
@@ -102,35 +106,37 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
         this.batch.iter = batch.iter;
 
         // Create locals that point directly to the arrays within the columns in the destination batch.
-
-        <# foreach (var f in this.computedFields.Keys) { #>
-        <# if (f.OptimizeString()) { #>
-
+<#  foreach (var f in this.computedFields.Keys)
+    {
+        if (f.OptimizeString())
+        { #>
         var dest_<#= f.Name #> = this.batch.<#= f.Name #>;
-        <# } else { #>
-
+<#      }
+        else
+        { #>
         var dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
-        <# } #>
-        <# } #>
+<#      }
+    } #>
 
         // Create locals that point directly to the arrays within the columns in the source batch.
-        <# foreach (var f in this.fields) { #>
-
-        <# if (f.canBeFixed) { #>
-
+<#  foreach (var f in this.fields)
+    {
+        if (f.canBeFixed)
+        { #>
         fixed (<#= f.TypeName #>* <#= f.Name #>_col = batch.<#= f.Name #>.col)
         {
-        <# } else { #>
-
+<#      }
+        else
+        { #>
         var <#= f.Name #>_col = batch.<#= f.Name #>.col;
-        <# } #>
-        <# } #>
+<#      }
+    } #>
 
         var srckey = batch.key.col;
-        <# if (this.hasKey) { #>
-
+<#  if (this.hasKey)
+    { #>
         var key_col = srckey; // hack until MakeColumnOriented is fixed
-        <# } #>
+<#  } #>
 
         fixed (long* src_bv = batch.bitvector.col, src_vsync = batch.vsync.col, src_vother = batch.vother.col)
         fixed (int* src_hash = batch.hash.col)
@@ -139,51 +145,64 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
             {
                 if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0)
                 {
-                    <# if (this.StartEdgeParameterName != null) { #>
-
+<#  if (this.StartEdgeParameterName != null)
+    { #>
                     var <#= this.StartEdgeParameterName #> = src_vsync[i] < src_vother[i] ? src_vsync[i] : src_vother[i];
-                    <# } #>
-
-                <# if (this.useEnumerator) { #>
-
+<#  }
+    if (this.useEnumerator)
+    { #>
                     var enumerator = <#= transformedSelectorAsSource #>.GetEnumerator();
                     while (enumerator.MoveNext())
-                <# } else { #>
-                    <# if (!this.enumerableRepeatSelector) { #>
+<#  }
+    else
+    {
+        if (!this.enumerableRepeatSelector)
+        { #>
 
                     var e_prime = <#= transformedSelectorAsSource #>;
-                    <# } #>
+<#      } #>
 
-                    <# if (this.keyParameterName != null) { #>
+<#      if (this.keyParameterName != null)
+        { #>
                     var <#= this.keyParameterName #> = srckey[i];
-                    <# } #>
+<#      } #>
                     for (int _x = 0; _x < <#= this.loopCounter #>; _x++)
-                <# } #>
+<#  } #>
 
                     {
                         dest_vsync[iter] = src_vsync[i];
                         dest_vother[iter] = src_vother[i];
-                        <# if (this.useEnumerator) { #>
-
+<#  if (this.useEnumerator)
+    { #>
                         this.batch[iter] = enumerator.Current;
-                        <# } else if (this.enumerableRepeatSelector) { #>
-
-                        <# foreach (var kv in this.computedFields) {
-                          var f = kv.Key;
-                          var v = kv.Value.ExpressionToCSharp();
-                        #>
-                        <# if (f.OptimizeString()) { #>
-
+<#  }
+    else if (this.enumerableRepeatSelector)
+    {
+        if (this.projectionReturningResultInstance != null)
+        { #>
+                        this.batch[iter] = <#= this.projectionReturningResultInstance.ExpressionToCSharp() #>;
+<#      }
+        else
+        {
+            foreach (var kv in this.computedFields)
+            {
+                var f = kv.Key;
+                var v = kv.Value.ExpressionToCSharp();
+                if (f.OptimizeString())
+                { #>
                         dest_<#= f.Name #>.AddString(<#= v #>);
-                        <# } else { #>
-
+<#              }
+                else
+                { #>
                         dest_<#= f.Name #>[iter] = <#= v #>;
-                        <# } #>
-                        <# } #>
-                        <# } else { #>
-
+<#              }
+            }
+        }
+    }
+    else
+    { #>
                         this.batch[iter] = e_prime;
-                        <# } #>
+<#  } #>
 
                         destkey[iter] = srckey[i];
                         dest_hash[iter] = src_hash[i];
@@ -194,23 +213,26 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                             FlushContents();
 
                             // Create locals that point directly to the arrays within the columns in the destination batch.
-                            <# foreach (var f in this.computedFields.Keys) { #>
-                            <# if (f.OptimizeString()) { #>
-
+<#  foreach (var f in this.computedFields.Keys)
+    {
+        if (f.OptimizeString())
+        { #>
                             dest_<#= f.Name #> = this.batch.<#= f.Name #>;
-                            <# } else { #>
-
+<#      }
+        else
+        { #>
                             dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
-                            <# } #>
-                            <# } #>
+<#      }
+    } #>
 
                             this.batch.iter = batch.iter;
                         }
                     }
-                <# if (this.useEnumerator) { #>
+<#  if (this.useEnumerator)
+    { #>
 
                     enumerator.Dispose();
-                <# } #>
+<#  } #>
                 }
                 else if (src_vother[i] < 0)
                 {
@@ -228,16 +250,17 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
                         FlushContents();
 
                         // Create locals that point directly to the arrays within the columns in the destination batch.
-                        <# foreach (var f in this.computedFields.Keys) { #>
-                        <# if (f.OptimizeString()) { #>
-
+<#  foreach (var f in this.computedFields.Keys)
+    {
+        if (f.OptimizeString())
+        { #>
                         dest_<#= f.Name #> = this.batch.<#= f.Name #>;
-                        <# } else { #>
-
+<#      }
+        else
+        { #>
                         dest_<#= f.Name #> = this.batch.<#= f.Name #>.col;
-                        <# } #>
-                        <# } #>
-
+<#      }
+    } #>
                         this.batch.iter = batch.iter;
                     }
                 }
@@ -245,10 +268,10 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
 
         } // end src_hash, src_bv, src_vsync, src_vother
 
-        <# foreach (var f in this.fields.Where(fld => fld.canBeFixed)) { #>
-
+<#  foreach (var f in this.fields.Where(fld => fld.canBeFixed))
+    { #>
         }
-        <# } #>
+<#  } #>
 
         batch.Free();
     }

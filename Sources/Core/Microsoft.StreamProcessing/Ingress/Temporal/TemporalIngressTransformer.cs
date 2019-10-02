@@ -165,6 +165,8 @@ namespace Microsoft.StreamProcessing
             template.fusionOption = fuseModule.IsEmpty ? "Simple" :
                 (Config.AllowFloatingReorderPolicy ? "Disordered" : "Fused");
             template.resultMightBeNull = template.resultType.CanContainNull();
+
+            Expression[] expressions = null;
             if (!fuseModule.IsEmpty)
             {
                 template.valueString = fuseModule.Coalesce<TSource, TResult, TKey>("value.SyncTime", "value.OtherTime", "value.Payload", template.emptyOrPartition, out template.leadingText, out template.trailingText);
@@ -174,9 +176,11 @@ namespace Microsoft.StreamProcessing
                     template.valueString = "value.Payload";
                     template.generatedEndTimeVariable = "value.OtherTime";
                 }
+
+                expressions = fuseModule.GetCodeGenExpressions();
             }
 
-            return template.Generate<TKey, TSource, TResult>(typeof(IStreamable<,>));
+            return template.Generate<TKey, TSource, TResult>(new Type[] { typeof(IStreamable<,>) }, expressions);
         }
     }
 }
