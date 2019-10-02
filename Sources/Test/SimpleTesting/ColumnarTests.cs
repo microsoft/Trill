@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
@@ -17,8 +18,7 @@ namespace SimpleTesting.ColumnarTests
     {
         public ColumnarTestBase() : base(new ConfigModifier()
             .ForceRowBasedExecution(false)
-            .DontFallBackToRowBasedExecution(true)
-            .BreakIntoCodeGen(Config.CodegenOptions.DebugFlags.Operators)) // TODO: remove
+            .DontFallBackToRowBasedExecution(true))
         {
         }
     }
@@ -37,43 +37,13 @@ namespace SimpleTesting.ColumnarTests
         public static ValueTuple<T1, T2> CreateValueTuple<T1, T2>(T1 item1, T2 item2) => ValueTuple.Create(item1, item2);
 
         [TestMethod, TestCategory("Gated")]
-        public void SelectTemplate()
-        {
-            var input = new[]
-            {
-                StreamEvent.CreateStart(0, 100L),
-                StreamEvent.CreateStart(0, 105L),
-                StreamEvent.CreateStart(0, 104L),
-                StreamEvent.CreateStart(0, 200L),
-                StreamEvent.CreateStart(0, 201L),
-                StreamEvent.CreateStart(0, 300L),
-                StreamEvent.CreateStart(0, 302L),
-                StreamEvent.CreateStart(0, 303L),
-                StreamEvent.CreatePunctuation<long>(StreamEvent.InfinitySyncTime),
-            }.ToStreamable();
+        public void SelectTemplate() => SelectWorker(selectMany: false, fuse: false);
 
-            var output = new List<StreamEvent<(long, long)>>();
-            input
-                .Select((time, payload) => CreateValueTuple(time, payload))
-                .ToStreamEventObservable()
-                .ForEachAsync(e => output.Add(e))
-                .Wait();
+        [TestMethod, TestCategory("Gated")]
+        public void SelectManyTemplate() => SelectWorker(selectMany: true, fuse: false);
 
-            var correct = new[]
-            {
-                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 100L)),
-                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 105L)),
-                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 104L)),
-                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 200L)),
-                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 201L)),
-                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 300L)),
-                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 302L)),
-                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 303L)),
-                StreamEvent.CreatePunctuation<(long, long)>(StreamEvent.InfinitySyncTime),
-            };
-
-            Assert.IsTrue(correct.SequenceEqual(output));
-        }
+        [TestMethod, TestCategory("Gated")]
+        public void FusedIngress() => SelectWorker(selectMany: false, fuse: true);
 
         [TestMethod, TestCategory("Gated")]
         public void UngroupTemplate()
@@ -102,6 +72,56 @@ namespace SimpleTesting.ColumnarTests
             {
                 StreamEvent.CreateStart(0, ValueTuple.Create(true, (ulong)8)),
                 StreamEvent.CreatePunctuation<ValueTuple<bool, ulong>>(StreamEvent.InfinitySyncTime)
+            };
+
+            Assert.IsTrue(correct.SequenceEqual(output));
+        }
+
+        private void SelectWorker(bool selectMany, bool fuse)
+        {
+            var input = new[]
+            {
+                StreamEvent.CreateStart(0, 100L),
+                StreamEvent.CreateStart(0, 105L),
+                StreamEvent.CreateStart(0, 104L),
+                StreamEvent.CreateStart(0, 200L),
+                StreamEvent.CreateStart(0, 201L),
+                StreamEvent.CreateStart(0, 300L),
+                StreamEvent.CreateStart(0, 302L),
+                StreamEvent.CreateStart(0, 303L),
+                StreamEvent.CreatePunctuation<long>(StreamEvent.InfinitySyncTime),
+            }.ToStreamable();
+
+            var output = new List<StreamEvent<(long, long)>>();
+
+            var streamable = input;
+            if (!fuse)
+            {
+                // Insert a fake AlterEventLifetime to prevent a fuse with ingress
+                streamable = streamable.AlterEventLifetime(time => time, StreamEvent.InfinitySyncTime);
+            }
+
+            // SelectMany optimizes Enumerable.Repeat into a SelectTransformer.Transform
+            var selectStreamable = selectMany
+                ? streamable.SelectMany((time, payload) => Enumerable.Repeat(CreateValueTuple(time, payload), 1))
+                : streamable.Select((time, payload) => CreateValueTuple(time, payload));
+
+            selectStreamable
+                .ToStreamEventObservable()
+                .ForEachAsync(e => output.Add(e))
+                .Wait();
+
+            var correct = new[]
+            {
+                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 100L)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 105L)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 104L)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 200L)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 201L)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 300L)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 302L)),
+                StreamEvent.CreateStart(0, ValueTuple.Create(0L, 303L)),
+                StreamEvent.CreatePunctuation<(long, long)>(StreamEvent.InfinitySyncTime),
             };
 
             Assert.IsTrue(correct.SequenceEqual(output));
