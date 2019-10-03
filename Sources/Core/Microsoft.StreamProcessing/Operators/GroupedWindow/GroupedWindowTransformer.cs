@@ -43,7 +43,7 @@ namespace Microsoft.StreamProcessing
         private GroupedWindowTemplate(string className) : base(className) { }
 
         /// <summary>
-        /// Generate a batch class definition to be used as an aggreate definition.
+        /// Generate a batch class definition to be used as an aggregate definition.
         /// Compile the definition, dynamically load the assembly containing it, and return the Type representing the
         /// aggregate class.
         /// </summary>
@@ -216,12 +216,20 @@ namespace Microsoft.StreamProcessing
                         var sb = new System.Text.StringBuilder();
                         sb.AppendLine("{");
                         sb.AppendLine($"var {resultSelector.Parameters.ElementAt(1).Name} = {aggregateResult};\n");
-                        foreach (var kv in projectionResult.ComputedFields)
+                        if (projectionResult.ProjectionReturningResultInstance != null)
                         {
-                            var f = kv.Key;
-                            var e = kv.Value;
-                            sb.AppendFormat("this.batch.{0}.col[_c] = {1};\n", f.Name, e.ExpressionToCSharpStringWithParameterSubstitution(parameters));
+                            sb.AppendLine($"this.batch[_c] = {projectionResult.ProjectionReturningResultInstance.ExpressionToCSharp()};");
                         }
+                        else
+                        {
+                            foreach (var kv in projectionResult.ComputedFields)
+                            {
+                                var f = kv.Key;
+                                var e = kv.Value;
+                                sb.AppendLine($"this.batch.{f.Name}.col[_c] = {e.ExpressionToCSharpStringWithParameterSubstitution(parameters)};");
+                            }
+                        }
+
                         sb.AppendLine("}");
                         return sb.ToString();
                     };

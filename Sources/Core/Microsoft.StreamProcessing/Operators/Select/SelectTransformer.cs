@@ -129,7 +129,7 @@ namespace Microsoft.StreamProcessing
                 template.computedFields = projectionResult.ComputedFields;
                 template.swingingFields = projectionResult.SwingingFields;
                 template.unassignedFields = projectionResult.UnmentionedFields;
-                template.ProjectionReturningResultInstance = projectionResult.ProjectionReturningResultInstance == null ? null : projectionResult.ProjectionReturningResultInstance.ExpressionToCSharp();
+                template.ProjectionReturningResultInstance = projectionResult.ProjectionReturningResultInstance?.ExpressionToCSharp();
                 template.multiStringOperations = projectionResult.MultiStringOperations;
                 template.needSourceInstance = projectionResult.NeedsSourceInstance;
 

@@ -345,6 +345,20 @@ namespace Microsoft.StreamProcessing
         public static IEnumerable<Assembly> AssemblyReferencesNeededFor(Expression expression)
             => AssemblyLocationFinder.GetAssemblyLocationsFor(expression);
 
+        public static IEnumerable<Assembly> AssemblyReferencesNeededFor(params Expression[] expressions)
+        {
+            var assemblies = new HashSet<Assembly>();
+            foreach (var expression in expressions)
+            {
+                foreach (var assembly in AssemblyLocationFinder.GetAssemblyLocationsFor(expression))
+                {
+                    assemblies.Add(assembly);
+                }
+            }
+
+            return assemblies;
+        }
+
         private sealed class AssemblyLocationFinder : ExpressionVisitor
         {
             private readonly HashSet<Assembly> assemblyLocations = new HashSet<Assembly>();

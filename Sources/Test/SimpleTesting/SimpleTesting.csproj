@@ -50,6 +50,7 @@
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ColumnarTests.cs" />
     <Compile Include="AdHocTests.cs" />
     <Compile Include="Macros\AdjustColumns.cs">
       <DependentUpon>AdjustColumns.tt</DependentUpon>

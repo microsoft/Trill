@@ -32,10 +32,10 @@ namespace Microsoft.StreamProcessing
             this.resultType = resultType;
 
             this.tm = new TypeMapper(keyType, leftType, rightType, resultType);
-            this.TKey = tm.CSharpNameFor(keyType);
-            this.TLeft = tm.CSharpNameFor(leftType);
-            this.TRight = tm.CSharpNameFor(rightType);
-            this.TResult = tm.CSharpNameFor(resultType);
+            this.TKey = this.tm.CSharpNameFor(keyType);
+            this.TLeft = this.tm.CSharpNameFor(leftType);
+            this.TRight = this.tm.CSharpNameFor(rightType);
+            this.TResult = this.tm.CSharpNameFor(resultType);
         }
 
         protected Tuple<Type, string> Generate<TKey, TPayload>() => GenerateInternal<TKey, TPayload, TPayload, TPayload>(2, null);
@@ -61,7 +61,7 @@ namespace Microsoft.StreamProcessing
                 if (expression != null) assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(expression));
 
                 var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                if (keyType.IsAnonymousType())
+                if (this.keyType.IsAnonymousType())
                 {
                     if (errorMessages == null) errorMessages = string.Empty;
                     errorMessages += "\nCodegen Warning: The key type for a binary operator is an anonymous type (or contains an anonymous type), preventing the inlining of the key equality and hashcode functions. This may lead to poor performance.\n";

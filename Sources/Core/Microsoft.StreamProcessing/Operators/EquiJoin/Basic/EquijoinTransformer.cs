@@ -123,37 +123,39 @@ namespace Microsoft.StreamProcessing
                             errorMessages = "error while transforming the result selector";
                             throw new InvalidOperationException();
                         }
+
                         template.leftBatchSelector = (leftBatch, leftIndex, rightEvent) =>
                         {
-                            var d = new Dictionary<ParameterExpression, string>
+                            var parameterMap = new Dictionary<ParameterExpression, string>
                             {
                                 { Expression.Variable(leftMessageType, "leftBatch"), leftBatch },
                                 { Expression.Variable(typeof(int), leftBatchIndexVariable), leftIndex },
                                 { selector.Parameters[1], rightEvent }
                             };
-                            var sb = new System.Text.StringBuilder();
-                            sb.AppendLine("{");
-                            foreach (var kv in projectionResult.ComputedFields)
+                            if (projectionResult.ProjectionReturningResultInstance != null)
                             {
-                                var f = kv.Key;
-                                var e = kv.Value;
-                                if (f.OptimizeString())
-                                {
-                                    sb.AppendFormat(
-                                        "output.{0}.AddString({1});\n",
-                                        f.Name,
-                                        e.ExpressionToCSharpStringWithParameterSubstitution(d));
-                                }
-                                else
-                                {
-                                    sb.AppendFormat(
-                                        "output.{0}.col[index] = {1};\n",
-                                        f.Name,
-                                        e.ExpressionToCSharpStringWithParameterSubstitution(d));
-                                }
+                                return $"this.output[index] = {projectionResult.ProjectionReturningResultInstance.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)};";
                             }
-                            sb.AppendLine("}");
-                            return sb.ToString();
+                            else
+                            {
+                                var sb = new System.Text.StringBuilder();
+                                sb.AppendLine("{");
+                                foreach (var kv in projectionResult.ComputedFields)
+                                {
+                                    var f = kv.Key;
+                                    var e = kv.Value;
+                                    if (f.OptimizeString())
+                                    {
+                                        sb.AppendLine($"this.output.{f.Name}.AddString({e.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)});");
+                                    }
+                                    else
+                                    {
+                                        sb.AppendLine($"this.output.{f.Name}.col[index] = {e.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)};");
+                                    }
+                                }
+                                sb.AppendLine("}");
+                                return sb.ToString();
+                            }
                         };
                     }
                     #endregion
@@ -170,37 +172,39 @@ namespace Microsoft.StreamProcessing
                             errorMessages = "error while transforming the result selector";
                             throw new InvalidOperationException();
                         }
+
                         template.rightBatchSelector = (leftEvent, rightBatch, rightIndex) =>
                         {
-                            var d = new Dictionary<ParameterExpression, string>
+                            var parameterMap = new Dictionary<ParameterExpression, string>
                             {
                                 { selector.Parameters[0], leftEvent },
                                 { Expression.Variable(rightMessageType, "rightBatch"), rightBatch },
                                 { Expression.Variable(typeof(int), rightBatchIndexVariable), rightIndex }
                             };
-                            var sb = new System.Text.StringBuilder();
-                            sb.AppendLine("{");
-                            foreach (var kv in projectionResult.ComputedFields)
+                            if (projectionResult.ProjectionReturningResultInstance != null)
                             {
-                                var f = kv.Key;
-                                var e = kv.Value;
-                                if (f.OptimizeString())
-                                {
-                                    sb.AppendFormat(
-                                        "output.{0}.AddString({1});\n",
-                                        f.Name,
-                                        e.ExpressionToCSharpStringWithParameterSubstitution(d));
-                                }
-                                else
-                                {
-                                    sb.AppendFormat(
-                                        "output.{0}.col[index] = {1};\n",
-                                        f.Name,
-                                        e.ExpressionToCSharpStringWithParameterSubstitution(d));
-                                }
+                                return $"this.output[index] = {projectionResult.ProjectionReturningResultInstance.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)};";
                             }
-                            sb.AppendLine("}");
-                            return sb.ToString();
+                            else
+                            {
+                                var sb = new System.Text.StringBuilder();
+                                sb.AppendLine("{");
+                                foreach (var kv in projectionResult.ComputedFields)
+                                {
+                                    var f = kv.Key;
+                                    var e = kv.Value;
+                                    if (f.OptimizeString())
+                                    {
+                                        sb.AppendLine($"this.output.{f.Name}.AddString({e.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)});");
+                                    }
+                                    else
+                                    {
+                                        sb.AppendLine($"this.output.{f.Name}.col[index] = {e.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)};");
+                                    }
+                                }
+                                sb.AppendLine("}");
+                                return sb.ToString();
+                            }
                         };
                     }
                     #endregion
@@ -213,36 +217,38 @@ namespace Microsoft.StreamProcessing
                             errorMessages = "error while transforming the result selector";
                             throw new InvalidOperationException();
                         }
+
                         template.activeSelector = (leftEvent, rightEvent) =>
                         {
-                            var d = new Dictionary<ParameterExpression, string>
+                            var parameterMap = new Dictionary<ParameterExpression, string>
                             {
                                 { selector.Parameters[0], leftEvent },
                                 { selector.Parameters[1], rightEvent }
                             };
-                            var sb = new System.Text.StringBuilder();
-                            sb.AppendLine("{");
-                            foreach (var kv in projectionResult.ComputedFields)
+                            if (projectionResult.ProjectionReturningResultInstance != null)
                             {
-                                var f = kv.Key;
-                                var e = kv.Value;
-                                if (f.OptimizeString())
-                                {
-                                    sb.AppendFormat(
-                                        "output.{0}.AddString({1});\n",
-                                        f.Name,
-                                        e.ExpressionToCSharpStringWithParameterSubstitution(d));
-                                }
-                                else
-                                {
-                                    sb.AppendFormat(
-                                        "output.{0}.col[index] = {1};\n",
-                                        f.Name,
-                                        e.ExpressionToCSharpStringWithParameterSubstitution(d));
-                                }
+                                return $"this.output[index] = {projectionResult.ProjectionReturningResultInstance.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)};";
                             }
-                            sb.AppendLine("}");
-                            return sb.ToString();
+                            else
+                            {
+                                var sb = new System.Text.StringBuilder();
+                                sb.AppendLine("{");
+                                foreach (var kv in projectionResult.ComputedFields)
+                                {
+                                    var f = kv.Key;
+                                    var e = kv.Value;
+                                    if (f.OptimizeString())
+                                    {
+                                        sb.AppendLine($"this.output.{f.Name}.AddString({e.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)});");
+                                    }
+                                    else
+                                    {
+                                        sb.AppendLine($"this.output.{f.Name}.col[index] = {e.ExpressionToCSharpStringWithParameterSubstitution(parameterMap)};");
+                                    }
+                                }
+                                sb.AppendLine("}");
+                                return sb.ToString();
+                            }
                         };
                     }
                     #endregion
@@ -267,7 +273,7 @@ namespace Microsoft.StreamProcessing
                     template.endPointHeap = "EndPointHeap";
                 }
 
-                return template.Generate<TKey, TLeft, TRight, TResult>();
+                return template.Generate<TKey, TLeft, TRight, TResult>(selector);
             }
             catch
             {

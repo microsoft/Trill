@@ -34,6 +34,8 @@ namespace Microsoft.StreamProcessing
 
         public FuseModule Clone() => new FuseModule(this);
 
+        public Expression[] GetCodeGenExpressions() => this.expressions.Select(profile => (Expression)profile.expression).ToArray();
+
         public FuseModule FuseSelect<TPayload, TResult>(Expression<Func<TPayload, TResult>> selector)
         {
             if (this.expressions.Count == 0)
