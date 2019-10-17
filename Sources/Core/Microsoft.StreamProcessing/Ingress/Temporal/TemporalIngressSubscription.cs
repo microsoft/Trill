@@ -358,22 +358,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
-                }
-            }
 
             // check for out of order event
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
@@ -491,6 +475,21 @@ namespace Microsoft.StreamProcessing
                     default:
                         Contract.Assert(false, "switch meant to be exhaustive");
                         throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -742,22 +741,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
-                }
-            }
 
             // check for out of order event
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
@@ -875,6 +858,21 @@ namespace Microsoft.StreamProcessing
                     default:
                         Contract.Assert(false, "switch meant to be exhaustive");
                         throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -1124,22 +1122,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
-                }
-            }
 
             // check for out of order event
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
@@ -1257,6 +1239,21 @@ namespace Microsoft.StreamProcessing
                     default:
                         Contract.Assert(false, "switch meant to be exhaustive");
                         throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
                 }
             }
 
@@ -1416,22 +1413,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
-                }
-            }
 
             // check for out of order event
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
@@ -1549,6 +1530,21 @@ namespace Microsoft.StreamProcessing
                     default:
                         Contract.Assert(false, "switch meant to be exhaustive");
                         throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -1697,22 +1693,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
-                }
-            }
 
             // check for out of order event
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
@@ -1830,6 +1810,21 @@ namespace Microsoft.StreamProcessing
                     default:
                         Contract.Assert(false, "switch meant to be exhaustive");
                         throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
                 }
             }
 
@@ -1976,22 +1971,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
-                }
-            }
 
             // check for out of order event
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
@@ -2109,6 +2088,21 @@ namespace Microsoft.StreamProcessing
                     default:
                         Contract.Assert(false, "switch meant to be exhaustive");
                         throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
                 }
             }
 
@@ -2324,22 +2318,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -2369,6 +2347,21 @@ namespace Microsoft.StreamProcessing
                                 value = new StreamEvent<TPayload>(current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
+                }
             }
 
             this.currentBatch.Add(value.SyncTime, value.OtherTime, Empty.Default, value.Payload);
@@ -2624,22 +2617,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -2669,6 +2646,21 @@ namespace Microsoft.StreamProcessing
                                 value = new StreamEvent<TPayload>(current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
+                }
             }
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, Empty.Default);
@@ -2921,22 +2913,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -2966,6 +2942,21 @@ namespace Microsoft.StreamProcessing
                                 value = new StreamEvent<TResult>(current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
+                }
             }
 
             this.currentBatch.Add(value.SyncTime, value.OtherTime, Empty.Default, value.Payload);
@@ -3135,22 +3126,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -3180,6 +3155,21 @@ namespace Microsoft.StreamProcessing
                                 value = new StreamEvent<TPayload>(current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
+                }
             }
 
             this.currentBatch.Add(value.SyncTime, value.OtherTime, Empty.Default, value.Payload);
@@ -3338,22 +3328,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -3383,6 +3357,21 @@ namespace Microsoft.StreamProcessing
                                 value = new StreamEvent<TPayload>(current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TPayload>(punctuationTimeQuantized));
+                }
             }
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, Empty.Default);
@@ -3538,22 +3527,6 @@ namespace Microsoft.StreamProcessing
             long current = this.currentTime;
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
-                if (!outOfOrder && delta >= this.punctuationGenerationPeriod)
-                {
-                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
-#endif
-                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -3583,6 +3556,21 @@ namespace Microsoft.StreamProcessing
                                 value = new StreamEvent<TResult>(current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                ulong delta = (ulong)(value.SyncTime - this.lastPunctuationTime);
+                if (delta >= this.punctuationGenerationPeriod)
+                {
+                    // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                    var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                    Debug.Assert(punctuationTimeQuantized >= LastEventTime(), "Bug in punctuation quantization logic");
+#endif
+                    OnPunctuation(StreamEvent.CreatePunctuation<TResult>(punctuationTimeQuantized));
+                }
             }
 
             this.currentBatch.Add(value.SyncTime, value.OtherTime, Empty.Default, value.Payload);
@@ -3848,31 +3836,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
-                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
-
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             // check for out of order event
             if (value.IsPunctuation)
@@ -3996,6 +3959,26 @@ namespace Microsoft.StreamProcessing
                         default:
                             Contract.Assert(false, "switch meant to be exhaustive");
                             throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                    }
+                }
+    
+                if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+                {
+                    // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                    if (this.punctuationGenerationPeriod > 0)
+                    {
+                        // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                        // punctuations for all partitions
+                        var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                        if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                        {
+                            // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                            var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+    #if DEBUG
+                            Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+    #endif
+                            OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                        }
                     }
                 }
     
@@ -4347,31 +4330,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
-                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
-
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             // check for out of order event
             if (value.IsPunctuation)
@@ -4495,6 +4453,26 @@ namespace Microsoft.StreamProcessing
                         default:
                             Contract.Assert(false, "switch meant to be exhaustive");
                             throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                    }
+                }
+    
+                if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+                {
+                    // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                    if (this.punctuationGenerationPeriod > 0)
+                    {
+                        // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                        // punctuations for all partitions
+                        var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                        if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                        {
+                            // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                            var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+    #if DEBUG
+                            Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+    #endif
+                            OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                        }
                     }
                 }
     
@@ -4844,31 +4822,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
-                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
-
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             // check for out of order event
             if (value.IsPunctuation)
@@ -4992,6 +4945,26 @@ namespace Microsoft.StreamProcessing
                         default:
                             Contract.Assert(false, "switch meant to be exhaustive");
                             throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                    }
+                }
+    
+                if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+                {
+                    // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                    if (this.punctuationGenerationPeriod > 0)
+                    {
+                        // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                        // punctuations for all partitions
+                        var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                        if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                        {
+                            // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                            var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+    #if DEBUG
+                            Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+    #endif
+                            OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                        }
                     }
                 }
     
@@ -5224,31 +5197,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
-                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
-
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             // check for out of order event
             if (value.IsPunctuation)
@@ -5372,6 +5320,26 @@ namespace Microsoft.StreamProcessing
                         default:
                             Contract.Assert(false, "switch meant to be exhaustive");
                             throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                    }
+                }
+    
+                if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+                {
+                    // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                    if (this.punctuationGenerationPeriod > 0)
+                    {
+                        // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                        // punctuations for all partitions
+                        var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                        if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                        {
+                            // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                            var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+    #if DEBUG
+                            Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+    #endif
+                            OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                        }
                     }
                 }
     
@@ -5546,31 +5514,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
-                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
-
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             // check for out of order event
             if (value.IsPunctuation)
@@ -5694,6 +5637,26 @@ namespace Microsoft.StreamProcessing
                         default:
                             Contract.Assert(false, "switch meant to be exhaustive");
                             throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                    }
+                }
+    
+                if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+                {
+                    // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                    if (this.punctuationGenerationPeriod > 0)
+                    {
+                        // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                        // punctuations for all partitions
+                        var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                        if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                        {
+                            // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                            var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+    #if DEBUG
+                            Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+    #endif
+                            OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                        }
                     }
                 }
     
@@ -5866,31 +5829,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // Track punctuation
-                if (value.IsPunctuation && value.SyncTime > this.lastPunctuationTime[value.PartitionKey].lastPunctuation)
-                    UpdatePunctuation(value.PartitionKey, value.SyncTime);
-
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             // check for out of order event
             if (value.IsPunctuation)
@@ -6014,6 +5952,26 @@ namespace Microsoft.StreamProcessing
                         default:
                             Contract.Assert(false, "switch meant to be exhaustive");
                             throw new InvalidOperationException("Unsupported stream event kind: " + value.Kind.ToString());
+                    }
+                }
+    
+                if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+                {
+                    // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                    if (this.punctuationGenerationPeriod > 0)
+                    {
+                        // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                        // punctuations for all partitions
+                        var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                        if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                        {
+                            // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                            var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+    #if DEBUG
+                            Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+    #endif
+                            OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                        }
                     }
                 }
     
@@ -6279,27 +6237,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -6329,6 +6266,26 @@ namespace Microsoft.StreamProcessing
                                 value = new PartitionedStreamEvent<TKey, TPayload>(value.PartitionKey, current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                if (this.punctuationGenerationPeriod > 0)
+                {
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
+                }
             }
 
             this.currentBatch.Add(value.SyncTime, value.OtherTime, new PartitionKey<TKey>(value.PartitionKey), value.Payload);
@@ -6680,27 +6637,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -6730,6 +6666,26 @@ namespace Microsoft.StreamProcessing
                                 value = new PartitionedStreamEvent<TKey, TPayload>(value.PartitionKey, current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                if (this.punctuationGenerationPeriod > 0)
+                {
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
+                }
             }
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, new PartitionKey<TKey>(value.PartitionKey));
@@ -7078,27 +7034,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -7128,6 +7063,26 @@ namespace Microsoft.StreamProcessing
                                 value = new PartitionedStreamEvent<TKey, TResult>(value.PartitionKey, current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                if (this.punctuationGenerationPeriod > 0)
+                {
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
+                }
             }
 
             this.currentBatch.Add(value.SyncTime, value.OtherTime, new PartitionKey<TKey>(value.PartitionKey), value.Payload);
@@ -7375,27 +7330,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -7425,6 +7359,26 @@ namespace Microsoft.StreamProcessing
                                 value = new PartitionedStreamEvent<TKey, TPayload>(value.PartitionKey, current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                if (this.punctuationGenerationPeriod > 0)
+                {
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
+                }
             }
 
             this.currentBatch.Add(value.SyncTime, value.OtherTime, new PartitionKey<TKey>(value.PartitionKey), value.Payload);
@@ -7614,27 +7568,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -7664,6 +7597,26 @@ namespace Microsoft.StreamProcessing
                                 value = new PartitionedStreamEvent<TKey, TPayload>(value.PartitionKey, current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                if (this.punctuationGenerationPeriod > 0)
+                {
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
+                }
             }
 
             this.action(value.SyncTime, value.OtherTime, value.Payload, new PartitionKey<TKey>(value.PartitionKey));
@@ -7850,27 +7803,6 @@ namespace Microsoft.StreamProcessing
             }
 
             var outOfOrder = value.SyncTime < current;
-            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
-            {
-                // out of order events shouldn't count, and if the disorder policy adjusts their sync time, then it
-                // will be made equal to a timestamp already seen earlier in the sequence and this would have triggered
-                // (if necessary) when that timestamp was seen.
-                if (!outOfOrder && this.punctuationGenerationPeriod > 0)
-                {
-                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
-                    // punctuations for all partitions
-                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
-                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
-                    {
-                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
-                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
-#if DEBUG
-                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
-#endif
-                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
-                    }
-                }
-            }
 
             if (this.disorderPolicyType == DisorderPolicyType.Throw)
             {
@@ -7900,6 +7832,26 @@ namespace Microsoft.StreamProcessing
                                 value = new PartitionedStreamEvent<TKey, TResult>(value.PartitionKey, current, value.OtherTime, value.Payload);
                             }
                         }
+            }
+
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                // Note that we must generate punctuation after disorder policy has been applied, since an event with an adjusted sync time may still need to generate the punctuation.
+                if (this.punctuationGenerationPeriod > 0)
+                {
+                    // We use lowWatermark as the baseline in the delta computation because a low watermark implies
+                    // punctuations for all partitions
+                    var prevPunctuation = Math.Max(this.lastPunctuationTime[value.PartitionKey].lastPunctuationQuantized, this.lowWatermark.quantizedForPunctuationGeneration);
+                    if ((ulong)(value.SyncTime - prevPunctuation) >= this.punctuationGenerationPeriod)
+                    {
+                        // SyncTime is sufficiently high to generate a new punctuation, but first snap it to the nearest generationPeriod boundary
+                        var punctuationTimeQuantized = value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
+#if DEBUG
+                        Debug.Assert(punctuationTimeQuantized >= LastEventTime(value.PartitionKey), "Bug in punctuation quantization logic");
+#endif
+                        OnPunctuation(value.CreatePunctuation(punctuationTimeQuantized));
+                    }
+                }
             }
 
             this.currentBatch.Add(value.SyncTime, value.OtherTime, new PartitionKey<TKey>(value.PartitionKey), value.Payload);
