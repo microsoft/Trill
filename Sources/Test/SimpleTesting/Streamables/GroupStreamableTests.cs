@@ -62,27 +62,23 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void Group0Row()
         {
-            var mapArity = Config.MapArity;
-            var reduceArity = Config.ReduceArity;
-            Config.MapArity = 1;
-            Config.ReduceArity = 1;
+            using (var modifier = new ConfigModifier().MapArity(1).ReduceArity(1).Modify())
+            {
+                // Simple pass through
+                var input = Enumerable.Range(0, 20);
+                var cached = input
+                    .ToObservable();
+                var cachedStr = cached
+                    .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+                var streamResult = cachedStr
+                    .GroupApply(i => i % 2, g => g)
+                    .ToPayloadEnumerable()
+                    ;
 
-            // Simple pass through
-            var input = Enumerable.Range(0, 20);
-            var cached = input
-                .ToObservable();
-            var cachedStr = cached
-                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
-            var streamResult = cachedStr
-                .GroupApply(i => i % 2, g => g)
-                .ToPayloadEnumerable()
-                ;
+                var a = streamResult.ToArray();
 
-            var a = streamResult.ToArray();
-
-            Config.MapArity = mapArity;
-            Config.ReduceArity = reduceArity;
-            Assert.IsTrue(input.SequenceEqual(a));
+                Assert.IsTrue(input.SequenceEqual(a));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -246,26 +242,26 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void Group7Row()
         {
-            var savedUseMultiString = Config.UseMultiString;
-            Config.UseMultiString = true;
-            var input = Enumerable.Range(0, 100)
-                .Select(i => new MyData { field1 = i, field2 = (i % 10).ToString(), })
-                ;
-            var stream = input
-                .ToStatStreamable();
-            var result = stream
-                .GroupApply(e => e.field2, str => str.Count(), (g, c) => new StructTuple<string, int> { Item1 = g.Key, Item2 = (int)c, })
-                .ToStreamEventObservable().Where(e => e.IsData)
-                .Select(e => e.Payload)
-                .ToEnumerable()
-                .OrderBy(e => e.Item1)
-                .ToArray();
-            var expected = input
-                .GroupBy(e => e.field2, (k, v) => new StructTuple<string, int> { Item1 = k, Item2 = v.Count(), })
-                .ToArray()
-                ;
-            Assert.IsTrue(expected.SequenceEqual(result));
-            Config.UseMultiString = savedUseMultiString;
+            using (var modifier = new ConfigModifier().UseMultiString(true).Modify())
+            {
+                var input = Enumerable.Range(0, 100)
+                    .Select(i => new MyData { field1 = i, field2 = (i % 10).ToString(), })
+                    ;
+                var stream = input
+                    .ToStatStreamable();
+                var result = stream
+                    .GroupApply(e => e.field2, str => str.Count(), (g, c) => new StructTuple<string, int> { Item1 = g.Key, Item2 = (int)c, })
+                    .ToStreamEventObservable().Where(e => e.IsData)
+                    .Select(e => e.Payload)
+                    .ToEnumerable()
+                    .OrderBy(e => e.Item1)
+                    .ToArray();
+                var expected = input
+                    .GroupBy(e => e.field2, (k, v) => new StructTuple<string, int> { Item1 = k, Item2 = v.Count(), })
+                    .ToArray()
+                    ;
+                Assert.IsTrue(expected.SequenceEqual(result));
+            }
         }
     }
 
@@ -281,27 +277,23 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void Group0RowSmallBatch()
         {
-            var mapArity = Config.MapArity;
-            var reduceArity = Config.ReduceArity;
-            Config.MapArity = 1;
-            Config.ReduceArity = 1;
+            using (var modifier = new ConfigModifier().MapArity(1).ReduceArity(1).Modify())
+            {
+                // Simple pass through
+                var input = Enumerable.Range(0, 20);
+                var cached = input
+                    .ToObservable();
+                var cachedStr = cached
+                    .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+                var streamResult = cachedStr
+                    .GroupApply(i => i % 2, g => g)
+                    .ToPayloadEnumerable()
+                    ;
 
-            // Simple pass through
-            var input = Enumerable.Range(0, 20);
-            var cached = input
-                .ToObservable();
-            var cachedStr = cached
-                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
-            var streamResult = cachedStr
-                .GroupApply(i => i % 2, g => g)
-                .ToPayloadEnumerable()
-                ;
+                var a = streamResult.ToArray();
 
-            var a = streamResult.ToArray();
-
-            Config.MapArity = mapArity;
-            Config.ReduceArity = reduceArity;
-            Assert.IsTrue(input.SequenceEqual(a));
+                Assert.IsTrue(input.SequenceEqual(a));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -465,26 +457,26 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void Group7RowSmallBatch()
         {
-            var savedUseMultiString = Config.UseMultiString;
-            Config.UseMultiString = true;
-            var input = Enumerable.Range(0, 100)
-                .Select(i => new MyData { field1 = i, field2 = (i % 10).ToString(), })
-                ;
-            var stream = input
-                .ToStatStreamable();
-            var result = stream
-                .GroupApply(e => e.field2, str => str.Count(), (g, c) => new StructTuple<string, int> { Item1 = g.Key, Item2 = (int)c, })
-                .ToStreamEventObservable().Where(e => e.IsData)
-                .Select(e => e.Payload)
-                .ToEnumerable()
-                .OrderBy(e => e.Item1)
-                .ToArray();
-            var expected = input
-                .GroupBy(e => e.field2, (k, v) => new StructTuple<string, int> { Item1 = k, Item2 = v.Count(), })
-                .ToArray()
-                ;
-            Assert.IsTrue(expected.SequenceEqual(result));
-            Config.UseMultiString = savedUseMultiString;
+            using (var modifier = new ConfigModifier().UseMultiString(true).Modify())
+            {
+                var input = Enumerable.Range(0, 100)
+                    .Select(i => new MyData { field1 = i, field2 = (i % 10).ToString(), })
+                    ;
+                var stream = input
+                    .ToStatStreamable();
+                var result = stream
+                    .GroupApply(e => e.field2, str => str.Count(), (g, c) => new StructTuple<string, int> { Item1 = g.Key, Item2 = (int)c, })
+                    .ToStreamEventObservable().Where(e => e.IsData)
+                    .Select(e => e.Payload)
+                    .ToEnumerable()
+                    .OrderBy(e => e.Item1)
+                    .ToArray();
+                var expected = input
+                    .GroupBy(e => e.field2, (k, v) => new StructTuple<string, int> { Item1 = k, Item2 = v.Count(), })
+                    .ToArray()
+                    ;
+                Assert.IsTrue(expected.SequenceEqual(result));
+            }
         }
     }
 
@@ -499,27 +491,23 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void Group0Columnar()
         {
-            var mapArity = Config.MapArity;
-            var reduceArity = Config.ReduceArity;
-            Config.MapArity = 1;
-            Config.ReduceArity = 1;
+            using (var modifier = new ConfigModifier().MapArity(1).ReduceArity(1).Modify())
+            {
+                // Simple pass through
+                var input = Enumerable.Range(0, 20);
+                var cached = input
+                    .ToObservable();
+                var cachedStr = cached
+                    .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+                var streamResult = cachedStr
+                    .GroupApply(i => i % 2, g => g)
+                    .ToPayloadEnumerable()
+                    ;
 
-            // Simple pass through
-            var input = Enumerable.Range(0, 20);
-            var cached = input
-                .ToObservable();
-            var cachedStr = cached
-                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
-            var streamResult = cachedStr
-                .GroupApply(i => i % 2, g => g)
-                .ToPayloadEnumerable()
-                ;
+                var a = streamResult.ToArray();
 
-            var a = streamResult.ToArray();
-
-            Config.MapArity = mapArity;
-            Config.ReduceArity = reduceArity;
-            Assert.IsTrue(input.SequenceEqual(a));
+                Assert.IsTrue(input.SequenceEqual(a));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -683,26 +671,26 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void Group7Columnar()
         {
-            var savedUseMultiString = Config.UseMultiString;
-            Config.UseMultiString = true;
-            var input = Enumerable.Range(0, 100)
-                .Select(i => new MyData { field1 = i, field2 = (i % 10).ToString(), })
-                ;
-            var stream = input
-                .ToStatStreamable();
-            var result = stream
-                .GroupApply(e => e.field2, str => str.Count(), (g, c) => new StructTuple<string, int> { Item1 = g.Key, Item2 = (int)c, })
-                .ToStreamEventObservable().Where(e => e.IsData)
-                .Select(e => e.Payload)
-                .ToEnumerable()
-                .OrderBy(e => e.Item1)
-                .ToArray();
-            var expected = input
-                .GroupBy(e => e.field2, (k, v) => new StructTuple<string, int> { Item1 = k, Item2 = v.Count(), })
-                .ToArray()
-                ;
-            Assert.IsTrue(expected.SequenceEqual(result));
-            Config.UseMultiString = savedUseMultiString;
+            using (var modifier = new ConfigModifier().UseMultiString(true).Modify())
+            {
+                var input = Enumerable.Range(0, 100)
+                    .Select(i => new MyData { field1 = i, field2 = (i % 10).ToString(), })
+                    ;
+                var stream = input
+                    .ToStatStreamable();
+                var result = stream
+                    .GroupApply(e => e.field2, str => str.Count(), (g, c) => new StructTuple<string, int> { Item1 = g.Key, Item2 = (int)c, })
+                    .ToStreamEventObservable().Where(e => e.IsData)
+                    .Select(e => e.Payload)
+                    .ToEnumerable()
+                    .OrderBy(e => e.Item1)
+                    .ToArray();
+                var expected = input
+                    .GroupBy(e => e.field2, (k, v) => new StructTuple<string, int> { Item1 = k, Item2 = v.Count(), })
+                    .ToArray()
+                    ;
+                Assert.IsTrue(expected.SequenceEqual(result));
+            }
         }
     }
 
@@ -718,27 +706,23 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void Group0ColumnarSmallBatch()
         {
-            var mapArity = Config.MapArity;
-            var reduceArity = Config.ReduceArity;
-            Config.MapArity = 1;
-            Config.ReduceArity = 1;
+            using (var modifier = new ConfigModifier().MapArity(1).ReduceArity(1).Modify())
+            {
+                // Simple pass through
+                var input = Enumerable.Range(0, 20);
+                var cached = input
+                    .ToObservable();
+                var cachedStr = cached
+                    .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+                var streamResult = cachedStr
+                    .GroupApply(i => i % 2, g => g)
+                    .ToPayloadEnumerable()
+                    ;
 
-            // Simple pass through
-            var input = Enumerable.Range(0, 20);
-            var cached = input
-                .ToObservable();
-            var cachedStr = cached
-                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
-            var streamResult = cachedStr
-                .GroupApply(i => i % 2, g => g)
-                .ToPayloadEnumerable()
-                ;
+                var a = streamResult.ToArray();
 
-            var a = streamResult.ToArray();
-
-            Config.MapArity = mapArity;
-            Config.ReduceArity = reduceArity;
-            Assert.IsTrue(input.SequenceEqual(a));
+                Assert.IsTrue(input.SequenceEqual(a));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -902,26 +886,26 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void Group7ColumnarSmallBatch()
         {
-            var savedUseMultiString = Config.UseMultiString;
-            Config.UseMultiString = true;
-            var input = Enumerable.Range(0, 100)
-                .Select(i => new MyData { field1 = i, field2 = (i % 10).ToString(), })
-                ;
-            var stream = input
-                .ToStatStreamable();
-            var result = stream
-                .GroupApply(e => e.field2, str => str.Count(), (g, c) => new StructTuple<string, int> { Item1 = g.Key, Item2 = (int)c, })
-                .ToStreamEventObservable().Where(e => e.IsData)
-                .Select(e => e.Payload)
-                .ToEnumerable()
-                .OrderBy(e => e.Item1)
-                .ToArray();
-            var expected = input
-                .GroupBy(e => e.field2, (k, v) => new StructTuple<string, int> { Item1 = k, Item2 = v.Count(), })
-                .ToArray()
-                ;
-            Assert.IsTrue(expected.SequenceEqual(result));
-            Config.UseMultiString = savedUseMultiString;
+            using (var modifier = new ConfigModifier().UseMultiString(true).Modify())
+            {
+                var input = Enumerable.Range(0, 100)
+                    .Select(i => new MyData { field1 = i, field2 = (i % 10).ToString(), })
+                    ;
+                var stream = input
+                    .ToStatStreamable();
+                var result = stream
+                    .GroupApply(e => e.field2, str => str.Count(), (g, c) => new StructTuple<string, int> { Item1 = g.Key, Item2 = (int)c, })
+                    .ToStreamEventObservable().Where(e => e.IsData)
+                    .Select(e => e.Payload)
+                    .ToEnumerable()
+                    .OrderBy(e => e.Item1)
+                    .ToArray();
+                var expected = input
+                    .GroupBy(e => e.field2, (k, v) => new StructTuple<string, int> { Item1 = k, Item2 = v.Count(), })
+                    .ToArray()
+                    ;
+                Assert.IsTrue(expected.SequenceEqual(result));
+            }
         }
     }
 }

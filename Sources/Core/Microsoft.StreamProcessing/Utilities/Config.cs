@@ -573,7 +573,13 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<StreamScheduler>.Create(
                 value,
-                v => { var old = Config.StreamScheduler; Config.StreamScheduler = v; return old; }));
+                v =>
+                {
+                    var old = Config.StreamScheduler;
+                    old?.Stop();
+                    Config.StreamScheduler = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -614,6 +620,14 @@ namespace Microsoft.StreamProcessing
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
                 v => { var old = Config.CodegenOptions.CodeGenAfa; Config.CodegenOptions.CodeGenAfa = v; return old; }));
+            return this;
+        }
+
+        public ConfigModifier SerializationCompressionLevel(SerializationCompressionLevel value)
+        {
+            this.modifications.Add(GatedModification<SerializationCompressionLevel>.Create(
+                value,
+                v => { var old = Config.SerializationCompressionLevel; Config.SerializationCompressionLevel = v; return old; }));
             return this;
         }
 
