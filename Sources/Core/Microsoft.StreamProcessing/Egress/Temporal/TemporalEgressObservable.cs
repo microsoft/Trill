@@ -50,10 +50,7 @@ namespace Microsoft.StreamProcessing
             return this.source.Subscribe(pipe);
         }
 
-        private CacheKey CachedPipeLookupKey()
-        {
-            return CacheKey.Create(typeof(TPayload), "StreamEvent");
-        }
+        private CacheKey CachedPipeLookupKey() => CacheKey.Create(typeof(TPayload), "StreamEvent");
 
         private bool CanGenerateColumnar()
         {
@@ -129,10 +126,7 @@ namespace Microsoft.StreamProcessing
             return this.source.Subscribe(pipe);
         }
 
-        private CacheKey CachedPipeLookupKey()
-        {
-            return CacheKey.Create(typeof(TPayload), this.constructor.Body.ExpressionToCSharp(), typeof(TResult), "StartEdge");
-        }
+        private CacheKey CachedPipeLookupKey() => CacheKey.Create(typeof(TPayload), this.constructor.Body.ExpressionToCSharp(), typeof(TResult), "StartEdge");
 
         private bool CanGenerateColumnar()
         {
@@ -200,10 +194,7 @@ namespace Microsoft.StreamProcessing
             return this.source.Subscribe(pipe);
         }
 
-        private CacheKey CachedPipeLookupKey()
-        {
-            return CacheKey.Create(typeof(TPayload), this.constructor.Body.ExpressionToCSharp(), typeof(TResult), "Interval");
-        }
+        private CacheKey CachedPipeLookupKey() => CacheKey.Create(typeof(TPayload), this.constructor.Body.ExpressionToCSharp(), typeof(TResult), "Interval");
 
         private bool CanGenerateColumnar()
         {
@@ -267,10 +258,7 @@ namespace Microsoft.StreamProcessing
             return this.source.Subscribe(pipe);
         }
 
-        private CacheKey CachedPipeLookupKey()
-        {
-            return CacheKey.Create(typeof(TPayload), typeof(TKey), "StreamEvent");
-        }
+        private CacheKey CachedPipeLookupKey() => CacheKey.Create(typeof(TPayload), typeof(TKey), "StreamEvent");
 
         private bool CanGenerateColumnar()
         {
@@ -346,10 +334,7 @@ namespace Microsoft.StreamProcessing
             return this.source.Subscribe(pipe);
         }
 
-        private CacheKey CachedPipeLookupKey()
-        {
-            return CacheKey.Create(typeof(TPayload), this.constructor.Body.ExpressionToCSharp(), typeof(TResult), typeof(TKey), "StartEdge");
-        }
+        private CacheKey CachedPipeLookupKey() => CacheKey.Create(typeof(TPayload), this.constructor.Body.ExpressionToCSharp(), typeof(TResult), typeof(TKey), "StartEdge");
 
         private bool CanGenerateColumnar()
         {
@@ -417,10 +402,7 @@ namespace Microsoft.StreamProcessing
             return this.source.Subscribe(pipe);
         }
 
-        private CacheKey CachedPipeLookupKey()
-        {
-            return CacheKey.Create(typeof(TPayload), this.constructor.Body.ExpressionToCSharp(), typeof(TResult), typeof(TKey), "Interval");
-        }
+        private CacheKey CachedPipeLookupKey() => CacheKey.Create(typeof(TPayload), this.constructor.Body.ExpressionToCSharp(), typeof(TResult), typeof(TKey), "Interval");
 
         private bool CanGenerateColumnar()
         {

@@ -93,8 +93,8 @@ namespace Microsoft.StreamProcessing
                     broadcastMaster.bitvector = broadcastMaster.bitvector.MakeWritable(this.pool.bitvectorPool);
 
                     // Since we only care about punctuations, delete everything
-                    for (i = 0; i <= broadcastMaster.Count >> 6; i++)
-                        broadcastMaster.bitvector.col[i] = ~(0L);
+                    for (int deletingIndex = 0; deletingIndex <= broadcastMaster.Count >> 6; deletingIndex++)
+                        broadcastMaster.bitvector.col[deletingIndex] = ~(0L);
 
                     break;
                 }

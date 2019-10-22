@@ -91,13 +91,10 @@ foreach (string ingressType in new string[] { "StreamEvent", "StartEdge", "Inter
             return this.source.Subscribe(pipe);
         }
 
-        private CacheKey CachedPipeLookupKey()
-        {
-            return CacheKey.Create(typeof(TPayload)<#
+        private CacheKey CachedPipeLookupKey() => CacheKey.Create(typeof(TPayload)<#
                 if (ingressType != "StreamEvent") {#>, this.constructor.Body.ExpressionToCSharp(), typeof(TResult)<# }
                 if (!string.IsNullOrEmpty(partitionString)) {#>, typeof(TKey)<# }
                 #>, "<#= ingressType #>");
-        }
 
         private bool CanGenerateColumnar()
         {
