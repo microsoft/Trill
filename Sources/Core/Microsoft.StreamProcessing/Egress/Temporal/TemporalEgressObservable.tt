@@ -91,13 +91,17 @@ foreach (string ingressType in new string[] { "StreamEvent", "StartEdge", "Inter
             return this.source.Subscribe(pipe);
         }
 
+        private CacheKey CachedPipeLookupKey() => CacheKey.Create(typeof(TPayload)<#
+                if (ingressType != "StreamEvent") {#>, this.constructor.Body.ExpressionToCSharp(), typeof(TResult)<# }
+                if (!string.IsNullOrEmpty(partitionString)) {#>, typeof(TKey)<# }
+                #>, "<#= ingressType #>");
+
         private bool CanGenerateColumnar()
         {
             if (<#= !string.IsNullOrEmpty(partitionString) ? "typeof(TKey).IsAnonymousTypeName() || " : string.Empty #>typeof(TPayload).IsAnonymousTypeName()<#= ingressType != "StreamEvent" ? " || typeof(TResult).IsAnonymousTypeName()" : string.Empty#>) return false;
             if (<#= !string.IsNullOrEmpty(partitionString) ? "!typeof(TKey).GetTypeInfo().IsVisible || " : string.Empty #>!typeof(TPayload).GetTypeInfo().IsVisible<#= ingressType != "StreamEvent" ? " || !typeof(TResult).GetTypeInfo().IsVisible" : string.Empty#>) return false;
 
-            var lookupKey = CacheKey.Create(<#= ingressType == "StartEdge" || ingressType == "Interval"  ? "this.constructor.Body.ExpressionToCSharp(), " : string.Empty #>this.source.Properties.IsColumnar);
-
+            var lookupKey = CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             this.errorMessages = generatedPipeType.Item2;
@@ -106,8 +110,7 @@ foreach (string ingressType in new string[] { "StreamEvent", "StartEdge", "Inter
 
         private EgressBoundary<<#= inputKey #>, TPayload, <#= egress #>> GetPipe(IObserver<<#= egress #>> observer)
         {
-            var lookupKey = CacheKey.Create(<#= ingressType == "StartEdge" || ingressType == "Interval"  ? "this.constructor.Body.ExpressionToCSharp(), " : string.Empty #>this.source.Properties.IsColumnar);
-
+            var lookupKey = CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, observer, this.container);

@@ -1237,42 +1237,6 @@ namespace SimpleTesting
             };
             Assert.IsTrue(expected.SequenceEqual(output));
         }
-
-        [TestMethod, TestCategory("Gated")]
-        public void OutOfOrderGeneratedPunctuationWithAdjustedOutOfOrderEvent()
-        {
-            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
-            {
-                const long reorderLatency = 500;
-                const long punctuationPeriod = 1000;
-                var qc = new QueryContainer();
-                var input = new Subject<PartitionedStreamEvent<int, int>>();
-                var ingress = qc.RegisterInput(
-                    input,
-                    disorderPolicy: DisorderPolicy.Adjust(reorderLatency),
-                    periodicPunctuationPolicy: PeriodicPunctuationPolicy.Time(punctuationPeriod));
-                var output = new List<PartitionedStreamEvent<int, int>>();
-                var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
-                var process = qc.Restore();
-
-                // Ingress an event at time 9_900. This will update the "current time" of the partition to 9_900-reorderLatency=9_400
-                input.OnNext(PartitionedStreamEvent.CreateStart(0, 9_900, 1));
-
-                // Ingress an out of order event. This should be adjusted to the "current time" of 9_400. It should also generate a punctuation at 9_000.
-                input.OnNext(PartitionedStreamEvent.CreateStart(0, 9_100, 2));
-
-                input.OnCompleted();
-
-                var expected = new PartitionedStreamEvent<int, int>[]
-                {
-                    PartitionedStreamEvent.CreatePunctuation<int, int>(0, 9_000),
-                    PartitionedStreamEvent.CreateStart(0, 9_400, 2),
-                    PartitionedStreamEvent.CreateStart(0, 9_900, 1),
-                    PartitionedStreamEvent.CreateLowWatermark<int, int>(StreamEvent.InfinitySyncTime),
-                };
-                Assert.IsTrue(expected.SequenceEqual(output));
-            }
-        }
     }
 
     [TestClass]
@@ -1890,30 +1854,31 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SerializerRegressionTest()
         {
-            Config.ForceRowBasedExecution = true;
-            var processor = new QueryProcessor();
-
-            var inputEvents = ReadSource();
-
-            int cnt = 0;
-            foreach (var x in inputEvents)
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
             {
-                if (cnt++ == 45000)
+                var processor = new QueryProcessor();
+                var inputEvents = ReadSource();
+
+                int cnt = 0;
+                foreach (var x in inputEvents)
                 {
-                    Console.WriteLine("Taking a checkpoint after {0} input events", cnt);
-                    processor.Checkpoint();
-                    processor.Flush();
+                    if (cnt++ == 45000)
+                    {
+                        Console.WriteLine("Taking a checkpoint after {0} input events", cnt);
+                        processor.Checkpoint();
+                        processor.Flush();
 
-                    Console.WriteLine("Restoring from the checkpoint");
-                    processor = new QueryProcessor(true);
-                    Console.WriteLine("Done restoring");
+                        Console.WriteLine("Restoring from the checkpoint");
+                        processor = new QueryProcessor(true);
+                        Console.WriteLine("Done restoring");
+                    }
+
+                    if (cnt % 5000 == 0) Console.WriteLine(cnt);
+
+                    processor.SendEvent(x);
                 }
-
-                if (cnt % 5000 == 0) Console.WriteLine(cnt);
-
-                processor.SendEvent(x);
+                processor.Flush();
             }
-            processor.Flush();
         }
     }
 
@@ -2560,36 +2525,36 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void WhereWithClosure()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
-
-            // Should cause fallback to row-oriented.
-            // BUG? Should codegen be able to handle this?
-            var s = "string";
-            var t = "another string";
-            TestWhere(e => e.field2.mystring.Contains(s + t));
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                // Should cause fallback to row-oriented.
+                // BUG? Should codegen be able to handle this?
+                var s = "string";
+                var t = "another string";
+                TestWhere(e => e.field2.mystring.Contains(s + t));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void WhereNonColumnarWithClass() // Test to make sure that ColToRow creates an instance of a payload when it is a class
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
-            var input = Enumerable.Range(0, 20).Select(i => new MyString(i.ToString()));
-            var foo = "1";
-            var observable = input
-                .ToObservable();
-            var stream = observable
-                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
-            var streamResult = stream
-                .Where(r => r.mystring.Contains(foo))
-                .ToPayloadEnumerable();
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                Config.ForceRowBasedExecution = true;
+                var input = Enumerable.Range(0, 20).Select(i => new MyString(i.ToString()));
+                var foo = "1";
+                var observable = input
+                    .ToObservable();
+                var stream = observable
+                    .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+                var streamResult = stream
+                    .Where(r => r.mystring.Contains(foo))
+                    .ToPayloadEnumerable();
 
-            var a = streamResult.ToArray();
-            var expected = input.Where(r => r.mystring.Contains(foo));
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
-            Assert.IsTrue(expected.SequenceEqual(a));
+                var a = streamResult.ToArray();
+                var expected = input.Where(r => r.mystring.Contains(foo));
+                Assert.IsTrue(expected.SequenceEqual(a));
+            }
         }
     }
 
