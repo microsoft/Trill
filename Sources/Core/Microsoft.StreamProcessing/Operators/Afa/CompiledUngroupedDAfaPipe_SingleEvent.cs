@@ -151,17 +151,19 @@ namespace Microsoft.StreamProcessing
                                                 this.activeState_state = arcinfo.toState;
                                                 if (this.isFinal[this.activeState_state])
                                                 {
+                                                    var otherTime = Math.Min(this.activeState_PatternStartTimestamp + this.MaxDuration, StreamEvent.InfinitySyncTime);
+
                                                     if (!this.IsSyncTimeSimultaneityFree)
                                                     {
                                                         int ind = this.tentativeOutput.Insert();
-                                                        this.tentativeOutput.Values[ind].other = this.activeState_PatternStartTimestamp + this.MaxDuration;
+                                                        this.tentativeOutput.Values[ind].other = otherTime;
                                                         this.tentativeOutput.Values[ind].key = srckey[i];
                                                         this.tentativeOutput.Values[ind].payload = this.activeState_register;
                                                     }
                                                     else
                                                     {
                                                         dest_vsync[this.iter] = synctime;
-                                                        dest_vother[this.iter] = this.activeState_PatternStartTimestamp + this.MaxDuration;
+                                                        dest_vother[this.iter] = otherTime;
                                                         this.batch[this.iter] = this.activeState_register;
                                                         destkey[this.iter] = srckey[i];
                                                         dest_hash[this.iter] = src_hash[i];
@@ -212,17 +214,19 @@ namespace Microsoft.StreamProcessing
                                         this.activeState_state = arcinfo.toState;
                                         if (this.isFinal[this.activeState_state])
                                         {
+                                            var otherTime = Math.Min(synctime + this.MaxDuration, StreamEvent.InfinitySyncTime);
+
                                             if (!this.IsSyncTimeSimultaneityFree)
                                             {
                                                 int ind = this.tentativeOutput.Insert();
-                                                this.tentativeOutput.Values[ind].other = synctime + this.MaxDuration;
+                                                this.tentativeOutput.Values[ind].other = otherTime;
                                                 this.tentativeOutput.Values[ind].key = srckey[i];
                                                 this.tentativeOutput.Values[ind].payload = this.activeState_register;
                                             }
                                             else
                                             {
                                                 dest_vsync[this.iter] = synctime;
-                                                dest_vother[this.iter] = synctime + this.MaxDuration;
+                                                dest_vother[this.iter] = otherTime;
                                                 this.batch[this.iter] = this.activeState_register;
                                                 destkey[this.iter] = srckey[i];
                                                 dest_hash[this.iter] = src_hash[i];

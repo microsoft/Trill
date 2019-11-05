@@ -559,6 +559,53 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void AfaZeroOrOneWithStartEvent()
+        {
+            var source = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateStart(0, "A"),
+                StreamEvent.CreateStart(1, "C"),
+                StreamEvent.CreateStart(2, "B"),
+                StreamEvent.CreateStart(3, "B"),
+                StreamEvent.CreateStart(4, "C"),
+                StreamEvent.CreateStart(5, "A"),
+                StreamEvent.CreateStart(6, "B"),
+                StreamEvent.CreateStart(7, "B"),
+                StreamEvent.CreateStart(8, "B"),
+                StreamEvent.CreateStart(9, "A"),
+            }.ToObservable()
+                .ToStreamable()
+                .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
+
+            var afa = ARegex.Concat(
+                ARegex.SingleElement<string, string>(
+                    (time, @event, state) => @event == "A",
+                    (time, @event, state) => @event),
+                ARegex.ZeroOrOne(
+                    ARegex.SingleElement<string, string>(
+                        (time, @event, state) => @event == "B",
+                        (time, @event, state) => state + @event)));
+
+            var result = source
+                .Detect(
+                    afa,
+                    allowOverlappingInstances: false,
+                    isDeterministic: false)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateStart(0, "A"),
+                StreamEvent.CreateStart(5, "A"),
+                StreamEvent.CreateStart(6, "AB"),
+                StreamEvent.CreateStart(9, "A"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void AfaZeroOrOneInsideOr()
         {
             var source = new StreamEvent<string>[]

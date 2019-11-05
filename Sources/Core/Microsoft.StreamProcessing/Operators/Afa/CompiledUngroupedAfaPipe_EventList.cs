@@ -84,7 +84,7 @@ namespace Microsoft.StreamProcessing
                                             if (this.isFinal[ns])
                                             {
                                                 this.batch.vsync.col[this.iter] = synctime;
-                                                this.batch.vother.col[this.iter] = state.PatternStartTimestamp + this.MaxDuration;
+                                                this.batch.vother.col[this.iter] = Math.Min(state.PatternStartTimestamp + this.MaxDuration, StreamEvent.InfinitySyncTime);
                                                 this.batch[this.iter] = newReg;
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
@@ -142,7 +142,7 @@ namespace Microsoft.StreamProcessing
                                             if (this.isFinal[ns])
                                             {
                                                 this.batch.vsync.col[this.iter] = synctime;
-                                                this.batch.vother.col[this.iter] = state.PatternStartTimestamp + this.MaxDuration;
+                                                this.batch.vother.col[this.iter] = Math.Min(state.PatternStartTimestamp + this.MaxDuration, StreamEvent.InfinitySyncTime);
                                                 this.batch[this.iter] = newReg;
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
@@ -213,7 +213,7 @@ namespace Microsoft.StreamProcessing
                                         if (this.isFinal[ns])
                                         {
                                             this.batch.vsync.col[this.iter] = synctime;
-                                            this.batch.vother.col[this.iter] = synctime + this.MaxDuration;
+                                            this.batch.vother.col[this.iter] = Math.Min(synctime + this.MaxDuration, StreamEvent.InfinitySyncTime);
                                             this.batch[this.iter] = newReg;
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
@@ -266,7 +266,7 @@ namespace Microsoft.StreamProcessing
                                         if (this.isFinal[ns])
                                         {
                                             this.batch.vsync.col[this.iter] = synctime;
-                                            this.batch.vother.col[this.iter] = synctime + this.MaxDuration;
+                                            this.batch.vother.col[this.iter] = Math.Min(synctime + this.MaxDuration, StreamEvent.InfinitySyncTime);
                                             this.batch[this.iter] = newReg;
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
