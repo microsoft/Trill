@@ -558,6 +558,65 @@ namespace SimpleTesting
             Assert.IsTrue(result.SequenceEqual(expected));
         }
 
+        internal class State
+        {
+            // This cannot be an enum because we want represent a concatinated state in terms of digits in int value
+            public const int A = 1;
+            public const int B = 2;
+            public const int C = 3;
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AfaZeroOrOneWithStartEvent()
+        {
+            var source = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateStart(0, State.A),
+                StreamEvent.CreateStart(1, State.C),
+                StreamEvent.CreateStart(2, State.B),
+                StreamEvent.CreateStart(3, State.B),
+                StreamEvent.CreateStart(4, State.C),
+                StreamEvent.CreateStart(5, State.A),
+                StreamEvent.CreateStart(6, State.B),
+                StreamEvent.CreateStart(7, State.B),
+                StreamEvent.CreateStart(8, State.B),
+                StreamEvent.CreateStart(9, State.A),
+            }.ToObservable()
+                .ToStreamable()
+                .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
+
+            // Assert we are actually testing columnar
+            Assert.IsTrue(source.Properties.IsColumnar);
+
+            var afa = ARegex.Concat(
+                ARegex.SingleElement<int, int>(
+                    (time, @event, state) => @event == State.A,
+                    (time, @event, state) => @event),
+                ARegex.ZeroOrOne(
+                    ARegex.SingleElement<int, int>(
+                        (time, @event, state) => @event == State.B,
+                        (time, @event, state) => state * 10 + @event)));
+
+            var result = source
+                .Detect(
+                    afa,
+                    allowOverlappingInstances: false,
+                    isDeterministic: false)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateStart(0, State.A),
+                StreamEvent.CreateStart(5, State.A),
+                StreamEvent.CreateStart(6, State.A * 10 + State.B),
+                StreamEvent.CreateStart(9, State.A),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
         [TestMethod, TestCategory("Gated")]
         public void AfaZeroOrOneInsideOr()
         {

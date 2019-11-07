@@ -156,17 +156,19 @@ namespace Microsoft.StreamProcessing
                                                     {
                                                         if (this.isFinal[ns])
                                                         {
+                                                            var otherTime = Math.Min(state.PatternStartTimestamp + this.MaxDuration, StreamEvent.InfinitySyncTime);
+
                                                             if (!this.IsSyncTimeSimultaneityFree)
                                                             {
                                                                 int ind = this.tentativeOutput.Insert();
-                                                                this.tentativeOutput.Values[ind].other = state.PatternStartTimestamp + this.MaxDuration;
+                                                                this.tentativeOutput.Values[ind].other = otherTime;
                                                                 this.tentativeOutput.Values[ind].key = srckey[i];
                                                                 this.tentativeOutput.Values[ind].payload = newReg;
                                                             }
                                                             else
                                                             {
                                                                 dest_vsync[this.iter] = synctime;
-                                                                dest_vother[this.iter] = state.PatternStartTimestamp + this.MaxDuration;
+                                                                dest_vother[this.iter] = otherTime;
                                                                 this.batch[this.iter] = newReg;
                                                                 destkey[this.iter] = srckey[i];
                                                                 dest_hash[this.iter] = src_hash[i];
@@ -235,17 +237,19 @@ namespace Microsoft.StreamProcessing
                                             {
                                                 if (this.isFinal[ns])
                                                 {
+                                                    var otherTime = Math.Min(synctime + this.MaxDuration, StreamEvent.InfinitySyncTime);
+
                                                     if (!this.IsSyncTimeSimultaneityFree)
                                                     {
                                                         int ind = this.tentativeOutput.Insert();
-                                                        this.tentativeOutput.Values[ind].other = synctime + this.MaxDuration;
+                                                        this.tentativeOutput.Values[ind].other = otherTime;
                                                         this.tentativeOutput.Values[ind].key = srckey[i];
                                                         this.tentativeOutput.Values[ind].payload = newReg;
                                                     }
                                                     else
                                                     {
                                                         dest_vsync[this.iter] = synctime;
-                                                        dest_vother[this.iter] = synctime + this.MaxDuration;
+                                                        dest_vother[this.iter] = otherTime;
                                                         this.batch[this.iter] = newReg;
                                                         destkey[this.iter] = srckey[i];
                                                         dest_hash[this.iter] = src_hash[i];

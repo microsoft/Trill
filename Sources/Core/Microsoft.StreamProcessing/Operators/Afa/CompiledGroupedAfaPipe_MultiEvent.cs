@@ -75,7 +75,7 @@ namespace Microsoft.StreamProcessing
                                 if (this.isFinal[state2.toState])
                                 {
                                     this.batch.vsync.col[this.iter] = this.lastSyncTime;
-                                    this.batch.vother.col[this.iter] = state2.PatternStartTimestamp + this.MaxDuration;
+                                    this.batch.vother.col[this.iter] = Math.Min(state2.PatternStartTimestamp + this.MaxDuration, StreamEvent.InfinitySyncTime);
                                     this.batch.payload.col[this.iter] = this.activeStates.Values[activeFind_index].register;
                                     this.batch.key.col[this.iter] = state2.key;
                                     this.batch.hash.col[this.iter] = hash;
