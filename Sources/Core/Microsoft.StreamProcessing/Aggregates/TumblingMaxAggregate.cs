@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             var typeInfo = typeof(MinMaxState<T>).GetTypeInfo();
             this.accumulate = Expression.Lambda<Func<MinMaxState<T>, long, T, MinMaxState<T>>>(
                 Expression.Condition(
-                    Expression.Or(
+                    Expression.OrElse(
                         Expression.Equal(currentTimestampExpression, Expression.Constant(InvalidSyncTime)),
                         Expression.GreaterThan(comparerExpression, Expression.Constant(0))),
                     Expression.MemberInit(
