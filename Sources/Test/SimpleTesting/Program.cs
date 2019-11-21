@@ -49,7 +49,7 @@ namespace SimpleTesting
             return input.OrderBy(v => v.SyncTime).ToArray().ToStreamable();
         }
 
-        public static IStreamable<Empty, TPayload> ToStreamable<TPayload>(this StreamEvent<TPayload>[] input)
+        public static IStreamable<Empty, TPayload> ToStreamable<TPayload>(this IEnumerable<StreamEvent<TPayload>> input)
         {
             Invariant.IsNotNull(input, "input");
 
