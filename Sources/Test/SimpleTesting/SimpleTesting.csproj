@@ -167,6 +167,7 @@
       <DependentUpon>SnapshotTests.tt</DependentUpon>
     </Compile>
     <Compile Include="Streamables\StitchTest.cs" />
+    <Compile Include="Streamables\DisjointUnionTest.cs" />
     <Compile Include="Streamables\WhereTest.cs" />
     <Compile Include="Serializer\SurrogateTests.cs" />
   </ItemGroup>
