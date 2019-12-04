@@ -2,7 +2,7 @@
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace SimpleTesting.NewTest
+namespace SimpleTesting
 {
     [TestClass]
     public class WhereTest : TestWithConfigSettingsAndMemoryLeakDetection
