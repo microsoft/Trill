@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<Func<SortedDictionary<T, long>>, SortedMultiSet<T>>> template
                 = (g) => new SortedMultiSet<T>(g);
             var replaced = template.ReplaceParametersInBody(generator);
-            initialState = Expression.Lambda<Func<SortedMultiSet<T>>>(replaced);
+            this.initialState = Expression.Lambda<Func<SortedMultiSet<T>>>(replaced);
         }
 
         private readonly Expression<Func<SortedMultiSet<T>>> initialState;

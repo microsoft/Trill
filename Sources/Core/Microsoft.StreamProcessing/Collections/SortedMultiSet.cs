@@ -183,6 +183,25 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
+        /// Remove all items matching the key
+        /// </summary>
+        /// <param name="key">The element that should be removed from the current object.</param>
+        /// <returns>A reference to the current Sorted Multiset to allow for functional composition.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public SortedMultiSet<T> RemoveAll(T key)
+        {
+            this.Elements.TryGetValue(key, out long keyCount);
+            if (keyCount == 0)
+                throw new ArgumentException("Attempting to remove element not in set.");
+
+            this.Elements.Remove(key);
+
+            this.count -= keyCount;
+            return this;
+        }
+
+        /// <summary>
         /// Remove the given element from the current Sorted Multiset the given number of times.
         /// </summary>
         /// <param name="key">The element to remove from the Sorted Multiset.</param>
@@ -217,6 +236,21 @@ namespace Microsoft.StreamProcessing
             Contract.Requires(set != null);
             foreach (var keyAndCount in set.Elements)
                 Remove(keyAndCount.Key, keyAndCount.Value);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Remove all of the elements in the given set from the current Sorted Multiset, inluding multiplicity.
+        /// </summary>
+        /// <param name="itemAndCount">The Sorted Multiset containing the elements that should be removed from the current object.</param>
+        /// <returns>A reference to the current Sorted Multiset to allow for functional composition.</returns>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public SortedMultiSet<T> RemoveAll(IEnumerable<ItemAndCount<T>> itemAndCount)
+        {
+            Contract.Requires(itemAndCount != null);
+            foreach (var keyAndCount in itemAndCount)
+                Remove(keyAndCount.Item, keyAndCount.Count);
 
             return this;
         }
@@ -267,5 +301,52 @@ namespace Microsoft.StreamProcessing
                     yield return keyAndCount.Key;
             }
         }
+
+        /// <summary>
+        /// Get all elements, including multiplicity, of the Sorted Multiset in sort order.
+        /// </summary>
+        /// <returns>An object that enumerates all of the elements in the Sorted Multiset, including multiplicity.</returns>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public IEnumerable<ItemAndCount<T>> GetItemCountEnumerable()
+        {
+            foreach (var keyAndCount in this.Elements)
+            {
+                yield return new ItemAndCount<T>(keyAndCount.Key, keyAndCount.Value);
+            }
+        }
+
+        /// <summary>
+        /// Get the smallest element (and its number of occurances) in the collection
+        /// </summary>
+        /// <returns>The smallest element and its count</returns>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public ItemAndCount<T> GetMinItem()
+        {
+            var minItem = this.Elements.LastOrDefault();
+            return new ItemAndCount<T>(minItem.Key, minItem.Value);
+        }
+    }
+
+    /// <summary>
+    /// Represents an Item and its count used in MultiSet
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public struct ItemAndCount<T>
+    {
+        internal ItemAndCount(T item, long count)
+        {
+            Item = item;
+            Count = count;
+        }
+
+        /// <summary>
+        /// Item type used in Multiset
+        /// </summary>
+        public readonly T Item;
+
+        /// <summary>
+        /// Count of items with same value
+        /// </summary>
+        public long Count { get; set; }
     }
 }

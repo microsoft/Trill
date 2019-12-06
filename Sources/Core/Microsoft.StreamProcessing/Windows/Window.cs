@@ -162,25 +162,31 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector.
         /// </summary>
-        public IAggregate<TSource, SortedMultiSet<TSource>, List<RankedEvent<TSource>>> TopK<TOrderValue>(Expression<Func<TSource, TOrderValue>> orderer, int k)
+        public IAggregate<TSource, ITopKState<TSource>, List<RankedEvent<TSource>>> TopK<TOrderValue>(Expression<Func<TSource, TOrderValue>> orderer, int k)
         {
             Invariant.IsNotNull(orderer, nameof(orderer));
             Invariant.IsPositive(k, nameof(k));
             var orderComparer = ComparerExpression<TOrderValue>.Default.TransformInput(orderer);
-            var aggregate = new TopKAggregate<TSource>(k, orderComparer, this.Properties.QueryContainer);
+            bool isHoppingWindow = !Properties.IsTumbling && Properties.IsConstantDuration && Properties.ConstantDurationLength.HasValue &&
+                                   Properties.IsConstantHop && Properties.ConstantHopLength.HasValue && (Properties.ConstantDurationLength.Value % Properties.ConstantHopLength.Value) == 0;
+            long hoppingWindowSize = isHoppingWindow ? (Properties.ConstantDurationLength.Value / Properties.ConstantHopLength.Value) : 0;
+            var aggregate = new TopKAggregate<TSource>(k, orderComparer, this.Properties.QueryContainer, hoppingWindowSize);
             return aggregate.SkipNulls().ApplyFilter(this.Filter);
         }
 
         /// <summary>
         /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector with the provided ordering comparer.
         /// </summary>
-        public IAggregate<TSource, SortedMultiSet<TSource>, List<RankedEvent<TSource>>> TopK<TOrderValue>(Expression<Func<TSource, TOrderValue>> orderer, IComparerExpression<TOrderValue> comparer, int k)
+        public IAggregate<TSource, ITopKState<TSource>, List<RankedEvent<TSource>>> TopK<TOrderValue>(Expression<Func<TSource, TOrderValue>> orderer, IComparerExpression<TOrderValue> comparer, int k)
         {
             Invariant.IsNotNull(orderer, nameof(orderer));
             Invariant.IsNotNull(comparer, nameof(comparer));
             Invariant.IsPositive(k, nameof(k));
             var orderComparer = comparer.TransformInput(orderer);
-            var aggregate = new TopKAggregate<TSource>(k, orderComparer, this.Properties.QueryContainer);
+            bool isHoppingWindow = !Properties.IsTumbling && Properties.IsConstantDuration && Properties.ConstantDurationLength.HasValue &&
+                                   Properties.IsConstantHop && Properties.ConstantHopLength.HasValue && (Properties.ConstantHopLength.Value % Properties.ConstantDurationLength.Value) == 0;
+            long hoppingWindowSize = isHoppingWindow ? (Properties.ConstantDurationLength.Value / Properties.ConstantHopLength.Value) : 0;
+            var aggregate = new TopKAggregate<TSource>(k, orderComparer, this.Properties.QueryContainer, hoppingWindowSize);
             return aggregate.SkipNulls().ApplyFilter(this.Filter);
         }
 
