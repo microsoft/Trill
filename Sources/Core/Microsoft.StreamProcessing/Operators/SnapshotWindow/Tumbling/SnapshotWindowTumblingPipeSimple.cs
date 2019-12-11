@@ -198,7 +198,7 @@ namespace Microsoft.StreamProcessing
         protected override void DisposeState()
         {
             this.batch.Free();
-            if (hasDisposableState) DisposeState();
+            if (hasDisposableState) DisposeStateLocal();
         }
     }
 }
