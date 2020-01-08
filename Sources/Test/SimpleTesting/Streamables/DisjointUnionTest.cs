@@ -102,5 +102,41 @@ namespace SimpleTesting
 
             Assert.IsTrue(expected.SequenceEqual(actualOutput));
         }
+
+        [TestMethod, TestCategory("Gated")]
+        public void DisjointUnionNegativeWatermarkRepro()
+        {
+            const int leftKey = 1;
+            const int rightKey = 2;
+            var left = new Subject<PartitionedStreamEvent<int, int>>();
+            var right = new Subject<PartitionedStreamEvent<int, int>>();
+
+            var qc = new QueryContainer();
+            var leftInput = qc.RegisterInput(left);
+            var rightInput = qc.RegisterInput(right);
+
+            var actualOutput = new List<PartitionedStreamEvent<int, int>>();
+            var inputs = new IStreamable<PartitionKey<int>, int>[] { leftInput, rightInput };
+            var union = new MultiUnionStreamable<PartitionKey<int>, int>(inputs, guaranteedDisjoint: true);
+            var egress = qc.RegisterOutput(union).ForEachAsync(o => actualOutput.Add(o));
+            var process = qc.Restore();
+
+            left.OnNext(PartitionedStreamEvent.CreatePoint(leftKey, 100, 1));
+            right.OnNext(PartitionedStreamEvent.CreatePoint(rightKey, 100, 1));
+
+            process.Flush();
+
+            left.OnCompleted();
+            right.OnCompleted();
+
+            var expected = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreatePoint(leftKey, 100, 1),
+                PartitionedStreamEvent.CreatePoint(rightKey, 100, 1),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(StreamEvent.InfinitySyncTime),
+            };
+
+            Assert.IsTrue(expected.SequenceEqual(actualOutput));
+        }
     }
 }

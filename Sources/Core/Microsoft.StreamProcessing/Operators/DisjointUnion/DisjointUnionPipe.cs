@@ -15,9 +15,9 @@ namespace Microsoft.StreamProcessing
         private readonly MemoryPool<TKey, TPayload> pool;
 
         [DataMember]
-        private long leftGlobalPunctuation = long.MinValue;
+        private long leftGlobalPunctuation = 0;
         [DataMember]
-        private long rightGlobalPunctuation = long.MinValue;
+        private long rightGlobalPunctuation = 0;
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public DisjointUnionPipe() { }
