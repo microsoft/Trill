@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             this.k = k;
 
             Expression<Func<Func<SortedDictionary<T, long>>, ITopKState<T>>> template;
-            if (hoppingWindowSize > 0 && hoppingWindowSize < 1000000)
+            if (hoppingWindowSize > 0 && hoppingWindowSize < 1000000 && !Config.DisableNewOptimizations)
                 template = (g) => new HoppingTopKState<T>(k, compiledRankComparer, (int)hoppingWindowSize, g);
             else
                 template = (g) => new SimpleTopKState<T>(g);

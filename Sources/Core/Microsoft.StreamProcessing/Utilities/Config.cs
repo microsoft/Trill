@@ -44,6 +44,7 @@ namespace Microsoft.StreamProcessing
 
         private static bool clearColumnsOnReturn = false;
         private static bool disableMemoryPooling = false;
+        private static bool disableNewOptimizations = false;
         private static int dataBatchSize = 80000;
         private static bool useMultiString = false;
         private static SortingTechnique ingressSortingTechnique = SortingTechnique.ImpatienceSort;
@@ -181,6 +182,19 @@ namespace Microsoft.StreamProcessing
             {
                 TraceConfigChanges("DisableMemoryPooling", disableMemoryPooling, value);
                 disableMemoryPooling = value;
+            }
+        }
+
+        /// <summary>
+        /// Disable Trill's new optimizations
+        /// </summary>
+        public static bool DisableNewOptimizations
+        {
+            get => disableNewOptimizations;
+            set
+            {
+                TraceConfigChanges("DisableNewOptimizations", disableNewOptimizations, value);
+                disableNewOptimizations = value;
             }
         }
 
