@@ -57,6 +57,7 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
+    <Compile Include="Serializer\EnumerableSerializationTests.cs" />
     <Compile Include="Streamables\AfaTests.cs" />
     <Compile Include="Aggregates\AverageAggregate.cs" />
     <Compile Include="Aggregates\CompoundAggregate.cs" />
@@ -166,6 +167,8 @@
       <DependentUpon>SnapshotTests.tt</DependentUpon>
     </Compile>
     <Compile Include="Streamables\StitchTest.cs" />
+    <Compile Include="Streamables\DisjointUnionTest.cs" />
+    <Compile Include="Streamables\WhereTest.cs" />
     <Compile Include="Serializer\SurrogateTests.cs" />
   </ItemGroup>
   <ItemGroup>

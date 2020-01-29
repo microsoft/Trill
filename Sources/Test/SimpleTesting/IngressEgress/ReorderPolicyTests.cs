@@ -53,106 +53,101 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SorterDequeueUntillRow()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.ImpatienceSort;
-
-            var input = new List<Tuple<int, int>>()
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.ImpatienceSort).Modify())
             {
-                Tuple.Create(0, 1),
-                Tuple.Create(1, 1),
-                Tuple.Create(0, 3),
-                Tuple.Create(0, 5),
-                Tuple.Create(1, 3),
-                Tuple.Create(1, 20),
-                Tuple.Create(0, 6),
-                Tuple.Create(0, 7),
-                Tuple.Create(0, 8),
-                Tuple.Create(1, 2),
-                Tuple.Create(0, 2),
-                Tuple.Create(1, 30),
-                Tuple.Create(0, 13)
-            };
+                var input = new List<Tuple<int, int>>()
+                {
+                    Tuple.Create(0, 1),
+                    Tuple.Create(1, 1),
+                    Tuple.Create(0, 3),
+                    Tuple.Create(0, 5),
+                    Tuple.Create(1, 3),
+                    Tuple.Create(1, 20),
+                    Tuple.Create(0, 6),
+                    Tuple.Create(0, 7),
+                    Tuple.Create(0, 8),
+                    Tuple.Create(1, 2),
+                    Tuple.Create(0, 2),
+                    Tuple.Create(1, 30),
+                    Tuple.Create(0, 13)
+                };
 
-            var expectedoutput = new List<Tuple<int, int>>()
-            {
-                Tuple.Create(1, 1),
-                Tuple.Create(1, 3),
-                Tuple.Create(1, 20),
-                Tuple.Create(0, 1),
-                Tuple.Create(0, 2),
-                Tuple.Create(0, 3),
-                Tuple.Create(0, 5),
-                Tuple.Create(0, 6),
-                Tuple.Create(0, 7),
-                Tuple.Create(0, 8),
-                Tuple.Create(0, 13),
-                Tuple.Create(1, 30)
-            };
+                var expectedoutput = new List<Tuple<int, int>>()
+                {
+                    Tuple.Create(1, 1),
+                    Tuple.Create(1, 3),
+                    Tuple.Create(1, 20),
+                    Tuple.Create(0, 1),
+                    Tuple.Create(0, 2),
+                    Tuple.Create(0, 3),
+                    Tuple.Create(0, 5),
+                    Tuple.Create(0, 6),
+                    Tuple.Create(0, 7),
+                    Tuple.Create(0, 8),
+                    Tuple.Create(0, 13),
+                    Tuple.Create(1, 30)
+                };
 
-            var prog = input.Select(x => PartitionedStreamEvent.CreateStart(x.Item1, x.Item2, x.Item2)).ToObservable()
-                .ToStreamable(DisorderPolicy.Drop(10)).ToStreamEventObservable();
-            var outevents = prog.ToEnumerable().ToList();
-            var output = outevents.Where(o => o.IsData).ToList();
-            var success = output.SequenceEqual(expectedoutput.Select(t => PartitionedStreamEvent.CreateStart(t.Item1, t.Item2, t.Item2)));
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                var prog = input.Select(x => PartitionedStreamEvent.CreateStart(x.Item1, x.Item2, x.Item2)).ToObservable()
+                    .ToStreamable(DisorderPolicy.Drop(10)).ToStreamEventObservable();
+                var outevents = prog.ToEnumerable().ToList();
+                var output = outevents.Where(o => o.IsData).ToList();
+                var success = output.SequenceEqual(expectedoutput.Select(t => PartitionedStreamEvent.CreateStart(t.Item1, t.Item2, t.Item2)));
 
-            Assert.IsTrue(success);
+                Assert.IsTrue(success);
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void ReorderTest1Row()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.ImpatienceSort;
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.ImpatienceSort).Modify())
+            {
+                var outputList = new List<StreamEvent<int>>();
 
-            var outputList = new List<StreamEvent<int>>();
+                double disorderFraction = 0.5;
+                int reorderLatency = 202;
+                int disorderAmount = 200;
+                var rand = new Random(2);
+                var disorderedData =
+                    Enumerable.Range(disorderAmount, 500000).ToList()
+                    .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
+                    .ToList();
 
-            double disorderFraction = 0.5;
-            int reorderLatency = 202;
-            int disorderAmount = 200;
-            var rand = new Random(2);
-            var disorderedData =
-                Enumerable.Range(disorderAmount, 500000).ToList()
-                .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
-                .ToList();
+                var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
 
-            var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
+                stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
 
-            stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
+                disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
 
-            disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
-
-            Assert.IsTrue(disorderedData.SequenceEqual(outputList));
-
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                Assert.IsTrue(disorderedData.SequenceEqual(outputList));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void ReorderTest2Row()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.PriorityQueue;
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.PriorityQueue).Modify())
+            {
+                var outputList = new List<StreamEvent<int>>();
 
-            var outputList = new List<StreamEvent<int>>();
+                double disorderFraction = 0.5;
+                int reorderLatency = 202;
+                int disorderAmount = 200;
+                var rand = new Random(2);
+                var disorderedData =
+                    Enumerable.Range(disorderAmount, 500000).ToList()
+                    .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
+                    .ToList();
 
-            double disorderFraction = 0.5;
-            int reorderLatency = 202;
-            int disorderAmount = 200;
-            var rand = new Random(2);
-            var disorderedData =
-                Enumerable.Range(disorderAmount, 500000).ToList()
-                .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
-                .ToList();
+                var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
 
-            var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
+                stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
 
-            stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
+                disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
 
-            disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
-
-            Assert.IsTrue(disorderedData.SequenceEqual(outputList));
-
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                Assert.IsTrue(disorderedData.SequenceEqual(outputList));
+            }
         }
     }
 
@@ -199,106 +194,101 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SorterDequeueUntillRowSmallBatch()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.ImpatienceSort;
-
-            var input = new List<Tuple<int, int>>()
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.ImpatienceSort).Modify())
             {
-                Tuple.Create(0, 1),
-                Tuple.Create(1, 1),
-                Tuple.Create(0, 3),
-                Tuple.Create(0, 5),
-                Tuple.Create(1, 3),
-                Tuple.Create(1, 20),
-                Tuple.Create(0, 6),
-                Tuple.Create(0, 7),
-                Tuple.Create(0, 8),
-                Tuple.Create(1, 2),
-                Tuple.Create(0, 2),
-                Tuple.Create(1, 30),
-                Tuple.Create(0, 13)
-            };
+                var input = new List<Tuple<int, int>>()
+                {
+                    Tuple.Create(0, 1),
+                    Tuple.Create(1, 1),
+                    Tuple.Create(0, 3),
+                    Tuple.Create(0, 5),
+                    Tuple.Create(1, 3),
+                    Tuple.Create(1, 20),
+                    Tuple.Create(0, 6),
+                    Tuple.Create(0, 7),
+                    Tuple.Create(0, 8),
+                    Tuple.Create(1, 2),
+                    Tuple.Create(0, 2),
+                    Tuple.Create(1, 30),
+                    Tuple.Create(0, 13)
+                };
 
-            var expectedoutput = new List<Tuple<int, int>>()
-            {
-                Tuple.Create(1, 1),
-                Tuple.Create(1, 3),
-                Tuple.Create(1, 20),
-                Tuple.Create(0, 1),
-                Tuple.Create(0, 2),
-                Tuple.Create(0, 3),
-                Tuple.Create(0, 5),
-                Tuple.Create(0, 6),
-                Tuple.Create(0, 7),
-                Tuple.Create(0, 8),
-                Tuple.Create(0, 13),
-                Tuple.Create(1, 30)
-            };
+                var expectedoutput = new List<Tuple<int, int>>()
+                {
+                    Tuple.Create(1, 1),
+                    Tuple.Create(1, 3),
+                    Tuple.Create(1, 20),
+                    Tuple.Create(0, 1),
+                    Tuple.Create(0, 2),
+                    Tuple.Create(0, 3),
+                    Tuple.Create(0, 5),
+                    Tuple.Create(0, 6),
+                    Tuple.Create(0, 7),
+                    Tuple.Create(0, 8),
+                    Tuple.Create(0, 13),
+                    Tuple.Create(1, 30)
+                };
 
-            var prog = input.Select(x => PartitionedStreamEvent.CreateStart(x.Item1, x.Item2, x.Item2)).ToObservable()
-                .ToStreamable(DisorderPolicy.Drop(10)).ToStreamEventObservable();
-            var outevents = prog.ToEnumerable().ToList();
-            var output = outevents.Where(o => o.IsData).ToList();
-            var success = output.SequenceEqual(expectedoutput.Select(t => PartitionedStreamEvent.CreateStart(t.Item1, t.Item2, t.Item2)));
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                var prog = input.Select(x => PartitionedStreamEvent.CreateStart(x.Item1, x.Item2, x.Item2)).ToObservable()
+                    .ToStreamable(DisorderPolicy.Drop(10)).ToStreamEventObservable();
+                var outevents = prog.ToEnumerable().ToList();
+                var output = outevents.Where(o => o.IsData).ToList();
+                var success = output.SequenceEqual(expectedoutput.Select(t => PartitionedStreamEvent.CreateStart(t.Item1, t.Item2, t.Item2)));
 
-            Assert.IsTrue(success);
+                Assert.IsTrue(success);
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void ReorderTest1RowSmallBatch()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.ImpatienceSort;
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.ImpatienceSort).Modify())
+            {
+                var outputList = new List<StreamEvent<int>>();
 
-            var outputList = new List<StreamEvent<int>>();
+                double disorderFraction = 0.5;
+                int reorderLatency = 202;
+                int disorderAmount = 200;
+                var rand = new Random(2);
+                var disorderedData =
+                    Enumerable.Range(disorderAmount, 500000).ToList()
+                    .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
+                    .ToList();
 
-            double disorderFraction = 0.5;
-            int reorderLatency = 202;
-            int disorderAmount = 200;
-            var rand = new Random(2);
-            var disorderedData =
-                Enumerable.Range(disorderAmount, 500000).ToList()
-                .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
-                .ToList();
+                var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
 
-            var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
+                stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
 
-            stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
+                disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
 
-            disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
-
-            Assert.IsTrue(disorderedData.SequenceEqual(outputList));
-
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                Assert.IsTrue(disorderedData.SequenceEqual(outputList));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void ReorderTest2RowSmallBatch()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.PriorityQueue;
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.PriorityQueue).Modify())
+            {
+                var outputList = new List<StreamEvent<int>>();
 
-            var outputList = new List<StreamEvent<int>>();
+                double disorderFraction = 0.5;
+                int reorderLatency = 202;
+                int disorderAmount = 200;
+                var rand = new Random(2);
+                var disorderedData =
+                    Enumerable.Range(disorderAmount, 500000).ToList()
+                    .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
+                    .ToList();
 
-            double disorderFraction = 0.5;
-            int reorderLatency = 202;
-            int disorderAmount = 200;
-            var rand = new Random(2);
-            var disorderedData =
-                Enumerable.Range(disorderAmount, 500000).ToList()
-                .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
-                .ToList();
+                var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
 
-            var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
+                stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
 
-            stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
+                disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
 
-            disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
-
-            Assert.IsTrue(disorderedData.SequenceEqual(outputList));
-
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                Assert.IsTrue(disorderedData.SequenceEqual(outputList));
+            }
         }
     }
 
@@ -344,106 +334,101 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SorterDequeueUntillColumnar()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.ImpatienceSort;
-
-            var input = new List<Tuple<int, int>>()
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.ImpatienceSort).Modify())
             {
-                Tuple.Create(0, 1),
-                Tuple.Create(1, 1),
-                Tuple.Create(0, 3),
-                Tuple.Create(0, 5),
-                Tuple.Create(1, 3),
-                Tuple.Create(1, 20),
-                Tuple.Create(0, 6),
-                Tuple.Create(0, 7),
-                Tuple.Create(0, 8),
-                Tuple.Create(1, 2),
-                Tuple.Create(0, 2),
-                Tuple.Create(1, 30),
-                Tuple.Create(0, 13)
-            };
+                var input = new List<Tuple<int, int>>()
+                {
+                    Tuple.Create(0, 1),
+                    Tuple.Create(1, 1),
+                    Tuple.Create(0, 3),
+                    Tuple.Create(0, 5),
+                    Tuple.Create(1, 3),
+                    Tuple.Create(1, 20),
+                    Tuple.Create(0, 6),
+                    Tuple.Create(0, 7),
+                    Tuple.Create(0, 8),
+                    Tuple.Create(1, 2),
+                    Tuple.Create(0, 2),
+                    Tuple.Create(1, 30),
+                    Tuple.Create(0, 13)
+                };
 
-            var expectedoutput = new List<Tuple<int, int>>()
-            {
-                Tuple.Create(1, 1),
-                Tuple.Create(1, 3),
-                Tuple.Create(1, 20),
-                Tuple.Create(0, 1),
-                Tuple.Create(0, 2),
-                Tuple.Create(0, 3),
-                Tuple.Create(0, 5),
-                Tuple.Create(0, 6),
-                Tuple.Create(0, 7),
-                Tuple.Create(0, 8),
-                Tuple.Create(0, 13),
-                Tuple.Create(1, 30)
-            };
+                var expectedoutput = new List<Tuple<int, int>>()
+                {
+                    Tuple.Create(1, 1),
+                    Tuple.Create(1, 3),
+                    Tuple.Create(1, 20),
+                    Tuple.Create(0, 1),
+                    Tuple.Create(0, 2),
+                    Tuple.Create(0, 3),
+                    Tuple.Create(0, 5),
+                    Tuple.Create(0, 6),
+                    Tuple.Create(0, 7),
+                    Tuple.Create(0, 8),
+                    Tuple.Create(0, 13),
+                    Tuple.Create(1, 30)
+                };
 
-            var prog = input.Select(x => PartitionedStreamEvent.CreateStart(x.Item1, x.Item2, x.Item2)).ToObservable()
-                .ToStreamable(DisorderPolicy.Drop(10)).ToStreamEventObservable();
-            var outevents = prog.ToEnumerable().ToList();
-            var output = outevents.Where(o => o.IsData).ToList();
-            var success = output.SequenceEqual(expectedoutput.Select(t => PartitionedStreamEvent.CreateStart(t.Item1, t.Item2, t.Item2)));
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                var prog = input.Select(x => PartitionedStreamEvent.CreateStart(x.Item1, x.Item2, x.Item2)).ToObservable()
+                    .ToStreamable(DisorderPolicy.Drop(10)).ToStreamEventObservable();
+                var outevents = prog.ToEnumerable().ToList();
+                var output = outevents.Where(o => o.IsData).ToList();
+                var success = output.SequenceEqual(expectedoutput.Select(t => PartitionedStreamEvent.CreateStart(t.Item1, t.Item2, t.Item2)));
 
-            Assert.IsTrue(success);
+                Assert.IsTrue(success);
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void ReorderTest1Columnar()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.ImpatienceSort;
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.ImpatienceSort).Modify())
+            {
+                var outputList = new List<StreamEvent<int>>();
 
-            var outputList = new List<StreamEvent<int>>();
+                double disorderFraction = 0.5;
+                int reorderLatency = 202;
+                int disorderAmount = 200;
+                var rand = new Random(2);
+                var disorderedData =
+                    Enumerable.Range(disorderAmount, 500000).ToList()
+                    .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
+                    .ToList();
 
-            double disorderFraction = 0.5;
-            int reorderLatency = 202;
-            int disorderAmount = 200;
-            var rand = new Random(2);
-            var disorderedData =
-                Enumerable.Range(disorderAmount, 500000).ToList()
-                .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
-                .ToList();
+                var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
 
-            var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
+                stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
 
-            stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
+                disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
 
-            disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
-
-            Assert.IsTrue(disorderedData.SequenceEqual(outputList));
-
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                Assert.IsTrue(disorderedData.SequenceEqual(outputList));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void ReorderTest2Columnar()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.PriorityQueue;
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.PriorityQueue).Modify())
+            {
+                var outputList = new List<StreamEvent<int>>();
 
-            var outputList = new List<StreamEvent<int>>();
+                double disorderFraction = 0.5;
+                int reorderLatency = 202;
+                int disorderAmount = 200;
+                var rand = new Random(2);
+                var disorderedData =
+                    Enumerable.Range(disorderAmount, 500000).ToList()
+                    .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
+                    .ToList();
 
-            double disorderFraction = 0.5;
-            int reorderLatency = 202;
-            int disorderAmount = 200;
-            var rand = new Random(2);
-            var disorderedData =
-                Enumerable.Range(disorderAmount, 500000).ToList()
-                .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
-                .ToList();
+                var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
 
-            var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
+                stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
 
-            stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
+                disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
 
-            disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
-
-            Assert.IsTrue(disorderedData.SequenceEqual(outputList));
-
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                Assert.IsTrue(disorderedData.SequenceEqual(outputList));
+            }
         }
     }
 
@@ -490,106 +475,101 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SorterDequeueUntillColumnarSmallBatch()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.ImpatienceSort;
-
-            var input = new List<Tuple<int, int>>()
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.ImpatienceSort).Modify())
             {
-                Tuple.Create(0, 1),
-                Tuple.Create(1, 1),
-                Tuple.Create(0, 3),
-                Tuple.Create(0, 5),
-                Tuple.Create(1, 3),
-                Tuple.Create(1, 20),
-                Tuple.Create(0, 6),
-                Tuple.Create(0, 7),
-                Tuple.Create(0, 8),
-                Tuple.Create(1, 2),
-                Tuple.Create(0, 2),
-                Tuple.Create(1, 30),
-                Tuple.Create(0, 13)
-            };
+                var input = new List<Tuple<int, int>>()
+                {
+                    Tuple.Create(0, 1),
+                    Tuple.Create(1, 1),
+                    Tuple.Create(0, 3),
+                    Tuple.Create(0, 5),
+                    Tuple.Create(1, 3),
+                    Tuple.Create(1, 20),
+                    Tuple.Create(0, 6),
+                    Tuple.Create(0, 7),
+                    Tuple.Create(0, 8),
+                    Tuple.Create(1, 2),
+                    Tuple.Create(0, 2),
+                    Tuple.Create(1, 30),
+                    Tuple.Create(0, 13)
+                };
 
-            var expectedoutput = new List<Tuple<int, int>>()
-            {
-                Tuple.Create(1, 1),
-                Tuple.Create(1, 3),
-                Tuple.Create(1, 20),
-                Tuple.Create(0, 1),
-                Tuple.Create(0, 2),
-                Tuple.Create(0, 3),
-                Tuple.Create(0, 5),
-                Tuple.Create(0, 6),
-                Tuple.Create(0, 7),
-                Tuple.Create(0, 8),
-                Tuple.Create(0, 13),
-                Tuple.Create(1, 30)
-            };
+                var expectedoutput = new List<Tuple<int, int>>()
+                {
+                    Tuple.Create(1, 1),
+                    Tuple.Create(1, 3),
+                    Tuple.Create(1, 20),
+                    Tuple.Create(0, 1),
+                    Tuple.Create(0, 2),
+                    Tuple.Create(0, 3),
+                    Tuple.Create(0, 5),
+                    Tuple.Create(0, 6),
+                    Tuple.Create(0, 7),
+                    Tuple.Create(0, 8),
+                    Tuple.Create(0, 13),
+                    Tuple.Create(1, 30)
+                };
 
-            var prog = input.Select(x => PartitionedStreamEvent.CreateStart(x.Item1, x.Item2, x.Item2)).ToObservable()
-                .ToStreamable(DisorderPolicy.Drop(10)).ToStreamEventObservable();
-            var outevents = prog.ToEnumerable().ToList();
-            var output = outevents.Where(o => o.IsData).ToList();
-            var success = output.SequenceEqual(expectedoutput.Select(t => PartitionedStreamEvent.CreateStart(t.Item1, t.Item2, t.Item2)));
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                var prog = input.Select(x => PartitionedStreamEvent.CreateStart(x.Item1, x.Item2, x.Item2)).ToObservable()
+                    .ToStreamable(DisorderPolicy.Drop(10)).ToStreamEventObservable();
+                var outevents = prog.ToEnumerable().ToList();
+                var output = outevents.Where(o => o.IsData).ToList();
+                var success = output.SequenceEqual(expectedoutput.Select(t => PartitionedStreamEvent.CreateStart(t.Item1, t.Item2, t.Item2)));
 
-            Assert.IsTrue(success);
+                Assert.IsTrue(success);
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void ReorderTest1ColumnarSmallBatch()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.ImpatienceSort;
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.ImpatienceSort).Modify())
+            {
+                var outputList = new List<StreamEvent<int>>();
 
-            var outputList = new List<StreamEvent<int>>();
+                double disorderFraction = 0.5;
+                int reorderLatency = 202;
+                int disorderAmount = 200;
+                var rand = new Random(2);
+                var disorderedData =
+                    Enumerable.Range(disorderAmount, 500000).ToList()
+                    .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
+                    .ToList();
 
-            double disorderFraction = 0.5;
-            int reorderLatency = 202;
-            int disorderAmount = 200;
-            var rand = new Random(2);
-            var disorderedData =
-                Enumerable.Range(disorderAmount, 500000).ToList()
-                .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
-                .ToList();
+                var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
 
-            var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
+                stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
 
-            stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
+                disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
 
-            disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
-
-            Assert.IsTrue(disorderedData.SequenceEqual(outputList));
-
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                Assert.IsTrue(disorderedData.SequenceEqual(outputList));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void ReorderTest2ColumnarSmallBatch()
         {
-            var oldSortingTechnique = Config.IngressSortingTechnique;
-            Config.IngressSortingTechnique = SortingTechnique.PriorityQueue;
+            using (var modifier = new ConfigModifier().IngressSortingTechnique(SortingTechnique.PriorityQueue).Modify())
+            {
+                var outputList = new List<StreamEvent<int>>();
 
-            var outputList = new List<StreamEvent<int>>();
+                double disorderFraction = 0.5;
+                int reorderLatency = 202;
+                int disorderAmount = 200;
+                var rand = new Random(2);
+                var disorderedData =
+                    Enumerable.Range(disorderAmount, 500000).ToList()
+                    .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
+                    .ToList();
 
-            double disorderFraction = 0.5;
-            int reorderLatency = 202;
-            int disorderAmount = 200;
-            var rand = new Random(2);
-            var disorderedData =
-                Enumerable.Range(disorderAmount, 500000).ToList()
-                .Select(e => StreamEvent.CreateStart(rand.NextDouble() < disorderFraction ? e - rand.Next(0, disorderAmount) : e, 0))
-                .ToList();
+                var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
 
-            var stream = disorderedData.ToObservable().ToStreamable(DisorderPolicy.Drop(reorderLatency));
+                stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
 
-            stream.ToStreamEventObservable().ForEachAsync(e => { if (e.IsData) outputList.Add(e); }).Wait();
+                disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
 
-            disorderedData.Sort((a, b) => a.SyncTime.CompareTo(b.SyncTime));
-
-            Assert.IsTrue(disorderedData.SequenceEqual(outputList));
-
-            Config.IngressSortingTechnique = oldSortingTechnique;
+                Assert.IsTrue(disorderedData.SequenceEqual(outputList));
+            }
         }
     }
 

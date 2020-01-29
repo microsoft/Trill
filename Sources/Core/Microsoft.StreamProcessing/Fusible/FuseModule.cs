@@ -486,7 +486,7 @@ namespace Microsoft.StreamProcessing
             var prev = this.expressions[this.expressions.Count - 1];
             var parameter = prev.expression.Parameters[0];
             var replaced = expression.ReplaceParametersInBody(parameter);
-            prev.expression = Expression.Lambda<Func<TPayload, bool>>(Expression.And(prev.expression.Body, replaced), parameter);
+            prev.expression = Expression.Lambda<Func<TPayload, bool>>(Expression.AndAlso(prev.expression.Body, replaced), parameter);
             return this;
         }
 

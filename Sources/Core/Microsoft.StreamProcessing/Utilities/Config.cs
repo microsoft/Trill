@@ -428,25 +428,25 @@ namespace Microsoft.StreamProcessing
         /// <returns>A string representation of the configuration settings.</returns>
         public static string Describe()
             => new
-                {
-                    MapArity,
-                    ReduceArity,
-                    ForceRowBasedExecution,
-                    DeterministicWithinTimestamp,
-                    ClearColumnsOnReturn,
-                    DisableMemoryPooling,
-                    DataBatchSize,
-                    UseMultiString,
-                    IngressSortingTechnique,
-                    MultiStringTransforms,
-                    Scheduler = SchedToStr(StreamScheduler.scheduler),
-                    GeneratedCodePath,
-                    CodegenOptions.GenerateDebugInfo,
-                    CodegenOptions.BreakIntoCodeGen,
-                    CodegenOptions.DontFallBackToRowBasedExecution,
-                    CodegenOptions.SuperStrictColumnar,
-                    CodegenOptions.CodeGenAfa,
-                }.ToString();
+            {
+                MapArity,
+                ReduceArity,
+                ForceRowBasedExecution,
+                DeterministicWithinTimestamp,
+                ClearColumnsOnReturn,
+                DisableMemoryPooling,
+                DataBatchSize,
+                UseMultiString,
+                IngressSortingTechnique,
+                MultiStringTransforms,
+                Scheduler = SchedToStr(StreamScheduler.scheduler),
+                GeneratedCodePath,
+                CodegenOptions.GenerateDebugInfo,
+                CodegenOptions.BreakIntoCodeGen,
+                CodegenOptions.DontFallBackToRowBasedExecution,
+                CodegenOptions.SuperStrictColumnar,
+                CodegenOptions.CodeGenAfa,
+            }.ToString();
     }
 
     // ConfigModifier allows to modify multiple Config values at once, guaranteeing that only
@@ -477,7 +477,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<string>.Create(
                 value,
-                v => { var old = Config.GeneratedCodePath; Config.GeneratedCodePath = v; return old; }));
+                v =>
+                {
+                    var old = Config.GeneratedCodePath;
+                    Config.GeneratedCodePath = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -485,7 +490,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<int>.Create(
                 value,
-                v => { var old = Config.MapArity; Config.MapArity = v; return old; }));
+                v =>
+                {
+                    var old = Config.MapArity;
+                    Config.MapArity = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -493,7 +503,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<int>.Create(
                 value,
-                v => { var old = Config.ReduceArity; Config.ReduceArity = v; return old; }));
+                v =>
+                {
+                    var old = Config.ReduceArity;
+                    Config.ReduceArity = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -501,7 +516,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.ForceRowBasedExecution; Config.ForceRowBasedExecution = v; return old; }));
+                v =>
+                {
+                    var old = Config.ForceRowBasedExecution;
+                    Config.ForceRowBasedExecution = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -509,7 +529,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.AllowFloatingReorderPolicy; Config.AllowFloatingReorderPolicy = v; return old; }));
+                v =>
+                {
+                    var old = Config.AllowFloatingReorderPolicy;
+                    Config.AllowFloatingReorderPolicy = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -517,7 +542,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.DeterministicWithinTimestamp; Config.DeterministicWithinTimestamp = v; return old; }));
+                v =>
+                {
+                    var old = Config.DeterministicWithinTimestamp;
+                    Config.DeterministicWithinTimestamp = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -525,7 +555,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.ClearColumnsOnReturn; Config.ClearColumnsOnReturn = v; return old; }));
+                v =>
+                {
+                    var old = Config.ClearColumnsOnReturn;
+                    Config.ClearColumnsOnReturn = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -533,7 +568,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.DisableMemoryPooling; Config.DisableMemoryPooling = v; return old; }));
+                v =>
+                {
+                    var old = Config.DisableMemoryPooling;
+                    Config.DisableMemoryPooling = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -541,7 +581,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<int>.Create(
                 value,
-                v => { var old = Config.DataBatchSize; Config.DataBatchSize = v; return old; }));
+                v =>
+                {
+                    var old = Config.DataBatchSize;
+                    Config.DataBatchSize = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -549,7 +594,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.UseMultiString; Config.UseMultiString = v; return old; }));
+                v =>
+                {
+                    var old = Config.UseMultiString;
+                    Config.UseMultiString = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -557,7 +607,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<SortingTechnique>.Create(
                 value,
-                v => { var old = Config.IngressSortingTechnique; Config.IngressSortingTechnique = v; return old; }));
+                v =>
+                {
+                    var old = Config.IngressSortingTechnique;
+                    Config.IngressSortingTechnique = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -565,7 +620,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<Config.CodegenOptions.MultiStringFlags>.Create(
                 value,
-                v => { var old = Config.MultiStringTransforms; Config.MultiStringTransforms = v; return old; }));
+                v =>
+                {
+                    var old = Config.MultiStringTransforms;
+                    Config.MultiStringTransforms = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -573,7 +633,13 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<StreamScheduler>.Create(
                 value,
-                v => { var old = Config.StreamScheduler; Config.StreamScheduler = v; return old; }));
+                v =>
+                {
+                    var old = Config.StreamScheduler;
+                    old?.Stop();
+                    Config.StreamScheduler = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -581,7 +647,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.CodegenOptions.GenerateDebugInfo; Config.CodegenOptions.GenerateDebugInfo = v; return old; }));
+                v =>
+                {
+                    var old = Config.CodegenOptions.GenerateDebugInfo;
+                    Config.CodegenOptions.GenerateDebugInfo = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -589,7 +660,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<Config.CodegenOptions.DebugFlags>.Create(
                 value,
-                v => { var old = Config.CodegenOptions.BreakIntoCodeGen; Config.CodegenOptions.BreakIntoCodeGen = v; return old; }));
+                v =>
+                {
+                    var old = Config.CodegenOptions.BreakIntoCodeGen;
+                    Config.CodegenOptions.BreakIntoCodeGen = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -597,7 +673,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.CodegenOptions.DontFallBackToRowBasedExecution; Config.CodegenOptions.DontFallBackToRowBasedExecution = v; return old; }));
+                v =>
+                {
+                    var old = Config.CodegenOptions.DontFallBackToRowBasedExecution;
+                    Config.CodegenOptions.DontFallBackToRowBasedExecution = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -605,7 +686,12 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.CodegenOptions.SuperStrictColumnar; Config.CodegenOptions.SuperStrictColumnar = v; return old; }));
+                v =>
+                {
+                    var old = Config.CodegenOptions.SuperStrictColumnar;
+                    Config.CodegenOptions.SuperStrictColumnar = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -613,7 +699,25 @@ namespace Microsoft.StreamProcessing
         {
             this.modifications.Add(GatedModification<bool>.Create(
                 value,
-                v => { var old = Config.CodegenOptions.CodeGenAfa; Config.CodegenOptions.CodeGenAfa = v; return old; }));
+                v =>
+                {
+                    var old = Config.CodegenOptions.CodeGenAfa;
+                    Config.CodegenOptions.CodeGenAfa = v;
+                    return old;
+                }));
+            return this;
+        }
+
+        public ConfigModifier SerializationCompressionLevel(SerializationCompressionLevel value)
+        {
+            this.modifications.Add(GatedModification<SerializationCompressionLevel>.Create(
+                value,
+                v =>
+                {
+                    var old = Config.SerializationCompressionLevel;
+                    Config.SerializationCompressionLevel = v;
+                    return old;
+                }));
             return this;
         }
 
@@ -627,6 +731,7 @@ namespace Microsoft.StreamProcessing
             {
                 foreach (var m in this.modifications)
                     m.Modify();
+
                 Monitor.Exit(gate);
             });
         }
@@ -654,10 +759,10 @@ namespace Microsoft.StreamProcessing
 
             public static GatedModification<T> Create(T newValue, Func<T, T> modifier)
                 => new GatedModification<T>
-                    {
-                        val = newValue,
-                        modifier = modifier
-                    };
+                {
+                    val = newValue,
+                    modifier = modifier
+                };
 
             public void Modify() => this.val = this.modifier(this.val);
         }

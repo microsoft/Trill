@@ -232,13 +232,22 @@ namespace Microsoft.StreamProcessing
         private void OutputBatch(StreamMessage<TKey, TPayload> batch)
         {
             long updatedCTI = this.lastCTI;
+            bool writable = false;
             for (int i = 0; i < batch.Count; i++)
             {
-                // Find first punctuation
+                // Since we are emitting the entire batch from one side of the union, we need to ensure that all
+                // punctuations are ordered with respect to the other side of the union
                 if (batch.vother.col[i] == StreamEvent.PunctuationOtherTime)
                 {
                     if (batch.vsync.col[i] <= updatedCTI)
                     {
+                        if (!writable)
+                        {
+                            batch.vother = batch.vother.MakeWritable(this.pool.longPool);
+                            batch.bitvector = batch.bitvector.MakeWritable(this.pool.bitvectorPool);
+                            writable = true;
+                        }
+
                         // Remove the redundant punctuation by converting to a deleted data event
                         batch.vother.col[i] = 0;
                         batch.bitvector.col[i >> 6] |= (1L << (i & 0x3f));

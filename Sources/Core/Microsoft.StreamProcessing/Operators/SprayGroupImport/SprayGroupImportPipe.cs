@@ -81,47 +81,29 @@ namespace Microsoft.StreamProcessing
             }
 
             // If this batch contains any punctuation, we need to broadcast them to all observers.
-            bool broadcastPunctuations = false;
+            StreamMessage<TKey, TSpray> broadcastMaster = null;
             for (int i = batch.Count - 1; i >= 0; i--)
             {
                 if (batch.vother.col[i] < 0)
                 {
-                    broadcastPunctuations = true;
+                    // Create a master broadcast batch that we can clone from.
+                    // TODO: maybe it's better to allocate a new batch without deleted data gaps?
+                    this.pool.Get(out broadcastMaster);
+                    broadcastMaster.CloneFrom(batch);
+                    broadcastMaster.bitvector = broadcastMaster.bitvector.MakeWritable(this.pool.bitvectorPool);
+
+                    // Since we only care about punctuations, delete everything
+                    for (int deletingIndex = 0; deletingIndex <= broadcastMaster.Count >> 6; deletingIndex++)
+                        broadcastMaster.bitvector.col[deletingIndex] = ~(0L);
+
                     break;
                 }
             }
-            if (broadcastPunctuations)
-            {
-                // Create a master broadcast batch that we can clone from.
-                // TODO: maybe it's better to allocate a new batch without deleted data gaps?
-                this.pool.Get(out StreamMessage<TKey, TSpray> broadcastMaster);
-                broadcastMaster.CloneFrom(batch);
-                broadcastMaster.bitvector = broadcastMaster.bitvector.MakeWritable(this.pool.bitvectorPool);
 
-                // Since we only care about punctuations, delete everything
-                for (int i = 0; i <= broadcastMaster.Count >> 6; i++)
-                    broadcastMaster.bitvector.col[i] = ~(0L);
-
-                // Broadcast to all except the observer that will receive the current batch (l1_spray)
-                int lastBroadcastIndex = this.totalBranches - 1;
-                if (lastBroadcastIndex == this.l1_spray) lastBroadcastIndex--;
-                for (int i = 0; i < this.totalBranches; i++)
-                {
-                    if (i == this.l1_spray) continue; // skip observer that will receive the current batch
-
-                    if (i == lastBroadcastIndex)
-                        this.Observers[i].OnNext(broadcastMaster);
-                    else
-                    {
-                        this.pool.Get(out StreamMessage<TKey, TSpray> broadcastClone);
-                        broadcastClone.CloneFrom(broadcastMaster);
-                        this.Observers[i].OnNext(broadcastClone);
-                    }
-                }
-            }
-
+            int originalBatchRecipient;
             if (this.spraySortOrderComparer == null)
             {
+                originalBatchRecipient = this.l1_spray;
                 this.Observers[this.l1_spray].OnNext(batch);
                 this.l1_spray++;
                 if (this.l1_spray == this.totalBranches) this.l1_spray = 0;
@@ -132,6 +114,7 @@ namespace Microsoft.StreamProcessing
                 {
                     this.first = false;
                     this.lastElem = batch[batch.Count - 1];
+                    originalBatchRecipient = this.l1_spray;
                     this.Observers[this.l1_spray].OnNext(batch);
                 }
                 else
@@ -139,7 +122,28 @@ namespace Microsoft.StreamProcessing
                     this.lastElem = batch[batch.Count - 1];
                     this.l1_spray++;
                     if (this.l1_spray == this.totalBranches) this.l1_spray = 0;
+                    originalBatchRecipient = this.l1_spray;
                     this.Observers[this.l1_spray].OnNext(batch);
+                }
+            }
+
+            if (broadcastMaster != null)
+            {
+                // Broadcast to all except the observer that received the current batch
+                int lastBroadcastIndex = this.totalBranches - 1;
+                if (lastBroadcastIndex == originalBatchRecipient) lastBroadcastIndex--;
+                for (int i = 0; i < this.totalBranches; i++)
+                {
+                    if (i == originalBatchRecipient) continue; // skip observer that received the current batch
+
+                    if (i == lastBroadcastIndex)
+                        this.Observers[i].OnNext(broadcastMaster);
+                    else
+                    {
+                        this.pool.Get(out StreamMessage<TKey, TSpray> broadcastClone);
+                        broadcastClone.CloneFrom(broadcastMaster);
+                        this.Observers[i].OnNext(broadcastClone);
+                    }
                 }
             }
         }

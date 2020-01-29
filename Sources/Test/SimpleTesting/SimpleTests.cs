@@ -766,23 +766,24 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedRow()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
     }
@@ -1398,23 +1399,24 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedRowFloating()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
     }
@@ -2030,23 +2032,24 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedRowSmallBatch()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
     }
@@ -2663,23 +2666,24 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedRowSmallBatchFloating()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
     }
@@ -3294,23 +3298,24 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedColumnar()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
     }
@@ -3926,23 +3931,24 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedColumnarFloating()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
     }
@@ -4558,23 +4564,24 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedColumnarSmallBatch()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
     }
@@ -5191,23 +5198,24 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructFusedColumnarSmallBatchFloating()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
     }
@@ -5850,24 +5858,25 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructRow()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .ShiftEventLifetime(0)
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .ShiftEventLifetime(0)
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -7099,46 +7108,44 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CharArraySerializationRow()
         {
-            var orig = Config.SerializationCompressionLevel;
-
-            Config.SerializationCompressionLevel = SerializationCompressionLevel.CharArrayToUTF8;
-            var rand = new Random(0);
-
-            for (int x = 0; x < 5; x++)
+            using (var modifier = new ConfigModifier().SerializationCompressionLevel(SerializationCompressionLevel.CharArrayToUTF8).Modify())
             {
-                var inputStr = new MultiString();
+                var rand = new Random(0);
 
-                var toss1 = rand.NextDouble();
-                var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
-
-                for (int i = 0; i < usedLength; i++)
+                for (int x = 0; x < 5; x++)
                 {
-                    var toss = rand.NextDouble();
-                    string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
-                    if (x == 0) str = string.Empty;
-                    inputStr.AddString(str);
+                    var inputStr = new MultiString();
+
+                    var toss1 = rand.NextDouble();
+                    var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
+
+                    for (int i = 0; i < usedLength; i++)
+                    {
+                        var toss = rand.NextDouble();
+                        string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
+                        if (x == 0) str = string.Empty;
+                        inputStr.AddString(str);
+                    }
+
+                    inputStr.Seal();
+
+                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    var ms = new MemoryStream { Position = 0 };
+
+                    s.Serialize(ms, inputStr);
+                    ms.Position = 0;
+                    var resultStr = s.Deserialize(ms);
+
+                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+
+                    for (int j = 0; j < inputStr.Count; j++)
+                    {
+                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                    }
+                    resultStr.Dispose();
+                    inputStr.Dispose();
                 }
-
-                inputStr.Seal();
-
-                StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
-                var ms = new MemoryStream { Position = 0 };
-
-                s.Serialize(ms, inputStr);
-                ms.Position = 0;
-                var resultStr = s.Deserialize(ms);
-
-                Assert.IsTrue(resultStr.Count == inputStr.Count);
-
-                for (int j = 0; j < inputStr.Count; j++)
-                {
-                    Assert.IsTrue(inputStr[j] == resultStr[j]);
-                }
-                resultStr.Dispose();
-                inputStr.Dispose();
             }
-
-            Config.SerializationCompressionLevel = orig;
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -7841,24 +7848,25 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructRowFloating()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .ShiftEventLifetime(0)
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .ShiftEventLifetime(0)
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -8967,46 +8975,44 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CharArraySerializationRowFloating()
         {
-            var orig = Config.SerializationCompressionLevel;
-
-            Config.SerializationCompressionLevel = SerializationCompressionLevel.CharArrayToUTF8;
-            var rand = new Random(0);
-
-            for (int x = 0; x < 5; x++)
+            using (var modifier = new ConfigModifier().SerializationCompressionLevel(SerializationCompressionLevel.CharArrayToUTF8).Modify())
             {
-                var inputStr = new MultiString();
+                var rand = new Random(0);
 
-                var toss1 = rand.NextDouble();
-                var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
-
-                for (int i = 0; i < usedLength; i++)
+                for (int x = 0; x < 5; x++)
                 {
-                    var toss = rand.NextDouble();
-                    string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
-                    if (x == 0) str = string.Empty;
-                    inputStr.AddString(str);
+                    var inputStr = new MultiString();
+
+                    var toss1 = rand.NextDouble();
+                    var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
+
+                    for (int i = 0; i < usedLength; i++)
+                    {
+                        var toss = rand.NextDouble();
+                        string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
+                        if (x == 0) str = string.Empty;
+                        inputStr.AddString(str);
+                    }
+
+                    inputStr.Seal();
+
+                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    var ms = new MemoryStream { Position = 0 };
+
+                    s.Serialize(ms, inputStr);
+                    ms.Position = 0;
+                    var resultStr = s.Deserialize(ms);
+
+                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+
+                    for (int j = 0; j < inputStr.Count; j++)
+                    {
+                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                    }
+                    resultStr.Dispose();
+                    inputStr.Dispose();
                 }
-
-                inputStr.Seal();
-
-                StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
-                var ms = new MemoryStream { Position = 0 };
-
-                s.Serialize(ms, inputStr);
-                ms.Position = 0;
-                var resultStr = s.Deserialize(ms);
-
-                Assert.IsTrue(resultStr.Count == inputStr.Count);
-
-                for (int j = 0; j < inputStr.Count; j++)
-                {
-                    Assert.IsTrue(inputStr[j] == resultStr[j]);
-                }
-                resultStr.Dispose();
-                inputStr.Dispose();
             }
-
-            Config.SerializationCompressionLevel = orig;
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -9709,24 +9715,25 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructRowSmallBatch()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .ShiftEventLifetime(0)
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .ShiftEventLifetime(0)
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -10958,46 +10965,44 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CharArraySerializationRowSmallBatch()
         {
-            var orig = Config.SerializationCompressionLevel;
-
-            Config.SerializationCompressionLevel = SerializationCompressionLevel.CharArrayToUTF8;
-            var rand = new Random(0);
-
-            for (int x = 0; x < 5; x++)
+            using (var modifier = new ConfigModifier().SerializationCompressionLevel(SerializationCompressionLevel.CharArrayToUTF8).Modify())
             {
-                var inputStr = new MultiString();
+                var rand = new Random(0);
 
-                var toss1 = rand.NextDouble();
-                var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
-
-                for (int i = 0; i < usedLength; i++)
+                for (int x = 0; x < 5; x++)
                 {
-                    var toss = rand.NextDouble();
-                    string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
-                    if (x == 0) str = string.Empty;
-                    inputStr.AddString(str);
+                    var inputStr = new MultiString();
+
+                    var toss1 = rand.NextDouble();
+                    var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
+
+                    for (int i = 0; i < usedLength; i++)
+                    {
+                        var toss = rand.NextDouble();
+                        string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
+                        if (x == 0) str = string.Empty;
+                        inputStr.AddString(str);
+                    }
+
+                    inputStr.Seal();
+
+                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    var ms = new MemoryStream { Position = 0 };
+
+                    s.Serialize(ms, inputStr);
+                    ms.Position = 0;
+                    var resultStr = s.Deserialize(ms);
+
+                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+
+                    for (int j = 0; j < inputStr.Count; j++)
+                    {
+                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                    }
+                    resultStr.Dispose();
+                    inputStr.Dispose();
                 }
-
-                inputStr.Seal();
-
-                StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
-                var ms = new MemoryStream { Position = 0 };
-
-                s.Serialize(ms, inputStr);
-                ms.Position = 0;
-                var resultStr = s.Deserialize(ms);
-
-                Assert.IsTrue(resultStr.Count == inputStr.Count);
-
-                for (int j = 0; j < inputStr.Count; j++)
-                {
-                    Assert.IsTrue(inputStr[j] == resultStr[j]);
-                }
-                resultStr.Dispose();
-                inputStr.Dispose();
             }
-
-            Config.SerializationCompressionLevel = orig;
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -11701,24 +11706,25 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructRowSmallBatchFloating()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .ShiftEventLifetime(0)
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .ShiftEventLifetime(0)
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -12827,46 +12833,44 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CharArraySerializationRowSmallBatchFloating()
         {
-            var orig = Config.SerializationCompressionLevel;
-
-            Config.SerializationCompressionLevel = SerializationCompressionLevel.CharArrayToUTF8;
-            var rand = new Random(0);
-
-            for (int x = 0; x < 5; x++)
+            using (var modifier = new ConfigModifier().SerializationCompressionLevel(SerializationCompressionLevel.CharArrayToUTF8).Modify())
             {
-                var inputStr = new MultiString();
+                var rand = new Random(0);
 
-                var toss1 = rand.NextDouble();
-                var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
-
-                for (int i = 0; i < usedLength; i++)
+                for (int x = 0; x < 5; x++)
                 {
-                    var toss = rand.NextDouble();
-                    string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
-                    if (x == 0) str = string.Empty;
-                    inputStr.AddString(str);
+                    var inputStr = new MultiString();
+
+                    var toss1 = rand.NextDouble();
+                    var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
+
+                    for (int i = 0; i < usedLength; i++)
+                    {
+                        var toss = rand.NextDouble();
+                        string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
+                        if (x == 0) str = string.Empty;
+                        inputStr.AddString(str);
+                    }
+
+                    inputStr.Seal();
+
+                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    var ms = new MemoryStream { Position = 0 };
+
+                    s.Serialize(ms, inputStr);
+                    ms.Position = 0;
+                    var resultStr = s.Deserialize(ms);
+
+                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+
+                    for (int j = 0; j < inputStr.Count; j++)
+                    {
+                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                    }
+                    resultStr.Dispose();
+                    inputStr.Dispose();
                 }
-
-                inputStr.Seal();
-
-                StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
-                var ms = new MemoryStream { Position = 0 };
-
-                s.Serialize(ms, inputStr);
-                ms.Position = 0;
-                var resultStr = s.Deserialize(ms);
-
-                Assert.IsTrue(resultStr.Count == inputStr.Count);
-
-                for (int j = 0; j < inputStr.Count; j++)
-                {
-                    Assert.IsTrue(inputStr[j] == resultStr[j]);
-                }
-                resultStr.Dispose();
-                inputStr.Dispose();
             }
-
-            Config.SerializationCompressionLevel = orig;
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -13568,24 +13572,25 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructColumnar()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .ShiftEventLifetime(0)
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .ShiftEventLifetime(0)
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -14817,46 +14822,44 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CharArraySerializationColumnar()
         {
-            var orig = Config.SerializationCompressionLevel;
-
-            Config.SerializationCompressionLevel = SerializationCompressionLevel.CharArrayToUTF8;
-            var rand = new Random(0);
-
-            for (int x = 0; x < 5; x++)
+            using (var modifier = new ConfigModifier().SerializationCompressionLevel(SerializationCompressionLevel.CharArrayToUTF8).Modify())
             {
-                var inputStr = new MultiString();
+                var rand = new Random(0);
 
-                var toss1 = rand.NextDouble();
-                var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
-
-                for (int i = 0; i < usedLength; i++)
+                for (int x = 0; x < 5; x++)
                 {
-                    var toss = rand.NextDouble();
-                    string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
-                    if (x == 0) str = string.Empty;
-                    inputStr.AddString(str);
+                    var inputStr = new MultiString();
+
+                    var toss1 = rand.NextDouble();
+                    var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
+
+                    for (int i = 0; i < usedLength; i++)
+                    {
+                        var toss = rand.NextDouble();
+                        string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
+                        if (x == 0) str = string.Empty;
+                        inputStr.AddString(str);
+                    }
+
+                    inputStr.Seal();
+
+                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    var ms = new MemoryStream { Position = 0 };
+
+                    s.Serialize(ms, inputStr);
+                    ms.Position = 0;
+                    var resultStr = s.Deserialize(ms);
+
+                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+
+                    for (int j = 0; j < inputStr.Count; j++)
+                    {
+                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                    }
+                    resultStr.Dispose();
+                    inputStr.Dispose();
                 }
-
-                inputStr.Seal();
-
-                StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
-                var ms = new MemoryStream { Position = 0 };
-
-                s.Serialize(ms, inputStr);
-                ms.Position = 0;
-                var resultStr = s.Deserialize(ms);
-
-                Assert.IsTrue(resultStr.Count == inputStr.Count);
-
-                for (int j = 0; j < inputStr.Count; j++)
-                {
-                    Assert.IsTrue(inputStr[j] == resultStr[j]);
-                }
-                resultStr.Dispose();
-                inputStr.Dispose();
             }
-
-            Config.SerializationCompressionLevel = orig;
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -15559,24 +15562,25 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructColumnarFloating()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .ShiftEventLifetime(0)
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .ShiftEventLifetime(0)
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -16685,46 +16689,44 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CharArraySerializationColumnarFloating()
         {
-            var orig = Config.SerializationCompressionLevel;
-
-            Config.SerializationCompressionLevel = SerializationCompressionLevel.CharArrayToUTF8;
-            var rand = new Random(0);
-
-            for (int x = 0; x < 5; x++)
+            using (var modifier = new ConfigModifier().SerializationCompressionLevel(SerializationCompressionLevel.CharArrayToUTF8).Modify())
             {
-                var inputStr = new MultiString();
+                var rand = new Random(0);
 
-                var toss1 = rand.NextDouble();
-                var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
-
-                for (int i = 0; i < usedLength; i++)
+                for (int x = 0; x < 5; x++)
                 {
-                    var toss = rand.NextDouble();
-                    string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
-                    if (x == 0) str = string.Empty;
-                    inputStr.AddString(str);
+                    var inputStr = new MultiString();
+
+                    var toss1 = rand.NextDouble();
+                    var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
+
+                    for (int i = 0; i < usedLength; i++)
+                    {
+                        var toss = rand.NextDouble();
+                        string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
+                        if (x == 0) str = string.Empty;
+                        inputStr.AddString(str);
+                    }
+
+                    inputStr.Seal();
+
+                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    var ms = new MemoryStream { Position = 0 };
+
+                    s.Serialize(ms, inputStr);
+                    ms.Position = 0;
+                    var resultStr = s.Deserialize(ms);
+
+                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+
+                    for (int j = 0; j < inputStr.Count; j++)
+                    {
+                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                    }
+                    resultStr.Dispose();
+                    inputStr.Dispose();
                 }
-
-                inputStr.Seal();
-
-                StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
-                var ms = new MemoryStream { Position = 0 };
-
-                s.Serialize(ms, inputStr);
-                ms.Position = 0;
-                var resultStr = s.Deserialize(ms);
-
-                Assert.IsTrue(resultStr.Count == inputStr.Count);
-
-                for (int j = 0; j < inputStr.Count; j++)
-                {
-                    Assert.IsTrue(inputStr[j] == resultStr[j]);
-                }
-                resultStr.Dispose();
-                inputStr.Dispose();
             }
-
-            Config.SerializationCompressionLevel = orig;
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -17427,24 +17429,25 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructColumnarSmallBatch()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .ShiftEventLifetime(0)
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .ShiftEventLifetime(0)
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -18676,46 +18679,44 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CharArraySerializationColumnarSmallBatch()
         {
-            var orig = Config.SerializationCompressionLevel;
-
-            Config.SerializationCompressionLevel = SerializationCompressionLevel.CharArrayToUTF8;
-            var rand = new Random(0);
-
-            for (int x = 0; x < 5; x++)
+            using (var modifier = new ConfigModifier().SerializationCompressionLevel(SerializationCompressionLevel.CharArrayToUTF8).Modify())
             {
-                var inputStr = new MultiString();
+                var rand = new Random(0);
 
-                var toss1 = rand.NextDouble();
-                var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
-
-                for (int i = 0; i < usedLength; i++)
+                for (int x = 0; x < 5; x++)
                 {
-                    var toss = rand.NextDouble();
-                    string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
-                    if (x == 0) str = string.Empty;
-                    inputStr.AddString(str);
+                    var inputStr = new MultiString();
+
+                    var toss1 = rand.NextDouble();
+                    var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
+
+                    for (int i = 0; i < usedLength; i++)
+                    {
+                        var toss = rand.NextDouble();
+                        string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
+                        if (x == 0) str = string.Empty;
+                        inputStr.AddString(str);
+                    }
+
+                    inputStr.Seal();
+
+                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    var ms = new MemoryStream { Position = 0 };
+
+                    s.Serialize(ms, inputStr);
+                    ms.Position = 0;
+                    var resultStr = s.Deserialize(ms);
+
+                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+
+                    for (int j = 0; j < inputStr.Count; j++)
+                    {
+                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                    }
+                    resultStr.Dispose();
+                    inputStr.Dispose();
                 }
-
-                inputStr.Seal();
-
-                StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
-                var ms = new MemoryStream { Position = 0 };
-
-                s.Serialize(ms, inputStr);
-                ms.Position = 0;
-                var resultStr = s.Deserialize(ms);
-
-                Assert.IsTrue(resultStr.Count == inputStr.Count);
-
-                for (int j = 0; j < inputStr.Count; j++)
-                {
-                    Assert.IsTrue(inputStr[j] == resultStr[j]);
-                }
-                resultStr.Dispose();
-                inputStr.Dispose();
             }
-
-            Config.SerializationCompressionLevel = orig;
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -19419,24 +19420,25 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SelectStructColumnarSmallBatchFloating()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
+                Config.ForceRowBasedExecution = true;
 
-            var input = Enumerable.Range(0, 100);
-            Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
+                var input = Enumerable.Range(0, 100);
+                Expression<Func<int, MyStruct>> lambda = e => new MyStruct { field1 = e, field2 = e + 0.5, field3 = default };
 
-            var streamResult = input
-                .ToStreamable()
-                .ShiftEventLifetime(0)
-                .Select(lambda)
-                .ToPayloadEnumerable();
-            var linqResult = input
-                .Select(lambda.Compile());
+                var streamResult = input
+                    .ToStreamable()
+                    .ShiftEventLifetime(0)
+                    .Select(lambda)
+                    .ToPayloadEnumerable();
+                var linqResult = input
+                    .Select(lambda.Compile());
 
-            var query = input.Where(e => true);
-            Assert.IsTrue(linqResult.SequenceEqual(streamResult));
-
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+                var query = input.Where(e => true);
+                Assert.IsTrue(linqResult.SequenceEqual(streamResult));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -20545,46 +20547,44 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void CharArraySerializationColumnarSmallBatchFloating()
         {
-            var orig = Config.SerializationCompressionLevel;
-
-            Config.SerializationCompressionLevel = SerializationCompressionLevel.CharArrayToUTF8;
-            var rand = new Random(0);
-
-            for (int x = 0; x < 5; x++)
+            using (var modifier = new ConfigModifier().SerializationCompressionLevel(SerializationCompressionLevel.CharArrayToUTF8).Modify())
             {
-                var inputStr = new MultiString();
+                var rand = new Random(0);
 
-                var toss1 = rand.NextDouble();
-                var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
-
-                for (int i = 0; i < usedLength; i++)
+                for (int x = 0; x < 5; x++)
                 {
-                    var toss = rand.NextDouble();
-                    string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
-                    if (x == 0) str = string.Empty;
-                    inputStr.AddString(str);
+                    var inputStr = new MultiString();
+
+                    var toss1 = rand.NextDouble();
+                    var usedLength = 1 + rand.Next(Config.DataBatchSize - 1);
+
+                    for (int i = 0; i < usedLength; i++)
+                    {
+                        var toss = rand.NextDouble();
+                        string str = toss < 0.2 ? string.Empty : Guid.NewGuid().ToString();
+                        if (x == 0) str = string.Empty;
+                        inputStr.AddString(str);
+                    }
+
+                    inputStr.Seal();
+
+                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    var ms = new MemoryStream { Position = 0 };
+
+                    s.Serialize(ms, inputStr);
+                    ms.Position = 0;
+                    var resultStr = s.Deserialize(ms);
+
+                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+
+                    for (int j = 0; j < inputStr.Count; j++)
+                    {
+                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                    }
+                    resultStr.Dispose();
+                    inputStr.Dispose();
                 }
-
-                inputStr.Seal();
-
-                StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
-                var ms = new MemoryStream { Position = 0 };
-
-                s.Serialize(ms, inputStr);
-                ms.Position = 0;
-                var resultStr = s.Deserialize(ms);
-
-                Assert.IsTrue(resultStr.Count == inputStr.Count);
-
-                for (int j = 0; j < inputStr.Count; j++)
-                {
-                    Assert.IsTrue(inputStr[j] == resultStr[j]);
-                }
-                resultStr.Dispose();
-                inputStr.Dispose();
             }
-
-            Config.SerializationCompressionLevel = orig;
         }
 
         [TestMethod, TestCategory("Gated")]
