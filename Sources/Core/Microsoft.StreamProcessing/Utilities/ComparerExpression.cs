@@ -39,7 +39,7 @@ namespace Microsoft.StreamProcessing
             typeComparerCache.Add(typeof(uint), new PrimitiveComparerExpression<uint>((x, y) => x < y ? -1 : x == y ? 0 : 1));
             typeComparerCache.Add(typeof(long), new PrimitiveComparerExpression<long>((x, y) => x < y ? -1 : x == y ? 0 : 1));
             typeComparerCache.Add(typeof(ulong), new PrimitiveComparerExpression<ulong>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(decimal), new PrimitiveComparerExpression<ulong>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.Add(typeof(decimal), new PrimitiveComparerExpression<decimal>((x, y) => x < y ? -1 : x == y ? 0 : 1));
             typeComparerCache.Add(typeof(string), new GenericComparableExpression<string>());
             typeComparerCache.Add(typeof(TimeSpan), new GenericComparableExpression<TimeSpan>());
             typeComparerCache.Add(typeof(DateTime), new GenericComparableExpression<DateTime>());

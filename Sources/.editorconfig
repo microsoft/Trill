@@ -51,3 +51,16 @@ csharp_new_line_before_finally = true
 csharp_indent_case_contents = true
 csharp_indent_switch_labels = true
 csharp_preserve_single_line_statements = false
+[*.{cs,vb}]
+
+# IDE0003: Remove qualification
+dotnet_style_qualification_for_event = false:none
+
+# IDE0003: Remove qualification
+dotnet_style_qualification_for_field = false:none
+
+# IDE0003: Remove qualification
+dotnet_style_qualification_for_property = false:none
+
+# IDE0003: Remove qualification
+dotnet_style_qualification_for_method = false:none
