@@ -63,6 +63,7 @@
     <Compile Include="Aggregates\CompoundAggregate.cs" />
     <Compile Include="Aggregates\CountAggregate.cs" />
     <Compile Include="Aggregates\GroupAggregate.cs" />
+    <Compile Include="Aggregates\HoppingWindowTopKAggregate.cs" />
     <Compile Include="Aggregates\MaxAggregate.cs" />
     <Compile Include="Aggregates\MinAggregate.cs" />
     <Compile Include="Aggregates\PercentileAggregates.cs" />

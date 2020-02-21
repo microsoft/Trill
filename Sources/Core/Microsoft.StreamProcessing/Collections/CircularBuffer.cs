@@ -106,6 +106,13 @@ namespace Microsoft.StreamProcessing
         public bool IsEmpty() => this.head == this.tail;
 
         /// <summary>
+        /// Removes alll elements from the list - do not use directly.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void Clear() => this.head = this.tail = 0;
+
+        /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -258,6 +265,17 @@ namespace Microsoft.StreamProcessing
             {
                 foreach (var item in buffer.Iterate()) yield return item;
             }
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void Clear()
+        {
+            this.tail = this.head = this.buffers.First;
+            this.head.Value.Clear();
+            this.Count = 0;
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
