@@ -21,7 +21,7 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private int capacityMask = 0xfff;
         [DataMember]
-        internal T[] Items;
+        internal T[] Items = null;
         [DataMember]
         internal int head = 0;
         [DataMember]
@@ -31,7 +31,7 @@ namespace Microsoft.StreamProcessing
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public CircularBuffer() => this.Items = new T[this.capacityMask + 1];
+        public CircularBuffer() { }
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -44,7 +44,6 @@ namespace Microsoft.StreamProcessing
             var temp = 8;
             while (temp <= capacity) temp <<= 1;
 
-            this.Items = new T[temp];
             this.capacityMask = temp - 1;
         }
 
@@ -72,6 +71,7 @@ namespace Microsoft.StreamProcessing
         {
             int next = (this.tail + 1) & this.capacityMask;
             if (next == this.head) throw new InvalidOperationException("The list is full!");
+            if (this.Items == null) this.Items = new T[this.capacityMask + 1];
             this.Items[this.tail] = value;
             this.tail = next;
         }
@@ -96,6 +96,21 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
+        public T PopLast()
+        {
+            if (this.head == this.tail) throw new InvalidOperationException("The list is empty!");
+            int oldtail = this.tail;
+            this.tail = (this.tail - 1) & this.capacityMask;
+            var ret = this.Items[oldtail];
+            this.Items[oldtail] = default;
+            return ret;
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public bool IsFull() => ((this.tail + 1) & this.capacityMask) == this.head;
 
         /// <summary>
@@ -104,6 +119,13 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public bool IsEmpty() => this.head == this.tail;
+
+        /// <summary>
+        /// Removes alll elements from the list - do not use directly.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void Clear() => this.head = this.tail = 0;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -147,6 +169,17 @@ namespace Microsoft.StreamProcessing
             var node = new LinkedListNode<CircularBuffer<T>>(new CircularBuffer<T>());
             this.buffers.AddFirst(node);
             this.tail = this.head = node;
+            this.Count = 0;
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void Clear()
+        {
+            this.tail = this.head = this.buffers.First;
+            this.head.Value.Clear();
             this.Count = 0;
         }
 
@@ -201,6 +234,27 @@ namespace Microsoft.StreamProcessing
 
             this.Count--;
             return this.head.Value.Dequeue();
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public T PopLast()
+        {
+            if (this.tail.Value.IsEmpty())
+            {
+                if (this.head == this.tail)
+                    throw new InvalidOperationException("The list is empty!");
+
+                this.tail = this.tail.Previous;
+                if (this.tail == null) this.tail = this.buffers.Last;
+            }
+
+            this.Count--;
+            return this.tail.Value.PopLast();
         }
 
         /// <summary>

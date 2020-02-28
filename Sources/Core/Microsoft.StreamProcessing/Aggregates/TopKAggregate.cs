@@ -20,22 +20,13 @@ namespace Microsoft.StreamProcessing.Aggregates
             : this(k, rankComparer, ComparerExpression<T>.Default, container) { }
 
         public TopKAggregate(int k, IComparerExpression<T> rankComparer, IComparerExpression<T> overallComparer, QueryContainer container)
-            : base(ThenOrderBy(Reverse(rankComparer), overallComparer), container)
+            : base(ThenOrderBy(ComparerExpression<T>.Reverse(rankComparer), overallComparer), container)
         {
             Contract.Requires(rankComparer != null);
             Contract.Requires(overallComparer != null);
             Contract.Requires(k > 0);
-            this.compiledRankComparer = Reverse(rankComparer).GetCompareExpr().Compile();
+            this.compiledRankComparer = ComparerExpression<T>.Reverse(rankComparer).GetCompareExpr().Compile();
             this.k = k;
-        }
-
-        private static IComparerExpression<T> Reverse(IComparerExpression<T> comparer)
-        {
-            Contract.Requires(comparer != null);
-            var expression = comparer.GetCompareExpr();
-            Expression<Comparison<T>> template = (left, right) => CallInliner.Call(expression, right, left);
-            var reversedExpression = template.InlineCalls();
-            return new ComparerExpression<T>(reversedExpression);
         }
 
         private static IComparerExpression<T> ThenOrderBy(IComparerExpression<T> comparer1, IComparerExpression<T> comparer2)

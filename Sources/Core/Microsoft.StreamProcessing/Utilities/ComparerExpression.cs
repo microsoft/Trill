@@ -5,7 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics.Contracts;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -244,6 +244,16 @@ namespace Microsoft.StreamProcessing
 
         internal static bool IsSimpleDefault(IComparerExpression<T> input)
             => input == Default && input is PrimitiveComparerExpression<T>;
+
+        public static IComparerExpression<T> Reverse(IComparerExpression<T> comparer)
+        {
+            Contract.Requires(comparer != null);
+
+            var expression = comparer.GetCompareExpr();
+            Expression<Comparison<T>> template = (left, right) => CallInliner.Call(expression, right, left);
+            var reversedExpression = template.InlineCalls();
+            return new ComparerExpression<T>(reversedExpression);
+        }
     }
 
     internal class PrimitiveComparerExpression<T> : ComparerExpression<T>
