@@ -100,7 +100,9 @@ namespace SimpleTesting
             return linqResult.SequenceEqual(streamResult);
         }
 
-        public static IEnumerable<long> CountToInfinity(this long i) { var x = i; while (true) yield return x++; }
+        public static IEnumerable<long> CountToInfinity(this long initialValue)
+            => Enumerable.Range(0, int.MaxValue).Select(i => i + initialValue);
+
         public static IStreamable<Empty, T> ToStatStreamable<T>(this IEnumerable<T> source)
         {
             var batchSize = 80000;
@@ -113,6 +115,7 @@ namespace SimpleTesting
                 .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
             return stream;
         }
+
         public static StreamCache<Empty, T> Sort<T, U>(this IStreamable<Empty, T> stream, Expression<Func<T, U>> sortBySelector)
         {
             var u_comparer = Utility.CreateCompoundComparer(sortBySelector, ComparerExpression<U>.Default.GetCompareExpr()).Compile();
