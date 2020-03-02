@@ -100,23 +100,27 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static int StableHash(this string stringToHash)
         {
-            const long magicno = 40343L;
-            int stringLength = stringToHash.Length;
-            ulong hashState = (ulong)stringLength;
-
             unsafe
             {
                 fixed (char* str = stringToHash)
                 {
-                    var stringChars = str;
-                    for (int i = 0; i < stringLength; i++, stringChars++)
-                        hashState = magicno * hashState + *stringChars;
+                    return StableHashUnsafe(str, stringToHash.Length);
                 }
-
-                var rotate = magicno * hashState;
-                var rotated = (rotate >> 4) | (rotate << 60);
-                return (int)(rotated ^ (rotated >> 32));
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static unsafe int StableHashUnsafe(char* stringToHash, int length)
+        {
+            const long magicno = 40343L;
+            ulong hashState = (ulong)length;
+            var stringChars = stringToHash;
+            for (int i = 0; i < length; i++, stringChars++)
+                hashState = magicno * hashState + *stringChars;
+
+            var rotate = magicno * hashState;
+            var rotated = (rotate >> 4) | (rotate << 60);
+            return (int)(rotated ^ (rotated >> 32));
         }
 
         internal static Expression<Comparison<T2>> CreateCompoundComparer<T1, T2>(Expression<Func<T2, T1>> selector, Expression<Comparison<T1>> comparer)
