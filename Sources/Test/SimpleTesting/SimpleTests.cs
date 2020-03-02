@@ -467,11 +467,11 @@ namespace SimpleTesting
                 ;
             var streamResult = input
                 .ToStreamable()
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -1100,11 +1100,11 @@ namespace SimpleTesting
                 ;
             var streamResult = input
                 .ToStreamable()
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -1733,11 +1733,11 @@ namespace SimpleTesting
                 ;
             var streamResult = input
                 .ToStreamable()
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -2367,11 +2367,11 @@ namespace SimpleTesting
                 ;
             var streamResult = input
                 .ToStreamable()
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -2999,11 +2999,11 @@ namespace SimpleTesting
                 ;
             var streamResult = input
                 .ToStreamable()
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -3632,11 +3632,11 @@ namespace SimpleTesting
                 ;
             var streamResult = input
                 .ToStreamable()
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -4265,11 +4265,11 @@ namespace SimpleTesting
                 ;
             var streamResult = input
                 .ToStreamable()
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -4899,11 +4899,11 @@ namespace SimpleTesting
                 ;
             var streamResult = input
                 .ToStreamable()
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -5547,11 +5547,11 @@ namespace SimpleTesting
             var streamResult = input
                 .ToStreamable()
                 .ShiftEventLifetime(0)
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -7537,11 +7537,11 @@ namespace SimpleTesting
             var streamResult = input
                 .ToStreamable()
                 .ShiftEventLifetime(0)
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -9404,11 +9404,11 @@ namespace SimpleTesting
             var streamResult = input
                 .ToStreamable()
                 .ShiftEventLifetime(0)
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -11395,11 +11395,11 @@ namespace SimpleTesting
             var streamResult = input
                 .ToStreamable()
                 .ShiftEventLifetime(0)
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -13261,11 +13261,11 @@ namespace SimpleTesting
             var streamResult = input
                 .ToStreamable()
                 .ShiftEventLifetime(0)
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -15251,11 +15251,11 @@ namespace SimpleTesting
             var streamResult = input
                 .ToStreamable()
                 .ShiftEventLifetime(0)
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -17118,11 +17118,11 @@ namespace SimpleTesting
             var streamResult = input
                 .ToStreamable()
                 .ShiftEventLifetime(0)
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }
@@ -19109,11 +19109,11 @@ namespace SimpleTesting
             var streamResult = input
                 .ToStreamable()
                 .ShiftEventLifetime(0)
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 .ToPayloadEnumerable()
                 ;
             var linqResult = input
-                .SelectMany(e => e.field2.ToString().Split('.').Select(s => s.Length))
+                .SelectMany(e => e.field2.ToString().Split('.', StringSplitOptions.None).Select(s => s.Length))
                 ;
             Assert.IsTrue(linqResult.SequenceEqual(streamResult));
         }

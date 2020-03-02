@@ -244,8 +244,8 @@ namespace Microsoft.StreamProcessing
             var allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
                 .Split(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':');
 
-            // From: http://source.roslyn.io/#Microsoft.CodeAnalysis.Scripting/ScriptOptions.cs,40
-            // These references are resolved lazily. Keep in sync with list in core csi.rsp.
+            // From: https://github.com/dotnet/roslyn/blob/master/src/Interactive/csi/csi.coreclr.rsp
+            // These references are resolved lazily. Keep in sync with list in core csi.coreslr.rsp.
             var files = new[]
             {
                 "System.Collections",
@@ -258,6 +258,8 @@ namespace Microsoft.StreamProcessing
                 "System.IO",
                 "System.IO.FileSystem",
                 "System.IO.FileSystem.Primitives",
+                "System.Linq",
+                "System.Linq.Expressions",
                 "System.Reflection",
                 "System.Reflection.Extensions",
                 "System.Reflection.Primitives",
