@@ -1679,70 +1679,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 {
                     if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
                     {
-#if XOR_HASH
-                        int len = lengthscol[i];
-
-                        int rounded = len >> 2;
-                        int remain = len & 0x3;
-
-                        ulong hc = 0;
-                        ulong* start_long = (ulong*)(src + startscol[i]);
-                        ulong *end_long = start_long + rounded;
-                        ulong tmp = *end_long;
-                        switch (remain)
-                        {
-                            case 0:
-                                end_long--;
-                                break;
-                            case 1:
-                                *end_long &= 0x000000000000ffff;
-                                break;
-                            case 2:
-                                *end_long &= 0x00000000ffffffff;
-                                break;
-                            case 3:
-                                *end_long &= 0x0000ffffffffffff;
-                                break;
-                        }
-
-                        while (start_long <= end_long)
-                        {
-                            hc = ((hc << 5) + hc) ^ *start_long;
-                            start_long++;
-                        }
-                        if (remain != 0) *end_long = tmp;
-                        int ihc = (int)((hc >> 32) ^ (hc & 0xffffffff));
-                        resultcol[i] = (ihc >> 16) + (ihc & 0xffff)*0x5d588b65;
-#elif FNV_HASH
-                        UInt64 hc = 14695981039346656037L;
-                        byte* b = (byte*)(src + startscol[i]);
-                        byte* end = b + 2 * lengthscol[i];
-
-                        while (b < end)
-                        {
-                            hc ^= *b;
-                            hc *= 1099511628211L;
-                            b++;
-                        }
-                        resultcol[i] = (int)hc;
-#else
-                        int num3;
-                        char* charIter = src + startscol[i];
-                        char* end = charIter + lengthscol[i];
-                        int num = 0x1505;
-                        int num2 = num;
-                        for (char* otherIter = charIter; ; otherIter += 2)
-                        {
-                            if (otherIter == end) break;
-                            num3 = otherIter[0];
-                            num = ((num << 5) + num) ^ num3;
-
-                            if (otherIter + 1 == end) break;
-                            num3 = otherIter[1];
-                            num2 = ((num2 << 5) + num2) ^ num3;
-                        }
-                        resultcol[i] = (num + (num2 * 0x5d588b65));
-#endif
+                        char* stringStart = src + startscol[i];
+                        var stringLength = lengthscol[i];
+                        resultcol[i] = Utility.StableHashUnsafe(stringStart, stringLength);
                     }
                 }
             }

@@ -666,7 +666,7 @@ namespace SimpleTesting
                 var output = new List<int>();
                 for (int i = 0; i < input.Count(); i++)
                     output.Add(result.col[i]);
-                var expected = input.Select(s => s.GetHashCode());
+                var expected = input.Select(s => s.StableHash());
                 Assert.IsTrue(expected.SequenceEqual(output));
             }
         }

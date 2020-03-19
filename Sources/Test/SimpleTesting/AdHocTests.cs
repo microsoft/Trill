@@ -21,29 +21,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting
 {
-    public static class Helpers
-    {
-        public static void RunTwiceForRowAndColumnar(Action action)
-        {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            var savedRowFallback = Config.CodegenOptions.DontFallBackToRowBasedExecution;
-            try
-            {
-                foreach (var rowBased in new bool[] { true, false })
-                {
-                    Config.ForceRowBasedExecution = rowBased;
-                    Config.CodegenOptions.DontFallBackToRowBasedExecution = !rowBased;
-                    action();
-                }
-            }
-            finally
-            {
-                Config.ForceRowBasedExecution = savedForceRowBasedExecution;
-                Config.CodegenOptions.DontFallBackToRowBasedExecution = savedRowFallback;
-            }
-        }
-    }
-
     [TestClass]
     public class AdHoc : TestWithConfigSettingsAndMemoryLeakDetection
     {

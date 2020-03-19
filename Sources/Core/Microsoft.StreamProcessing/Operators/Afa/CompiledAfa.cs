@@ -164,9 +164,7 @@ namespace Microsoft.StreamProcessing
                                         toState = to,
                                         Initialize = mearc.Initialize != null
                                             ? mearc.Initialize.Compile()
-                                            : this.defaultAccumulator == default
-                                                ? (ts, reg) => default // To avoid a closure
-                                                : (Func<long, TRegister, TAccumulator>)((ts, reg) => this.defaultAccumulator),
+                                            : (ts, reg) => this.defaultAccumulator,
                                         Accumulate = mearc.Accumulate != null ? mearc.Accumulate.Compile() : (ts, ev, reg, acc) => acc,
                                         SkipToEnd = mearc.SkipToEnd?.Compile(),
                                         Dispose = mearc.Dispose?.Compile(),
