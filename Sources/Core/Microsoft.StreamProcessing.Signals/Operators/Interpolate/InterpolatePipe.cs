@@ -186,7 +186,6 @@ namespace Microsoft.StreamProcessing.Signal
                             // gets transformed into at least two samples: a start sample [a, a + 1) if a < b,
                             // an end sample [b - 1, b) if a < b - 1, and any additional samples created at
                             // sampling beats.
-
                             long previousBeatTime = currBeatTime - period;
                             long sampleTime = edgeEndTime - 1;
 
@@ -368,7 +367,6 @@ namespace Microsoft.StreamProcessing.Signal
                 // We are guaranteed there are no events within (currBeatTime, currBeatTime + period) because
                 // lastTime must be <= currBeatTime and time is >= currBeatTime + period. Note there could have
                 // been edges at currBeatTime or edges to still come at currBeatTime + period, however.
-
                 LeaveBeat(this.currBeatTime);
                 this.currBeatTime += period;
                 ReachBeat(this.currBeatTime);
@@ -413,12 +411,14 @@ namespace Microsoft.StreamProcessing.Signal
 
                 // Create a sample at edgeStartTime if the event started between two last beats
                 long edgeStartTime = this.newEdges.Values[index].Start;
+
                 // if (previousBeatTime < edgeStartTime && edgeStartTime < beatTime)
                 {
                     // Add sample at edgeStartTime
                     ProcessNewPoint(interpolator, edgeStartTime, ref this.newEdges.Values[index].Key, ref this.newEdges.Values[index].Payload, hash, beatTime);
                 }
             }
+
             // Clear new edges as no longer need to output.
             this.newEdges.Clear();
 
@@ -431,7 +431,6 @@ namespace Microsoft.StreamProcessing.Signal
                 // Each event interval [vs, vo) gets transformed into at least two samples:
                 // a start sample [vs, vs + 1) if vs < vo, an end sample [vo - 1, vo) if vs < vo - 1,
                 // and any additional samples created at sampling beats.
-
                 long intervalEndTime = this.intervals.Values[index].end;
 
                 // Create sample and remove interval if ends before or at (beatTime + 1).

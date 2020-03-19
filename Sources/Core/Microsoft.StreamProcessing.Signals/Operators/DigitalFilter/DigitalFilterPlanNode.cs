@@ -24,6 +24,7 @@ namespace Microsoft.StreamProcessing.Signal
         /// Returns the kind of plan node, which can then be used for type casting.
         /// </summary>
         public override PlanNodeKind Kind => PlanNodeKind.DigitalFilter;
+
         /// <summary>
         /// Returns the filter associated with the active query operator
         /// </summary>

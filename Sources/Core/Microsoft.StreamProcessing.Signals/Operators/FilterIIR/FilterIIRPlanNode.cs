@@ -25,10 +25,12 @@ namespace Microsoft.StreamProcessing.Signal
         /// Returns the kind of plan node, which can then be used for type casting.
         /// </summary>
         public override PlanNodeKind Kind => PlanNodeKind.FilterIIR;
+
         /// <summary>
         /// The period of the uniformly-sampled signal.
         /// </summary>
         public long Period { get; private set; }
+
         /// <summary>
         /// The leakage factor of the leaky integrator.
         /// </summary>

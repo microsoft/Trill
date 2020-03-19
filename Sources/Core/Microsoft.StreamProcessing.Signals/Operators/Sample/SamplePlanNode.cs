@@ -22,10 +22,12 @@ namespace Microsoft.StreamProcessing.Signal
         /// Returns the kind of plan node, which can then be used for type casting.
         /// </summary>
         public override PlanNodeKind Kind => PlanNodeKind.Sample;
+
         /// <summary>
         /// The offset value in the sample operation.
         /// </summary>
         public long Offset { get; private set; }
+
         /// <summary>
         /// The period value in the sample operation.
         /// </summary>

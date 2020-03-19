@@ -21,11 +21,13 @@ namespace Microsoft.StreamProcessing.Signal.UDO
         /// </summary>
         [DataMember]
         protected int BaseWindowSize;
+
         /// <summary>
         /// For internal use only - do not use externally
         /// </summary>
         [DataMember]
         protected int HistoryWindowSize;
+
         /// <summary>
         /// For internal use only - do not use externally
         /// </summary>
@@ -33,6 +35,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
         protected int Size;
         [DataMember]
         internal int Capacity;
+
         /// <summary>
         /// For internal use only - do not use externally
         /// </summary>
@@ -89,7 +92,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
                 throw new ArgumentException("Array size has to be greater than base size");
             }
 
-            if (!Utility.IsPowerOfTwo(items.Length))
+            if (!IsPowerOfTwo(items.Length))
             {
                 throw new ArgumentException("Initial capacity has to be zero or a power of two");
             }
@@ -102,6 +105,9 @@ namespace Microsoft.StreamProcessing.Signal.UDO
             Items = items;
             tail = baseSize;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsPowerOfTwo(long x) => (x > 0) && ((x & (x - 1)) == 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Enqueue(ref T item)
@@ -238,7 +244,6 @@ namespace Microsoft.StreamProcessing.Signal.UDO
             if (time < nextSampleTime) { return; }
 
             // Ensured: windowStartTime <= nextSampleTime = time < windowEndTime
-
             Items[tail] = item;
             tail = (tail + 1) & IndexMask;
             numberOfActiveItems++;
@@ -304,13 +309,11 @@ namespace Microsoft.StreamProcessing.Signal.UDO
             // Advance time to ensure:
             //   1) time <= nextSampleTime
             //   2) windowStartTime <= nextSampleTime < windowEndTime
-
             AdvanceTime(time);
 
             if (time < nextSampleTime) { return; }
 
             // Ensured: windowStartTime <= nextSampleTime = time < windowEndTime
-
             Items[tail] = item;
             tail = (tail + 1) & IndexMask;
             numberOfActiveItems++;

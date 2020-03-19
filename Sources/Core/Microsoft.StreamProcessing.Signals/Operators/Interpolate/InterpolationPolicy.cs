@@ -51,7 +51,7 @@ namespace Microsoft.StreamProcessing.Signal
             var parameters = exp.Parameters;
             var var1 = Expression.Parameter(typeof(T));
             var var2 = Expression.Parameter(typeof(T));
-            var body = ParameterSubstituter.Replace(parameters[0], var1, parameters[2], var2, exp);
+            var body = exp.ReplaceParametersInBody(var1, parameters[1], var2);
             return new TwoPointInterpolationPolicy<T>(
                 windowSize,
                 Expression.Lambda<Func<T, long, T, long, long, T>>(
@@ -73,7 +73,7 @@ namespace Microsoft.StreamProcessing.Signal
             var parameters1 = exp1.Parameters;
             var var1 = Expression.Parameter(typeof(T));
             var var2 = Expression.Parameter(typeof(T));
-            var body1 = ParameterSubstituter.Replace(parameters1[0], var1, parameters1[2], var2, exp1);
+            var body1 = exp1.ReplaceParametersInBody(var1, parameters1[1], var2);
 
             Expression<Func<double, long, double, long, double, long, long, double>> exp2 = (v1, t1, v2, t2, v3, t3, t) =>
                     t == t1 ? v1 : (t == t2 ? v2 : t == t3 ? v3 :
@@ -82,7 +82,7 @@ namespace Microsoft.StreamProcessing.Signal
                         v3 * ((double)(t - t1) * (t - t2) / (t3 - t1) / (t3 - t2)));
             var parameters2 = exp2.Parameters;
             var var3 = Expression.Parameter(typeof(T));
-            var body2 = ParameterSubstituter.Replace(parameters2[0], var1, parameters2[2], var2, parameters2[4], var3, exp2);
+            var body2 = exp2.ReplaceParametersInBody(var1, parameters2[1], var2, parameters2[3], var3);
 
             return new ThreePointInterpolationPolicy<T>(
                 windowSize,
@@ -299,6 +299,7 @@ namespace Microsoft.StreamProcessing.Signal
                         this.leftValue = this.middleValue = this.rightValue = value;
                         this.numActiveSamples = 1;
                     }
+
                     // Check if interpolator has one sample or new sample is too far away from middle point
                     else if (numActiveSamples == 1 || watermark > this.middleTime)
                     {

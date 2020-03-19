@@ -23,6 +23,7 @@ namespace Microsoft.StreamProcessing.Signal.UDO
         /// Returns the kind of plan node, which can then be used for type casting.
         /// </summary>
         public override PlanNodeKind Kind => PlanNodeKind.WindowedPipeline;
+
         /// <summary>
         /// Returns the operator pipeline function represented by this windowed operator
         /// </summary>

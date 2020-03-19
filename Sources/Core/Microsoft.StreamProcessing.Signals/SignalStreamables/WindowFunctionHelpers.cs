@@ -8,6 +8,7 @@ using System.Diagnostics.Contracts;
 namespace Microsoft.StreamProcessing.Signal
 {
     // For more details about window functions see https://en.wikipedia.org/wiki/Window_function
+
     /// <summary>
     /// Static class that provides helper methods for creating window arrays
     /// </summary>

@@ -108,7 +108,6 @@ namespace Microsoft.StreamProcessing.Signal.UDO
 
                             // First time group is active for this time.
                             // Create window pipeline and wire together observers and observables.
-
                             var resultObserver = this as ISignalWindowObserver<TResult>;
 
                             ISignalWindowObserver<TSource> firstPipelineObserver;
