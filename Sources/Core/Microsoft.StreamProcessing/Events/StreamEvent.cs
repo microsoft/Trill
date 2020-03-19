@@ -10,12 +10,10 @@ using System.Runtime.Serialization;
 namespace Microsoft.StreamProcessing
 {
 
-    internal class StreamEventSyncTimeComparer<TPayload> : IComparer<StreamEvent<TPayload>>
+    internal sealed class StreamEventSyncTimeComparer<TPayload> : IComparer<StreamEvent<TPayload>>
     {
         public int Compare(StreamEvent<TPayload> x, StreamEvent<TPayload> y)
-        {
-            return x.SyncTime.CompareTo(y.SyncTime);
-        }
+            => x.SyncTime.CompareTo(y.SyncTime);
     }
 
     /// <summary>
@@ -167,12 +165,11 @@ namespace Microsoft.StreamProcessing
 
     }
 
-    internal class PartitionedStreamEventSyncTimeComparer<TKey, TPayload> : IComparer<PartitionedStreamEvent<TKey, TPayload>>
+
+    internal sealed class PartitionedStreamEventSyncTimeComparer<TKey, TPayload> : IComparer<PartitionedStreamEvent<TKey, TPayload>>
     {
         public int Compare(PartitionedStreamEvent<TKey, TPayload> x, PartitionedStreamEvent<TKey, TPayload> y)
-        {
-            return x.SyncTime.CompareTo(y.SyncTime);
-        }
+            => x.SyncTime.CompareTo(y.SyncTime);
     }
 
     /// <summary>

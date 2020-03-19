@@ -9,7 +9,7 @@ namespace Microsoft.StreamProcessing
 {
     internal enum ExpressionCategory { Select, SelectMany, Where }
 
-    internal class ExpressionProfile
+    internal sealed class ExpressionProfile
     {
         public ExpressionCategory category;
         public Type keyType;

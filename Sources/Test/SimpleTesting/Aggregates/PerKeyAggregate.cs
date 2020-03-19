@@ -2,16 +2,21 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reactive.Linq;
 using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting
 {
+    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009", Justification = "Reviewed.")]
     [TestClass]
     public class AggregateByKey : TestWithConfigSettingsAndMemoryLeakDetection
     {
-
         public AggregateByKey()
             : base(new ConfigModifier()
                         .ForceRowBasedExecution(false)
@@ -122,6 +127,38 @@ namespace SimpleTesting
             };
 
             Assert.IsTrue(output.IsEquivalentTo(correct));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void TestAggregateByKeyTupleDecomposition()
+        {
+            var input = new[]
+            {
+                StreamEvent.CreateStart(0, 100),
+                StreamEvent.CreateStart(0, 105),
+                StreamEvent.CreateStart(0, 104),
+                StreamEvent.CreateStart(0, 200),
+                StreamEvent.CreateStart(0, 201),
+                StreamEvent.CreateStart(0, 300),
+                StreamEvent.CreateStart(0, 302),
+                StreamEvent.CreateStart(0, 303),
+                StreamEvent.CreatePunctuation<int>(StreamEvent.InfinitySyncTime)
+            }.ToStreamable();
+
+            var output = new List<StreamEvent<(bool, ulong)>>();
+            input
+                .GroupAggregate(s => true, w => w.Count(), (g, c) => ValueTuple.Create(g.Key, c))
+                .ToStreamEventObservable()
+                .ForEachAsync(e => output.Add(e))
+                .Wait();
+
+            var correct = new[]
+            {
+                StreamEvent.CreateStart(0, ValueTuple.Create(true, (ulong)8)),
+                StreamEvent.CreatePunctuation<ValueTuple<bool, ulong>>(StreamEvent.InfinitySyncTime)
+            };
+
+            Assert.IsTrue(correct.SequenceEqual(output));
         }
     }
 }

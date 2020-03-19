@@ -27,8 +27,9 @@ namespace Microsoft.StreamProcessing
             var t = typeof(TKey).GetPartitionType();
             if (t == null)
             {
-                if (this.Source.Properties.IsColumnar) return GetPipe(observer);
-                else return new ClipByConstantPipe<TKey, TPayload>(this, observer, this.limit);
+                return this.Source.Properties.IsColumnar
+                    ? GetPipe(observer)
+                    : new ClipByConstantPipe<TKey, TPayload>(this, observer, this.limit);
             }
             var outputType = typeof(PartitionedClipByConstantPipe<,,>).MakeGenericType(
                 typeof(TKey),
@@ -52,7 +53,7 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create();
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ClipByConstantTemplate.Generate(this));
-            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new ClipByConstantPlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2));
+            Func<PlanNode, IQueryObject, PlanNode> planNode = (PlanNode p, IQueryObject o) => new ClipByConstantPlanNode(p, o, typeof(TKey), typeof(TPayload), true, generatedPipeType.Item2);
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode, this.limit);
             var returnValue = (UnaryPipe<TKey, TPayload, TPayload>)instance;

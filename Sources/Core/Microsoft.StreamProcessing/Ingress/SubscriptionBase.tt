@@ -14,6 +14,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Microsoft.StreamProcessing.Internal.Collections;
 
@@ -134,6 +135,10 @@ foreach (bool disordered in new[] { true, false })
     /// <typeparam name="TPayload"></typeparam>
     /// <typeparam name="TResult"></typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
+<#  if (partitioned) { #>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1008:OpeningParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
+<#  } #>
     public abstract class <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>SubscriptionBase<<#= genericArgument #>TIngressStructure, TPayload, TResult> : Pipe<<#= baseType #>, TResult>, IIngressStreamObserver
     {
         private readonly string errorMessages;
@@ -221,6 +226,16 @@ foreach (bool disordered in new[] { true, false })
         [DataMember]
         protected <#= !partitioned ? "long" : "Dictionary<TKey, long>" #> currentTime<#= !partitioned ? " = StreamEvent.MinSyncTime" : " = new Dictionary<TKey, long>()" #>;
 
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// Used for debug purposes only - very close to currentTime, but is only updated due to real events/punctuations/low watermarks processed, and not the reorder buffer latency
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DataMember]
+        protected <#= !partitioned ? "long" : "Dictionary<TKey, long>" #> lastEventTime<#= !partitioned ? " = StreamEvent.MinSyncTime" : " = new Dictionary<TKey, long>()" #>;
+#endif
+
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -242,7 +257,7 @@ foreach (bool disordered in new[] { true, false })
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
-        protected Dictionary<TKey, long> lastPunctuationTime = new Dictionary<TKey, long>();
+        protected Dictionary<TKey, (long lastPunctuation, long lastPunctuationQuantized)> lastPunctuationTime = new Dictionary<TKey, (long, long)>();
 <#  } #>
 
         /// <summary>
@@ -273,10 +288,14 @@ foreach (bool disordered in new[] { true, false })
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
+        /// Tracks the three possible low watermark values:
+        /// 1. rawValue - the raw low watermark value
+        /// 2. quantizedForLowWatermarkGeneration - raw low watermark value quantized for low watermark generation
+        /// 2. quanitzedForPunctuationGeneration - raw low watermark value quantized for punctuation generation
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected long lowWatermark = 0;
+        protected (long rawValue, long quantizedForLowWatermarkGeneration, long quantizedForPunctuationGeneration) lowWatermark = (0, 0, 0);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -412,9 +431,7 @@ foreach (bool disordered in new[] { true, false })
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                this.lastPunctuationTime[value.PartitionKey] = Math.Max(
-                    value.SyncTime.SnapToLeftBoundary((long)this.punctuationGenerationPeriod),
-                    this.lastPunctuationTime[value.PartitionKey]);
+                UpdatePunctuation(value.PartitionKey, value.SyncTime);
             }
 
             var count = this.currentBatch.Count;
@@ -424,6 +441,50 @@ foreach (bool disordered in new[] { true, false })
             {
                 if (this.flushPolicy == PartitionedFlushPolicy.FlushOnBatchBoundary) OnFlush();
                 else FlushContents();
+            }
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="partitionKey"></param>
+        /// <param name="time"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdatePunctuation(TKey partitionKey, long time)
+        {
+            this.lastPunctuationTime[partitionKey] = (time, time.SnapToLeftBoundary((long)this.punctuationGenerationPeriod));
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="partitionKey"></param>
+        /// <param name="time"></param>
+        /// <param name="timeQuantized"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdatePunctuation(TKey partitionKey, long time, long timeQuantized)
+        {
+            this.lastPunctuationTime[partitionKey] = (time, timeQuantized);
+        }
+
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+        /// <param name="time"></param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void UpdateLowWatermark(long time)
+        {
+            this.lowWatermark.rawValue = time;
+            if (this.lowWatermarkPolicyType == PeriodicLowWatermarkPolicyType.Time)
+            {
+                this.lowWatermark.quantizedForLowWatermarkGeneration = time.SnapToLeftBoundary((long)this.lowWatermarkGenerationPeriod);
+            }
+            if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
+            {
+                this.lowWatermark.quantizedForPunctuationGeneration = time.SnapToLeftBoundary((long)this.punctuationGenerationPeriod);
             }
         }
 <#  }
@@ -462,6 +523,29 @@ foreach (bool disordered in new[] { true, false })
             }
         }
 <#  } #>
+
+#if DEBUG
+        /// <summary>
+        /// Currently for internal use only - do not use directly.
+        /// </summary>
+<#  if (partitioned)
+    { #>
+        /// <param name="partitionKey"></param>
+<#  } #>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected long LastEventTime(<# if (partitioned) { #>TKey partitionKey<# } #>)
+        {
+<#  if (partitioned)
+    { #>
+            return this.lastEventTime.ContainsKey(partitionKey) ? this.lastEventTime[partitionKey] : 0;
+<#  }
+    else
+    { #>
+            return this.lastEventTime;
+<#  } #>
+        }
+#endif
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

@@ -275,6 +275,13 @@ namespace Microsoft.StreamProcessing
 
                 result.AddArc(0, nextPattern.StartState + oldMax, new EpsilonArc<TPayload, TRegister>());
 
+                // If the next pattern start state is also a final state, add it directly, as it will not necessarily have a transition entry
+                if (nextPattern.finalStates.Contains(nextPattern.StartState))
+                {
+                    if (!result.finalStates.Contains(nextPattern.StartState + oldMax))
+                        result.finalStates.Add(nextPattern.StartState + oldMax);
+                }
+
                 foreach (var kvp1 in nextPattern.transitionInfo)
                 {
                     foreach (var kvp2 in kvp1.Value)
@@ -391,6 +398,13 @@ namespace Microsoft.StreamProcessing
                 {
                     extraFinalStates.Add(oldFinal);
                     int oldMax = result.MaxState;
+
+                    // If the next pattern start state is also a final state, add it directly, as it will not necessarily have a transition entry
+                    if (nextPattern.finalStates.Contains(nextPattern.StartState))
+                    {
+                        if (!result.finalStates.Contains(oldFinal))
+                            result.finalStates.Add(oldFinal);
+                    }
 
                     foreach (var kvp1 in nextPattern.transitionInfo)
                     {

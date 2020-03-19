@@ -5,32 +5,53 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.StreamProcessing.Internal;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
-    internal class TumblingMinAggregate<T> : IAggregate<T, MinMaxState<T>, T>
+    internal sealed class TumblingMinAggregate<T> : IAggregate<T, MinMaxState<T>, T>
     {
         private static readonly long InvalidSyncTime = StreamEvent.MinSyncTime - 1;
-        private readonly Comparison<T> comparer;
+        private readonly Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> accumulate;
 
         public TumblingMinAggregate() : this(ComparerExpression<T>.Default) { }
 
         public TumblingMinAggregate(IComparerExpression<T> comparer)
         {
             Contract.Requires(comparer != null);
-            this.comparer = comparer.GetCompareExpr().Compile();
+
+            var stateExpression = Expression.Parameter(typeof(MinMaxState<T>), "state");
+            var timestampExpression = Expression.Parameter(typeof(long), "timestamp");
+            var inputExpression = Expression.Parameter(typeof(T), "input");
+
+            Expression<Func<MinMaxState<T>>> constructor = () => new MinMaxState<T>();
+            Expression<Func<MinMaxState<T>, long>> currentTimestamp = (state) => state.currentTimestamp;
+            Expression<Func<MinMaxState<T>, T>> currentValue = (state) => state.currentValue;
+            var currentTimestampExpression = currentTimestamp.ReplaceParametersInBody(stateExpression);
+            var comparerExpression = comparer.GetCompareExpr().ReplaceParametersInBody(
+                inputExpression, currentValue.ReplaceParametersInBody(stateExpression));
+
+            var typeInfo = typeof(MinMaxState<T>).GetTypeInfo();
+            this.accumulate = Expression.Lambda<Func<MinMaxState<T>, long, T, MinMaxState<T>>>(
+                Expression.Condition(
+                    Expression.OrElse(
+                        Expression.Equal(currentTimestampExpression, Expression.Constant(InvalidSyncTime)),
+                        Expression.LessThan(comparerExpression, Expression.Constant(0))),
+                    Expression.MemberInit(
+                        (NewExpression)constructor.Body,
+                        Expression.Bind(typeInfo.GetField("currentTimestamp"), timestampExpression),
+                        Expression.Bind(typeInfo.GetField("currentValue"), inputExpression)),
+                    stateExpression),
+                stateExpression,
+                timestampExpression,
+                inputExpression);
         }
 
         public Expression<Func<MinMaxState<T>>> InitialState()
             => () => new MinMaxState<T> { currentTimestamp = InvalidSyncTime };
 
-        public Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> Accumulate()
-            => (state, timestamp, input) => new MinMaxState<T>
-            {
-                currentTimestamp = timestamp,
-                currentValue = (state.currentTimestamp == InvalidSyncTime || this.comparer(input, state.currentValue) < 0) ? input : state.currentValue
-            };
+        public Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> Accumulate() => this.accumulate;
 
         public Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> Deaccumulate()
             => (state, timestamp, input) => state; // never invoked, hence not implemented

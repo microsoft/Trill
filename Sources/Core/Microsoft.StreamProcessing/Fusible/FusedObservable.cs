@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Microsoft.StreamProcessing
 {
-    internal class FusedObservable<TKey, TInput, TPayload, TResult, TOutput> : IObservable<TOutput>
+    internal sealed class FusedObservable<TKey, TInput, TPayload, TResult, TOutput> : IObservable<TOutput>
     {
         private readonly IObservable<TInput> observable;
         private readonly ParameterExpression inputParameter;
@@ -68,23 +68,22 @@ namespace Microsoft.StreamProcessing
 
             onNextPunctuation = baseType == typeof(StreamEvent<>) || baseType == typeof(PartitionedStreamEvent<,>)
                 ? Expression.IfThenElse(
-                    Expression.Equal(onNextFused.Parameters[1], Expression.Constant(long.MinValue)),
-                    onNextResultBody,
-                    onNextFused.Body)
+                    Expression.NotEqual(onNextFused.Parameters[1], Expression.Constant(long.MinValue)),
+                    onNextFused.Body,
+                    onNextResultBody)
                 : Expression.IfThen(
                     Expression.NotEqual(onNextFused.Parameters[1], Expression.Constant(long.MinValue)),
                     onNextFused.Body);
 
-            var onNextReplacedEdges = ParameterSubstituter.Replace(
-                onNextFused.Parameters[0], this.startEdgeExtractor.Body,
-                onNextFused.Parameters[1], this.endEdgeExtractor.Body,
-                onNextPunctuation);
-            var onNextReplacedValues = ParameterSubstituter.Replace(
-                onNextFused.Parameters[2], this.payloadExtractor.Body,
-                onNextFused.Parameters[3], this.keyExtractor.Body,
-                onNextReplacedEdges);
+            var onNextReplacedParameters = ParameterSubstituter.Replace(
+                onNextFused.Parameters,
+                onNextPunctuation,
+                this.startEdgeExtractor.Body,
+                this.endEdgeExtractor.Body,
+                this.payloadExtractor.Body,
+                this.keyExtractor.Body);
 
-            var onNextFinal = Expression.Lambda<Action<TInput>>(onNextReplacedValues, this.inputParameter);
+            var onNextFinal = Expression.Lambda<Action<TInput>>(onNextReplacedParameters, this.inputParameter);
 
             var pipe = new FusedObservablePipe<TInput>(observer.OnCompleted, observer.OnError, onNextFinal.Compile(), this.ingressIdentifier);
             if (this.container != null) this.container.RegisterEgressPipe(this.egressIdentifier, pipe);

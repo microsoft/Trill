@@ -11,29 +11,9 @@ using System.Runtime.CompilerServices;
 
 namespace Microsoft.StreamProcessing
 {
-    internal delegate int RefComparison<T>(ref T x, ref T y);
-
     internal static class Utility
     {
         internal static readonly IDisposable EmptyDisposable = new NullDisposable();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool IsPowerOfTwo(long x) => (x > 0) && ((x & (x - 1)) == 0);
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "x+1", Justification = "Reviewed.")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "x-1", Justification = "Reviewed.")]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static int Power2Ceil(int x)
-        {
-            x--;
-            x |= x >> 1;
-            x |= x >> 2;
-            x |= x >> 4;
-            x |= x >> 8;
-            x |= x >> 16;
-            x++;
-            return x;
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static long SnapToLeftBoundary(this long value, long period, long offset = 0)
@@ -120,32 +100,36 @@ namespace Microsoft.StreamProcessing
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static int StableHash(this string stringToHash)
         {
-            const long magicno = 40343L;
-            int stringLength = stringToHash.Length;
-            ulong hashState = (ulong)stringLength;
-
             unsafe
             {
                 fixed (char* str = stringToHash)
                 {
-                    var stringChars = str;
-                    for (int i = 0; i < stringLength; i++, stringChars++)
-                        hashState = magicno * hashState + *stringChars;
+                    return StableHashUnsafe(str, stringToHash.Length);
                 }
-
-                var rotate = magicno * hashState;
-                var rotated = (rotate >> 4) | (rotate << 60);
-                return (int)(rotated ^ (rotated >> 32));
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static unsafe int StableHashUnsafe(char* stringToHash, int length)
+        {
+            const long magicno = 40343L;
+            ulong hashState = (ulong)length;
+            var stringChars = stringToHash;
+            for (int i = 0; i < length; i++, stringChars++)
+                hashState = magicno * hashState + *stringChars;
+
+            var rotate = magicno * hashState;
+            var rotated = (rotate >> 4) | (rotate << 60);
+            return (int)(rotated ^ (rotated >> 32));
         }
 
         internal static Expression<Comparison<T2>> CreateCompoundComparer<T1, T2>(Expression<Func<T2, T1>> selector, Expression<Comparison<T1>> comparer)
         {
             var newParam1 = Expression.Parameter(selector.Parameters[0].Type, selector.Parameters[0].Name + "_1");
             var newParam2 = Expression.Parameter(selector.Parameters[0].Type, selector.Parameters[0].Name + "_2");
-            var copy1 = ParameterInliner.Inline(selector, newParam1);
-            var copy2 = ParameterInliner.Inline(selector, newParam2);
-            var result = ParameterInliner.Inline(comparer, copy1, copy2);
+            var copy1 = selector.ReplaceParametersInBody(newParam1);
+            var copy2 = selector.ReplaceParametersInBody(newParam2);
+            var result = comparer.ReplaceParametersInBody(copy1, copy2);
             return Expression.Lambda<Comparison<T2>>(result, newParam1, newParam2);
         }
 

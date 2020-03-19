@@ -328,7 +328,7 @@ using Microsoft.StreamProcessing.Aggregates;
  } 
             this.Write(@"                    this.batch[c] = default;
                     this.batch.hash.col[c] = 0;
-                    this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                    this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                     this.batch.Count++;
                     if (this.batch.Count == Config.DataBatchSize) FlushContents();
                 }

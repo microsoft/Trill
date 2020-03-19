@@ -164,7 +164,7 @@ namespace Microsoft.StreamProcessing
                 if (stream.Properties.IsConstantDuration)
                 {
                     Expression<Func<PartitionKey<TKey>, TKey>> lower = (o) => o.Key;
-                    var newBody = ParameterSubstituter.Replace(constructor.Parameters[0], lower.Body, constructor.Body);
+                    var newBody = constructor.ReplaceParametersInBody(lower.Body);
                     var newFunc = Expression.Lambda<Func<long, long, TPayload, PartitionKey<TKey>, TResult>>(
                         newBody,
                         constructor.Parameters[1],

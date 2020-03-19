@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
     /// Since punctuations force output, this exposes a throughput/latency tradeoff.
     /// </summary>
     [DataContract]
-    public class PeriodicPunctuationPolicy
+    public sealed class PeriodicPunctuationPolicy
     {
         [DataMember]
         internal PeriodicPunctuationPolicyType type;
@@ -69,7 +69,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A string representation for the PeriodicPunctuationPolicy object.</returns>
         public override string ToString()
         {
-            string kind = null;
+            string kind;
             switch (this.type)
             {
                 case PeriodicPunctuationPolicyType.None: kind = "None"; break;

@@ -43,7 +43,7 @@ using <#= this.payloadType.Namespace #>;
 
 [assembly: IgnoresAccessChecksTo("Microsoft.StreamProcessing")]
 [DataContract]
-public partial class <#= CLASSNAME #><#= genericParameters #> : StreamMessage<<#= TKEY #>, <#= TPAYLOAD #>>
+public sealed class <#= CLASSNAME #><#= genericParameters #> : StreamMessage<<#= TKEY #>, <#= TPAYLOAD #>>
 {
 
 <# if (this.payloadMightBeNull) { #>

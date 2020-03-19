@@ -71,7 +71,7 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     [DataContract]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class StreamMessage<TKey, TPayload> : StreamMessage // TODO: make this abstract
+    public class StreamMessage<TKey, TPayload> : StreamMessage
     {
         private const int M1 = 0x5555;
 

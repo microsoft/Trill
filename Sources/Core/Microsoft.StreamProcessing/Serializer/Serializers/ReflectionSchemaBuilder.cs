@@ -155,9 +155,9 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         {
             var elementSchema = CreateSchema(type.GetElementType(), currentDepth + 1);
 
-            if (type == typeof(Array)) return new ArraySerializer(elementSchema, type);
-            else if (type.GetArrayRank() == 1) return new ArraySerializer(elementSchema, type);
-            else return new MultidimensionalArraySerializer(elementSchema, type);
+            return type == typeof(Array) || type.GetArrayRank() == 1
+                ? new ArraySerializer(elementSchema, type)
+                : (ObjectSerializerBase)new MultidimensionalArraySerializer(elementSchema, type);
         }
 
         private ObjectSerializerBase BuildRecordTypeSchema(Type type, uint currentDepth)

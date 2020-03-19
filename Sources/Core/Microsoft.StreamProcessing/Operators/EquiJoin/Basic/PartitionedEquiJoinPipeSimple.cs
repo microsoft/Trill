@@ -244,6 +244,9 @@ namespace Microsoft.StreamProcessing
         {
             foreach (var pKey in this.processQueue)
             {
+                // Partition is no longer clean if we are processing it. If it is still clean, it will be added below.
+                this.cleanKeys.Remove(pKey);
+
                 Queue<LEntry> leftWorking = null;
                 Queue<REntry> rightWorking = null;
 

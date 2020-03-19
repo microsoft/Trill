@@ -48,6 +48,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(TInnerResult));
             this.Write("\r\n// TResult: ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TResult));
+            this.Write("\r\n// ProjectionReturningResultInstance: ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(ProjectionReturningResultInstance.ExpressionToCSharp()));
             this.Write("\r\n\r\n");
 
     var memoryPoolGenericParameters = string.Format("<{0}, {1}>", TOuterKey, TResult);
@@ -173,7 +175,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(resultBatchClassType));
             this.Write(this.ToStringHelper.ToStringWithCulture(resultBatchGenericParameters));
             this.Write(";\r\n\r\n");
- foreach (var f in this.computedFields.Keys) { 
+ foreach (var f in (this.ProjectionReturningResultInstance != null ? new ColumnarRepresentation(this.resultType).AllFields : this.computedFields.Keys)) { 
             this.Write("\r\n        outPool.Get(out resultBatch.");
             this.Write(this.ToStringHelper.ToStringWithCulture(f.Name));
             this.Write(");\r\n");
@@ -254,7 +256,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(";\r\n");
  } 
             this.Write("\r\n");
- if (!ungroupingToUnit || this.computedFields.Any()) { 
+ if (!ungroupingToUnit || this.computedFields.Any() || this.ProjectionReturningResultInstance != null) { 
      if (!ungroupingToUnit) { 
             this.Write("            var srckey = batch.key.col;\r\n            var destkey = tmp.key.col;\r\n" +
                     "");
@@ -275,6 +277,15 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write("                destkey[i] = srckey[i].outerGroup;\r\n                desthash[i] =" +
                     " this.outerHashCode(destkey[i]);\r\n");
      } 
+ if (this.ProjectionReturningResultInstance != null) {
+            var map = new Dictionary<System.Linq.Expressions.ParameterExpression, string>();
+            map.Add(this.keyParameter, "batch.key.col[i].InnerGroup");
+            var v = this.ProjectionReturningResultInstance.ExpressionToCSharpStringWithParameterSubstitution(map);
+
+            this.Write("                    resultBatch[i] = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(v));
+            this.Write(";\r\n");
+ } else { 
      foreach (var kv in this.computedFields) {
             var f = kv.Key;
             string v;
@@ -295,7 +306,8 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(v));
             this.Write(";\r\n");
           } 
-     } 
+     } // end foreach 
+ } 
             this.Write("            }\r\n");
  } 
             this.Write("\r\n");
@@ -331,8 +343,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write("\r\n        inputBatch._nullnessvector.ReturnClear();\r\n");
  } 
             this.Write("\r\n        batch.Return();\r\n\r\n        tmp.Seal();\r\n        this.Observer.OnNext(tm" +
-                    "p);\r\n    }\r\n\r\n    public void OnError(Exception error)\r\n    {\r\n        Observer." +
-                    "OnError(error);\r\n    }\r\n}\r\n");
+                    "p);\r\n    }\r\n}\r\n");
             return this.GenerationEnvironment.ToString();
         }
     }

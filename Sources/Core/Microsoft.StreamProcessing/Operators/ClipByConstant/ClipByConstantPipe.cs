@@ -37,7 +37,6 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = stream.ErrorMessages;
             this.pool.Get(out this.output);
             this.output.Allocate();
-
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -97,7 +96,7 @@ namespace Microsoft.StreamProcessing
 
                             if (this.output.Count == Config.DataBatchSize) FlushContents();
 
-                            if (!this.syncTimeMap.TryGetValue(sync, out MultiSet<ActiveEvent> multiSet))
+                            if (!this.syncTimeMap.TryGetValue(sync, out var multiSet))
                             {
                                 multiSet = new MultiSet<ActiveEvent>();
                                 this.syncTimeMap.Add(sync, multiSet);
@@ -150,7 +149,7 @@ namespace Microsoft.StreamProcessing
                         this.output.key.col[ind] = batch.key.col[i];
                         this.output[ind] = default;
                         this.output.hash.col[ind] = batch.hash.col[i];
-                        this.output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
+                        this.output.bitvector.col[ind >> 6] |= 1L << (ind & 0x3f);
 
                         if (this.output.Count == Config.DataBatchSize) FlushContents();
                     }

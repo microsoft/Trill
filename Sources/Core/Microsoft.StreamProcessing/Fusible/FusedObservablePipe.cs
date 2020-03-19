@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Microsoft.StreamProcessing
 {
-    internal class FusedObservablePipe<TInput> : IObserver<TInput>, IIngressStreamObserver, IEgressStreamObserver
+    internal sealed class FusedObservablePipe<TInput> : IObserver<TInput>, IIngressStreamObserver, IEgressStreamObserver
     {
         private readonly Action onCompleted;
         private readonly Action<Exception> onError;
@@ -58,10 +58,8 @@ namespace Microsoft.StreamProcessing
         public void OnNext(TInput value) => this.onNext(value);
 
         public void ProduceQueryPlan(PlanNode previous)
-        {
-            this.activeProcess.RegisterQueryPlan(this.egressIdentifier, new FusedPlanNode(
+            => this.activeProcess.RegisterQueryPlan(this.egressIdentifier, new FusedPlanNode(
                 this, typeof(Empty), typeof(TInput), false, null));
-        }
 
         public void Reset() { }
 

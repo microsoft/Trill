@@ -63,14 +63,12 @@ namespace Microsoft.StreamProcessing
         }
 
         public static bool IsFieldOrAutoProp(this MemberInfo member)
-        {
-            if (member is FieldInfo) return true;
-            return member is PropertyInfo p
+            => member is FieldInfo
+            || (member is PropertyInfo p
                 && p.GetMethod != null
                 && p.GetMethod.IsDefined(typeof(CompilerGeneratedAttribute))
                 && p.SetMethod != null
-                && p.SetMethod.IsDefined(typeof(CompilerGeneratedAttribute));
-        }
+                && p.SetMethod.IsDefined(typeof(CompilerGeneratedAttribute)));
 
         /// <summary>
         /// Transforms a unary function f, with parameter e of type <typeparamref name="TPayload"/>, into
@@ -89,7 +87,8 @@ namespace Microsoft.StreamProcessing
         /// </typeparam>
         /// <param name="f"></param>
         /// <returns>Null if the columnar transformation of f's body fails.</returns>
-        public static LambdaExpression/*?*/ TransformUnaryFunction<TKey, TPayload>(LambdaExpression f) => TransformFunction<TKey, TPayload>(f, 0);
+        public static LambdaExpression/*?*/ TransformUnaryFunction<TKey, TPayload>(LambdaExpression f)
+            => TransformFunction<TKey, TPayload>(f, 0);
 
         /// <summary>
         /// Transforms an n-ary function f, with parameters e_i, into a columnar representation.

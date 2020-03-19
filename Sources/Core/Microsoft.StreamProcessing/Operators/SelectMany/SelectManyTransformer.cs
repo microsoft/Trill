@@ -34,6 +34,13 @@ namespace Microsoft.StreamProcessing
         /// For each computed field, f, the table maps f to the the C# source for the value that is assigned to f for each row.
         /// </summary>
         private IDictionary<MyFieldInfo, Expression> computedFields = new Dictionary<MyFieldInfo, Expression>();
+
+        /// <summary>
+        /// Needed when the projection function is optimized to a single select, but cannot be split into separate assignments to the columns
+        /// of the result batch.
+        /// </summary>
+        private Expression projectionReturningResultInstance = null;
+
         private bool useEnumerator;
         private string loopCounter;
         private bool enumerableRepeatSelector;
@@ -109,6 +116,7 @@ namespace Microsoft.StreamProcessing
                     };
                     var projectionResult = SelectTransformer.Transform(pseudoLambda, parameterSubstitutions, template.resultPayloadRepresentation, true, stream.HasStartEdge);
                     template.computedFields = projectionResult.ComputedFields;
+                    template.projectionReturningResultInstance = projectionResult.ProjectionReturningResultInstance;
                     template.useEnumerator = false;
                     var loopCounter = tuple.Item2;
                     var newParameters = new ParameterExpression[stream.HasKey ? 2 : 1];

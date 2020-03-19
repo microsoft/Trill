@@ -79,7 +79,6 @@ namespace Microsoft.StreamProcessing
         /// The key value for the grouping
         /// </summary>
         [DataMember]
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public T Key;
 
         /// <summary>
@@ -102,7 +101,6 @@ namespace Microsoft.StreamProcessing
         /// The value associated with the given partition.
         /// </summary>
         [DataMember]
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public T Key;
 
         /// <summary>

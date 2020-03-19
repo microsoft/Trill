@@ -42,19 +42,13 @@ namespace PerformanceTesting.YahooBenchmark
             var segment = new ArraySegment<StreamEvent<Event>>(eventArray);
             var events = new Subject<ArraySegment<StreamEvent<Event>>>();
             var inputStream = events.ToStreamable();
-            var outputStream = inputStream
-                .Where(e => e.event_type == Event_Type.View)
-                .TumblingWindowLifetime(TimeSpan.FromSeconds(10).Ticks)
-                .Select(e => new ProjectedEvent { ad_id = e.ad_id, event_time = e.event_time, campaign_id = DataGenerator.Campaigns[e.ad_id] })
-                .GroupAggregate(e => e.campaign_id, o => o.Count(), o => o.Max(r => r.event_time), (key, count, max) => new Output { campaign_id = key.Key, count = count, lastUpdate = max })
-                ;
-            ;
+            var outputStream = BenchmarkQuery(inputStream);
             outputStream.ToStreamEventObservable().ForEachAsync(o => rowCount++);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            while (true)
+            for (int i = 0; i < 1000; i++)
             {
                 PopulateArray(eventArray);
                 eventArray[ArraySize - 1] = StreamEvent.CreatePunctuation<Event>(DateTime.Now.Ticks);

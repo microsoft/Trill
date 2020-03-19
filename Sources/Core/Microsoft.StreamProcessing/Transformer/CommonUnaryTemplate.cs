@@ -4,9 +4,8 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.StreamProcessing
 {
@@ -85,7 +84,7 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        protected Tuple<Type, string> Generate<TKey, TPayload, TResult>(params Type[] types)
+        protected Tuple<Type, string> Generate<TKey, TPayload, TResult>(Type[] types, Expression[] expressions)
         {
             string errorMessages = null;
             try
@@ -94,6 +93,11 @@ namespace Microsoft.StreamProcessing
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(this.keyType, this.payloadType, this.resultType, typeof(SortedDictionary<,>));
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(types));
+                if (expressions != null)
+                {
+                    assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(expressions));
+                }
+
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TResult>());
 

@@ -24,26 +24,6 @@ namespace SimpleTesting
         public ulong ActivityCount;
     }
 
-    public abstract class TestWithConfigSettingsWithoutMemoryLeakDetection
-    {
-        private IDisposable confmod = null;
-        private readonly ConfigModifier modifier;
-
-        protected TestWithConfigSettingsWithoutMemoryLeakDetection() : this(new ConfigModifier()) { }
-
-        internal TestWithConfigSettingsWithoutMemoryLeakDetection(ConfigModifier modifier) => this.modifier = modifier;
-
-        [TestInitialize]
-        public virtual void Setup() => this.confmod = this.modifier.Modify();
-
-        [TestCleanup]
-        public virtual void TearDown()
-        {
-            var cm = System.Threading.Interlocked.Exchange(ref this.confmod, null);
-            if (cm != null) { cm.Dispose(); }
-        }
-    }
-
     [TestClass]
     public class CheckpointRestoreTestsAllowFallbackRow : TestWithConfigSettingsWithoutMemoryLeakDetection
     {

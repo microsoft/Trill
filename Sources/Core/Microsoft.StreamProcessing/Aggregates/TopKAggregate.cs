@@ -32,9 +32,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         private static IComparerExpression<T> Reverse(IComparerExpression<T> comparer)
         {
             Contract.Requires(comparer != null);
-            Expression<Comparison<T>> expression = comparer.GetCompareExpr();
+            var expression = comparer.GetCompareExpr();
             Expression<Comparison<T>> template = (left, right) => CallInliner.Call(expression, right, left);
-            Expression<Comparison<T>> reversedExpression = template.InlineCalls();
+            var reversedExpression = template.InlineCalls();
             return new ComparerExpression<T>(reversedExpression);
         }
 
@@ -42,14 +42,14 @@ namespace Microsoft.StreamProcessing.Aggregates
         {
             Contract.Requires(comparer1 != null);
             Contract.Requires(comparer2 != null);
-            Expression<Comparison<T>> primary = comparer1.GetCompareExpr();
-            Expression<Comparison<T>> secondary = comparer2.GetCompareExpr();
+            var primary = comparer1.GetCompareExpr();
+            var secondary = comparer2.GetCompareExpr();
             Expression<Comparison<T>> template =
                 (left, right) =>
                 CallInliner.Call(primary, left, right) == 0
                     ? CallInliner.Call(secondary, left, right)
                     : CallInliner.Call(primary, left, right);
-            Expression<Comparison<T>> newExpression = template.InlineCalls();
+            var newExpression = template.InlineCalls();
             return new ComparerExpression<T>(newExpression);
         }
 

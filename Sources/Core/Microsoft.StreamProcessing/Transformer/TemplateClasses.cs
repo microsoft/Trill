@@ -3,6 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 #if CODEGEN_TIMING
 using System.Diagnostics;
@@ -13,10 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-#if DOTNETCORE
 using System.Runtime.InteropServices;
-using System.Runtime.Loader;
-#endif
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -28,53 +26,20 @@ namespace Microsoft.StreamProcessing
 {
     internal static class Transformer
     {
+        private static readonly bool IsNetCore = RuntimeInformation.FrameworkDescription.Contains(".NET Core");
+
+        private static readonly Lazy<IEnumerable<MetadataReference>> baseAssemblyReferences
+            = new Lazy<IEnumerable<MetadataReference>>(() => IsNetCore ? GetNetCoreAssemblyReferences() : GetNetFrameworkAssemblyReferences());
+        private static readonly Func<MemoryStream, Assembly> AssemblyFromMemoryStream
+            = IsNetCore ? (Func<MemoryStream, Assembly>)AssemblyFromMemoryStreamNetCore : AssemblyFromMemoryStreamNetFramework;
+        private static readonly Func<string, Assembly> AssemblyFromFile
+            = IsNetCore ? (Func<string, Assembly>)AssemblyFromFileNetCore : AssemblyFromFileNetFramework;
+
         // used so the compiler has access to the Microsoft.StramProcessing types it needs.
         // Fix this when there is a static location so we don't have to use Reflection to get it each time
         public static Assembly SystemRuntimeSerializationDll = typeof(System.Runtime.Serialization.DataContractAttribute).GetTypeInfo().Assembly;
         public static Assembly SystemDll = typeof(Uri).GetTypeInfo().Assembly;
         public static Assembly SystemCoreDll = typeof(BinaryExpression).GetTypeInfo().Assembly;
-
-#if DOTNETCORE
-        internal static IEnumerable<PortableExecutableReference> GetNetCoreAssemblyReferences()
-        {
-            var allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
-                .Split(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':');
-
-            // From: http://source.roslyn.io/#Microsoft.CodeAnalysis.Scripting/ScriptOptions.cs,40
-            // These references are resolved lazily. Keep in sync with list in core csi.rsp.
-            var files = new[]
-            {
-                "System.Collections",
-                "System.Collections.Concurrent",
-                "System.Console",
-                "System.Diagnostics.Debug",
-                "System.Diagnostics.Process",
-                "System.Diagnostics.StackTrace",
-                "System.Globalization",
-                "System.IO",
-                "System.IO.FileSystem",
-                "System.IO.FileSystem.Primitives",
-                "System.Reflection",
-                "System.Reflection.Extensions",
-                "System.Reflection.Primitives",
-                "System.Runtime",
-                "System.Runtime.Extensions",
-                "System.Runtime.InteropServices",
-                "System.Text.Encoding",
-                "System.Text.Encoding.CodePages",
-                "System.Text.Encoding.Extensions",
-                "System.Text.RegularExpressions",
-                "System.Threading",
-                "System.Threading.Tasks",
-                "System.Threading.Tasks.Parallel",
-                "System.Threading.Thread",
-            };
-            var filteredPaths = allAvailableAssemblies.Where(p => files.Concat(new string[] { "mscorlib", "netstandard", "System.Private.CoreLib", "System.Runtime.Serialization.Primitives", }).Any(f => Path.GetFileNameWithoutExtension(p).Equals(f)));
-            return filteredPaths.Select(p => MetadataReference.CreateFromFile(p));
-        }
-        private static readonly Lazy<IEnumerable<PortableExecutableReference>> netCoreAssemblyReferences
-            = new Lazy<IEnumerable<PortableExecutableReference>>(GetNetCoreAssemblyReferences);
-#endif
 
         /// <summary>
         /// This is used as part of constructing the name of a field in a StreamMessage that is a column representing a field of the payload type.
@@ -157,9 +122,10 @@ namespace Microsoft.StreamProcessing
             if (includeIgnoreAccessChecksAssembly)
                 uniqueReferences = uniqueReferences.Concat(new Assembly[] { IgnoreAccessChecks.Assembly });
 
-#if DOTNETCORE
-            uniqueReferences = uniqueReferences.Where(r => !r.FullName.Contains("System.Private.CoreLib"));
-#endif
+            if (IsNetCore)
+            {
+                uniqueReferences = uniqueReferences.Where(r => !r.FullName.Contains("System.Private.CoreLib"));
+            }
 
             var assemblyName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
 
@@ -186,27 +152,14 @@ namespace Microsoft.StreamProcessing
                     encoding: Encoding.GetEncoding(0),
                     options: new CSharpParseOptions(LanguageVersion.Latest));
             }
-            SyntaxTree[] trees = { tree };
-            MetadataReference mscorlib = MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location);
-            MetadataReference numerics = MetadataReference.CreateFromFile(typeof(System.Numerics.Complex).GetTypeInfo().Assembly.Location);
+
             MetadataReference trill = MetadataReference.CreateFromFile(typeof(StreamMessage).GetTypeInfo().Assembly.Location);
-            MetadataReference linq = MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location);
-            MetadataReference contracts = MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataContractAttribute).GetTypeInfo().Assembly.Location);
-            MetadataReference[] baseReferences =
-            {
-                trill,
-#if !DOTNETCORE
-                mscorlib, linq, contracts, numerics,
-#endif
-            };
+            var baseReferences = new List<MetadataReference>() { trill };
 
             var refs = baseReferences
+                .Concat(baseAssemblyReferences.Value)
                 .Concat(uniqueReferences.Where(r => Path.IsPathRooted(r.Location)).Select(r => MetadataReference.CreateFromFile(r.Location)))
                 .Concat(uniqueReferences.Where(reference => metadataReferenceCache.ContainsKey(reference)).Select(reference => metadataReferenceCache[reference]));
-
-#if DOTNETCORE
-            refs = refs.Concat(netCoreAssemblyReferences.Value);
-#endif
 
             var options = new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
@@ -220,24 +173,25 @@ namespace Microsoft.StreamProcessing
             var ignoreAccessibility = binderFlagsType.GetTypeInfo().GetField("IgnoreAccessibility", BindingFlags.Static | BindingFlags.Public);
             topLevelBinderFlagsProperty.SetValue(options, (uint)ignoreCorLibraryDuplicatedTypesMember.GetValue(null) | (uint)ignoreAccessibility.GetValue(null));
 
+            SyntaxTree[] trees = { tree };
             var compilation = CSharpCompilation.Create(assemblyName, trees, refs, options);
-            var a = EmitCompilationAndLoadAssembly(compilation, includeDebugInfo, out errorMessages);
+            var assembly = EmitCompilationAndLoadAssembly(compilation, includeDebugInfo, out errorMessages);
 
 #if CODEGEN_TIMING
             sw.Stop();
             Console.WriteLine("Time to compile: {0}ms", sw.ElapsedMilliseconds);
 #endif
-            return a;
+            return assembly;
         }
 
-        public static Dictionary<Assembly, MetadataReference> metadataReferenceCache = new Dictionary<Assembly, MetadataReference>();
+        public static ConcurrentDictionary<Assembly, MetadataReference> metadataReferenceCache = new ConcurrentDictionary<Assembly, MetadataReference>();
         private static readonly InteractiveAssemblyLoader loader = new InteractiveAssemblyLoader();
 
         internal static Assembly EmitCompilationAndLoadAssembly(CSharpCompilation compilation, bool makeAssemblyDebuggable, out string errorMessages)
         {
             Contract.Requires(compilation.SyntaxTrees.Count() == 1);
 
-            Assembly a = null;
+            Assembly assembly = null;
             EmitResult emitResult;
 
             if (makeAssemblyDebuggable)
@@ -255,11 +209,7 @@ namespace Microsoft.StreamProcessing
 
                 if (emitResult.Success)
                 {
-#if DOTNETCORE
-                    a = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyFile);
-#else
-                    a = Assembly.LoadFrom(assemblyFile);
-#endif
+                    assembly = AssemblyFromFile(assemblyFile);
                 }
             }
             else
@@ -270,16 +220,11 @@ namespace Microsoft.StreamProcessing
                     if (emitResult.Success)
                     {
                         stream.Position = 0;
-#if DOTNETCORE
-                        a = AssemblyLoadContext.Default.LoadFromStream(stream);
-                        stream.Position = 0; // Must reset it! Loading leaves its position at the end
-#else
-                        var assembly = stream.ToArray();
-                        a = Assembly.Load(assembly);
-#endif
-                        loader.RegisterDependency(a);
+                        assembly = AssemblyFromMemoryStream(stream);
+
+                        loader.RegisterDependency(assembly);
                         var aref = MetadataReference.CreateFromStream(stream);
-                        metadataReferenceCache.Add(a, aref);
+                        metadataReferenceCache.TryAdd(assembly, aref);
                     }
                 }
             }
@@ -289,8 +234,84 @@ namespace Microsoft.StreamProcessing
             if (makeAssemblyDebuggable && emitResult.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
                 System.Diagnostics.Debug.WriteLine(errorMessages);
 
-            return a;
+            return assembly;
         }
+
+        #region netcore
+
+        internal static IEnumerable<PortableExecutableReference> GetNetCoreAssemblyReferences()
+        {
+            var allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
+                .Split(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':');
+
+            // From: https://github.com/dotnet/roslyn/blob/master/src/Interactive/csi/csi.coreclr.rsp
+            // These references are resolved lazily. Keep in sync with list in core csi.coreslr.rsp.
+            var files = new[]
+            {
+                "System.Collections",
+                "System.Collections.Concurrent",
+                "System.Console",
+                "System.Diagnostics.Debug",
+                "System.Diagnostics.Process",
+                "System.Diagnostics.StackTrace",
+                "System.Globalization",
+                "System.IO",
+                "System.IO.FileSystem",
+                "System.IO.FileSystem.Primitives",
+                "System.Linq",
+                "System.Linq.Expressions",
+                "System.Reflection",
+                "System.Reflection.Extensions",
+                "System.Reflection.Primitives",
+                "System.Runtime",
+                "System.Runtime.Extensions",
+                "System.Runtime.InteropServices",
+                "System.Text.Encoding",
+                "System.Text.Encoding.CodePages",
+                "System.Text.Encoding.Extensions",
+                "System.Text.RegularExpressions",
+                "System.Threading",
+                "System.Threading.Tasks",
+                "System.Threading.Tasks.Parallel",
+                "System.Threading.Thread",
+            };
+            var filteredPaths = allAvailableAssemblies.Where(p => files.Concat(new string[] { "mscorlib", "netstandard", "System.Private.CoreLib", "System.Runtime.Serialization.Primitives", }).Any(f => Path.GetFileNameWithoutExtension(p).Equals(f)));
+            return filteredPaths.Select(p => MetadataReference.CreateFromFile(p));
+        }
+
+        // Important - System.Runtime.Loader should not be referenced by any function that can run in a net framework environment!
+        internal static Assembly AssemblyFromMemoryStreamNetCore(MemoryStream stream)
+        {
+            var assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromStream(stream);
+            stream.Position = 0; // Must reset it! Loading leaves its position at the end
+            return assembly;
+        }
+
+        internal static Assembly AssemblyFromFileNetCore(string file) => System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
+
+        #endregion netcore
+
+        #region netframework
+
+        internal static IEnumerable<MetadataReference> GetNetFrameworkAssemblyReferences()
+        {
+            MetadataReference mscorlib = MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location);
+            MetadataReference numerics = MetadataReference.CreateFromFile(typeof(System.Numerics.Complex).GetTypeInfo().Assembly.Location);
+            MetadataReference linq = MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location);
+            MetadataReference contracts = MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataContractAttribute).GetTypeInfo().Assembly.Location);
+
+            // If we are compiling a netstandard binary from net framework environment, we have to explicitly add a reference to netstandard
+            var netstandardPath = Path.Combine(Path.GetDirectoryName(typeof(object).GetTypeInfo().Assembly.Location), "netstandard.dll");
+            MetadataReference netstandard = MetadataReference.CreateFromFile(netstandardPath);
+
+            return new MetadataReference[] { mscorlib, numerics, linq, contracts, netstandard };
+        }
+
+        internal static Assembly AssemblyFromMemoryStreamNetFramework(MemoryStream stream) => Assembly.Load(stream.ToArray());
+
+        internal static Assembly AssemblyFromFileNetFramework(string file) => Assembly.LoadFrom(file);
+
+        #endregion netframework
 
         internal static IEnumerable<Assembly> AssemblyReferencesNeededForType(Type type)
         {
@@ -325,6 +346,20 @@ namespace Microsoft.StreamProcessing
 
         public static IEnumerable<Assembly> AssemblyReferencesNeededFor(Expression expression)
             => AssemblyLocationFinder.GetAssemblyLocationsFor(expression);
+
+        public static IEnumerable<Assembly> AssemblyReferencesNeededFor(params Expression[] expressions)
+        {
+            var assemblies = new HashSet<Assembly>();
+            foreach (var expression in expressions)
+            {
+                foreach (var assembly in AssemblyLocationFinder.GetAssemblyLocationsFor(expression))
+                {
+                    assemblies.Add(assembly);
+                }
+            }
+
+            return assemblies;
+        }
 
         private sealed class AssemblyLocationFinder : ExpressionVisitor
         {

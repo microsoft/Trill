@@ -14,7 +14,7 @@ namespace Microsoft.StreamProcessing.Sharding
     /// </summary>
     /// <typeparam name="TKey">Grouping key type for data in the query</typeparam>
     /// <typeparam name="TPayload">Event payload type for data in the query</typeparam>
-    internal class ShardedStreamSerializer<TKey, TPayload>
+    internal sealed class ShardedStreamSerializer<TKey, TPayload>
     {
         /// <summary>
         /// Constructor to take a sharded streamable and provide serialization features

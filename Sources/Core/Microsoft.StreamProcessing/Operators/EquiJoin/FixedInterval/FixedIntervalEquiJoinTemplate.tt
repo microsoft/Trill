@@ -39,10 +39,30 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     private StreamMessage<<#= TKey #>, <#= TResult #>> genericOutputBatch;
     [DataMember]
     private <#= BatchGeneratedFrom_TKey_TResult #><#= TKeyTResultGenericParameters #> output;
+
+    /// <summary>
+    /// Stores left intervals starting at <see cref="currTime"/>.
+    /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the left edge time and the
+    /// left edge is processable.
+    /// </summary>    
     [DataMember]
     private FastMap<ActiveIntervalLeft> leftIntervalMap = new FastMap<ActiveIntervalLeft>();
+
+    /// <summary>
+    /// Stores right intervals starting at <see cref="currTime"/>.
+    /// FastMap visibility means that <see cref="nextRightTime"/> is caught up to the right edge time and the
+    /// right edge is processable.
+    /// </summary>
     [DataMember]
     private FastMap<ActiveIntervalRight> rightIntervalMap = new FastMap<ActiveIntervalRight>();
+
+    /// <summary>
+    /// Stores end edges for the current join intervals, i.e. after <see cref="currTime"/>.
+    /// Left intervals have a positive index, right intervals have a negative index.
+    /// </summary>
+    [DataMember]
+    private IEndPointOrderer endPointHeap;
+
     [DataMember]
     private long nextLeftTime = long.MinValue;
     [DataMember]
@@ -65,6 +85,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
 
         this.keyComparer = stream.Properties.KeyEqualityComparer.GetEqualsExpr();
         this.keyComparerEquals = this.keyComparer.Compile();
+        this.endPointHeap = new EndPoint<#= (leftDuration == rightDuration) ? "Queue" : "Heap" #>();
 
         this.pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TResult #>>(true /*stream.Properties.IsColumnar*/);
         GetOutputBatch();
@@ -265,70 +286,42 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
     {
         if (time != currTime)
         {
-            LeaveTime();
             currTime = time;
+            ReachTime();
+        }
+    }
+
+    private void ReachTime()
+    {
+        while (this.endPointHeap.TryGetNextInclusive(this.currTime, out long endTime, out int index))
+        {
+            if (index >= 0)
+            {
+                this.leftIntervalMap.Remove(index);
+            }
+            else
+            {
+                this.rightIntervalMap.Remove(~index);
+            }
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ProcessLeftEvent(long start, ref <#= TKey #> key, <#= LeftBatchType #> leftBatch, int leftIndex, int hash)
     {
-        if (nextRightTime > start)
-        {
-            int index = leftIntervalMap.Insert(hash);
-            leftIntervalMap.Values[index].Populate(start, ref key, leftBatch, leftIndex);
-            CreateOutputForLeftStartInterval(start, ref key, leftBatch, leftIndex, hash);
-        }
-        else
-        {
-            int index = leftIntervalMap.InsertInvisible(hash);
-            leftIntervalMap.Values[index].Populate(start, ref key, leftBatch, leftIndex);
-        }
+        int index = leftIntervalMap.Insert(hash);
+        leftIntervalMap.Values[index].Populate(start, ref key, leftBatch, leftIndex);
+        CreateOutputForLeftStartInterval(start, ref key, leftBatch, leftIndex, hash);
+        this.endPointHeap.Insert(start + <#= leftDuration #>, index);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ProcessRightEvent(long start, ref <#= TKey #> key, <#= RightBatchType #> rightBatch, int rightRowIndex, int hash)
     {
-        // Row is an interval.
-        if (nextLeftTime > start)
-        {
-            int index = rightIntervalMap.Insert(hash);
-            rightIntervalMap.Values[index].Populate(start, ref key, rightBatch, rightRowIndex);
-            CreateOutputForRightStartInterval(start, ref key, rightBatch, rightRowIndex, hash);
-        }
-        else
-        {
-            int index = rightIntervalMap.InsertInvisible(hash);
-            rightIntervalMap.Values[index].Populate(start, ref key, rightBatch, rightRowIndex);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void LeaveTime()
-    {
-        int index;
-        int hash;
-        var leftIntervals = leftIntervalMap.TraverseInvisible();
-        while (leftIntervals.Next(out index, out hash))
-        {
-            CreateOutputForLeftStartInterval(
-                currTime,
-                ref leftIntervalMap.Values[index].Key,
-                ref leftIntervalMap.Values[index],
-                hash);
-            leftIntervals.MakeVisible();
-        }
-
-        var rightIntervals = rightIntervalMap.TraverseInvisible();
-        while (rightIntervals.Next(out index, out hash))
-        {
-            CreateOutputForRightStartInterval(
-                currTime,
-                ref rightIntervalMap.Values[index].Key,
-                ref rightIntervalMap.Values[index],
-                hash);
-            rightIntervals.MakeVisible();
-        }
+        int index = rightIntervalMap.Insert(hash);
+        rightIntervalMap.Values[index].Populate(start, ref key, rightBatch, rightRowIndex);
+        CreateOutputForRightStartInterval(start, ref key, rightBatch, rightRowIndex, hash);
+        this.endPointHeap.Insert(start + <#= rightDuration #>, ~index);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

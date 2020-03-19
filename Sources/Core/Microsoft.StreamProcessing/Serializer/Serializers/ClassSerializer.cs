@@ -28,24 +28,28 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         private sealed class ClassSerializerTyped<T> : ClassSerializer
         {
-            private static Action<T, BinaryEncoder> cachedSerializer;
-            private static Func<BinaryDecoder, T> cachedDeserializer;
             private static readonly Expression<Action<StreamMessage>> ensureConsistency = s => s.EnsureConsistency();
             private static readonly Expression<Action<StreamMessage>> inflate = s => s.Inflate();
             private static readonly Expression<Action<StreamMessage>> deflate = s => s.Deflate();
             private static readonly Expression<Func<StreamMessage, bool>> refreshCount = s => s.RefreshCount();
-            private static readonly Expression<Action<T, BinaryEncoder>> cachedSerializerExpression = (v, e) => cachedSerializer(v, e);
-            private static readonly Expression<Func<BinaryDecoder, T>> cachedDeserializerExpression = d => cachedDeserializer(d);
+            private readonly Expression<Action<T, BinaryEncoder>> cachedSerializerExpression;
+            private readonly Expression<Func<BinaryDecoder, T>> cachedDeserializerExpression;
+            private Action<T, BinaryEncoder> cachedSerializer;
+            private Func<BinaryDecoder, T> cachedDeserializer;
 
-            public ClassSerializerTyped() : base(typeof(T)) { }
+            public ClassSerializerTyped() : base(typeof(T))
+            {
+                this.cachedSerializerExpression = (v, e) => this.cachedSerializer(v, e);
+                this.cachedDeserializerExpression = d => this.cachedDeserializer(d);
+            }
 
             protected override Expression BuildSerializerSafe(Expression encoder, Expression value)
             {
-                if (cachedSerializer != null) return cachedSerializerExpression.ReplaceParametersInBody(value, encoder);
+                if (this.cachedSerializer != null) return this.cachedSerializerExpression.ReplaceParametersInBody(value, encoder);
 
                 // For handling potential recursive types.
-                cachedSerializer = (o, e) => { };
-                cachedSerializer = GenerateCachedSerializer();
+                this.cachedSerializer = (o, e) => { };
+                this.cachedSerializer = GenerateCachedSerializer();
 
                 // For performance reasons we do not use a cached serializer
                 // for the first encounter of the type in the schema tree.
@@ -54,12 +58,12 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
             protected override Expression BuildDeserializerSafe(Expression decoder)
             {
-                if (cachedDeserializer != null) return cachedDeserializerExpression.ReplaceParametersInBody(decoder);
+                if (this.cachedDeserializer != null) return this.cachedDeserializerExpression.ReplaceParametersInBody(decoder);
 
                 // For handling potential recursive types.
-                cachedDeserializer = d => default;
+                this.cachedDeserializer = d => default;
                 var deserializeLambda = GenerateCachedDeserializer();
-                cachedDeserializer = deserializeLambda.Compile();
+                this.cachedDeserializer = deserializeLambda.Compile();
 
                 return Expression.Invoke(deserializeLambda, decoder);
             }
@@ -131,8 +135,8 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         public static Expression ThrowUnexpectedNullCheckExpression(Type type)
         {
-            var exceptionMethodInfo = typeof(ClassSerializer).GetMethod("UnexpectedNullValueException", BindingFlags.NonPublic | BindingFlags.Static);
-            return Expression.Throw(Expression.Call(exceptionMethodInfo, Expression.Constant(type)));
+            Expression<Func<Type, Exception>> exceptionMethod = (t) => UnexpectedNullValueException(t);
+            return Expression.Throw(exceptionMethod.ReplaceParametersInBody(Expression.Constant(type)));
         }
 
         private static Exception UnexpectedNullValueException(Type type)

@@ -93,7 +93,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.vother.col[c] = PartitionedStreamEvent.LowWatermarkOtherTime;
                             this.batch.key.col[c] = new PartitionKey<TPartitionKey>(default);
                             this.batch.hash.col[c] = 0;
-                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                            this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }
@@ -112,7 +112,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.vother.col[c] = long.MinValue;
                             this.batch.key.col[c] = colkey[i];
                             this.batch.hash.col[c] = partitionEntry.currentHash;
-                            this.batch.bitvector.col[c >> 6] |= (1L << (c & 0x3f));
+                            this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
                             if (this.batch.Count == Config.DataBatchSize) FlushContents();
                         }

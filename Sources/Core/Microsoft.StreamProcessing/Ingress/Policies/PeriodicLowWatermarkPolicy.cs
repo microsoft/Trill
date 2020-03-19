@@ -21,7 +21,7 @@ namespace Microsoft.StreamProcessing
     /// before that lower bound will be considered out of order.
     /// </summary>
     [DataContract]
-    public class PeriodicLowWatermarkPolicy
+    public sealed class PeriodicLowWatermarkPolicy
     {
         [DataMember]
         internal PeriodicLowWatermarkPolicyType type = PeriodicLowWatermarkPolicyType.None;
@@ -78,9 +78,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns>A hash code for the PeriodicLowWatermarkPolicy object.</returns>
         public override int GetHashCode()
-        {
-            return this.type.GetHashCode() ^ this.generationPeriod.GetHashCode() ^ this.lowWatermarkTimestampLag.GetHashCode();
-        }
+            => this.type.GetHashCode() ^ this.generationPeriod.GetHashCode() ^ this.lowWatermarkTimestampLag.GetHashCode();
 
         /// <summary>
         /// Provides a string representation for the PeriodicLowWatermarkPolicy object.

@@ -6,17 +6,13 @@ using System;
 
 namespace Microsoft.StreamProcessing
 {
-    internal class NullScheduler : IInternalScheduler
+    internal sealed class NullScheduler : IInternalScheduler
     {
-        public NullScheduler()
-        {
-        }
+        public NullScheduler() { }
 
         public IStreamObserver<TK, TP> RegisterStreamObserver<TK, TP>(IStreamObserver<TK, TP> o, Guid? classId = null) => o;
 
-        public void Stop()
-        {
-        }
+        public void Stop() { }
 
         public int MapArity => 1;
 

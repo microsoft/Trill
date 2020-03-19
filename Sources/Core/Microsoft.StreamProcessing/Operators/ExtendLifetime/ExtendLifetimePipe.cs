@@ -120,7 +120,7 @@ namespace Microsoft.StreamProcessing
                         this.output.key.col[ind] = batch.key.col[i];
                         this.output[ind] = default;
                         this.output.hash.col[ind] = batch.hash.col[i];
-                        this.output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
+                        this.output.bitvector.col[ind >> 6] |= 1L << (ind & 0x3f);
 
                         if (this.output.Count == Config.DataBatchSize) FlushContents();
                     }

@@ -10,11 +10,10 @@ using Microsoft.StreamProcessing.Internal;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
-    internal class SlidingMaxAggregate<T> : IAggregate<T, MinMaxState<T>, T>
+    internal sealed class SlidingMaxAggregate<T> : IAggregate<T, MinMaxState<T>, T>
     {
         private static readonly long InvalidSyncTime = StreamEvent.MinSyncTime - 1;
         private readonly Comparison<T> comparer;
-        private readonly Expression<Func<SortedDictionary<T, long>>> generator;
 
         public SlidingMaxAggregate(QueryContainer container) : this(ComparerExpression<T>.Default, container) { }
 
@@ -22,16 +21,16 @@ namespace Microsoft.StreamProcessing.Aggregates
         {
             Contract.Requires(comparer != null);
             this.comparer = comparer.GetCompareExpr().Compile();
-            this.generator = comparer.CreateSortedDictionaryGenerator<T, long>(container);
-        }
 
-        public Expression<Func<MinMaxState<T>>> InitialState()
-        {
+            var generator = comparer.CreateSortedDictionaryGenerator<T, long>(container);
             Expression<Func<Func<SortedDictionary<T, long>>, MinMaxState<T>>> template
                 = (g) => new MinMaxState<T> { savedValues = new SortedMultiSet<T>(g), currentValue = default, currentTimestamp = InvalidSyncTime };
-            var replaced = template.ReplaceParametersInBody(this.generator);
-            return Expression.Lambda<Func<MinMaxState<T>>>(replaced);
+            var replaced = template.ReplaceParametersInBody(generator);
+            this.initialState = Expression.Lambda<Func<MinMaxState<T>>>(replaced);
         }
+
+        private readonly Expression<Func<MinMaxState<T>>> initialState;
+        public Expression<Func<MinMaxState<T>>> InitialState() => initialState;
 
         public Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> Accumulate()
             => (state, timestamp, input) => Accumulate(state, timestamp, input);

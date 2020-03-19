@@ -21,29 +21,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting
 {
-    public static class Helpers
-    {
-        public static void RunTwiceForRowAndColumnar(Action action)
-        {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            var savedRowFallback = Config.CodegenOptions.DontFallBackToRowBasedExecution;
-            try
-            {
-                foreach (var rowBased in new bool[] { true, false })
-                {
-                    Config.ForceRowBasedExecution = rowBased;
-                    Config.CodegenOptions.DontFallBackToRowBasedExecution = !rowBased;
-                    action();
-                }
-            }
-            finally
-            {
-                Config.ForceRowBasedExecution = savedForceRowBasedExecution;
-                Config.CodegenOptions.DontFallBackToRowBasedExecution = savedRowFallback;
-            }
-        }
-    }
-
     [TestClass]
     public class AdHoc : TestWithConfigSettingsAndMemoryLeakDetection
     {
@@ -704,6 +681,141 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void ExplicitLowWatermarkInMiddleOfLowWatermarkGenerationPeriod()
+        {
+            const long generationPeriod = 100;
+            var qc = new QueryContainer();
+            var input = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreatePoint(0, 0, 0),
+                PartitionedStreamEvent.CreatePoint(0, 105, 0),  // Should generate lwm quantized to 100
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(150),
+
+                PartitionedStreamEvent.CreatePoint(0, 240, 0),  // Should generate lwm quantized to 200
+                PartitionedStreamEvent.CreatePoint(0, 255, 0),
+            };
+
+            var expected = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreatePoint(0, 0, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(100),
+                PartitionedStreamEvent.CreatePoint(0, 105, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(150),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(200),
+                PartitionedStreamEvent.CreatePoint(0, 240, 0),
+                PartitionedStreamEvent.CreatePoint(0, 255, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(StreamEvent.InfinitySyncTime),
+            };
+
+            var ingress = qc.RegisterInput(
+                input.ToObservable(),
+                periodicLowWatermarkPolicy: PeriodicLowWatermarkPolicy.Time(generationPeriod, lowWatermarkTimestampLag: 0));
+
+            var output = new List<PartitionedStreamEvent<int, int>>();
+            var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+            process.Flush();
+            egress.Wait();
+
+            output = output.ToList();
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExplicitLowWatermarkInMiddleOfPunctuationGenerationPeriod()
+        {
+            const long generationPeriod = 100;
+            var qc = new QueryContainer();
+            var input = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreatePoint(0, 0, 0),
+                PartitionedStreamEvent.CreatePoint(0, 105, 0),  // Should generate punctuation quantized to 100
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(150),
+
+                PartitionedStreamEvent.CreatePoint(0, 240, 0),  // Should generate a punctuation quantized to 200
+                PartitionedStreamEvent.CreatePoint(0, 255, 0),
+            };
+
+            var expected = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreatePoint(0, 0, 0),
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 100),
+                PartitionedStreamEvent.CreatePoint(0, 105, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(150),
+
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 200),
+                PartitionedStreamEvent.CreatePoint(0, 240, 0),
+                PartitionedStreamEvent.CreatePoint(0, 255, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(StreamEvent.InfinitySyncTime),
+            };
+
+            var ingress = qc.RegisterInput(
+                input.ToObservable(),
+                periodicPunctuationPolicy: PeriodicPunctuationPolicy.Time(generationPeriod));
+
+            var output = new List<PartitionedStreamEvent<int, int>>();
+            var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+            process.Flush();
+            egress.Wait();
+
+            output = output.ToList();
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ExplicitPartitionedPunctuationInMiddleOfPunctuationGenerationPeriod()
+        {
+            const long generationPeriod = 100;
+            var qc = new QueryContainer();
+            var input = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreatePoint(0, 0, 0),
+                PartitionedStreamEvent.CreatePoint(0, 105, 0),  // Should generate punctuation quantized to 100
+
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 150),
+
+                PartitionedStreamEvent.CreatePoint(0, 240, 0),  // Should this generate a punctuation at 200?
+                PartitionedStreamEvent.CreatePoint(0, 255, 0),  // Cannot generate punctuation at 200, since it's before the preceding data event!
+            };
+
+            var expected = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreatePoint(0, 0, 0),
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 100),
+                PartitionedStreamEvent.CreatePoint(0, 105, 0),
+
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 150),
+
+                PartitionedStreamEvent.CreatePunctuation<int, int>(0, 200),
+                PartitionedStreamEvent.CreatePoint(0, 240, 0),
+                PartitionedStreamEvent.CreatePoint(0, 255, 0),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(StreamEvent.InfinitySyncTime),
+            };
+
+            var ingress = qc.RegisterInput(
+                input.ToObservable(),
+                periodicPunctuationPolicy: PeriodicPunctuationPolicy.Time(generationPeriod));
+
+            var output = new List<PartitionedStreamEvent<int, int>>();
+            var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+            process.Flush();
+            egress.Wait();
+
+            output = output.ToList();
+            Assert.IsTrue(expected.SequenceEqual(output));
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void LASJ_OutOfOrderLWM()
         {
             const int key = 0; // Just use one key as the key and payload
@@ -829,6 +941,7 @@ namespace SimpleTesting
                 PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
                 PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
                 PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                PartitionedStreamEvent<int, int> CreatePunctuation(int key, long time) => PartitionedStreamEvent.CreatePunctuation<int, int>(key, time);
                 PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
 
                 var left = new Subject<PartitionedStreamEvent<int, int>>();
@@ -868,6 +981,22 @@ namespace SimpleTesting
 
                 left.OnNext(CreateInterval(0, 105));
 
+                // Make sure a dry partition (right) is cleaned/reactivated properly
+                left.OnNext(CreatePunctuation(0, 115));
+                right.OnNext(CreatePunctuation(0, 115));
+                process.Flush();
+
+                left.OnNext(CreateInterval(0, 115));
+                left.OnNext(CreateInterval(0, 120));
+
+                right.OnNext(CreateInterval(0, 125));
+                process.Flush();
+
+                left.OnNext(CreateLowWatermark(120));
+                right.OnNext(CreateLowWatermark(120));
+
+                left.OnNext(CreateInterval(0, 125));
+
                 left.OnCompleted();
                 right.OnCompleted();
 
@@ -877,6 +1006,13 @@ namespace SimpleTesting
                     CreateInterval(0, 90),
                     CreateLowWatermark(100),
                     CreateInterval(0, 105),
+
+                    CreatePunctuation(0, 115),
+
+                    CreateInterval(0, 115),
+                    CreateInterval(0, 120),
+
+                    CreateLowWatermark(120),
                     CreateLowWatermark(StreamEvent.InfinitySyncTime),
                 };
                 Assert.IsTrue(expected.SequenceEqual(output));
@@ -890,8 +1026,9 @@ namespace SimpleTesting
             {
                 const long duration = 5;
                 PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
-                PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
+                PartitionedStreamEvent<int, int> CreateEnd(int key, long time, long originalStart) => PartitionedStreamEvent.CreateEnd(key, time, originalStart, key);
                 PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                PartitionedStreamEvent<int, int> CreatePunctuation(int key, long time) => PartitionedStreamEvent.CreatePunctuation<int, int>(key, time);
                 PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
 
                 var left = new Subject<PartitionedStreamEvent<int, int>>();
@@ -929,6 +1066,23 @@ namespace SimpleTesting
                 left.OnNext(CreateLowWatermark(100));
                 right.OnNext(CreateLowWatermark(100));
 
+                // Make sure a dry partition (right) is cleaned/reactivated properly
+                left.OnNext(CreatePunctuation(0, 115));
+                right.OnNext(CreateEnd(0, 115, 90));
+                right.OnNext(CreatePunctuation(0, 115));
+                process.Flush();
+
+                left.OnNext(CreateInterval(0, 115));
+                left.OnNext(CreateInterval(0, 120));
+
+                right.OnNext(CreateInterval(0, 125));
+                process.Flush();
+
+                left.OnNext(CreateLowWatermark(120));
+                right.OnNext(CreateLowWatermark(120));
+
+                left.OnNext(CreateInterval(0, 125));
+
                 left.OnCompleted();
                 right.OnCompleted();
 
@@ -936,12 +1090,16 @@ namespace SimpleTesting
                 {
                     CreateLowWatermark(50),
                     CreateStart(0, 90),
-                    CreateEnd(0, 90 + duration),
+                    CreateEnd(0, 90 + duration, 90),
                     CreateLowWatermark(100),
+
+                    CreateLowWatermark(120),
+                    CreateInterval(0, 125),
+
                     CreateLowWatermark(StreamEvent.InfinitySyncTime),
                 };
 
-                var key0Output = output.Where(e => !e.IsData || e.PartitionKey == 0).ToList();
+                var key0Output = output.Where(e => e.IsLowWatermark || (e.IsData && e.PartitionKey == 0)).ToList();
                 Assert.IsTrue(expected.SequenceEqual(key0Output));
             }
         }
@@ -953,8 +1111,9 @@ namespace SimpleTesting
             {
                 const long duration = 5;
                 PartitionedStreamEvent<int, int> CreateStart(int key, long time) => PartitionedStreamEvent.CreateStart(key, time, key);
-                PartitionedStreamEvent<int, int> CreateEnd(int key, long time) => PartitionedStreamEvent.CreateEnd(key, time, time - duration, key);
+                PartitionedStreamEvent<int, int> CreateEnd(int key, long time, long originalStart) => PartitionedStreamEvent.CreateEnd(key, time, originalStart, key);
                 PartitionedStreamEvent<int, int> CreateInterval(int key, long time) => PartitionedStreamEvent.CreateInterval(key, time, time + duration, key);
+                PartitionedStreamEvent<int, int> CreatePunctuation(int key, long time) => PartitionedStreamEvent.CreatePunctuation<int, int>(key, time);
                 PartitionedStreamEvent<int, int> CreateLowWatermark(long time) => PartitionedStreamEvent.CreateLowWatermark<int, int>(time);
 
                 var left = new Subject<PartitionedStreamEvent<int, int>>();
@@ -991,6 +1150,18 @@ namespace SimpleTesting
                 left.OnNext(CreateLowWatermark(100));
                 right.OnNext(CreateLowWatermark(100));
 
+                // Make sure a dry partition is cleaned/reactivated properly
+                left.OnNext(CreatePunctuation(0, 115));
+                right.OnNext(CreatePunctuation(0, 115));
+                process.Flush();
+
+                right.OnNext(CreateInterval(0, 121));
+
+                left.OnNext(CreateLowWatermark(120));
+                right.OnNext(CreateLowWatermark(120));
+
+                left.OnNext(CreateInterval(0, 120));
+
                 left.OnCompleted();
                 right.OnCompleted();
 
@@ -998,14 +1169,50 @@ namespace SimpleTesting
                 {
                     CreateStart(0, 90),
                     CreateLowWatermark(50),
-                    CreateEnd(0, 90 + duration),
+                    CreateEnd(0, 90 + duration, 90),
                     CreateLowWatermark(100),
+
+                    CreateLowWatermark(120),
+                    CreateStart(0, 120),
+                    CreateEnd(0, 121, 120),
                     CreateLowWatermark(StreamEvent.InfinitySyncTime),
                 };
 
-                var key0Output = output.Where(e => !e.IsData || e.PartitionKey == 0).ToList();
+                var key0Output = output.Where(e => e.IsLowWatermark || (e.IsData && e.PartitionKey == 0)).ToList();
                 Assert.IsTrue(expected.SequenceEqual(key0Output));
             }
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void OutOfOrderRepro()
+        {
+            var qc = new QueryContainer();
+            var input = new Subject<PartitionedStreamEvent<int, int>>();
+            var ingress = qc.RegisterInput(input, DisorderPolicy.Drop(reorderLatency: 500));
+            var output = new List<PartitionedStreamEvent<int, int>>();
+            var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            // These will be buffered due to reorderLatency
+            input.OnNext(PartitionedStreamEvent.CreatePoint(0, 1, 0));    // key 0: 1-2
+            input.OnNext(PartitionedStreamEvent.CreatePoint(0, 101, 0));  // key 0: 101-102
+
+            // This will egress the first point (0: 1-2)); but the second point ( key 0: 101-102) should batched, since 101 > 100.
+            input.OnNext(PartitionedStreamEvent.CreateLowWatermark<int, int>(100));
+
+            // This should be dropped
+            input.OnNext(PartitionedStreamEvent.CreatePoint(0, 99, 0));
+
+            input.OnCompleted();
+
+            var expected = new PartitionedStreamEvent<int, int>[]
+            {
+                PartitionedStreamEvent.CreatePoint(0, 1, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(100),
+                PartitionedStreamEvent.CreatePoint(0, 101, 0),
+                PartitionedStreamEvent.CreateLowWatermark<int, int>(StreamEvent.InfinitySyncTime),
+            };
+            Assert.IsTrue(expected.SequenceEqual(output));
         }
     }
 
@@ -1624,30 +1831,31 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void SerializerRegressionTest()
         {
-            Config.ForceRowBasedExecution = true;
-            var processor = new QueryProcessor();
-
-            var inputEvents = ReadSource();
-
-            int cnt = 0;
-            foreach (var x in inputEvents)
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
             {
-                if (cnt++ == 45000)
+                var processor = new QueryProcessor();
+                var inputEvents = ReadSource();
+
+                int cnt = 0;
+                foreach (var x in inputEvents)
                 {
-                    Console.WriteLine("Taking a checkpoint after {0} input events", cnt);
-                    processor.Checkpoint();
-                    processor.Flush();
+                    if (cnt++ == 45000)
+                    {
+                        Console.WriteLine("Taking a checkpoint after {0} input events", cnt);
+                        processor.Checkpoint();
+                        processor.Flush();
 
-                    Console.WriteLine("Restoring from the checkpoint");
-                    processor = new QueryProcessor(true);
-                    Console.WriteLine("Done restoring");
+                        Console.WriteLine("Restoring from the checkpoint");
+                        processor = new QueryProcessor(true);
+                        Console.WriteLine("Done restoring");
+                    }
+
+                    if (cnt % 5000 == 0) Console.WriteLine(cnt);
+
+                    processor.SendEvent(x);
                 }
-
-                if (cnt % 5000 == 0) Console.WriteLine(cnt);
-
-                processor.SendEvent(x);
+                processor.Flush();
             }
-            processor.Flush();
         }
     }
 
@@ -2294,36 +2502,36 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void WhereWithClosure()
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
-
-            // Should cause fallback to row-oriented.
-            // BUG? Should codegen be able to handle this?
-            var s = "string";
-            var t = "another string";
-            TestWhere(e => e.field2.mystring.Contains(s + t));
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                // Should cause fallback to row-oriented.
+                // BUG? Should codegen be able to handle this?
+                var s = "string";
+                var t = "another string";
+                TestWhere(e => e.field2.mystring.Contains(s + t));
+            }
         }
 
         [TestMethod, TestCategory("Gated")]
         public void WhereNonColumnarWithClass() // Test to make sure that ColToRow creates an instance of a payload when it is a class
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            Config.ForceRowBasedExecution = true;
-            var input = Enumerable.Range(0, 20).Select(i => new MyString(i.ToString()));
-            var foo = "1";
-            var observable = input
-                .ToObservable();
-            var stream = observable
-                .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
-            var streamResult = stream
-                .Where(r => r.mystring.Contains(foo))
-                .ToPayloadEnumerable();
+            using (var modifier = new ConfigModifier().ForceRowBasedExecution(true).Modify())
+            {
+                Config.ForceRowBasedExecution = true;
+                var input = Enumerable.Range(0, 20).Select(i => new MyString(i.ToString()));
+                var foo = "1";
+                var observable = input
+                    .ToObservable();
+                var stream = observable
+                    .ToTemporalStreamable(s => 0, s => StreamEvent.InfinitySyncTime);
+                var streamResult = stream
+                    .Where(r => r.mystring.Contains(foo))
+                    .ToPayloadEnumerable();
 
-            var a = streamResult.ToArray();
-            var expected = input.Where(r => r.mystring.Contains(foo));
-            Config.ForceRowBasedExecution = savedForceRowBasedExecution;
-            Assert.IsTrue(expected.SequenceEqual(a));
+                var a = streamResult.ToArray();
+                var expected = input.Where(r => r.mystring.Contains(foo));
+                Assert.IsTrue(expected.SequenceEqual(a));
+            }
         }
     }
 

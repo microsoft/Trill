@@ -22,6 +22,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
 // InnerKey: <#= TInnerKey #>
 // InnerResult: <#= TInnerResult #>
 // TResult: <#= TResult #>
+// ProjectionReturningResultInstance: <#= ProjectionReturningResultInstance.ExpressionToCSharp() #>
 
 <#
     var memoryPoolGenericParameters = string.Format("<{0}, {1}>", TOuterKey, TResult);
@@ -106,7 +107,7 @@ internal sealed class <#= className #><#= genericParameters #> :
 
         <#= resultBatchClassType #><#= resultBatchGenericParameters #> resultBatch = tmp as <#= resultBatchClassType #><#= resultBatchGenericParameters #>;
 
-<# foreach (var f in this.computedFields.Keys) { #>
+<# foreach (var f in (this.ProjectionReturningResultInstance != null ? new ColumnarRepresentation(this.resultType).AllFields : this.computedFields.Keys)) { #>
 
         outPool.Get(out resultBatch.<#= f.Name #>);
 <# } #>
@@ -170,7 +171,7 @@ internal sealed class <#= className #><#= genericParameters #> :
         resultBatch.<#= f.Name #> = this.sharedDefaultColumnFor_<#= f.Name #>;
 <# } #>
 
-<# if (!ungroupingToUnit || this.computedFields.Any()) { #>
+<# if (!ungroupingToUnit || this.computedFields.Any() || this.ProjectionReturningResultInstance != null) { #>
 <#     if (!ungroupingToUnit) { #>
             var srckey = batch.key.col;
             var destkey = tmp.key.col;
@@ -193,6 +194,13 @@ internal sealed class <#= className #><#= genericParameters #> :
                 destkey[i] = srckey[i].outerGroup;
                 desthash[i] = this.outerHashCode(destkey[i]);
 <#     } #>
+<# if (this.ProjectionReturningResultInstance != null) {
+            var map = new Dictionary<System.Linq.Expressions.ParameterExpression, string>();
+            map.Add(this.keyParameter, "batch.key.col[i].InnerGroup");
+            var v = this.ProjectionReturningResultInstance.ExpressionToCSharpStringWithParameterSubstitution(map);
+#>
+                    resultBatch[i] = <#= v #>;
+<# } else { #>
 <#     foreach (var kv in this.computedFields) {
             var f = kv.Key;
             string v;
@@ -205,7 +213,8 @@ internal sealed class <#= className #><#= genericParameters #> :
 <#          } else { #>
                         dest_<#= f.Name #>[i] = <#= v #>;
 <#          } #>
-<#     } #>
+<#     } // end foreach #>
+<# } #>
             }
 <# } #>
 
@@ -248,10 +257,5 @@ internal sealed class <#= className #><#= genericParameters #> :
 
         tmp.Seal();
         this.Observer.OnNext(tmp);
-    }
-
-    public void OnError(Exception error)
-    {
-        Observer.OnError(error);
     }
 }

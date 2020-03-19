@@ -139,7 +139,7 @@ namespace Microsoft.StreamProcessing
             Invariant.IsPositive(period, nameof(period));
             Invariant.IsPositive(progress, nameof(progress));
             if (period % progress != 0) throw new ArgumentException("Progress interval must be a proper divisor of the period.");
-            if (period <= progress) throw new ArgumentException("Progress interval must be strickly smaller than the period.");
+            if (period <= progress) throw new ArgumentException("Progress interval must be strictly smaller than the period.");
 
             return new QuantizeLifetimeStreamable<TKey, TPayload>(source, windowSize, period, progress, offset);
         }
