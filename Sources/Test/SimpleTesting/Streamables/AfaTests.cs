@@ -557,6 +557,476 @@ namespace SimpleTesting
             };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
+        [TestMethod, TestCategory("Gated")]
+        public void AfaZeroOrOneInsideOr()
+        {
+            var source = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateStart(0, "A"),
+                StreamEvent.CreateStart(1, "C"),
+                StreamEvent.CreateStart(2, "B"),
+                StreamEvent.CreateStart(3, "B"),
+                StreamEvent.CreateStart(4, "C"),
+                StreamEvent.CreateStart(5, "A"),
+                StreamEvent.CreateStart(6, "B"),
+                StreamEvent.CreateStart(7, "B"),
+                StreamEvent.CreateStart(8, "B"),
+                StreamEvent.CreateStart(9, "A"),
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(3);
+
+            // Create Regex for "A (C? | BB)
+            var afa = ARegex.Concat(
+                ARegex.SingleElement<string, string>(
+                    (time, @event, state) => @event == "A",
+                    (time, @event, state) => @event),
+                ARegex.Or(
+                    ARegex.ZeroOrOne(
+                        ARegex.SingleElement<string, string>(
+                            (time, @event, state) => @event == "C",
+                            (time, @event, state) => state + @event)),
+                    ARegex.Concat(
+                        ARegex.SingleElement<string, string>(
+                            (time, @event, state) => @event == "B",
+                            (time, @event, state) => state + @event),
+                        ARegex.SingleElement<string, string>(
+                            (time, @event, state) => @event == "B",
+                            (time, @event, state) => state + @event))));
+
+            var result = source
+                .Detect(
+                    afa,
+                    allowOverlappingInstances: false,
+                    isDeterministic: false)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateInterval(0, 3, "A"),
+                StreamEvent.CreateInterval(1, 3, "AC"),
+                StreamEvent.CreateInterval(5, 8, "A"),
+                StreamEvent.CreateInterval(7, 8, "ABB"),
+                StreamEvent.CreateInterval(9, 12, "A"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+    }
+
+    /// <summary>
+    /// Since columnar is not supported for partitioned queries, put partitioned test cases here.
+    /// </summary>
+    [TestClass]
+    public class AfaTestsWithoutCodegen : AfaTests
+    {
+        public AfaTestsWithoutCodegen() : base(new ConfigModifier().CodeGenAfa(false))
+        { }
+
+        [TestMethod, TestCategory("Gated")]
+        public void DAfa_IsSyncTimeSimultaneityFree()
+        {
+            var source = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateStart(0, "A"),
+                StreamEvent.CreateStart(1, "A"),
+                StreamEvent.CreateStart(1, "B"),
+                StreamEvent.CreateStart(3, "B"),
+                StreamEvent.CreateStart(4, "C"),
+                StreamEvent.CreateStart(5, "A"),
+                StreamEvent.CreateStart(5, "B"),
+                StreamEvent.CreateStart(5, "B"),
+                StreamEvent.CreateStart(5, "B"),
+                StreamEvent.CreateStart(9, "A"),
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(2);
+
+            // Pattern: A B
+            var afa = ARegex.Concat(
+                ARegex.SingleElement<string, string>(
+                    (time, @event, state) => @event == "A",
+                    (time, @event, state) => state + @event),
+                ARegex.SingleElement<string, string>(
+                    (time, @event, state) => @event == "B",
+                    (time, @event, state) => state + @event));
+
+            var afa_compiled = source
+                .Detect(afa);
+            afa_compiled.Properties.IsSyncTimeSimultaneityFree = true;
+
+            var result = afa_compiled
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateInterval(1, 3, "AB"),
+                StreamEvent.CreateInterval(5, 7, "AB"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void Afa_IsSyncTimeSimultaneityFree()
+        {
+            var source = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateStart(0, "A"),
+                StreamEvent.CreateStart(1, "A"),
+                StreamEvent.CreateStart(1, "B"),
+                StreamEvent.CreateStart(3, "B"),
+                StreamEvent.CreateStart(4, "C"),
+                StreamEvent.CreateStart(5, "A"),
+                StreamEvent.CreateStart(5, "B"),
+                StreamEvent.CreateStart(5, "B"),
+                StreamEvent.CreateStart(5, "B"),
+                StreamEvent.CreateStart(9, "A"),
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(5);
+
+            // Pattern: A+ B+
+            var afa = ARegex.Concat(
+                ARegex.KleenePlus(
+                    ARegex.SingleElement<string, string>(
+                        (time, @event, state) => @event == "A",
+                        (time, @event, state) => state + @event)),
+                ARegex.KleenePlus(
+                    ARegex.SingleElement<string, string>(
+                        (time, @event, state) => @event == "B",
+                        (time, @event, state) => state + @event)));
+
+            var afa_compiled = source
+                .Detect(afa);
+            afa_compiled.Properties.IsSyncTimeSimultaneityFree = true;
+
+            var result = afa_compiled
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateInterval(1, 6, "AB"),
+                StreamEvent.CreateInterval(1, 5, "AAB"),
+                StreamEvent.CreateInterval(3, 6, "ABB"),
+                StreamEvent.CreateInterval(3, 5, "AABB"),
+                StreamEvent.CreateInterval(5, 10, "AB"),
+                StreamEvent.CreateInterval(5, 10, "ABB"),
+                StreamEvent.CreateInterval(5, 10, "ABBB"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void GroupedAfa()
+        {
+            var source = new StreamEvent<Tuple<string, int>>[]
+            {
+                StreamEvent.CreateStart(0, new Tuple<string, int>("A", 1)),
+                    StreamEvent.CreateStart(1, new Tuple<string, int>("A", 2)),
+                    StreamEvent.CreateStart(2, new Tuple<string, int>("B", 2)),
+                StreamEvent.CreateStart(3, new Tuple<string, int>("A", 1)),
+                StreamEvent.CreateStart(4, new Tuple<string, int>("B", 1)),
+                    StreamEvent.CreateStart(5, new Tuple<string, int>("B", 2)),
+                StreamEvent.CreateStart(6, new Tuple<string, int>("B", 1)),
+                StreamEvent.CreateStart(7, new Tuple<string, int>("C", 1)),
+                    StreamEvent.CreateStart(8, new Tuple<string, int>("B", 2)),
+                    StreamEvent.CreateStart(9, new Tuple<string, int>("A", 2)),
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(7);
+
+            // Pattern: A+ B+
+            var afa = ARegex.Concat(
+                ARegex.KleenePlus(
+                    ARegex.SingleElement<Tuple<string, int>, Tuple<string, int>>(
+                        (time, @event, state) => @event.Item1 == "A",
+                        (time, @event, state) => new Tuple<string, int>(state == null ? @event.Item1 : state.Item1 + @event.Item1, @event.Item2))),
+                ARegex.KleenePlus(
+                    ARegex.SingleElement<Tuple<string, int>, Tuple<string, int>>(
+                        (time, @event, state) => @event.Item1 == "B",
+                        (time, @event, state) => new Tuple<string, int>(state == null ? @event.Item1 : state.Item1 + @event.Item1, @event.Item2))));
+
+            var result = source
+                .GroupApply((input) => input.Item2, group => group.Detect(afa, maxDuration: 7), (group, bind) => bind)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new StreamEvent<Tuple<string, int>>[]
+            {
+                StreamEvent.CreateInterval(2, 8, new Tuple<string, int>("AB", 2)),
+                StreamEvent.CreateInterval(4, 10, new Tuple<string, int>("AB", 1)),
+                StreamEvent.CreateInterval(4, 7, new Tuple<string, int>("AAB", 1)),
+                StreamEvent.CreateInterval(5, 8, new Tuple<string, int>("ABB", 2)),
+                StreamEvent.CreateInterval(6, 10, new Tuple<string, int>("ABB", 1)),
+                StreamEvent.CreateInterval(6, 7, new Tuple<string, int>("AABB", 1)),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void GroupedAfa_IsSyncTimeSimultaneityFree()
+        {
+            var source = new StreamEvent<Tuple<string, int>>[]
+            {
+                 StreamEvent.CreateStart(0, new Tuple<string, int>("A", 1)),
+                    StreamEvent.CreateStart(1, new Tuple<string, int>("A", 2)),
+                    StreamEvent.CreateStart(1, new Tuple<string, int>("B", 2)),
+                 StreamEvent.CreateStart(3, new Tuple<string, int>("A", 1)),
+                 StreamEvent.CreateStart(4, new Tuple<string, int>("B", 1)),
+                    StreamEvent.CreateStart(4, new Tuple<string, int>("B", 2)),
+                 StreamEvent.CreateStart(5, new Tuple<string, int>("B", 1)),
+                 StreamEvent.CreateStart(5, new Tuple<string, int>("C", 1)),
+                    StreamEvent.CreateStart(6, new Tuple<string, int>("B", 2)),
+                    StreamEvent.CreateStart(7, new Tuple<string, int>("A", 2)),
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(10);
+
+            // Pattern: A+ B+
+            var afa = ARegex.Concat(
+                ARegex.KleenePlus(
+                    ARegex.SingleElement<Tuple<string, int>, Tuple<string, int>>(
+                        (time, @event, state) => @event.Item1 == "A",
+                        (time, @event, state) => new Tuple<string, int>(state == null ? @event.Item1 : state.Item1 + @event.Item1, @event.Item2))),
+                ARegex.KleenePlus(
+                    ARegex.SingleElement<Tuple<string, int>, Tuple<string, int>>(
+                        (time, @event, state) => @event.Item1 == "B",
+                        (time, @event, state) => new Tuple<string, int>(state == null ? @event.Item1 : state.Item1 + @event.Item1, @event.Item2))));
+
+            var afa_compiled = source.GroupApply(
+                (input) => input.Item2,
+                group =>
+                {
+                    var afaGroup = group.Detect(afa, maxDuration: 10);
+                    afaGroup.Properties.IsSyncTimeSimultaneityFree = true;
+                    return afaGroup;
+                },
+                (group, bind) => bind);
+
+            var result = afa_compiled
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new StreamEvent<Tuple<string, int>>[]
+            {
+                StreamEvent.CreateInterval(1, 11, new Tuple<string, int>("AB", 2)),
+                StreamEvent.CreateInterval(4, 13, new Tuple<string, int>("AB", 1)),
+                StreamEvent.CreateInterval(4, 10, new Tuple<string, int>("AAB", 1)),
+                StreamEvent.CreateInterval(4, 11, new Tuple<string, int>("ABB", 2)),
+                StreamEvent.CreateInterval(5, 13, new Tuple<string, int>("ABB", 1)),
+                StreamEvent.CreateInterval(5, 10, new Tuple<string, int>("AABB", 1)),
+                StreamEvent.CreateInterval(6, 11, new Tuple<string, int>("ABBB", 2)),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PartitionedAfa()
+        {
+            var source = new PartitionedStreamEvent<int, string>[]
+            {
+                PartitionedStreamEvent.CreateStart(1, 0, "A"),
+                            PartitionedStreamEvent.CreateStart(2, 0, "A"),
+                PartitionedStreamEvent.CreateStart(1, 1, "B"),
+                PartitionedStreamEvent.CreateStart(1, 2, "B"),
+                            PartitionedStreamEvent.CreateStart(2, 2, "B"),
+                PartitionedStreamEvent.CreateStart(1, 3, "A"),
+                PartitionedStreamEvent.CreateStart(1, 4, "C"),
+                            PartitionedStreamEvent.CreateStart(2, 3, "C"),
+                            PartitionedStreamEvent.CreateStart(2, 4, "A"),
+                PartitionedStreamEvent.CreateStart(1, 5, "A"),
+                PartitionedStreamEvent.CreateStart(1, 6, "B"),
+                            PartitionedStreamEvent.CreateStart(2, 5, "B"),
+                PartitionedStreamEvent.CreateStart(1, 7, "B"),
+                            PartitionedStreamEvent.CreateStart(2, 6, "B"),
+                PartitionedStreamEvent.CreateStart(1, 8, "B"),
+                PartitionedStreamEvent.CreateStart(1, 9, "A"),
+                            PartitionedStreamEvent.CreateStart(2, 7, "A"),
+                            PartitionedStreamEvent.CreateStart(2, 8, "B")
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(7);
+
+            // Pattern: A B
+            var afa = ARegex.Concat(
+                            ARegex.SingleElement<string, string>(
+                                (time, @event, state) => @event == "A",
+                                (time, @event, state) => state + @event),
+                            ARegex.SingleElement<string, string>(
+                                (time, @event, state) => @event == "B",
+                                (time, @event, state) => state + @event));
+
+            var result = source
+                .Detect(
+                    afa,
+                    maxDuration: 7,
+                    allowOverlappingInstances: false,
+                    isDeterministic: false)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new PartitionedStreamEvent<int, string>[]
+            {
+                PartitionedStreamEvent.CreateInterval(1, 1, 7, "AB"),
+                PartitionedStreamEvent.CreateInterval(2, 2, 7, "AB"),
+                PartitionedStreamEvent.CreateInterval(1, 6, 12, "AB"),
+                PartitionedStreamEvent.CreateInterval(2, 5, 11, "AB"),
+                PartitionedStreamEvent.CreateInterval(2, 8, 14, "AB"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PartitionedAfa_IsSyncTimeSimultaneityFree()
+        {
+            var source = new PartitionedStreamEvent<int, string>[]
+            {
+                PartitionedStreamEvent.CreateStart(1, 0, "A"),
+                            PartitionedStreamEvent.CreateStart(2, 0, "A"),
+                PartitionedStreamEvent.CreateStart(1, 1, "B"),
+                PartitionedStreamEvent.CreateStart(1, 1, "B"),
+                            PartitionedStreamEvent.CreateStart(2, 0, "B"),
+                PartitionedStreamEvent.CreateStart(1, 3, "A"),
+                PartitionedStreamEvent.CreateStart(1, 4, "C"),
+                            PartitionedStreamEvent.CreateStart(2, 3, "C"),
+                            PartitionedStreamEvent.CreateStart(2, 4, "A"),
+                PartitionedStreamEvent.CreateStart(1, 5, "A"),
+                PartitionedStreamEvent.CreateStart(1, 6, "B"),
+                            PartitionedStreamEvent.CreateStart(2, 4, "B"),
+                PartitionedStreamEvent.CreateStart(1, 7, "B"),
+                            PartitionedStreamEvent.CreateStart(2, 6, "B"),
+                PartitionedStreamEvent.CreateStart(1, 8, "B"),
+                PartitionedStreamEvent.CreateStart(1, 9, "A"),
+                            PartitionedStreamEvent.CreateStart(2, 7, "A"),
+                            PartitionedStreamEvent.CreateStart(2, 8, "B")
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(7);
+
+            // Pattern: A B
+            var afa = ARegex.Concat(
+                            ARegex.SingleElement<string, string>(
+                                (time, @event, state) => @event == "A",
+                                (time, @event, state) => state + @event),
+                            ARegex.SingleElement<string, string>(
+                                (time, @event, state) => @event == "B",
+                                (time, @event, state) => state + @event));
+
+            var afa_compiled = source
+                .Detect(afa, maxDuration: 7);
+
+            afa_compiled.Properties.IsSyncTimeSimultaneityFree = true;
+
+            var result = afa_compiled
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new PartitionedStreamEvent<int, string>[]
+            {
+                PartitionedStreamEvent.CreateInterval(1, 1, 7, "AB"),
+                PartitionedStreamEvent.CreateInterval(2, 0, 7, "AB"),
+                PartitionedStreamEvent.CreateInterval(1, 6, 12, "AB"),
+                PartitionedStreamEvent.CreateInterval(2, 4, 11, "AB"),
+                PartitionedStreamEvent.CreateInterval(2, 8, 14, "AB"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PartitionedAfa_LowWatermarkAboveMaxDuration_Emit()
+        {
+            var source = new PartitionedStreamEvent<int, string>[]
+            {
+                PartitionedStreamEvent.CreateStart(1, 0, "A"),
+                PartitionedStreamEvent.CreateStart(1, 1, "B"),
+                PartitionedStreamEvent.CreateStart(1, 2, "B"),
+                PartitionedStreamEvent.CreateStart(1, 3, "B"),
+                PartitionedStreamEvent.CreateLowWatermark<int, string>(9),
+                PartitionedStreamEvent.CreateStart(1, 10, "B")
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(4);
+
+            // Pattern: A B+
+            var afa = ARegex.Concat(
+                            ARegex.SingleElement<string, string>(
+                                (time, @event, state) => @event == "A",
+                                (time, @event, state) => state + @event),
+                            ARegex.KleenePlus(
+                                ARegex.SingleElement<string, string>(
+                                    (time, @event, state) => @event == "B",
+                                    (time, @event, state) => state + @event)));
+
+            var result = source
+                .Detect(afa, maxDuration: 4)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new PartitionedStreamEvent<int, string>[]
+            {
+                PartitionedStreamEvent.CreateInterval(1, 1, 4, "AB"),
+                PartitionedStreamEvent.CreateInterval(1, 2, 4, "ABB"),
+                PartitionedStreamEvent.CreateInterval(1, 3, 4, "ABBB"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PartitionedAfa_LowWatermarkBelowMaxDuration_PunctuationEmit()
+        {
+            var source = new PartitionedStreamEvent<int, string>[]
+            {
+                PartitionedStreamEvent.CreateStart(1, 0, "A"),
+                PartitionedStreamEvent.CreateStart(1, 1, "B"),
+                PartitionedStreamEvent.CreateStart(1, 2, "B"),
+                PartitionedStreamEvent.CreateStart(1, 3, "B"),
+                PartitionedStreamEvent.CreateLowWatermark<int, string>(4),
+                PartitionedStreamEvent.CreateStart(1, 5, "B"),
+                PartitionedStreamEvent.CreateStart(1, 11, "A"),
+                PartitionedStreamEvent.CreateStart(1, 12, "B"),
+                PartitionedStreamEvent.CreateStart(1, 13, "B"),
+                PartitionedStreamEvent.CreatePunctuation<int, string>(1, 15),
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(7);
+
+            // Pattern: A B+
+            var afa = ARegex.Concat(
+                            ARegex.SingleElement<string, string>(
+                                (time, @event, state) => @event == "A",
+                                (time, @event, state) => state + @event),
+                            ARegex.KleenePlus(
+                                ARegex.SingleElement<string, string>(
+                                    (time, @event, state) => @event == "B",
+                                    (time, @event, state) => state + @event)));
+
+            var result = source
+                .Detect(afa, maxDuration: 7)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new PartitionedStreamEvent<int, string>[]
+            {
+                PartitionedStreamEvent.CreateInterval(1, 1, 7, "AB"),
+                PartitionedStreamEvent.CreateInterval(1, 2, 7, "ABB"),
+                PartitionedStreamEvent.CreateInterval(1, 3, 7, "ABBB"),
+                PartitionedStreamEvent.CreateInterval(1, 5, 7, "ABBBB"),
+                PartitionedStreamEvent.CreateInterval(1, 12, 18, "AB"),
+                PartitionedStreamEvent.CreateInterval(1, 13, 18, "ABB"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
 
         internal class State
         {
@@ -616,70 +1086,6 @@ namespace SimpleTesting
             };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaZeroOrOneInsideOr()
-        {
-            var source = new StreamEvent<string>[]
-            {
-                StreamEvent.CreateStart(0, "A"),
-                StreamEvent.CreateStart(1, "C"),
-                StreamEvent.CreateStart(2, "B"),
-                StreamEvent.CreateStart(3, "B"),
-                StreamEvent.CreateStart(4, "C"),
-                StreamEvent.CreateStart(5, "A"),
-                StreamEvent.CreateStart(6, "B"),
-                StreamEvent.CreateStart(7, "B"),
-                StreamEvent.CreateStart(8, "B"),
-                StreamEvent.CreateStart(9, "A"),
-            }.ToObservable()
-                .ToStreamable()
-                .AlterEventDuration(3);
-
-            // Create Regex for "A (C? | BB)
-            var afa = ARegex.Concat(
-                ARegex.SingleElement<string, string>(
-                    (time, @event, state) => @event == "A",
-                    (time, @event, state) => @event),
-                ARegex.Or(
-                    ARegex.ZeroOrOne(
-                        ARegex.SingleElement<string, string>(
-                            (time, @event, state) => @event == "C",
-                            (time, @event, state) => state + @event)),
-                    ARegex.Concat(
-                        ARegex.SingleElement<string, string>(
-                            (time, @event, state) => @event == "B",
-                            (time, @event, state) => state + @event),
-                        ARegex.SingleElement<string, string>(
-                            (time, @event, state) => @event == "B",
-                            (time, @event, state) => state + @event))));
-
-            var result = source
-                .Detect(
-                    afa,
-                    allowOverlappingInstances: false,
-                    isDeterministic: false)
-                .ToStreamEventObservable()
-                .Where(evt => evt.IsData)
-                .ToEnumerable()
-                .ToArray();
-            var expected = new StreamEvent<string>[]
-            {
-                StreamEvent.CreateInterval(0, 3, "A"),
-                StreamEvent.CreateInterval(1, 3, "AC"),
-                StreamEvent.CreateInterval(5, 8, "A"),
-                StreamEvent.CreateInterval(7, 8, "ABB"),
-                StreamEvent.CreateInterval(9, 12, "A"),
-            };
-            Assert.IsTrue(result.SequenceEqual(expected));
-        }
-    }
-
-    [TestClass]
-    public class AfaTestsWithoutCodegen : AfaTests
-    {
-        public AfaTestsWithoutCodegen() : base(new ConfigModifier().CodeGenAfa(false))
-        { }
     }
 
     [TestClass]

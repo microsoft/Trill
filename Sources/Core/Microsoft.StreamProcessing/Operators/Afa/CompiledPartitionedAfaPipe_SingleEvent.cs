@@ -20,13 +20,11 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary2<TKey, byte> seenEvent;
 
-        // The follow three fields' keys need to be updated in lock step
+        // The follow two fields' keys need to be updated in lock step
         [DataMember]
         private FastDictionary2<TPartitionKey, FastMap<OutputEvent<TKey, TRegister>>> tentativeOutput;
         [DataMember]
         private FastDictionary2<TPartitionKey, long> lastSyncTime = new FastDictionary2<TPartitionKey, long>();
-        [DataMember]
-        private FastDictionary2<TPartitionKey, List<TKey>> seenPartitions = new FastDictionary2<TPartitionKey, List<TKey>>();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledPartitionedAfaPipe_SingleEvent() { }
@@ -72,16 +70,16 @@ namespace Microsoft.StreamProcessing
                             var key = srckey[i];
                             var partitionKey = this.getPartitionKey(key);
                             int partitionIndex = EnsurePartition(partitionKey);
-                            var tentativeVisibleTraverser = new FastMap<OutputEvent<TKey, TRegister>>.VisibleTraverser(this.tentativeOutput.entries[partitionIndex].value);
                             long synctime = src_vsync[i];
 
                             if (!this.IsSyncTimeSimultaneityFree)
                             {
                                 int index;
+                                var tentativeVisibleTraverser = new FastMap<OutputEvent<TKey, TRegister>>.VisibleTraverser(this.tentativeOutput.entries[partitionIndex].value);
 
                                 if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                                 {
-                                    foreach (var mapIndex in this.seenPartitions.entries[partitionIndex].value) this.seenEvent.Remove(mapIndex);
+                                    this.seenEvent.Remove(srckey[i]);
 
                                     if (this.tentativeOutput.Count > 0)
                                     {
@@ -121,14 +119,17 @@ namespace Microsoft.StreamProcessing
                                         this.seenEvent.entries[index].value = 2;
 
                                         // Delete tentative output for that key
-                                        var tentativeFindTraverser = new FastMap<OutputEvent<TKey, TRegister>>.FindTraverser(this.tentativeOutput.entries[partitionIndex].value);
-                                        if (tentativeFindTraverser.Find(src_hash[i]))
+                                        if (!this.IsSyncTimeSimultaneityFree)
                                         {
-                                            while (tentativeFindTraverser.Next(out index))
+                                            var tentativeFindTraverser = new FastMap<OutputEvent<TKey, TRegister>>.FindTraverser(this.tentativeOutput.entries[partitionIndex].value);
+                                            if (tentativeFindTraverser.Find(src_hash[i]))
                                             {
-                                                if (this.keyEqualityComparer(this.tentativeOutput.entries[partitionIndex].value.Values[index].key, srckey[i]))
+                                                while (tentativeFindTraverser.Next(out index))
                                                 {
-                                                    tentativeFindTraverser.Remove();
+                                                    if (this.keyEqualityComparer(this.tentativeOutput.entries[partitionIndex].value.Values[index].key, srckey[i]))
+                                                    {
+                                                        tentativeFindTraverser.Remove();
+                                                    }
                                                 }
                                             }
                                         }
@@ -186,21 +187,19 @@ namespace Microsoft.StreamProcessing
                                                     {
                                                         if (this.isFinal[ns])
                                                         {
-                                                            var otherTime = Math.Min(state.PatternStartTimestamp + this.MaxDuration, StreamEvent.InfinitySyncTime);
-
                                                             if (!this.IsSyncTimeSimultaneityFree)
                                                             {
                                                                 var tentativeOutputEntry = this.tentativeOutput.entries[partitionIndex].value;
 
                                                                 int ind = tentativeOutputEntry.Insert(src_hash[i]);
-                                                                tentativeOutputEntry.Values[ind].other = otherTime;
+                                                                tentativeOutputEntry.Values[ind].other = state.PatternStartTimestamp + this.MaxDuration;
                                                                 tentativeOutputEntry.Values[ind].key = srckey[i];
                                                                 tentativeOutputEntry.Values[ind].payload = newReg;
                                                             }
                                                             else
                                                             {
                                                                 dest_vsync[this.iter] = synctime;
-                                                                dest_vother[this.iter] = otherTime;
+                                                                dest_vother[this.iter] = state.PatternStartTimestamp + this.MaxDuration;
                                                                 this.batch[this.iter] = newReg;
                                                                 destkey[this.iter] = srckey[i];
                                                                 dest_hash[this.iter] = src_hash[i];
@@ -254,7 +253,7 @@ namespace Microsoft.StreamProcessing
                             /* (2) Start new activations from the start state(s) */
                             if (!this.AllowOverlappingInstances && !ended) continue;
 
-                            for (int counter = 0; counter < this.numStartStates;  counter++)
+                            for (int counter = 0; counter < this.numStartStates; counter++)
                             {
                                 int startState = this.startStates[counter];
                                 var startStateMap = this.singleEventStateMap[startState];
@@ -274,21 +273,19 @@ namespace Microsoft.StreamProcessing
                                             {
                                                 if (this.isFinal[ns])
                                                 {
-                                                    var otherTime = Math.Min(synctime + this.MaxDuration, StreamEvent.InfinitySyncTime);
-
                                                     if (!this.IsSyncTimeSimultaneityFree)
                                                     {
                                                         var tentativeOutputEntry = this.tentativeOutput.entries[partitionIndex].value;
 
                                                         int ind = tentativeOutputEntry.Insert(src_hash[i]);
-                                                        tentativeOutputEntry.Values[ind].other = otherTime;
+                                                        tentativeOutputEntry.Values[ind].other = synctime + this.MaxDuration;
                                                         tentativeOutputEntry.Values[ind].key = srckey[i];
                                                         tentativeOutputEntry.Values[ind].payload = newReg;
                                                     }
                                                     else
                                                     {
                                                         dest_vsync[this.iter] = synctime;
-                                                        dest_vother[this.iter] = otherTime;
+                                                        dest_vother[this.iter] = synctime + this.MaxDuration;
                                                         this.batch[this.iter] = newReg;
                                                         destkey[this.iter] = srckey[i];
                                                         dest_hash[this.iter] = src_hash[i];
@@ -339,37 +336,62 @@ namespace Microsoft.StreamProcessing
                             long synctime = src_vsync[i];
                             if (!this.IsSyncTimeSimultaneityFree)
                             {
-                                var partitionIndex = FastDictionary2<TPartitionKey, long>.IteratorStart;
-                                while (this.tentativeOutput.Iterate(ref partitionIndex))
+                                // Clean active states for stale partitions
+                                int seenEventIndex;
+                                if (this.activeStates.Count > 0)
                                 {
-                                    if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
+                                    var activeVisibleTraverser = new FastMap<GroupedActiveState<TKey, TRegister>>.VisibleTraverser(this.activeStates);
+                                    while (activeVisibleTraverser.Next(out int activeStateIndex, out _))
                                     {
-                                        var tentativeVisibleTraverser = new FastMap<OutputEvent<TKey, TRegister>>.VisibleTraverser(this.tentativeOutput.entries[partitionIndex].value);
-
-                                        foreach (var mapIndex in this.seenPartitions.entries[partitionIndex].value) this.seenEvent.Remove(mapIndex);
-
-                                        if (this.tentativeOutput.Count > 0)
+                                        var activeState = this.activeStates.Values[activeStateIndex];
+                                        if (synctime >= activeState.PatternStartTimestamp + this.MaxDuration)
                                         {
-                                            tentativeVisibleTraverser.currIndex = 0;
+                                            // Since we know this partition is stale, remove it from seenEvent as well.
+                                            this.seenEvent.Remove(activeState.key);
+                                            this.activeStates.Remove(activeStateIndex);
+                                        }
+                                    }
+                                }
 
-                                            while (tentativeVisibleTraverser.Next(out int index, out int hash))
-                                            {
-                                                var elem = this.tentativeOutput.entries[partitionIndex].value.Values[index];
+                                // Clean seen events from stale partitions. This enumeration is necessary for stale partitions without active state.
+                                seenEventIndex = FastDictionary2<TPartitionKey, long>.IteratorStart;
+                                int partitionIndex;
+                                while (this.seenEvent.Iterate(ref seenEventIndex))
+                                {
+                                    var partitionKey = this.getPartitionKey(this.seenEvent.entries[seenEventIndex].key);
+                                    if (this.lastSyncTime.Lookup(partitionKey, out partitionIndex) && synctime > this.lastSyncTime.entries[partitionIndex].value)
+                                    {
+                                        this.seenEvent.Remove(this.seenEvent.entries[seenEventIndex].key);
+                                    }
+                                }
 
-                                                this.batch.vsync.col[this.iter] = this.lastSyncTime.entries[partitionIndex].value;
-                                                this.batch.vother.col[this.iter] = elem.other;
-                                                this.batch.payload.col[this.iter] = elem.payload;
-                                                this.batch.key.col[this.iter] = elem.key;
-                                                this.batch.hash.col[this.iter] = hash;
-                                                this.iter++;
+                                // Clean last synctime and tentative output from stale partitions (these two need to be kept in sync)
+                                partitionIndex = FastDictionary2<TPartitionKey, long>.IteratorStart;
+                                while (this.lastSyncTime.Iterate(ref partitionIndex))
+                                {
+                                    // Check to see if partition is stale
+                                    if (synctime > this.lastSyncTime.entries[partitionIndex].value)
+                                    {
+                                        // Emit tentative output from stale partitions
+                                        var tentativeVisibleTraverser = new FastMap<OutputEvent<TKey, TRegister>>.VisibleTraverser(this.tentativeOutput.entries[partitionIndex].value);
+                                        while (tentativeVisibleTraverser.Next(out int index, out int hash))
+                                        {
+                                            var elem = this.tentativeOutput.entries[partitionIndex].value.Values[index];
 
-                                                if (this.iter == Config.DataBatchSize) FlushContents();
-                                            }
+                                            this.batch.vsync.col[this.iter] = this.lastSyncTime.entries[partitionIndex].value;
+                                            this.batch.vother.col[this.iter] = elem.other;
+                                            this.batch.payload.col[this.iter] = elem.payload;
+                                            this.batch.key.col[this.iter] = elem.key;
+                                            this.batch.hash.col[this.iter] = hash;
+                                            this.iter++;
 
-                                            this.tentativeOutput.entries[partitionIndex].value.Clear(); // Clear the tentative output list
+                                            if (this.iter == Config.DataBatchSize) FlushContents();
                                         }
 
-                                        this.lastSyncTime.entries[partitionIndex].value = synctime;
+                                        // Remove the partition
+                                        var partitionKey = this.lastSyncTime.entries[partitionIndex].key;
+                                        this.tentativeOutput.Remove(partitionKey);
+                                        this.lastSyncTime.Remove(partitionKey);
                                     }
                                 }
                             }
@@ -388,9 +410,8 @@ namespace Microsoft.StreamProcessing
 
                                 if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                                 {
+                                    this.seenEvent.Remove(srckey[i]);
                                     var tentativeVisibleTraverser = new FastMap<OutputEvent<TKey, TRegister>>.VisibleTraverser(this.tentativeOutput.entries[partitionIndex].value);
-
-                                    foreach (var mapIndex in this.seenPartitions.entries[partitionIndex].value) this.seenEvent.Remove(mapIndex);
 
                                     if (this.tentativeOutput.Count > 0)
                                     {
@@ -438,8 +459,9 @@ namespace Microsoft.StreamProcessing
             if (!this.lastSyncTime.Lookup(partitionKey, out int index))
             {
                 index = this.lastSyncTime.Insert(partitionKey, long.MinValue);
-                this.tentativeOutput.Insert(partitionKey, new FastMap<OutputEvent<TKey, TRegister>>());
-                this.seenPartitions.Insert(partitionKey, new List<TKey>());
+
+                if (!this.IsSyncTimeSimultaneityFree)
+                    this.tentativeOutput.Insert(partitionKey, new FastMap<OutputEvent<TKey, TRegister>>());
             }
             return index;
         }
