@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing
                 long* sourceVOtherPtr = sourceVOther;
                 for (int row = 0; row < count; row++)
                 {
-                    if ((sourceBitVector[row >> 6] & (1L << (row & 0x3f))) == 0 || *sourceVOtherPtr == long.MinValue)
+                    if ((sourceBitVector[row >> 6] & (1L << (row & 0x3f))) == 0 || *sourceVOtherPtr < 0)
                     {
                         long startTime = *sourceVSyncPtr;
                         long endTime = *sourceVOtherPtr;
@@ -431,7 +431,7 @@ namespace Microsoft.StreamProcessing
             this.output.key.col[index] = key;
             this.output.payload.col[index] = payload;
             this.output.hash.col[index] = hash;
-            if (end == long.MinValue) this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
+            if (end < 0) this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
 
             if (this.output.Count == Config.DataBatchSize) FlushContents();
         }
