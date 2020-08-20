@@ -2,6 +2,8 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
+using System.Linq;
+using System.Reactive.Linq;
 using Microsoft.StreamProcessing;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -256,6 +258,96 @@ namespace SimpleTesting
             };
 
             Assert.IsTrue(outputStream.IsEquivalentTo(correct));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PartitionedChop()
+        {
+            var input = new[]
+            {
+                PartitionedStreamEvent.CreateInterval(0, 100, 109, StructTuple.Create("P1", 2)),
+                PartitionedStreamEvent.CreateInterval(0, 100, 110, StructTuple.Create("P2", 2)),
+                PartitionedStreamEvent.CreateInterval(0, 100, 111, StructTuple.Create("P3", 2)),
+                PartitionedStreamEvent.CreateInterval(0, 100, 150, StructTuple.Create("P4", 2)),
+
+                PartitionedStreamEvent.CreateInterval(1, 100, 109, StructTuple.Create("P1", 2)),
+                PartitionedStreamEvent.CreateInterval(1, 100, 110, StructTuple.Create("P2", 2)),
+                PartitionedStreamEvent.CreateInterval(1, 100, 111, StructTuple.Create("P3", 2)),
+                PartitionedStreamEvent.CreateInterval(1, 100, 150, StructTuple.Create("P4", 2)),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, StructTuple<string, int>>(100),
+
+                PartitionedStreamEvent.CreateStart(0, 100, StructTuple.Create("P5", 2)),
+                PartitionedStreamEvent.CreateEnd(0, 109, 100, StructTuple.Create("P5", 2)),
+                PartitionedStreamEvent.CreateStart(0, 100, StructTuple.Create("P6", 2)),
+                PartitionedStreamEvent.CreateEnd(0, 110, 100, StructTuple.Create("P6", 2)),
+
+                PartitionedStreamEvent.CreateStart(1, 100, StructTuple.Create("P5", 2)),
+                PartitionedStreamEvent.CreateEnd(1, 109, 100, StructTuple.Create("P5", 2)),
+                PartitionedStreamEvent.CreateStart(1, 100, StructTuple.Create("P6", 2)),
+                PartitionedStreamEvent.CreateEnd(1, 110, 100, StructTuple.Create("P6", 2)),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, StructTuple<string, int>>(StreamEvent.InfinitySyncTime)
+            }
+                .OrderBy(v => v.SyncTime)
+                .ToArray();
+
+            var outputStream = input
+                .ToObservable()
+                .ToStreamable()
+                .Chop(0, 10)
+                .Select(payload => payload.Item1);
+
+            var correct = new PartitionedStreamEvent<int, string>[]
+            {
+                PartitionedStreamEvent.CreateInterval(0, 100, 109, "P1"),
+                PartitionedStreamEvent.CreateInterval(0, 100, 110, "P2"),
+                PartitionedStreamEvent.CreateInterval(0, 100, 110, "P3"),
+                PartitionedStreamEvent.CreateInterval(0, 100, 110, "P4"),
+
+                PartitionedStreamEvent.CreateInterval(1, 100, 109, "P1"),
+                PartitionedStreamEvent.CreateInterval(1, 100, 110, "P2"),
+                PartitionedStreamEvent.CreateInterval(1, 100, 110, "P3"),
+                PartitionedStreamEvent.CreateInterval(1, 100, 110, "P4"),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, string>(100),
+
+                PartitionedStreamEvent.CreateStart(0, 100, "P5"),
+                PartitionedStreamEvent.CreateStart(0, 100, "P6"),
+                PartitionedStreamEvent.CreateEnd(0, 109, 100, "P5"),
+                PartitionedStreamEvent.CreateEnd(0, 110, 100, "P6"),
+
+                PartitionedStreamEvent.CreateStart(1, 100, "P5"),
+                PartitionedStreamEvent.CreateStart(1, 100, "P6"),
+                PartitionedStreamEvent.CreateEnd(1, 109, 100, "P5"),
+                PartitionedStreamEvent.CreateEnd(1, 110, 100, "P6"),
+
+                PartitionedStreamEvent.CreateInterval(0, 110, 111, "P3"),
+                PartitionedStreamEvent.CreateInterval(1, 110, 111, "P3"),
+
+                PartitionedStreamEvent.CreateInterval(0, 110, 120, "P4"),
+                PartitionedStreamEvent.CreateInterval(0, 120, 130, "P4"),
+                PartitionedStreamEvent.CreateInterval(0, 130, 140, "P4"),
+                PartitionedStreamEvent.CreateInterval(0, 140, 150, "P4"),
+
+                PartitionedStreamEvent.CreateInterval(1, 110, 120, "P4"),
+                PartitionedStreamEvent.CreateInterval(1, 120, 130, "P4"),
+                PartitionedStreamEvent.CreateInterval(1, 130, 140, "P4"),
+                PartitionedStreamEvent.CreateInterval(1, 140, 150, "P4"),
+
+                PartitionedStreamEvent.CreateLowWatermark<int, string>(StreamEvent.InfinitySyncTime)
+            };
+
+            var events = outputStream.ToStreamEventObservable().ToEnumerable().ToArray();
+
+            // Compare each key separately (this is solely for readability of the test)
+            var expectedKey0 = correct.Where(e => !e.IsData || e.PartitionKey == 0).ToArray();
+            var expectedKey1 = correct.Where(e => !e.IsData || e.PartitionKey == 1).ToArray();
+            var actualKey0 = events.Where(e => !e.IsData || e.PartitionKey == 0).ToArray();
+            var actualKey1 = events.Where(e => !e.IsData || e.PartitionKey == 1).ToArray();
+
+            Assert.IsTrue(actualKey0.SequenceEqual(expectedKey0));
+            Assert.IsTrue(actualKey1.SequenceEqual(expectedKey1));
         }
     }
 }
