@@ -4,7 +4,7 @@ variables:
 jobs:
 - job: 'CSharp_Windows'  
   pool:
-    vmImage: vs2017-win2016    
+    vmImage: windows-latest
   displayName: 'C# (Windows)'
 
   strategy:
@@ -38,5 +38,6 @@ jobs:
 
   - task: VSTest@2
     inputs:
+      testAssemblyVer2: 'bintest\**\netcoreapp3.1\SimpleTesting.dll'
       platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
