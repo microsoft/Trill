@@ -61,7 +61,7 @@ namespace Microsoft.StreamProcessing
 
             try
             {
-                var serializer = StreamableSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(
+                var serializer = StreamSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(
                     new SerializerSettings() { KnownTypes = StreamMessageManager.GeneratedTypes() });
                 while (true)
                 {

@@ -92,6 +92,7 @@ namespace SimpleTesting
             "StreamScheduler", // scheduler can be skipped
 
             // Types manually looked at and skipped
+            "StateSerializer",
             "ShardedStreamSerializer",
             "ShardedStreamCache",
             "FileObservable",

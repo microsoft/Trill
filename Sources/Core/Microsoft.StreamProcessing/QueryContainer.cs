@@ -101,7 +101,7 @@ namespace Microsoft.StreamProcessing
         internal object GetOrCreateSerializer(Type type)
         {
             if (this.serializers.TryGetValue(type, out object serializer)) return serializer;
-            var serializerStatic = typeof(StreamableSerializer);
+            var serializerStatic = typeof(StreamSerializer);
             var method = serializerStatic.GetTypeInfo().GetMethod("Create", new Type[] { typeof(SerializerSettings) }).MakeGenericMethod(type);
             var settings = new SerializerSettings()
             {

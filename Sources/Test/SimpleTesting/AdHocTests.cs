@@ -132,7 +132,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                var s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                var s = StreamSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream
                 {
                     Position = 0

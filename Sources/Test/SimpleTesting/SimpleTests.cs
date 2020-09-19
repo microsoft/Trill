@@ -7087,7 +7087,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                StateSerializer<ColumnBatch<string>> s = StreamSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream { Position = 0 };
 
                 s.Serialize(ms, inputStr);
@@ -7129,7 +7129,7 @@ namespace SimpleTesting
 
                     inputStr.Seal();
 
-                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    StateSerializer<MultiString> s = StreamSerializer.Create<MultiString>(new SerializerSettings { });
                     var ms = new MemoryStream { Position = 0 };
 
                     s.Serialize(ms, inputStr);
@@ -8954,7 +8954,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                StateSerializer<ColumnBatch<string>> s = StreamSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream { Position = 0 };
 
                 s.Serialize(ms, inputStr);
@@ -8996,7 +8996,7 @@ namespace SimpleTesting
 
                     inputStr.Seal();
 
-                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    StateSerializer<MultiString> s = StreamSerializer.Create<MultiString>(new SerializerSettings { });
                     var ms = new MemoryStream { Position = 0 };
 
                     s.Serialize(ms, inputStr);
@@ -10944,7 +10944,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                StateSerializer<ColumnBatch<string>> s = StreamSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream { Position = 0 };
 
                 s.Serialize(ms, inputStr);
@@ -10986,7 +10986,7 @@ namespace SimpleTesting
 
                     inputStr.Seal();
 
-                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    StateSerializer<MultiString> s = StreamSerializer.Create<MultiString>(new SerializerSettings { });
                     var ms = new MemoryStream { Position = 0 };
 
                     s.Serialize(ms, inputStr);
@@ -12812,7 +12812,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                StateSerializer<ColumnBatch<string>> s = StreamSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream { Position = 0 };
 
                 s.Serialize(ms, inputStr);
@@ -12854,7 +12854,7 @@ namespace SimpleTesting
 
                     inputStr.Seal();
 
-                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    StateSerializer<MultiString> s = StreamSerializer.Create<MultiString>(new SerializerSettings { });
                     var ms = new MemoryStream { Position = 0 };
 
                     s.Serialize(ms, inputStr);
@@ -14801,7 +14801,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                StateSerializer<ColumnBatch<string>> s = StreamSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream { Position = 0 };
 
                 s.Serialize(ms, inputStr);
@@ -14843,7 +14843,7 @@ namespace SimpleTesting
 
                     inputStr.Seal();
 
-                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    StateSerializer<MultiString> s = StreamSerializer.Create<MultiString>(new SerializerSettings { });
                     var ms = new MemoryStream { Position = 0 };
 
                     s.Serialize(ms, inputStr);
@@ -16668,7 +16668,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                StateSerializer<ColumnBatch<string>> s = StreamSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream { Position = 0 };
 
                 s.Serialize(ms, inputStr);
@@ -16710,7 +16710,7 @@ namespace SimpleTesting
 
                     inputStr.Seal();
 
-                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    StateSerializer<MultiString> s = StreamSerializer.Create<MultiString>(new SerializerSettings { });
                     var ms = new MemoryStream { Position = 0 };
 
                     s.Serialize(ms, inputStr);
@@ -18658,7 +18658,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                StateSerializer<ColumnBatch<string>> s = StreamSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream { Position = 0 };
 
                 s.Serialize(ms, inputStr);
@@ -18700,7 +18700,7 @@ namespace SimpleTesting
 
                     inputStr.Seal();
 
-                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    StateSerializer<MultiString> s = StreamSerializer.Create<MultiString>(new SerializerSettings { });
                     var ms = new MemoryStream { Position = 0 };
 
                     s.Serialize(ms, inputStr);
@@ -20526,7 +20526,7 @@ namespace SimpleTesting
                     if (x == 1) inputStr.col[i] = string.Empty;
                 }
 
-                StateSerializer<ColumnBatch<string>> s = StreamableSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
+                StateSerializer<ColumnBatch<string>> s = StreamSerializer.Create<ColumnBatch<string>>(new SerializerSettings { });
                 var ms = new MemoryStream { Position = 0 };
 
                 s.Serialize(ms, inputStr);
@@ -20568,7 +20568,7 @@ namespace SimpleTesting
 
                     inputStr.Seal();
 
-                    StateSerializer<MultiString> s = StreamableSerializer.Create<MultiString>(new SerializerSettings { });
+                    StateSerializer<MultiString> s = StreamSerializer.Create<MultiString>(new SerializerSettings { });
                     var ms = new MemoryStream { Position = 0 };
 
                     s.Serialize(ms, inputStr);
