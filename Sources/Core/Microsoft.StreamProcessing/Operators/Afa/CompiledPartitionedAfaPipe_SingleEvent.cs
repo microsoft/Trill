@@ -79,7 +79,7 @@ namespace Microsoft.StreamProcessing
 
                                 if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                                 {
-                                    this.seenEvent.Remove(srckey[i]);
+                                    this.seenEvent.Remove(key);
 
                                     if (this.tentativeOutput.Count > 0)
                                     {
