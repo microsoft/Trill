@@ -23,13 +23,13 @@ namespace Microsoft.StreamProcessing
         {
             if (readPropertiesFromStream)
             {
-                var propSer = StreamableSerializer.Create<SerializedProperties>();
+                var propSer = StreamSerializer.Create<SerializedProperties>();
                 var props = propSer.Deserialize(binaryStream);
                 this.properties = props.ToStreamProperties<TKey, TPayload>();
             }
 
             this.stream = binaryStream;
-            this.serializer = StreamableSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(new SerializerSettings());
+            this.serializer = StreamSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(new SerializerSettings());
             this.container = container;
             this.IngressSiteIdentifier = identifier ?? Guid.NewGuid().ToString();
             container?.RegisterIngressSite(identifier);

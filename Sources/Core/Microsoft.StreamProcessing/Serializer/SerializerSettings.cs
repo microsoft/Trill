@@ -11,7 +11,7 @@ namespace Microsoft.StreamProcessing.Serializer
     /// <summary>
     ///     Specifies serializer settings.
     /// </summary>
-    internal sealed class SerializerSettings : IEquatable<SerializerSettings>
+    public sealed class SerializerSettings : IEquatable<SerializerSettings>
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="SerializerSettings" /> class.

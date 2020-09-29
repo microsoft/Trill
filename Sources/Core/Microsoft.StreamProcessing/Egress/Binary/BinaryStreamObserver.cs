@@ -15,7 +15,7 @@ namespace Microsoft.StreamProcessing
 
         public BinaryStreamObserver(StreamProperties<TKey, TPayload> streamProperties, Stream stream)
         {
-            this.serializer = StreamableSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(
+            this.serializer = StreamSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(
                 new SerializerSettings() { KnownTypes = StreamMessageManager.GeneratedTypes() });
             this.stream = stream;
         }

@@ -24,7 +24,7 @@ namespace Microsoft.StreamProcessing
         {
             if (readPropertiesFromStream)
             {
-                var propSer = StreamableSerializer.Create<SerializedProperties>();
+                var propSer = StreamSerializer.Create<SerializedProperties>();
                 var props = propSer.Deserialize(binaryStream);
                 this.properties = props.ToStreamProperties<TKey, TPayload>();
             }

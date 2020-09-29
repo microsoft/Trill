@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
         {
             if (writePropertiesToStream)
             {
-                var propSer = StreamableSerializer.Create<SerializedProperties>();
+                var propSer = StreamSerializer.Create<SerializedProperties>();
                 propSer.Serialize(binaryStream, SerializedProperties.FromStreamProperties(input.Properties));
             }
 <# if (hasContainer) { #>

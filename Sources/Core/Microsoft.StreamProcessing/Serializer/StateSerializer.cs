@@ -9,7 +9,11 @@ using Microsoft.StreamProcessing.Serializer.Serializers;
 
 namespace Microsoft.StreamProcessing.Serializer
 {
-    internal sealed class StateSerializer<T>
+    /// <summary>
+    /// State serializer
+    /// </summary>
+    /// <typeparam name="T">Serialization object type</typeparam>
+    public sealed class StateSerializer<T>
     {
         private readonly ObjectSerializerBase schema;
         private readonly Lazy<Action<BinaryEncoder, T>> serialize;
@@ -22,8 +26,18 @@ namespace Microsoft.StreamProcessing.Serializer
             this.deserialize = new Lazy<Func<BinaryDecoder, T>>(GenerateDeserializer);
         }
 
+        /// <summary>
+        /// Serialize object to stream
+        /// </summary>
+        /// <param name="stream">Stream to serialize to</param>
+        /// <param name="obj">Object to serialize</param>
         public void Serialize(Stream stream, T obj) => this.serialize.Value(new BinaryEncoder(stream), obj);
 
+        /// <summary>
+        /// Deserialize object from stream
+        /// </summary>
+        /// <param name="stream">Stream to deserialize from</param>
+        /// <returns>Deserialized object</returns>
         public T Deserialize(Stream stream) => this.deserialize.Value(new BinaryDecoder(stream));
 
         private Action<BinaryEncoder, T> GenerateSerializer()

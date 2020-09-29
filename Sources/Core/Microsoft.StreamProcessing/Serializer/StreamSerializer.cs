@@ -8,11 +8,19 @@ using Microsoft.StreamProcessing.Serializer.Serializers;
 
 namespace Microsoft.StreamProcessing.Serializer
 {
-    internal static class StreamableSerializer
+    /// <summary>
+    /// Serializer to read/write objects from/to streams
+    /// </summary>
+    public static class StreamSerializer
     {
         private static readonly Dictionary<Tuple<Type, SerializerSettings>, object> TypedSerializers
             = new Dictionary<Tuple<Type, SerializerSettings>, object>();
 
+        /// <summary>
+        /// Create instance of serializer for given object type
+        /// </summary>
+        /// <typeparam name="T">Type of object</typeparam>
+        /// <returns>StateSerializer</returns>
         public static StateSerializer<T> Create<T>() => Create<T>(new SerializerSettings());
 
         /// <summary>

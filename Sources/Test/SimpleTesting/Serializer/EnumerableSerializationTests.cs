@@ -82,7 +82,7 @@ namespace SimpleTesting
         private static void TestSerialization<T>(T enumerable)
             where T : IEnumerable<int>
         {
-            var serializer = StreamableSerializer.Create<T>();
+            var serializer = StreamSerializer.Create<T>();
             using (var stream = new MemoryStream())
             {
                 serializer.Serialize(stream, enumerable);

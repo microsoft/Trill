@@ -21,7 +21,7 @@ namespace Microsoft.StreamProcessing
         {
             if (writePropertiesToStream)
             {
-                var propSer = StreamableSerializer.Create<SerializedProperties>();
+                var propSer = StreamSerializer.Create<SerializedProperties>();
                 propSer.Serialize(binaryStream, SerializedProperties.FromStreamProperties(input.Properties));
             }
             input.ToStreamMessageObservable()
@@ -29,7 +29,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Serialize streamable into a binary file
+        /// Serialize streamble into a binary file
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
         /// <typeparam name="TPayload"></typeparam>
@@ -57,7 +57,7 @@ namespace Microsoft.StreamProcessing
         {
             if (writePropertiesToStream)
             {
-                var propSer = StreamableSerializer.Create<SerializedProperties>();
+                var propSer = StreamSerializer.Create<SerializedProperties>();
                 propSer.Serialize(binaryStream, SerializedProperties.FromStreamProperties(input.Properties));
             }
             container.RegisterOutputAsStreamMessages(input, identifier)
@@ -65,7 +65,7 @@ namespace Microsoft.StreamProcessing
         }
 
         /// <summary>
-        /// Serialize streamable into a binary file
+        /// Serialize streamble into a binary file
         /// </summary>
         /// <typeparam name="TKey"></typeparam>
         /// <typeparam name="TPayload"></typeparam>

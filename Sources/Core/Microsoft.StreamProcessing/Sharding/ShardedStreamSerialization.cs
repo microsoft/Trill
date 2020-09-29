@@ -61,11 +61,11 @@ namespace Microsoft.StreamProcessing.Sharding
             this.destination = destination;
             if (writePropertiesToStream)
             {
-                var propSer = StreamableSerializer.Create<SerializedProperties>();
+                var propSer = StreamSerializer.Create<SerializedProperties>();
                 propSer.Serialize(destination, SerializedProperties.FromStreamProperties(sourceProps));
             }
 
-            this.serializer = StreamableSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(new SerializerSettings());
+            this.serializer = StreamSerializer.Create<QueuedMessage<StreamMessage<TKey, TPayload>>>(new SerializerSettings());
         }
 
         public void Dispose()

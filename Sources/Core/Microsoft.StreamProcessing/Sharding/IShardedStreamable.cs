@@ -135,7 +135,7 @@ namespace Microsoft.StreamProcessing.Sharding
                     properties = shardedStreamable.Streamables[0].Properties;
                 }
             }
-            var propSer = StreamableSerializer.Create<SerializedProperties>();
+            var propSer = StreamSerializer.Create<SerializedProperties>();
             propSer.Serialize(stream, SerializedProperties.FromStreamProperties(properties));
         }
     }
