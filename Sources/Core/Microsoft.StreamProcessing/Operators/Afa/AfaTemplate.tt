@@ -14,7 +14,7 @@ protected virtual void IfFinalStateProduceOutput(int indent, int node, string in
         {
 #>
 int ind = tentativeOutput.Insert(<#= insertArgument #>);
-tentativeOutput.Values[ind].other = Math.Min(<#= otherTime #> + MaxDuration, StreamEvent.InfinitySyncTime);;
+tentativeOutput.Values[ind].other = Math.Min(<#= otherTime #> + MaxDuration, StreamEvent.InfinitySyncTime);
 tentativeOutput.Values[ind].key = <#= keyValue #>;
 tentativeOutput.Values[ind].payload = newReg;
 <#+
@@ -23,7 +23,7 @@ tentativeOutput.Values[ind].payload = newReg;
         {
 #>
 dest_vsync[iter] = <#= syncTime #>;
-dest_vother[iter] = Math.Min(<#= otherTime #> + MaxDuration, StreamEvent.InfinitySyncTime);;
+dest_vother[iter] = Math.Min(<#= otherTime #> + MaxDuration, StreamEvent.InfinitySyncTime);
 <#+
             if (this.noPublicResultFields) {
 #>

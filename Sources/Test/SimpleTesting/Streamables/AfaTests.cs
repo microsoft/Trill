@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Runtime.Serialization;
 using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Internal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting
@@ -557,6 +558,7 @@ namespace SimpleTesting
             };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
+
         [TestMethod, TestCategory("Gated")]
         public void AfaZeroOrOneInsideOr()
         {
@@ -612,6 +614,74 @@ namespace SimpleTesting
                 StreamEvent.CreateInterval(9, 12, "A"),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AfaPunctuationAtBatchBoundary()
+        {
+            using (new ConfigModifier().DataBatchSize(3).Modify())
+            {
+                // Add some columns to the pool so we don't just keep reusing the same one
+                var longPool = MemoryManager.GetColumnPool<long>();
+                var columns = new ColumnBatch<long>[100];
+                for (int i = 0; i < columns.Length; i++)
+                {
+                    Assert.IsTrue(longPool.Get(out columns[i]));
+                }
+                for (int i = 0; i < columns.Length; i++)
+                {
+                    columns[i].Return();
+                }
+
+                var source = new StreamEvent<string>[]
+                {
+                    StreamEvent.CreateStart(0, "A"),
+                    StreamEvent.CreateStart(1, "B"), // Match
+                    StreamEvent.CreateStart(2, "C"),
+
+                    StreamEvent.CreateStart(3, "A"),
+                    StreamEvent.CreateStart(4, "B"), // Match
+                    StreamEvent.CreateStart(5, "C"),
+
+                    StreamEvent.CreateStart(6, "A"),
+                    StreamEvent.CreatePunctuation<string>(6), // End of output batch, middle of input batch
+                    StreamEvent.CreateStart(7, "B"),
+
+                    StreamEvent.CreateStart(8, "C"),
+                }.ToObservable()
+                    .ToStreamable(flushPolicy: FlushPolicy.None)
+                    .AlterEventDuration(3);
+
+                // Create Regex for "ABC"
+                var afa = ARegex.Concat(
+                    ARegex.SingleElement<string, string>(
+                        (time, @event, state) => @event == "A",
+                        (time, @event, state) => state + @event),
+                    ARegex.SingleElement<string, string>(
+                        (time, @event, state) => @event == "B",
+                        (time, @event, state) => state + @event));
+                var afaStreamable = source.Detect(
+                        afa,
+                        allowOverlappingInstances: false,
+                        isDeterministic: false);
+                afaStreamable.Properties.IsSyncTimeSimultaneityFree = true;
+
+                var result = afaStreamable
+                    .ToStreamEventObservable()
+                    .ToEnumerable()
+                    .ToArray();
+                var expected = new StreamEvent<string>[]
+                {
+                    StreamEvent.CreateInterval(1, 3, "AB"),
+                    StreamEvent.CreateInterval(4, 6, "AB"),
+                    StreamEvent.CreatePunctuation<string>(6),
+                    StreamEvent.CreateInterval(7, 9, "AB"),
+                    StreamEvent.CreatePunctuation<string>(StreamEvent.InfinitySyncTime),
+                };
+                Assert.IsTrue(result.SequenceEqual(expected));
+
+                longPool.Free();
+            }
         }
     }
 
@@ -1085,6 +1155,79 @@ namespace SimpleTesting
                 StreamEvent.CreateStart(9, State.A),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void PartitionedAfaPunctuationAtBatchBoundary() => PartitionedAfaBatchBoundary(isLowWatermark: false);
+
+        [TestMethod, TestCategory("Gated")]
+        public void PartitionedAfaLowWatermarkAtBatchBoundary() => PartitionedAfaBatchBoundary(isLowWatermark: true);
+
+        private void PartitionedAfaBatchBoundary(bool isLowWatermark)
+        {
+            using (new ConfigModifier().DataBatchSize(3).Modify())
+            {
+                // Add some columns to the pool so we don't just keep reusing the same one
+                var longPool = MemoryManager.GetColumnPool<long>();
+                var columns = new ColumnBatch<long>[100];
+                for (int i = 0; i < columns.Length; i++)
+                {
+                    Assert.IsTrue(longPool.Get(out columns[i]));
+                }
+                for (int i = 0; i < columns.Length; i++)
+                {
+                    columns[i].Return();
+                }
+
+                var source = new PartitionedStreamEvent<int, string>[]
+                {
+                    PartitionedStreamEvent.CreateStart(0, 0, "A"),
+                    PartitionedStreamEvent.CreateStart(0, 1, "B"), // Match
+                    PartitionedStreamEvent.CreateStart(0, 2, "C"),
+
+                    PartitionedStreamEvent.CreateStart(0, 3, "A"),
+                    PartitionedStreamEvent.CreateStart(0, 4, "B"), // Match
+                    PartitionedStreamEvent.CreateStart(0, 5, "C"),
+
+                    PartitionedStreamEvent.CreateStart(0, 6, "A"),
+                    isLowWatermark ? PartitionedStreamEvent.CreateLowWatermark<int, string>(6) : PartitionedStreamEvent.CreatePunctuation<int, string>(0, 6), // End of output batch, middle of input batch
+                    PartitionedStreamEvent.CreateStart(0, 7, "B"),
+
+                    PartitionedStreamEvent.CreateStart(0, 8, "C"),
+                }.ToObservable()
+                    .ToStreamable(flushPolicy: PartitionedFlushPolicy.None)
+                    .AlterEventDuration(3);
+
+                // Create Regex for "ABC"
+                var afa = ARegex.Concat(
+                    ARegex.SingleElement<string, string>(
+                        (time, @event, state) => @event == "A",
+                        (time, @event, state) => state + @event),
+                    ARegex.SingleElement<string, string>(
+                        (time, @event, state) => @event == "B",
+                        (time, @event, state) => state + @event));
+                var afaStreamable = source.Detect(
+                        afa,
+                        allowOverlappingInstances: false,
+                        isDeterministic: false);
+                afaStreamable.Properties.IsSyncTimeSimultaneityFree = true;
+
+                var result = afaStreamable
+                    .ToStreamEventObservable()
+                    .ToEnumerable()
+                    .ToArray();
+                var expected = new PartitionedStreamEvent<int, string>[]
+                {
+                    PartitionedStreamEvent.CreateInterval(0, 1, 3, "AB"),
+                    PartitionedStreamEvent.CreateInterval(0, 4, 6, "AB"),
+                    isLowWatermark ? PartitionedStreamEvent.CreateLowWatermark<int, string>(6) : PartitionedStreamEvent.CreatePunctuation<int, string>(0, 6),
+                    PartitionedStreamEvent.CreateInterval(0, 7, 9, "AB"),
+                    PartitionedStreamEvent.CreateLowWatermark<int, string>(StreamEvent.InfinitySyncTime),
+                };
+                Assert.IsTrue(result.SequenceEqual(expected));
+
+                longPool.Free();
+            }
         }
     }
 

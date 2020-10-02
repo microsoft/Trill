@@ -290,7 +290,6 @@ namespace Microsoft.StreamProcessing
                                                             dest_vother = this.batch.vother.col;
                                                             destkey = this.batch.key.col;
                                                             dest_hash = this.batch.hash.col;
-
                                                         }
                                                     }
                                                 }
@@ -343,7 +342,14 @@ namespace Microsoft.StreamProcessing
                                         this.batch.hash.col[this.iter] = hash;
                                         this.iter++;
 
-                                        if (this.iter == Config.DataBatchSize) FlushContents();
+                                        if (this.iter == Config.DataBatchSize)
+                                        {
+                                            FlushContents();
+                                            dest_vsync = this.batch.vsync.col;
+                                            dest_vother = this.batch.vother.col;
+                                            destkey = this.batch.key.col;
+                                            dest_hash = this.batch.hash.col;
+                                        }
                                     }
 
                                     this.tentativeOutput.Clear(); // Clear the tentative output list
@@ -351,7 +357,14 @@ namespace Microsoft.StreamProcessing
 
                                 this.lastSyncTime = synctime;
                             }
+
+                            // Update dest_* on punctuation in case this event will hit the batch boundary and allocate a new batch
                             OnPunctuation(synctime);
+
+                            dest_vsync = this.batch.vsync.col;
+                            dest_vother = this.batch.vother.col;
+                            destkey = this.batch.key.col;
+                            dest_hash = this.batch.hash.col;
                         }
                     }
                 }

@@ -279,6 +279,10 @@ public sealed class <#= className #> : CompiledAfaPipeBase<Microsoft.StreamProce
                                     {
                                         FlushContents();
                                         resultBatch = this.batch as <#= resultBatchTypeName #>;
+                                        dest_vsync = this.batch.vsync.col;
+                                        dest_vother = this.batch.vother.col;
+                                        destkey = this.batch.key.col;
+                                        dest_hash = this.batch.hash.col;
                                     }
                                 }
                                 tentativeOutput.Clear(); // Clear the tentative output list
@@ -286,7 +290,13 @@ public sealed class <#= className #> : CompiledAfaPipeBase<Microsoft.StreamProce
                             lastSyncTime = synctime;
                         }
 <#  } #>
+                        // Update dest_* on punctuation in case this event will hit the batch boundary and allocate a new batch
                         OnPunctuation(synctime);
+
+                        dest_vsync = this.batch.vsync.col;
+                        dest_vother = this.batch.vother.col;
+                        destkey = this.batch.key.col;
+                        dest_hash = this.batch.hash.col;
                     }
                 }
             }
