@@ -214,10 +214,10 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
             this.Write(@"> batch)
     {
-        dest_vsync = this.batch.vsync.col;
-        dest_vother = this.batch.vother.col;
-        destkey = this.batch.key.col;
-        dest_hash = this.batch.hash.col;
+        this.dest_vsync = this.batch.vsync.col;
+        this.dest_vother = this.batch.vother.col;
+        this.destkey = this.batch.key.col;
+        this.dest_hash = this.batch.hash.col;
 
         var count = batch.Count;
 
@@ -252,6 +252,10 @@ using Microsoft.StreamProcessing.Internal.Collections;
                         if (src_vother[i] < 0)
                         {
                             OnPunctuation(synctime);
+                            this.dest_vsync = this.batch.vsync.col;
+                            this.dest_vother = this.batch.vother.col;
+                            this.destkey = this.batch.key.col;
+                            this.dest_hash = this.batch.hash.col;
                             continue;
                         }
 

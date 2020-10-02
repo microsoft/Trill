@@ -300,7 +300,6 @@ namespace Microsoft.StreamProcessing
                                                             dest_vother = this.batch.vother.col;
                                                             destkey = this.batch.key.col;
                                                             dest_hash = this.batch.hash.col;
-
                                                         }
                                                     }
                                                 }
@@ -387,7 +386,14 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = hash;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize)
+                                            {
+                                                FlushContents();
+                                                dest_vsync = this.batch.vsync.col;
+                                                dest_vother = this.batch.vother.col;
+                                                destkey = this.batch.key.col;
+                                                dest_hash = this.batch.hash.col;
+                                            }
                                         }
 
                                         // Remove the partition
@@ -398,7 +404,13 @@ namespace Microsoft.StreamProcessing
                                 }
                             }
 
+                            // Update dest_* on low watermark in case this event will hit the batch boundary and allocate a new batch
                             OnLowWatermark(synctime);
+
+                            dest_vsync = this.batch.vsync.col;
+                            dest_vother = this.batch.vother.col;
+                            destkey = this.batch.key.col;
+                            dest_hash = this.batch.hash.col;
                         }
                         else if (src_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
                         {
@@ -430,7 +442,14 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = hash;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize)
+                                            {
+                                                FlushContents();
+                                                dest_vsync = this.batch.vsync.col;
+                                                dest_vother = this.batch.vother.col;
+                                                destkey = this.batch.key.col;
+                                                dest_hash = this.batch.hash.col;
+                                            }
                                         }
 
                                         this.tentativeOutput.entries[partitionIndex].value.Clear(); // Clear the tentative output list
@@ -448,7 +467,14 @@ namespace Microsoft.StreamProcessing
                             this.batch.bitvector.col[this.iter >> 6] |= (1L << (this.iter & 0x3f));
                             this.iter++;
 
-                            if (this.iter == Config.DataBatchSize) FlushContents();
+                            if (this.iter == Config.DataBatchSize)
+                            {
+                                FlushContents();
+                                dest_vsync = this.batch.vsync.col;
+                                dest_vother = this.batch.vother.col;
+                                destkey = this.batch.key.col;
+                                dest_hash = this.batch.hash.col;
+                            }
                         }
                     }
                 }

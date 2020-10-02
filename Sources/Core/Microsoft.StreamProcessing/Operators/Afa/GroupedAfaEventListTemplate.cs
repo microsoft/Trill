@@ -251,26 +251,29 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
             this.Write(", ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
-            this.Write("> batch)\r\n    {\r\n        dest_vsync = this.batch.vsync.col;\r\n        dest_vother " +
-                    "= this.batch.vother.col;\r\n        destkey = this.batch.key.col;\r\n        dest_ha" +
-                    "sh = this.batch.hash.col;\r\n\r\n        var count = batch.Count;\r\n\r\n        var src" +
-                    "key = batch.key.col;\r\n\r\n        fixed (long* src_bv = batch.bitvector.col, src_v" +
-                    "sync = batch.vsync.col, src_vother = batch.vother.col)\r\n        {\r\n            f" +
-                    "ixed (int* src_hash = batch.hash.col)\r\n            {\r\n                for (int i" +
-                    " = 0; i < count; i++)\r\n                {\r\n                    if ((src_bv[i >> 6" +
-                    "] & (1L << (i & 0x3f))) == 0 || src_vother[i] < 0)\r\n                    {\r\n     " +
-                    "                   long synctime = src_vsync[i];\r\n\r\n                        if (" +
-                    "synctime > lastSyncTime) // move time forward\r\n                        {\r\n      " +
-                    "                      ProcessCurrentTimestamp();\r\n                            la" +
-                    "stSyncTime = synctime;\r\n                        }\r\n\r\n                        if " +
-                    "(src_vother[i] < 0)\r\n                        {\r\n                            OnPu" +
-                    "nctuation(synctime);\r\n                            continue;\r\n                   " +
-                    "     }\r\n\r\n                        bool done = false;\r\n                        in" +
-                    "t index, hash;\r\n\r\n                        if (eventListTraverser.Find(src_hash[i" +
-                    "]))\r\n                        {\r\n                            while (eventListTrav" +
-                    "erser.Next(out index))\r\n                            {\r\n                         " +
-                    "       var state = currentTimestampEventList.Values[index];\r\n\r\n                 " +
-                    "               if (");
+            this.Write("> batch)\r\n    {\r\n        this.dest_vsync = this.batch.vsync.col;\r\n        this.de" +
+                    "st_vother = this.batch.vother.col;\r\n        this.destkey = this.batch.key.col;\r\n" +
+                    "        this.dest_hash = this.batch.hash.col;\r\n\r\n        var count = batch.Count" +
+                    ";\r\n\r\n        var srckey = batch.key.col;\r\n\r\n        fixed (long* src_bv = batch." +
+                    "bitvector.col, src_vsync = batch.vsync.col, src_vother = batch.vother.col)\r\n    " +
+                    "    {\r\n            fixed (int* src_hash = batch.hash.col)\r\n            {\r\n      " +
+                    "          for (int i = 0; i < count; i++)\r\n                {\r\n                  " +
+                    "  if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0 || src_vother[i] < 0)\r\n        " +
+                    "            {\r\n                        long synctime = src_vsync[i];\r\n\r\n        " +
+                    "                if (synctime > lastSyncTime) // move time forward\r\n             " +
+                    "           {\r\n                            ProcessCurrentTimestamp();\r\n          " +
+                    "                  lastSyncTime = synctime;\r\n                        }\r\n\r\n       " +
+                    "                 if (src_vother[i] < 0)\r\n                        {\r\n            " +
+                    "                OnPunctuation(synctime);\r\n                            this.dest_" +
+                    "vsync = this.batch.vsync.col;\r\n                            this.dest_vother = th" +
+                    "is.batch.vother.col;\r\n                            this.destkey = this.batch.key." +
+                    "col;\r\n                            this.dest_hash = this.batch.hash.col;\r\n       " +
+                    "                     continue;\r\n                        }\r\n\r\n                   " +
+                    "     bool done = false;\r\n                        int index, hash;\r\n\r\n           " +
+                    "             if (eventListTraverser.Find(src_hash[i]))\r\n                        " +
+                    "{\r\n                            while (eventListTraverser.Next(out index))\r\n     " +
+                    "                       {\r\n                                var state = currentTim" +
+                    "estampEventList.Values[index];\r\n\r\n                                if (");
             this.Write(this.ToStringHelper.ToStringWithCulture(keyEqualityComparer("state.key", "srckey[i]")));
             this.Write(@")
                                 {

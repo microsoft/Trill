@@ -405,6 +405,10 @@ using Microsoft.StreamProcessing.Internal.Collections;
                                         resultBatch = this.batch as ");
             this.Write(this.ToStringHelper.ToStringWithCulture(resultBatchTypeName));
             this.Write(@";
+                                        dest_vsync = this.batch.vsync.col;
+                                        dest_vother = this.batch.vother.col;
+                                        destkey = this.batch.key.col;
+                                        dest_hash = this.batch.hash.col;
                                     }
 
                                 }
@@ -414,8 +418,18 @@ using Microsoft.StreamProcessing.Internal.Collections;
                         }
 ");
   } 
-            this.Write("                        OnPunctuation(synctime);\r\n                    }\r\n        " +
-                    "        }\r\n            }\r\n        }\r\n        ");
+            this.Write(@"                        // Update dest_* on punctuation in case this event will hit the batch boundary and allocate a new batch
+                        OnPunctuation(synctime);
+
+                        dest_vsync = this.batch.vsync.col;
+                        dest_vother = this.batch.vother.col;
+                        destkey = this.batch.key.col;
+                        dest_hash = this.batch.hash.col;
+                    }
+                }
+            }
+        }
+        ");
  foreach (var f in this.sourceFields) { 
             this.Write("            ");
             this.Write(this.ToStringHelper.ToStringWithCulture(EndColumnPointerDeclaration(f)));

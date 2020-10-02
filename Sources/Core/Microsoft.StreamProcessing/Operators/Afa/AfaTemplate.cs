@@ -45,8 +45,8 @@ this.Write(");\r\ntentativeOutput.Values[ind].other = Math.Min(");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(otherTime));
 
-this.Write(" + MaxDuration, StreamEvent.InfinitySyncTime);;\r\ntentativeOutput.Values[ind].key " +
-        "= ");
+this.Write(" + MaxDuration, StreamEvent.InfinitySyncTime);\r\ntentativeOutput.Values[ind].key =" +
+        " ");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(keyValue));
 
@@ -65,7 +65,7 @@ this.Write(";\r\ndest_vother[iter] = Math.Min(");
 
 this.Write(this.ToStringHelper.ToStringWithCulture(otherTime));
 
-this.Write(" + MaxDuration, StreamEvent.InfinitySyncTime);;\r\n");
+this.Write(" + MaxDuration, StreamEvent.InfinitySyncTime);\r\n");
 
 
             if (this.noPublicResultFields) {
