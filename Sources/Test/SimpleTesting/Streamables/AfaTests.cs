@@ -844,16 +844,21 @@ namespace SimpleTesting
         {
             var source = new StreamEvent<Tuple<string, int>>[]
             {
-                 StreamEvent.CreateStart(0, new Tuple<string, int>("A", 1)),
+                StreamEvent.CreateStart(0, new Tuple<string, int>("A", 1)),
                     StreamEvent.CreateStart(1, new Tuple<string, int>("A", 2)),
                     StreamEvent.CreateStart(1, new Tuple<string, int>("B", 2)),
-                 StreamEvent.CreateStart(3, new Tuple<string, int>("A", 1)),
-                 StreamEvent.CreateStart(4, new Tuple<string, int>("B", 1)),
+                StreamEvent.CreateStart(3, new Tuple<string, int>("A", 1)),
+
+                StreamEvent.CreatePunctuation<Tuple<string, int>>(4),
+
+                StreamEvent.CreateStart(4, new Tuple<string, int>("B", 1)),
                     StreamEvent.CreateStart(4, new Tuple<string, int>("B", 2)),
-                 StreamEvent.CreateStart(5, new Tuple<string, int>("B", 1)),
-                 StreamEvent.CreateStart(5, new Tuple<string, int>("C", 1)),
+                StreamEvent.CreateStart(5, new Tuple<string, int>("B", 1)),
+                StreamEvent.CreateStart(5, new Tuple<string, int>("C", 1)),
                     StreamEvent.CreateStart(6, new Tuple<string, int>("B", 2)),
                     StreamEvent.CreateStart(7, new Tuple<string, int>("A", 2)),
+
+                StreamEvent.CreatePunctuation<Tuple<string, int>>(7),
             }.ToObservable()
                 .ToStreamable()
                 .AlterEventDuration(10);
@@ -881,18 +886,21 @@ namespace SimpleTesting
 
             var result = afa_compiled
                 .ToStreamEventObservable()
-                .Where(evt => evt.IsData)
                 .ToEnumerable()
                 .ToArray();
             var expected = new StreamEvent<Tuple<string, int>>[]
             {
                 StreamEvent.CreateInterval(1, 11, new Tuple<string, int>("AB", 2)),
+                StreamEvent.CreatePunctuation<Tuple<string, int>>(4),
                 StreamEvent.CreateInterval(4, 13, new Tuple<string, int>("AB", 1)),
                 StreamEvent.CreateInterval(4, 10, new Tuple<string, int>("AAB", 1)),
                 StreamEvent.CreateInterval(4, 11, new Tuple<string, int>("ABB", 2)),
                 StreamEvent.CreateInterval(5, 13, new Tuple<string, int>("ABB", 1)),
                 StreamEvent.CreateInterval(5, 10, new Tuple<string, int>("AABB", 1)),
                 StreamEvent.CreateInterval(6, 11, new Tuple<string, int>("ABBB", 2)),
+                StreamEvent.CreatePunctuation<Tuple<string, int>>(7),
+
+                StreamEvent.CreatePunctuation<Tuple<string, int>>(StreamEvent.InfinitySyncTime),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
