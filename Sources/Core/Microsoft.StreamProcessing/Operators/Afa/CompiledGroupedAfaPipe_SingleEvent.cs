@@ -320,10 +320,10 @@ namespace Microsoft.StreamProcessing
                                 if (this.IsDeterministic) break; // We are guaranteed to have only one start state
                             }
                         }
-                        else if (batch.vother.col[i] < 0 && !this.IsSyncTimeSimultaneityFree)
+                        else if (batch.vother.col[i] < 0)
                         {
                             long synctime = src_vsync[i];
-                            if (synctime > this.lastSyncTime) // move time forward
+                            if (!this.IsSyncTimeSimultaneityFree && synctime > this.lastSyncTime) // move time forward
                             {
                                 this.seenEvent.Clear();
 
