@@ -249,15 +249,26 @@ namespace Microsoft.StreamProcessing
 
         protected override void UpdatePointers()
         {
+            // This method restores the member 'this.orderedKeysDictionary'
+            // The dictionary is not serializable because of the LinkedList value type,
+            // and hence it does not have [DataMember] attribute
             int iter = FastDictionary<TKey, long>.IteratorStart;
             var temp = new List<Tuple<TKey, long, TPartitionKey>>();
             while (this.lastDataTimeDictionary.Iterate(ref iter))
             {
+                var partitionKey = this.getPartitionKey(this.lastDataTimeDictionary.entries[iter].key);
+
                 if (this.stateDictionary.entries[iter].value.Any())
                 {
                     temp.Add(Tuple.Create(
                         this.lastDataTimeDictionary.entries[iter].key,
-                        Math.Min(this.lastDataTimeDictionary.entries[iter].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[iter].value), this.getPartitionKey(this.lastDataTimeDictionary.entries[iter].key)));
+                        Math.Min(this.lastDataTimeDictionary.entries[iter].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[iter].value),
+                        partitionKey));
+                }
+                else if (!this.orderedKeysDictionary.ContainsKey(partitionKey))
+                {
+                    // We still need to restore the empty list - as that was the case just before checkpoint
+                    this.orderedKeysDictionary.Add(partitionKey, new LinkedList<TKey>());
                 }
             }
             foreach (var item in temp.OrderBy(o => o.Item2))
