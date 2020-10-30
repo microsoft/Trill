@@ -617,6 +617,54 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void AfaZeroOrOneGroup()
+        {
+            var source = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateStart(0, "O"),
+                StreamEvent.CreateStart(1, "A"),
+                StreamEvent.CreateStart(2, "A"),
+                StreamEvent.CreateStart(3, "F"),
+                StreamEvent.CreateStart(4, "O"),
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(10);
+
+            // O(A*F)?
+            var afa = ARegex.Concat(
+                        ARegex.SingleElement<string, string>(
+                            (time, @event, state) => @event == "O",
+                            (time, @event, state) => state + @event),
+                        ARegex.ZeroOrOne(
+                            ARegex.Concat(
+                                ARegex.KleeneStar(
+                                    ARegex.SingleElement<string, string>(
+                                        (time, @event, state) => @event == "A",
+                                        (time, @event, state) => state + @event)),
+                                ARegex.SingleElement<string, string>(
+                                    (time, @event, state) => @event == "F",
+                                    (time, @event, state) => state + @event))));
+
+            var result = source
+                .Detect(
+                    afa,
+                    allowOverlappingInstances: false,
+                    isDeterministic: false)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateInterval(0, 10, "O"),
+                StreamEvent.CreateInterval(3, 10, "OAAF"),
+                StreamEvent.CreateInterval(4, 14, "O"),
+            };
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void AfaPunctuationAtBatchBoundary()
         {
             using (new ConfigModifier().DataBatchSize(3).Modify())
@@ -683,54 +731,6 @@ namespace SimpleTesting
                 longPool.Free();
             }
         }
-
-        [TestMethod, TestCategory("Gated")]
-        public void AfaZeroOrOneGroup()
-        {
-            var source = new StreamEvent<string>[]
-            {
-                StreamEvent.CreateStart(0, "O"),
-                StreamEvent.CreateStart(1, "A"),
-                StreamEvent.CreateStart(2, "A"),
-                StreamEvent.CreateStart(3, "F"),
-                StreamEvent.CreateStart(4, "O"),
-            }.ToObservable()
-                .ToStreamable()
-                .AlterEventDuration(10);
-
-            // O(A*F)?
-            var afa = ARegex.Concat(
-                        ARegex.SingleElement<string, string>(
-                            (time, @event, state) => @event == "O",
-                            (time, @event, state) => state + @event),
-                        ARegex.ZeroOrOne(
-                            ARegex.Concat(
-                                ARegex.KleeneStar(
-                                    ARegex.SingleElement<string, string>(
-                                        (time, @event, state) => @event == "A",
-                                        (time, @event, state) => state + @event)),
-                                ARegex.SingleElement<string, string>(
-                                    (time, @event, state) => @event == "F",
-                                    (time, @event, state) => state + @event))));
-
-            var result = source
-                .Detect(
-                    afa,
-                    allowOverlappingInstances: false,
-                    isDeterministic: false)
-                .ToStreamEventObservable()
-                .Where(evt => evt.IsData)
-                .ToEnumerable()
-                .ToArray();
-            var expected = new StreamEvent<string>[]
-            {
-                StreamEvent.CreateInterval(0, 10, "O"),
-                StreamEvent.CreateInterval(3, 10, "OAAF"),
-                StreamEvent.CreateInterval(4, 14, "O"),
-            };
-
-            Assert.IsTrue(result.SequenceEqual(expected));
-        }
     }
 
     /// <summary>
@@ -771,8 +771,7 @@ namespace SimpleTesting
                     (time, @event, state) => state + @event));
 
             var afa_compiled = source
-                .Detect(
-                    afa);
+                .Detect(afa);
             afa_compiled.Properties.IsSyncTimeSimultaneityFree = true;
 
             var result = afa_compiled
@@ -819,8 +818,7 @@ namespace SimpleTesting
                         (time, @event, state) => state + @event)));
 
             var afa_compiled = source
-                .Detect(
-                    afa);
+                .Detect(afa);
             afa_compiled.Properties.IsSyncTimeSimultaneityFree = true;
 
             var result = afa_compiled
@@ -927,11 +925,11 @@ namespace SimpleTesting
             var afa_compiled = source.GroupApply(
                 (input) => input.Item2,
                 group =>
-                    {
-                        var afaGroup = group.Detect(afa, maxDuration: 10);
-                        afaGroup.Properties.IsSyncTimeSimultaneityFree = true;
-                        return afaGroup;
-                    },
+                {
+                    var afaGroup = group.Detect(afa, maxDuration: 10);
+                    afaGroup.Properties.IsSyncTimeSimultaneityFree = true;
+                    return afaGroup;
+                },
                 (group, bind) => bind);
 
             var result = afa_compiled
@@ -1049,9 +1047,7 @@ namespace SimpleTesting
                                 (time, @event, state) => state + @event));
 
             var afa_compiled = source
-                .Detect(
-                    afa,
-                    maxDuration: 7);
+                .Detect(afa, maxDuration: 7);
 
             afa_compiled.Properties.IsSyncTimeSimultaneityFree = true;
 
@@ -1097,9 +1093,7 @@ namespace SimpleTesting
                                     (time, @event, state) => state + @event)));
 
             var result = source
-                .Detect(
-                    afa,
-                    maxDuration: 4)
+                .Detect(afa, maxDuration: 4)
                 .ToStreamEventObservable()
                 .Where(evt => evt.IsData)
                 .ToEnumerable()
@@ -1143,9 +1137,7 @@ namespace SimpleTesting
                                     (time, @event, state) => state + @event)));
 
             var result = source
-                .Detect(
-                    afa,
-                    maxDuration: 7)
+                .Detect(afa, maxDuration: 7)
                 .ToStreamEventObservable()
                 .Where(evt => evt.IsData)
                 .ToEnumerable()
@@ -1158,6 +1150,65 @@ namespace SimpleTesting
                 PartitionedStreamEvent.CreateInterval(1, 5, 7, "ABBBB"),
                 PartitionedStreamEvent.CreateInterval(1, 12, 18, "AB"),
                 PartitionedStreamEvent.CreateInterval(1, 13, 18, "ABB"),
+            };
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        internal class State
+        {
+            // This cannot be an enum because we want represent a concatinated state in terms of digits in int value
+            public const int A = 1;
+            public const int B = 2;
+            public const int C = 3;
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void AfaZeroOrOneWithStartEvent()
+        {
+            var source = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateStart(0, State.A),
+                StreamEvent.CreateStart(1, State.C),
+                StreamEvent.CreateStart(2, State.B),
+                StreamEvent.CreateStart(3, State.B),
+                StreamEvent.CreateStart(4, State.C),
+                StreamEvent.CreateStart(5, State.A),
+                StreamEvent.CreateStart(6, State.B),
+                StreamEvent.CreateStart(7, State.B),
+                StreamEvent.CreateStart(8, State.B),
+                StreamEvent.CreateStart(9, State.A),
+            }.ToObservable()
+                .ToStreamable()
+                .SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime);
+
+            // Assert we are actually testing columnar
+            Assert.IsTrue(source.Properties.IsColumnar);
+
+            var afa = ARegex.Concat(
+                ARegex.SingleElement<int, int>(
+                    (time, @event, state) => @event == State.A,
+                    (time, @event, state) => @event),
+                ARegex.ZeroOrOne(
+                    ARegex.SingleElement<int, int>(
+                        (time, @event, state) => @event == State.B,
+                        (time, @event, state) => state * 10 + @event)));
+
+            var result = source
+                .Detect(
+                    afa,
+                    allowOverlappingInstances: false,
+                    isDeterministic: false)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+
+            var expected = new StreamEvent<int>[]
+            {
+                StreamEvent.CreateStart(0, State.A),
+                StreamEvent.CreateStart(5, State.A),
+                StreamEvent.CreateStart(6, State.A * 10 + State.B),
+                StreamEvent.CreateStart(9, State.A),
             };
             Assert.IsTrue(result.SequenceEqual(expected));
         }
