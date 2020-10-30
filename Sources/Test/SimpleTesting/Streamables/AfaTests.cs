@@ -617,6 +617,54 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void AfaZeroOrOneGroup()
+        {
+            var source = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateStart(0, "O"),
+                StreamEvent.CreateStart(1, "A"),
+                StreamEvent.CreateStart(2, "A"),
+                StreamEvent.CreateStart(3, "F"),
+                StreamEvent.CreateStart(4, "O"),
+            }.ToObservable()
+                .ToStreamable()
+                .AlterEventDuration(10);
+
+            // O(A*F)?
+            var afa = ARegex.Concat(
+                        ARegex.SingleElement<string, string>(
+                            (time, @event, state) => @event == "O",
+                            (time, @event, state) => state + @event),
+                        ARegex.ZeroOrOne(
+                            ARegex.Concat(
+                                ARegex.KleeneStar(
+                                    ARegex.SingleElement<string, string>(
+                                        (time, @event, state) => @event == "A",
+                                        (time, @event, state) => state + @event)),
+                                ARegex.SingleElement<string, string>(
+                                    (time, @event, state) => @event == "F",
+                                    (time, @event, state) => state + @event))));
+
+            var result = source
+                .Detect(
+                    afa,
+                    allowOverlappingInstances: false,
+                    isDeterministic: false)
+                .ToStreamEventObservable()
+                .Where(evt => evt.IsData)
+                .ToEnumerable()
+                .ToArray();
+            var expected = new StreamEvent<string>[]
+            {
+                StreamEvent.CreateInterval(0, 10, "O"),
+                StreamEvent.CreateInterval(3, 10, "OAAF"),
+                StreamEvent.CreateInterval(4, 14, "O"),
+            };
+
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void AfaPunctuationAtBatchBoundary()
         {
             using (new ConfigModifier().DataBatchSize(3).Modify())
