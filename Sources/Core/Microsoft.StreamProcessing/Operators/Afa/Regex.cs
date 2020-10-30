@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace Microsoft.StreamProcessing
@@ -774,8 +775,22 @@ namespace Microsoft.StreamProcessing
 
             if (!result.finalStates.Contains(result.StartState))
             {
-                result.finalStates.Add(result.StartState);
+                // We need to mark the starting state as final to cover the "zero" case.
+                // However, if there is any loop back to the starting state, we can't just mark the original pattern's
+                // start state as final, or else the afa could produce several matches for the "zero" case. So if any
+                // state can transition back to the start, prepend an epsilon arc before marking the final result's
+                // start state as final.
+                if (result.transitionInfo.Any(transitionInfo => transitionInfo.Value.ContainsKey(result.StartState)))
+                {
+                    var zeroCaseEpsilon = Afa.Create<TInput, TRegister, TAccumulator>();
+                    zeroCaseEpsilon.AddArc(0, 1, new EpsilonArc<TInput, TRegister> { });
+                    zeroCaseEpsilon.AddFinalState(1);
+                    result = Concat(zeroCaseEpsilon, pattern);
+                }
+
+                result.AddFinalState(result.StartState);
             }
+
             return result;
         }
         #endregion
