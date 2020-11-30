@@ -355,7 +355,7 @@ namespace Microsoft.StreamProcessing
                                     this.tentativeOutput.Clear(); // Clear the tentative output list
                                 }
 
-                                this.lastSyncTime = synctime;
+                                this.lastSyncTime = synctime; // BUG! should be done regardless of !IsSyncTimeSimultaneityFree
                             }
 
                             // Update dest_* on punctuation in case this event will hit the batch boundary and allocate a new batch

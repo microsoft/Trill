@@ -113,7 +113,7 @@ internal sealed class <#= className #><#= genericParameters #> :
 <# } #>
 
 <# if (!ungroupingToUnit) { #>
-
+        outPool.GetKey(out tmp.key);
         tmp.hash = batch.hash.MakeWritable(outPool.intPool);
 <# } #>
         var count = batch.Count;

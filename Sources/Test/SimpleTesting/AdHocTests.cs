@@ -1214,6 +1214,52 @@ namespace SimpleTesting
             };
             Assert.IsTrue(expected.SequenceEqual(output));
         }
+
+        public struct Payload
+        {
+            public string Name;
+            public string GroupId;
+            public double Reading;
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void ColumnarUngroupNullRefRepro()
+        {
+            var input = new StreamEvent<Payload>[]
+            {
+                StreamEvent.CreatePoint(1, new Payload { GroupId = "GA", Name = "A", Reading = 1 }),
+                StreamEvent.CreatePoint(2, new Payload { GroupId = "GA", Name = "B", Reading = 2 }),
+                StreamEvent.CreatePoint(3, new Payload { GroupId = "GA", Name = "C", Reading = 3 }),
+            };
+
+            var qc = new QueryContainer();
+            var ingress = qc.RegisterInput(
+                input
+                    .ToStreamable()
+                    .GroupApply(
+                        e => e.GroupId,
+                        byGroup => byGroup.GroupApply(
+                            b => b.Name,
+                            byName => byName
+                                .TumblingWindowLifetime(5)
+                                .Average(e => e.Reading),
+                            (g, avg) => new Payload { Name = g.Key, Reading = avg }),
+                        (g, byNamePayload) => new Payload { GroupId = g.Key, Name = byNamePayload.Name, Reading = byNamePayload.Reading })
+                    .ToStreamEventObservable());
+            var output = new List<StreamEvent<Payload>>();
+            var egress = qc.RegisterOutput(ingress).Where(e => e.IsData).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+            process.Flush();
+            egress.Wait();
+
+            var expected = new StreamEvent<Payload>[]
+            {
+                StreamEvent.CreateInterval(5, 10, new Payload { GroupId = "GA", Name = "A", Reading = 1 }),
+                StreamEvent.CreateInterval(5, 10, new Payload { GroupId = "GA", Name = "B", Reading = 2 }),
+                StreamEvent.CreateInterval(5, 10, new Payload { GroupId = "GA", Name = "C", Reading = 3 }),
+            };
+            CollectionAssert.AreEquivalent(expected, output);
+        }
     }
 
     [TestClass]
