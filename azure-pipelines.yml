@@ -2,7 +2,7 @@ variables:
   solution: 'Sources/Trill.sln'
 
 jobs:
-- job: 'CSharp_Windows'  
+- job: 'CSharp_Windows'
   pool:
     vmImage: windows-latest
   displayName: 'C# (Windows)'
@@ -22,9 +22,11 @@ jobs:
       x64-Release:
         buildPlatform: 'x64'
         buildConfiguration: 'Release'
-  
+
   steps:
   - task: NuGetToolInstaller@0
+    inputs:
+      versionSpec: '5.8.0'
 
   - task: NuGetCommand@2
     inputs:
