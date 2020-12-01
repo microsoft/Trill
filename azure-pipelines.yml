@@ -4,7 +4,7 @@ variables:
 jobs:
 - job: 'CSharp_Windows'  
   pool:
-    vmImage: windows-latest
+    vmImage: windows-latest   
   displayName: 'C# (Windows)'
 
   strategy:
@@ -25,6 +25,8 @@ jobs:
   
   steps:
   - task: NuGetToolInstaller@0
+    inputs:
+      versionSpec: '5.8.0'
 
   - task: NuGetCommand@2
     inputs:
