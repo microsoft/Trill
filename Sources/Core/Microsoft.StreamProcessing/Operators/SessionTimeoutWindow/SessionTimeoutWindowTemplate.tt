@@ -1,0 +1,305 @@
+﻿<#@ template language="C#" inherits="CommonUnaryTemplate" visibility="internal" linePragmas="false" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+// *********************************************************************
+// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Licensed under the MIT License
+// *********************************************************************
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Threading;
+using Microsoft.StreamProcessing;
+using Microsoft.StreamProcessing.Aggregates;
+using Microsoft.StreamProcessing.Internal;
+using Microsoft.StreamProcessing.Internal.Collections;
+
+// TKey: <#= TKey #>
+// TPayload: <#= TPayload #>
+
+[DataContract]
+internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : UnaryPipe<<#= TKey #>, <#= TPayload #>, <#= TPayload #>>
+{
+    private readonly MemoryPool<<#= TKey #>, <#= TPayload #>> pool;
+    private readonly Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator;
+
+    [SchemaSerialization]
+    private readonly long sessionTimeout;
+    [SchemaSerialization]
+    private readonly long maximumDuration;
+
+    private StreamMessage<<#= TKey #>, <#= TPayload #>> genericOutputBatch;
+    [DataMember]
+    private <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> output;
+
+    private LinkedList<<#= TKey #>> orderedKeys = new LinkedList<<#= TKey #>>();
+    [DataMember]
+    private FastDictionary2<<#= TKey #>, long> windowEndTimeDictionary = new FastDictionary2<<#= TKey #>, long>();
+    [DataMember]
+    private FastDictionary2<<#= TKey #>, long> lastDataTimeDictionary = new FastDictionary2<<#= TKey #>, long>();
+    [DataMember]
+    private FastDictionary2<<#= TKey #>, Queue<ActiveEvent>> stateDictionary = new FastDictionary2<<#= TKey #>, Queue<ActiveEvent>>();
+
+    <#= staticCtor #>
+
+    [Obsolete("Used only by serialization. Do not call directly.")]
+    public <#= className #>() { }
+
+    public <#= className #>(
+        IStreamable<<#= TKey #>, <#= TPayload #>> stream,
+        IStreamObserver<<#= TKey #>, <#= TPayload #>> observer,
+        Func<PlanNode, IQueryObject, PlanNode> queryPlanGenerator,
+        long sessionTimeout,
+        long maximumDuration)
+        : base(stream, observer)
+    {
+        this.sessionTimeout = sessionTimeout;
+        this.maximumDuration = maximumDuration;
+        pool = MemoryManager.GetMemoryPool<<#= TKey #>, <#= TPayload #>>(true /*stream.Properties.IsColumnar*/);
+        this.queryPlanGenerator = queryPlanGenerator;
+        GetOutputBatch();
+    }
+
+    private void GetOutputBatch()
+    {
+        pool.Get(out genericOutputBatch);
+        genericOutputBatch.Allocate();
+        output = (<#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>)genericOutputBatch;
+<# foreach (var f in this.fields.Where(fld => fld.OptimizeString())) {  #>
+
+        output.<#= f.Name #>.Initialize();
+<# } #>
+   }
+
+    public override void ProduceQueryPlan(PlanNode previous)
+    {
+        Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
+    }
+
+    private void ReachTime(int pIndex, long timestamp)
+    {
+        if (pIndex != -1 && maximumDuration < StreamEvent.InfinitySyncTime)
+        {
+            if (windowEndTimeDictionary.entries[pIndex].value == StreamEvent.InfinitySyncTime)
+            {
+                long mod = timestamp % maximumDuration;
+                windowEndTimeDictionary.entries[pIndex].value = timestamp - mod + ((mod == 0 ? 1 : 2) * maximumDuration);
+            }
+            else if (windowEndTimeDictionary.entries[pIndex].value == StreamEvent.MaxSyncTime)
+            {
+                windowEndTimeDictionary.entries[pIndex].value = timestamp - (timestamp % maximumDuration) + maximumDuration;
+            }
+        }
+
+        var current = orderedKeys.First;
+        while (current != null)
+        {
+            int cIndex;
+            lastDataTimeDictionary.Lookup(current.Value, out cIndex);
+            var threshhold = lastDataTimeDictionary.entries[cIndex].value == long.MinValue
+                ? windowEndTimeDictionary.entries[cIndex].value
+                : Math.Min(lastDataTimeDictionary.entries[cIndex].value + sessionTimeout, windowEndTimeDictionary.entries[cIndex].value);
+            if (timestamp >= threshhold)
+            {
+                var queue = stateDictionary.entries[cIndex].value;
+                while (queue.Any())
+                {
+                    var active = queue.Dequeue();
+
+                    int ind = output.Count++;
+                    output.vsync.col[ind] = threshhold;
+                    output.vother.col[ind] = active.Sync;
+                    output.key.col[ind] = active.Key;
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+
+                    output.<#= f.Name #>.AddString(active.<#= f.Name #>);
+<#       } else { #>
+                    output.<#= f.Name #>.col[ind] = active.<#= f.Name #>;
+<#       } #>
+<#     } #>
+                    output.hash.col[ind] = active.Hash;
+
+                    if (output.Count == Config.DataBatchSize) FlushContents();
+                }
+                if (timestamp < lastDataTimeDictionary.entries[cIndex].value + sessionTimeout)
+                    windowEndTimeDictionary.entries[cIndex].value = StreamEvent.MaxSyncTime;
+                else
+                {
+                    windowEndTimeDictionary.Remove(current.Value);
+                    lastDataTimeDictionary.Remove(current.Value);
+                    stateDictionary.Remove(current.Value);
+                }
+                orderedKeys.RemoveFirst();
+                current = orderedKeys.First;
+            }
+            else break;
+        }
+    }
+
+    private int AllocatePartition(<#= TKey #> pKey)
+    {
+        windowEndTimeDictionary.Insert(pKey, StreamEvent.InfinitySyncTime);
+        lastDataTimeDictionary.Insert(pKey, long.MinValue);
+        return stateDictionary.Insert(pKey, new Queue<ActiveEvent>());
+    }
+
+    public override unsafe void OnNext(StreamMessage<<#= TKey #>, <#= TPayload #>> genericBatch)
+    {
+        var batch = genericBatch as <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #>;
+        var count = batch.Count;
+
+        fixed (long* bv = batch.bitvector.col)
+        fixed (long* vsync = batch.vsync.col)
+        fixed (long* vother = batch.vother.col)
+        fixed (int* hash = batch.hash.col)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
+                {
+                    if (vsync[i] > vother[i]) // We have an end edge
+                    {
+                        ReachTime(-1, vsync[i]);
+                    }
+                    else
+                    {
+                        // Check to see if the key is already being tracked
+                        int keyIndex;
+                        if (!lastDataTimeDictionary.Lookup(batch.key.col[i], out keyIndex))
+                            keyIndex = AllocatePartition(batch.key.col[i]);
+                        ReachTime(keyIndex, vsync[i]);
+
+                        // Check to see if advancing time removed the key
+                        if (!lastDataTimeDictionary.Lookup(batch.key.col[i], out keyIndex))
+                            keyIndex = AllocatePartition(batch.key.col[i]);
+
+                        if (!stateDictionary.entries[keyIndex].value.Any()) orderedKeys.AddLast(new LinkedListNode<<#= TKey #>>(batch.key.col[i]));
+                        else
+                        {
+                            var oldThreshhold = Math.Min(lastDataTimeDictionary.entries[keyIndex].value + sessionTimeout, windowEndTimeDictionary.entries[keyIndex].value);
+                            var newThreshhold = Math.Min(vsync[i] + sessionTimeout, windowEndTimeDictionary.entries[keyIndex].value);
+                            if (newThreshhold > oldThreshhold)
+                            {
+                                var node = orderedKeys.Find(batch.key.col[i]);
+                                orderedKeys.Remove(node);
+                                orderedKeys.AddLast(node);
+                            }
+                        }
+                        lastDataTimeDictionary.entries[keyIndex].value = vsync[i];
+                        var activeEvent = new ActiveEvent();
+                        activeEvent.Populate(batch.key.col[i], batch, i, hash[i], vsync[i]);
+                        stateDictionary.entries[keyIndex].value.Enqueue(activeEvent);
+
+                        int ind = output.Count++;
+                        output.vsync.col[ind] = vsync[i];
+                        output.vother.col[ind] = StreamEvent.InfinitySyncTime;
+                        output.key.col[ind] = batch.key.col[i];
+<#     foreach (var f in this.fields) { #>
+<#       if (f.OptimizeString()) { #>
+                        output.<#= f.Name #>.AddString(batch.<#= f.Name #>[i]);
+<#       } else { #>
+                        output.<#= f.Name #>.col[ind] = batch.<#= f.Name #>.col[i];
+<#       } #>
+<#     } #>
+                        output.hash.col[ind] = hash[i];
+
+                        if (output.Count == Config.DataBatchSize) FlushContents();
+                    }
+                }
+                else if (vother[i] == long.MinValue)
+                {
+                    ReachTime(-1, vsync[i]);
+
+                    int ind = output.Count++;
+                    output.vsync.col[ind] = vsync[i];
+                    output.vother.col[ind] = long.MinValue;
+                    output.key.col[ind] = default;
+                    output[ind] = default;
+                    output.hash.col[ind] = hash[i];
+                    output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
+
+                    if (output.Count == Config.DataBatchSize) FlushContents();
+                }
+            }
+        }
+
+        batch.Free();
+    }
+
+    protected override void UpdatePointers()
+    {
+        int iter = FastDictionary<<#= TKey #>, long>.IteratorStart;
+        List<Tuple<<#= TKey #>, long>> temp = new List<Tuple<<#= TKey #>, long>>();
+        while (lastDataTimeDictionary.Iterate(ref iter))
+            if (stateDictionary.entries[iter].value.Any())
+                temp.Add(Tuple.Create(
+                    lastDataTimeDictionary.entries[iter].key,
+                    Math.Min(lastDataTimeDictionary.entries[iter].value + sessionTimeout, windowEndTimeDictionary.entries[iter].value)));
+        foreach (var item in temp.OrderBy(o => o.Item2)) orderedKeys.AddLast(new LinkedListNode<<#= TKey #>>(item.Item1));
+        base.UpdatePointers();
+    }
+
+    protected override void FlushContents()
+    {
+        if (output.Count == 0) return;
+        this.Observer.OnNext(output);
+        GetOutputBatch();
+    }
+
+    protected override void DisposeState()
+    {
+        output.Free();
+        windowEndTimeDictionary.Clear();
+        lastDataTimeDictionary.Clear();
+        stateDictionary.Clear();
+    }
+
+    public override int CurrentlyBufferedOutputCount => output.Count;
+
+    public override int CurrentlyBufferedInputCount
+    {
+        get
+        {
+            int count = 0;
+            int iter = FastDictionary<<#= TKey #>, Queue<ActiveEvent>>.IteratorStart;
+            while (stateDictionary.Iterate(ref iter)) count += stateDictionary.entries[iter].value.Count();
+            return count;
+        }
+    }
+
+    [DataContract]
+    private struct ActiveEvent
+    {
+<# foreach (var f in this.fields) { #>
+        [DataMember]
+        public <#= f.Type.GetCSharpSourceSyntax() #> <#= f.Name #>;
+<# } #>
+        [DataMember]
+        public <#= TKey #> Key;
+        [DataMember]
+        public int Hash;
+        [DataMember]
+        public long Sync;
+
+        public void Populate(<#= TKey #> key, <#= BatchGeneratedFrom_TKey_TPayload #><#= TKeyTPayloadGenericParameters #> batch, int index, int hash, long sync)
+        {
+            this.Key = key;
+<# foreach (var f in this.fields) { #>
+            this.<#= f.Name #> = <#= f.AccessExpressionForRowValue("batch", "index") #>;
+<# } #>
+            this.Hash = hash;
+            this.Sync = sync;
+        }
+
+        public override string ToString()
+        {
+            return "Key='" + Key + "', Payload='"; // + Payload;
+        }
+    }
+}

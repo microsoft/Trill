@@ -10,28 +10,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting
 {
-    public struct MyData
-    {
-        public int field1;
-        public string field2;
-
-        public override string ToString() => $"field1 = {this.field1}, field2 = \"{this.field2}\"";
-    }
-
-    internal struct MyData2
-    {
-        public int field3;
-        public string field4;
-    }
-
-    internal struct MyData3
-    {
-        public int field1;
-        public string field2;
-        public int field3;
-        public string field4;
-    }
-
     [TestClass]
     public class LeftOuterJoinTestsRow : TestWithConfigSettingsAndMemoryLeakDetection
     {

@@ -13,16 +13,13 @@ namespace Microsoft.StreamProcessing
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
                           = new SafeConcurrentDictionary<Tuple<Type, string>>();
 
-        private readonly long sessionTimeout;
-        private readonly long maximumDuration;
+        private readonly long sessionDuration;
 
-        public SessionWindowStreamable(IStreamable<TKey, TPayload> source, long sessionTimeout, long maximumDuration)
+        public SessionWindowStreamable(IStreamable<TKey, TPayload> source, long sessionDuration)
             : base(source, source.Properties)
         {
-            Contract.Assert(sessionTimeout > 0);
-            Contract.Assert(maximumDuration > sessionTimeout);
-            this.sessionTimeout = sessionTimeout;
-            this.maximumDuration = maximumDuration;
+            Contract.Assert(sessionDuration > 0);
+            this.sessionDuration = sessionDuration;
 
             Initialize();
         }
@@ -34,15 +31,15 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.Source.Properties.IsColumnar) return GetPipe(observer);
                 if (typeof(TKey) == typeof(Empty))
-                    return new SessionWindowPipeStateless<TKey, TPayload>(this, observer, this.sessionTimeout, this.maximumDuration);
+                    return new SessionWindowPipeStateless<TKey, TPayload>(this, observer, this.sessionDuration);
                 else
-                    return new SessionWindowPipe<TKey, TPayload>(this, observer, this.sessionTimeout, this.maximumDuration);
+                    return new SessionWindowPipe<TKey, TPayload>(this, observer, this.sessionDuration);
             }
             var outputType = typeof(PartitionedSessionWindowPipe<,,>).MakeGenericType(
                 typeof(TKey),
                 typeof(TPayload),
                 t);
-            return (IStreamObserver<TKey, TPayload>)Activator.CreateInstance(outputType, this, observer, this.sessionTimeout, this.maximumDuration);
+            return (IStreamObserver<TKey, TPayload>)Activator.CreateInstance(outputType, this, observer, this.sessionDuration);
         }
 
         protected override bool CanGenerateColumnar()
@@ -60,9 +57,9 @@ namespace Microsoft.StreamProcessing
             var lookupKey = CacheKey.Create();
 
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => SessionWindowTemplate.Generate(this));
-            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SessionWindowPlanNode(p, o, typeof(TKey), typeof(TPayload), this.sessionTimeout, this.maximumDuration, true, generatedPipeType.Item2));
+            Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new SessionWindowPlanNode(p, o, typeof(TKey), typeof(TPayload), this.sessionDuration, true, generatedPipeType.Item2));
 
-            var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode, this.sessionTimeout, this.maximumDuration);
+            var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, planNode, this.sessionDuration);
             var returnValue = (UnaryPipe<TKey, TPayload, TPayload>)instance;
             return returnValue;
         }

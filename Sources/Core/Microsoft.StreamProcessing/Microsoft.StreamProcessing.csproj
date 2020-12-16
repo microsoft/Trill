@@ -249,8 +249,13 @@
       <LastGenOutput>SelectManyPipe.cs</LastGenOutput>
     </None>
     <None Update="Operators\SessionWindow\SessionWindowTemplate.tt">
-      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
       <LastGenOutput>SessionWindowTemplate.cs</LastGenOutput>
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+    </None>
+    <None Update="Operators\SessionTimeoutWindow\SessionTimeoutWindowTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SessionTimeoutWindowTemplate.cs</LastGenOutput>
       <CustomToolNamespace>Microsoft.StreamProcessing</CustomToolNamespace>
     </None>
     <None Update="Operators\Shuffle\ShufflePipe.tt">
@@ -873,9 +878,14 @@
       <DependentUpon>SelectManyPipe.tt</DependentUpon>
     </Compile>
     <Compile Update="Operators\SessionWindow\SessionWindowTemplate.cs">
+      <DependentUpon>SessionWindowTemplate.tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>SessionWindowTemplate.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Operators\SessionTimeoutWindow\SessionTimeoutWindowTemplate.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SessionTimeoutWindowTemplate.tt</DependentUpon>
     </Compile>
     <Compile Update="Aggregates\AggregateFunctionsTemplate.cs">
       <AutoGen>True</AutoGen>

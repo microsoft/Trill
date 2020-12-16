@@ -7,28 +7,26 @@ using System;
 namespace Microsoft.StreamProcessing
 {
     /// <summary>
-    /// A node in the query plan representing a session window truncation ("SessionTimeoutWindow") operation in the active, running query.
+    /// A node in the query plan representing a session window truncation ("SessionWindow") operation in the active, running query.
     /// </summary>
     public sealed class SessionWindowPlanNode : UnaryPlanNode
     {
         /// <summary>
-        /// Timeout for closing the current session
+        /// Session Window Duration
         /// </summary>
-        public long SessionTimeout { get; }
-
-        /// <summary>
-        /// The max duration of a session timeout window
-        /// </summary>
-        public long MaximumDuration { get; }
+        public long SessionDuration { get; }
 
         internal SessionWindowPlanNode(
-            PlanNode previous, IQueryObject pipe,
-            Type keyType, Type payloadType, long sessionTimeout, long maximumDuration,
-            bool isGenerated, string errorMessages)
+            PlanNode previous,
+            IQueryObject pipe,
+            Type keyType,
+            Type payloadType,
+            long sessionDuration,
+            bool isGenerated,
+            string errorMessages)
             : base(previous, pipe, keyType, payloadType, payloadType, isGenerated, errorMessages)
         {
-            this.SessionTimeout = sessionTimeout;
-            this.MaximumDuration = maximumDuration;
+            this.SessionDuration = sessionDuration;
         }
 
         /// <summary>

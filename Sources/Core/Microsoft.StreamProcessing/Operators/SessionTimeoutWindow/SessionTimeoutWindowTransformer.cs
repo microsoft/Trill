@@ -8,11 +8,11 @@ using System.Reflection;
 
 namespace Microsoft.StreamProcessing
 {
-    internal partial class SessionWindowTemplate
+    internal partial class SessionTimeoutWindowTemplate
     {
         protected static int SessionWindowSequenceNumber = 0;
 
-        private SessionWindowTemplate(string className, Type keyType, Type payloadType)
+        private SessionTimeoutWindowTemplate(string className, Type keyType, Type payloadType)
             : base(className, keyType, payloadType, payloadType) { }
 
         /// <summary>
@@ -25,13 +25,13 @@ namespace Microsoft.StreamProcessing
         /// <returns>
         /// A type that is defined to be a subtype of UnaryPipe&lt;<typeparamref name="TKey"/>,<typeparamref name="TPayload"/>, <typeparamref name="TPayload"/>&gt;.
         /// </returns>
-        internal static Tuple<Type, string> Generate<TKey, TPayload>(SessionWindowStreamable<TKey, TPayload> stream)
+        internal static Tuple<Type, string> Generate<TKey, TPayload>(SessionTimeoutWindowStreamable<TKey, TPayload> stream)
         {
             Contract.Requires(stream != null);
             Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TPayload>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
-            var template = new SessionWindowTemplate(
-                $"GeneratedSessionWindow_{SessionWindowSequenceNumber++}",
+            var template = new SessionTimeoutWindowTemplate(
+                $"GeneratedSessionTimeoutWindow_{SessionWindowSequenceNumber++}",
                 typeof(TKey), typeof(TPayload));
 
             return template.Generate<TKey, TPayload>(typeof(IStreamable<,>));

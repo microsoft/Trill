@@ -183,8 +183,48 @@ namespace Microsoft.StreamProcessing
             Invariant.IsNotNull(source, nameof(source));
 
             if (maxDuration <= 0L) maxDuration = StreamEvent.InfinitySyncTime;
-            return new SessionWindowStreamable<TKey, TPayload>(source, timeout, maxDuration);
+            return new SessionTimeoutWindowStreamable<TKey, TPayload>(source, timeout, maxDuration);
         }
+
+        /// <summary>
+        /// The window type implements sessions with constant duration in Trill. A new session window starts in response
+        /// to, and at the same time as, the next event, and is closed after the specified duration.
+        /// </summary>
+        /// <typeparam name="TKey">Type of (mapping) key in the stream</typeparam>
+        /// <typeparam name="TPayload">Type of payload in the stream</typeparam>
+        /// <param name="source">Input stream</param>
+        /// <param name="sessionDuration">Duration of the session window</param>
+        /// <returns>Result (output) stream</returns>
+        public static IStreamable<TKey, TPayload> SessionWindow<TKey, TPayload>(
+            this IStreamable<TKey, TPayload> source,
+            long sessionDuration)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsPositive(sessionDuration, nameof(sessionDuration));
+
+            return new SessionWindowStreamable<TKey, TPayload>(source, sessionDuration);
+        }
+
+        /*
+        /// <summary>
+        /// The window type implements progressive sessions in Trill. A session window begins at start time of the first
+        /// event received, and is closed after a specified duration.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TPayload"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sessionDuration"></param>
+        /// <returns></returns>
+        public static IStreamable<TKey, TPayload> ProgressiveSessionWindow<TKey, TPayload>(
+            this IStreamable<TKey, TPayload> source,
+            long sessionDuration)
+        {
+            Invariant.IsNotNull(source, nameof(source));
+            Invariant.IsPositive(sessionDuration, nameof(sessionDuration));
+
+            return new ProgressiveSessionWindowStreamable<TKey, TPayload>(source, timeout);
+        }
+        */
 
         /// <summary>
         /// Changes the Ve of each event according to the durationSelector, which is a function of start time
