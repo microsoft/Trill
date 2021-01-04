@@ -282,6 +282,17 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
                             if (found)
                             {
+                                // Track which active states need to be inserted after the current traversal
+                                var newActiveStates = new List<GroupedActiveStateAccumulator<");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TRegister));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TAccumulator));
+            this.Write(@">>();
+
                                 int activeFind_index;
                                 while (activeFindTraverser.Next(out activeFind_index))
                                 {
@@ -298,28 +309,63 @@ using Microsoft.StreamProcessing.Internal.Collections;
  foreach (var sourceNodeInfo in this.edgeInfos) { 
             this.Write("\r\n                                            case ");
             this.Write(this.ToStringHelper.ToStringWithCulture(sourceNodeInfo.Item1));
-            this.Write(" :\r\n                                                ");
+            this.Write(" :\r\n                                            {\r\n                              " +
+                    "                  ");
  foreach (var arcinfo in sourceNodeInfo.Item2) { 
-            this.Write(@"
-                                                if (activeFind_index == -1) activeFind_index = activeStates.Insert(src_hash[i]);
-                                                activeStates.Values[activeFind_index].arcinfo = null /*arcinfo*/;
-                                                activeStates.Values[activeFind_index].key = state.key;
-                                                activeStates.Values[activeFind_index].fromState = state.toState;
-                                                activeStates.Values[activeFind_index].toState = ");
+            this.Write(@"                                                
+
+                                                // Since we will eventually remove this state/index from activeStates, attempt to reuse this index for the outgoing state instead of deleting/re-adding
+                                                // If index is already -1, this means we've already reused the state and must allocate/insert a new index for the outgoing state.
+                                                if (activeFind_index != -1)
+                                                {
+                                                    activeStates.Values[activeFind_index].arcinfo = null;
+                                                    activeStates.Values[activeFind_index].key = state.key;
+                                                    activeStates.Values[activeFind_index].fromState = state.toState;
+                                                    activeStates.Values[activeFind_index].toState = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(arcinfo.TargetNode));
             this.Write(@";
-                                                activeStates.Values[activeFind_index].PatternStartTimestamp = state.PatternStartTimestamp;
-                                                activeStates.Values[activeFind_index].register = state.register;
-                                                activeStates.Values[activeFind_index].accumulator = ");
+                                                    activeStates.Values[activeFind_index].PatternStartTimestamp = state.PatternStartTimestamp;
+                                                    activeStates.Values[activeFind_index].register = state.register;
+                                                    activeStates.Values[activeFind_index].accumulator = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(arcinfo.Initialize("synctime", "state.register")));
-            this.Write(";\r\n                                                activeStates.Values[activeFind" +
-                    "_index].accumulator = ");
+            this.Write(";\r\n                                                    activeStates.Values[active" +
+                    "Find_index].accumulator = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(arcinfo.Accumulate("synctime", "batch[i]", "state.register", "activeStates.Values[activeFind_index].accumulator")));
-            this.Write(";\r\n                                                activeFind_index = -1;\r\n      " +
-                    "                                          ");
+            this.Write(@";
+
+                                                    activeFind_index = -1;
+                                                }
+                                                else
+                                                {
+                                                    // Do not attempt to insert directly into activeStates, as that could corrupt the traversal state.
+                                                    var accumulator = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(arcinfo.Initialize("synctime", "state.register")));
+            this.Write(";\r\n                                                    newActiveStates.Add(new Gr" +
+                    "oupedActiveStateAccumulator<");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TRegister));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TAccumulator));
+            this.Write(@">
+                                                    {
+                                                        arcinfo = null,
+                                                        key = state.key,
+                                                        fromState = state.toState,
+                                                        toState = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(arcinfo.TargetNode));
+            this.Write(@",
+                                                        PatternStartTimestamp = state.PatternStartTimestamp,
+                                                        register = state.register,
+                                                        accumulator = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(arcinfo.Accumulate("synctime", "batch[i]", "state.register", "accumulator")));
+            this.Write(",\r\n                                                    });\r\n                     " +
+                    "                           }\r\n                                                ");
  } 
             this.Write("\r\n                                                break;\r\n                       " +
-                    "                     ");
+                    "                     }\r\n                                            ");
  } 
             this.Write(@"
                                         } // end switch
@@ -327,6 +373,12 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
                                     // Remove current state
                                     if (activeFind_index != -1) activeFindTraverser.Remove();
+                                }
+
+                                // Now that we are done traversing the current active states, add any new ones.
+                                foreach (var newActiveState in newActiveStates)
+                                {
+                                    this.activeStates.Insert(src_hash[i], newActiveState);
                                 }
                             }
 

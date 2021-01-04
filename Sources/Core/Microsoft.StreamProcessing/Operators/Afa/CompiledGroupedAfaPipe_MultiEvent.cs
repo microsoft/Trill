@@ -151,6 +151,8 @@ namespace Microsoft.StreamProcessing
 
                                 if (found)
                                 {
+                                    // Track which active states need to be inserted after the current traversal
+                                    var newActiveStates = new List<GroupedActiveStateAccumulator<TKey, TPayload, TRegister, TAccumulator>>();
                                     while (this.activeFindTraverser.Next(out int activeFind_index))
                                     {
                                         var state = this.activeStates.Values[activeFind_index];
@@ -166,23 +168,47 @@ namespace Microsoft.StreamProcessing
                                                 for (int cnt = 0; cnt < m; cnt++)
                                                 {
                                                     var arcinfo = currentStateMap[cnt];
+                                                    var accumulator = arcinfo.Initialize(synctime, state.register);
 
-                                                    if (activeFind_index == -1) activeFind_index = this.activeStates.Insert(src_hash[i]);
-                                                    this.activeStates.Values[activeFind_index].arcinfo = arcinfo;
-                                                    this.activeStates.Values[activeFind_index].key = state.key;
-                                                    this.activeStates.Values[activeFind_index].fromState = state.toState;
-                                                    this.activeStates.Values[activeFind_index].toState = arcinfo.toState;
-                                                    this.activeStates.Values[activeFind_index].PatternStartTimestamp = state.PatternStartTimestamp;
-                                                    this.activeStates.Values[activeFind_index].register = state.register;
-                                                    this.activeStates.Values[activeFind_index].accumulator = arcinfo.Initialize(synctime, state.register);
-                                                    this.activeStates.Values[activeFind_index].accumulator = arcinfo.Accumulate(synctime, batch.payload.col[i], state.register, this.activeStates.Values[activeFind_index].accumulator);
-                                                    activeFind_index = -1;
+                                                    // Since we will eventually remove this state/index from activeStates, attempt to reuse this index for the outgoing state instead of deleting/re-adding
+                                                    // If index is already -1, this means we've already reused the state and must allocate/insert a new index for the outgoing state.
+                                                    if (activeFind_index != -1)
+                                                    {
+                                                        this.activeStates.Values[activeFind_index].arcinfo = arcinfo;
+                                                        this.activeStates.Values[activeFind_index].key = state.key;
+                                                        this.activeStates.Values[activeFind_index].fromState = state.toState;
+                                                        this.activeStates.Values[activeFind_index].toState = arcinfo.toState;
+                                                        this.activeStates.Values[activeFind_index].PatternStartTimestamp = state.PatternStartTimestamp;
+                                                        this.activeStates.Values[activeFind_index].register = state.register;
+                                                        this.activeStates.Values[activeFind_index].accumulator = arcinfo.Accumulate(synctime, batch.payload.col[i], state.register, accumulator);
+                                                        activeFind_index = -1;
+                                                    }
+                                                    else
+                                                    {
+                                                        // Do not attempt to insert directly into activeStates, as that could corrupt the traversal state.
+                                                        newActiveStates.Add(new GroupedActiveStateAccumulator<TKey, TPayload, TRegister, TAccumulator>
+                                                        {
+                                                            arcinfo = arcinfo,
+                                                            key = state.key,
+                                                            fromState = state.toState,
+                                                            toState = arcinfo.toState,
+                                                            PatternStartTimestamp = state.PatternStartTimestamp,
+                                                            register = state.register,
+                                                            accumulator = arcinfo.Accumulate(synctime, batch.payload.col[i], state.register, accumulator),
+                                                        });
+                                                    }
                                                 }
                                             }
                                         }
 
                                         // Remove current state
                                         if (activeFind_index != -1) this.activeFindTraverser.Remove();
+                                    }
+
+                                    // Now that we are done traversing the current active states, add any new ones.
+                                    foreach (var newActiveState in newActiveStates)
+                                    {
+                                        this.activeStates.Insert(src_hash[i], newActiveState);
                                     }
                                 }
 
