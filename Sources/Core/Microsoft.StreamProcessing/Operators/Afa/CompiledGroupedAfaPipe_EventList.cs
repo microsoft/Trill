@@ -65,6 +65,8 @@ namespace Microsoft.StreamProcessing
                 {
                     int orig_index;
 
+                    // Track which active states need to be inserted after the current traversal
+                    var newActiveStates = new List<GroupedActiveState<TKey, TRegister>>();
                     while (this.activeFindTraverser.Next(out int index))
                     {
                         orig_index = index;
@@ -107,13 +109,28 @@ namespace Microsoft.StreamProcessing
 
                                                 if (this.hasOutgoingArcs[ns])
                                                 {
-                                                    if (index == -1) index = this.activeStates.Insert(el_hash);
-                                                    this.activeStates.Values[index].key = currentList.key;
-                                                    this.activeStates.Values[index].state = ns;
-                                                    this.activeStates.Values[index].register = newReg;
-                                                    this.activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+                                                    // Since we will eventually remove this state/index from activeStates, attempt to reuse this index for the outgoing state instead of deleting/re-adding
+                                                    // If index is already -1, this means we've already reused the state and must allocate/insert a new index for the outgoing state.
+                                                    if (index != -1)
+                                                    {
+                                                        this.activeStates.Values[index].key = currentList.key;
+                                                        this.activeStates.Values[index].state = ns;
+                                                        this.activeStates.Values[index].register = newReg;
+                                                        this.activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
 
-                                                    index = -1;
+                                                        index = -1;
+                                                    }
+                                                    else
+                                                    {
+                                                        // Do not attempt to insert directly into activeStates, as that could corrupt the traversal state.
+                                                        newActiveStates.Add(new GroupedActiveState<TKey, TRegister>
+                                                        {
+                                                            key = currentList.key,
+                                                            state = ns,
+                                                            register = newReg,
+                                                            PatternStartTimestamp = state.PatternStartTimestamp,
+                                                        });
+                                                    }
 
                                                     ended = false;
 
@@ -167,13 +184,28 @@ namespace Microsoft.StreamProcessing
 
                                                 if (this.hasOutgoingArcs[ns])
                                                 {
-                                                    if (index == -1) index = this.activeStates.Insert(el_hash);
-                                                    this.activeStates.Values[index].key = currentList.key;
-                                                    this.activeStates.Values[index].state = ns;
-                                                    this.activeStates.Values[index].register = newReg;
-                                                    this.activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+                                                    // Since we will eventually remove this state/index from activeStates, attempt to reuse this index for the outgoing state instead of deleting/re-adding
+                                                    // If index is already -1, this means we've already reused the state and must allocate/insert a new index for the outgoing state.
+                                                    if (index != -1)
+                                                    {
+                                                        this.activeStates.Values[index].key = currentList.key;
+                                                        this.activeStates.Values[index].state = ns;
+                                                        this.activeStates.Values[index].register = newReg;
+                                                        this.activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
 
-                                                    index = -1;
+                                                        index = -1;
+                                                    }
+                                                    else
+                                                    {
+                                                        // Do not attempt to insert directly into activeStates, as that could corrupt the traversal state.
+                                                        newActiveStates.Add(new GroupedActiveState<TKey, TRegister>
+                                                        {
+                                                            key = currentList.key,
+                                                            state = ns,
+                                                            register = newReg,
+                                                            PatternStartTimestamp = state.PatternStartTimestamp,
+                                                        });
+                                                    }
 
                                                     ended = false;
 
@@ -196,6 +228,12 @@ namespace Microsoft.StreamProcessing
                         }
                         if (index == orig_index) this.activeFindTraverser.Remove();
                         if (this.IsDeterministic) break; // We are guaranteed to have only one active state
+                    }
+
+                    // Now that we are done traversing the current active states, add any new ones.
+                    foreach (var newActiveState in newActiveStates)
+                    {
+                        this.activeStates.Insert(el_hash, newActiveState);
                     }
                 }
 

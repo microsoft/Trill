@@ -206,6 +206,9 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
 
                             if (found)
                             {
+                                // Track which active states need to be inserted after the current traversal
+                                var newActiveStates = new List<GroupedActiveStateAccumulator<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>>();
+
                                 int activeFind_index;
                                 while (activeFindTraverser.Next(out activeFind_index))
                                 {
@@ -219,21 +222,44 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
                                             <# foreach (var sourceNodeInfo in this.edgeInfos) { #>
 
                                             case <#= sourceNodeInfo.Item1 #> :
+                                            {
                                                 <# foreach (var arcinfo in sourceNodeInfo.Item2) { #>
+                                                
 
-                                                if (activeFind_index == -1) activeFind_index = activeStates.Insert(src_hash[i]);
-                                                activeStates.Values[activeFind_index].arcinfo = null /*arcinfo*/;
-                                                activeStates.Values[activeFind_index].key = state.key;
-                                                activeStates.Values[activeFind_index].fromState = state.toState;
-                                                activeStates.Values[activeFind_index].toState = <#= arcinfo.TargetNode #>;
-                                                activeStates.Values[activeFind_index].PatternStartTimestamp = state.PatternStartTimestamp;
-                                                activeStates.Values[activeFind_index].register = state.register;
-                                                activeStates.Values[activeFind_index].accumulator = <#= arcinfo.Initialize("synctime", "state.register") #>;
-                                                activeStates.Values[activeFind_index].accumulator = <#= arcinfo.Accumulate("synctime", "batch[i]", "state.register", "activeStates.Values[activeFind_index].accumulator") #>;
-                                                activeFind_index = -1;
+                                                // Since we will eventually remove this state/index from activeStates, attempt to reuse this index for the outgoing state instead of deleting/re-adding
+                                                // If index is already -1, this means we've already reused the state and must allocate/insert a new index for the outgoing state.
+                                                if (activeFind_index != -1)
+                                                {
+                                                    activeStates.Values[activeFind_index].arcinfo = null;
+                                                    activeStates.Values[activeFind_index].key = state.key;
+                                                    activeStates.Values[activeFind_index].fromState = state.toState;
+                                                    activeStates.Values[activeFind_index].toState = <#= arcinfo.TargetNode #>;
+                                                    activeStates.Values[activeFind_index].PatternStartTimestamp = state.PatternStartTimestamp;
+                                                    activeStates.Values[activeFind_index].register = state.register;
+                                                    activeStates.Values[activeFind_index].accumulator = <#= arcinfo.Initialize("synctime", "state.register") #>;
+                                                    activeStates.Values[activeFind_index].accumulator = <#= arcinfo.Accumulate("synctime", "batch[i]", "state.register", "activeStates.Values[activeFind_index].accumulator") #>;
+
+                                                    activeFind_index = -1;
+                                                }
+                                                else
+                                                {
+                                                    // Do not attempt to insert directly into activeStates, as that could corrupt the traversal state.
+                                                    var accumulator = <#= arcinfo.Initialize("synctime", "state.register") #>;
+                                                    newActiveStates.Add(new GroupedActiveStateAccumulator<<#= TKey #>, <#= TPayload #>, <#= TRegister #>, <#= TAccumulator #>>
+                                                    {
+                                                        arcinfo = null,
+                                                        key = state.key,
+                                                        fromState = state.toState,
+                                                        toState = <#= arcinfo.TargetNode #>,
+                                                        PatternStartTimestamp = state.PatternStartTimestamp,
+                                                        register = state.register,
+                                                        accumulator = <#= arcinfo.Accumulate("synctime", "batch[i]", "state.register", "accumulator") #>,
+                                                    });
+                                                }
                                                 <# } #>
 
                                                 break;
+                                            }
                                             <# } #>
 
                                         } // end switch
@@ -241,6 +267,12 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
 
                                     // Remove current state
                                     if (activeFind_index != -1) activeFindTraverser.Remove();
+                                }
+
+                                // Now that we are done traversing the current active states, add any new ones.
+                                foreach (var newActiveState in newActiveStates)
+                                {
+                                    this.activeStates.Insert(src_hash[i], newActiveState);
                                 }
                             }
 

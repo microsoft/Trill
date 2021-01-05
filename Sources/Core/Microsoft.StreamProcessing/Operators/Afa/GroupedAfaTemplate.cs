@@ -260,7 +260,13 @@ using Microsoft.StreamProcessing.Internal.Collections;
                         if (activeFindTraverser.Find(src_hash[i]))
                         {
                             int index, orig_index;
-
+                            
+                            // Track which active states need to be inserted after the current traversal
+                            var newActiveStates = new List<GroupedActiveState<");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TRegister));
+            this.Write(@">>();
                             while (activeFindTraverser.Next(out index))
                             {
                                 orig_index = index;
@@ -295,15 +301,36 @@ using Microsoft.StreamProcessing.Internal.Collections;
  if (hasOutgoingArcs[ns]) { 
             this.Write(@"
                                                 // target node has outgoing edges
-                                                if (index == -1) index = activeStates.Insert(src_hash[i]);
-                                                activeStates.Values[index].key = srckey[i];
-                                                activeStates.Values[index].state = ");
+                                                // Since we will eventually remove this state/index from activeStates, attempt to reuse this index for the outgoing state instead of deleting/re-adding
+                                                // If index is already -1, this means we've already reused the state and must allocate/insert a new index for the outgoing state.
+                                                if (index != -1)
+                                                {
+                                                    activeStates.Values[index].key = srckey[i];
+                                                    activeStates.Values[index].state = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ns));
             this.Write(@";
-                                                activeStates.Values[index].register = newReg;
-                                                activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+                                                    activeStates.Values[index].register = newReg;
+                                                    activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
 
-                                                index = -1;
+                                                    index = -1;
+                                                }
+                                                else
+                                                {
+                                                    // Do not attempt to insert directly into activeStates, as that could corrupt the traversal state.
+                                                    newActiveStates.Add(new GroupedActiveState<");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TRegister));
+            this.Write(">\r\n                                                    {\r\n                       " +
+                    "                                 key = srckey[i],\r\n                             " +
+                    "                           state = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(ns));
+            this.Write(@",
+                                                        register = newReg,
+                                                        PatternStartTimestamp = state.PatternStartTimestamp,
+                                                    });
+                                                }
+
                                                 ended = false;
                                                 ");
  } else { 
@@ -323,6 +350,12 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
                                 }
                                 if (index == orig_index) activeFindTraverser.Remove();
+                            }
+                            
+                            // Now that we are done traversing the current active states, add any new ones.
+                            foreach (var newActiveState in newActiveStates)
+                            {
+                                this.activeStates.Insert(src_hash[i], newActiveState);
                             }
                         }
 

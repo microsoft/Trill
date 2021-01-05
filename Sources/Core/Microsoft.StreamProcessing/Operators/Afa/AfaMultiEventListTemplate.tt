@@ -188,6 +188,8 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
 
 <# if (grouped) { #>
 
+                // Track which active states need to be inserted after the current traversal
+                var newActiveStates = new List<GroupedActiveState<<#= TKey #>, <#= TRegister #>>>();
                 while (activeFindTraverser.Next(out index))
 <# } else { #>
             if (activeStatesTraverser.Find())
@@ -196,10 +198,9 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
 <# } #>
                 {
                     orig_index = index;
-
+                    
                     var state = activeStates.Values[index];
 <# if (grouped) { #>
-
                     if (!(<#= keyEqualityComparer("state.key", "currentList.key") #>)) continue;
 <# } #>
 
@@ -268,17 +269,39 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
                                     <# if (hasOutgoingArcs[ns]) { #>
 
                                     {
-                                        // target node has outgoing edges
-                                        if (index == -1) index = activeStates.Insert(<#= grouped ? "el_hash" : string.Empty #>);
 <# if (grouped) { #>
+                                        // target node has outgoing edges
+                                        // Since we will eventually remove this state/index from activeStates, attempt to reuse this index for the outgoing state instead of deleting/re-adding
+                                        // If index is already -1, this means we've already reused the state and must allocate/insert a new index for the outgoing state.
+                                        if (index != -1)
+                                        {
+                                            activeStates.Values[index].key = currentList.key;
+                                            activeStates.Values[index].state = <#= ns #>;
+                                            activeStates.Values[index].register = newReg;
+                                            activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
 
-                                        activeStates.Values[index].key = currentList.key;
-<# } #>
+                                            index = -1;
+                                        }
+                                        else
+                                        {
+                                            // Do not attempt to insert directly into activeStates, as that could corrupt the traversal state.
+                                            newActiveStates.Add(new GroupedActiveState<<#= TKey #>, <#= TRegister #>>
+                                            {
+                                                key = currentList.key,
+                                                state = <#= ns #>,
+                                                register = newReg,
+                                                PatternStartTimestamp = state.PatternStartTimestamp,
+                                            });
+                                        }
+<# } else { #>
+                                        // target node has outgoing edges
+                                        if (index == -1) index = activeStates.Insert();
                                         activeStates.Values[index].state = <#= ns #>;
                                         activeStates.Values[index].register = newReg;
                                         activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
 
                                         index = -1;
+<# } #>
 
                                         ended = false;
                                     }
@@ -316,6 +339,13 @@ internal sealed class <#= className #> : CompiledAfaPipeBase<<#= TKey #>, <#= TP
                 }
 <# if (!grouped) { #>
              }
+<# } else { #>
+
+                // Now that we are done traversing the current active states, add any new ones.
+                foreach (var newActiveState in newActiveStates)
+                {
+                    this.activeStates.Insert(el_hash, newActiveState);
+                }
 <# } #>
             }
 

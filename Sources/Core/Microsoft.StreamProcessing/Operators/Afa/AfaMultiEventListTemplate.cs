@@ -230,15 +230,21 @@ using Microsoft.StreamProcessing.Internal.Collections;
  } 
             this.Write("            {\r\n                int index, orig_index;\r\n\r\n");
  if (grouped) { 
-            this.Write("\r\n                while (activeFindTraverser.Next(out index))\r\n");
+            this.Write("\r\n                // Track which active states need to be inserted after the curr" +
+                    "ent traversal\r\n                var newActiveStates = new List<GroupedActiveState" +
+                    "<");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TRegister));
+            this.Write(">>();\r\n                while (activeFindTraverser.Next(out index))\r\n");
  } else { 
             this.Write("            if (activeStatesTraverser.Find())\r\n            {\r\n                whi" +
                     "le (activeStatesTraverser.Next(out index))\r\n");
  } 
-            this.Write("                {\r\n                    orig_index = index;\r\n\r\n                   " +
-                    " var state = activeStates.Values[index];\r\n");
+            this.Write("                {\r\n                    orig_index = index;\r\n                    \r" +
+                    "\n                    var state = activeStates.Values[index];\r\n");
  if (grouped) { 
-            this.Write("\r\n                    if (!(");
+            this.Write("                    if (!(");
             this.Write(this.ToStringHelper.ToStringWithCulture(keyEqualityComparer("state.key", "currentList.key")));
             this.Write(")) continue;\r\n");
  } 
@@ -321,27 +327,53 @@ using Microsoft.StreamProcessing.Internal.Collections;
  IfFinalStateProduceOutput(36, ns, string.Empty, "synctime", "state.PatternStartTimestamp", keyArg, hashArg); 
             this.Write("                                    ");
  if (hasOutgoingArcs[ns]) { 
-            this.Write("\r\n                                    {\r\n                                        " +
-                    "// target node has outgoing edges\r\n                                        if (i" +
-                    "ndex == -1) index = activeStates.Insert(");
-            this.Write(this.ToStringHelper.ToStringWithCulture(grouped ? "el_hash" : string.Empty));
-            this.Write(");\r\n");
+            this.Write("\r\n                                    {\r\n");
  if (grouped) { 
-            this.Write("\r\n                                        activeStates.Values[index].key = curren" +
-                    "tList.key;\r\n");
- } 
-            this.Write("                                        activeStates.Values[index].state = ");
+            this.Write(@"                                        // target node has outgoing edges
+                                        // Since we will eventually remove this state/index from activeStates, attempt to reuse this index for the outgoing state instead of deleting/re-adding
+                                        // If index is already -1, this means we've already reused the state and must allocate/insert a new index for the outgoing state.
+                                        if (index != -1)
+                                        {
+                                            activeStates.Values[index].key = currentList.key;
+                                            activeStates.Values[index].state = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(ns));
+            this.Write(@";
+                                            activeStates.Values[index].register = newReg;
+                                            activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
+
+                                            index = -1;
+                                        }
+                                        else
+                                        {
+                                            // Do not attempt to insert directly into activeStates, as that could corrupt the traversal state.
+                                            newActiveStates.Add(new GroupedActiveState<");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TKey));
+            this.Write(", ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(TRegister));
+            this.Write(">\r\n                                            {\r\n                               " +
+                    "                 key = currentList.key,\r\n                                       " +
+                    "         state = ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(ns));
+            this.Write(@",
+                                                register = newReg,
+                                                PatternStartTimestamp = state.PatternStartTimestamp,
+                                            });
+                                        }
+");
+ } else { 
+            this.Write("                                        // target node has outgoing edges\r\n      " +
+                    "                                  if (index == -1) index = activeStates.Insert()" +
+                    ";\r\n                                        activeStates.Values[index].state = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ns));
             this.Write(@";
                                         activeStates.Values[index].register = newReg;
                                         activeStates.Values[index].PatternStartTimestamp = state.PatternStartTimestamp;
 
                                         index = -1;
-
-                                        ended = false;
-                                    }
-
-                                    ");
+");
+ } 
+            this.Write("\r\n                                        ended = false;\r\n                       " +
+                    "             }\r\n\r\n                                    ");
  } else { 
             this.Write("\r\n                                    // target node does not have any outgoing e" +
                     "dges\r\n                                    ");
@@ -373,6 +405,14 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     " one active state\r\n                }\r\n");
  if (!grouped) { 
             this.Write("             }\r\n");
+ } else { 
+            this.Write(@"
+                // Now that we are done traversing the current active states, add any new ones.
+                foreach (var newActiveState in newActiveStates)
+                {
+                    this.activeStates.Insert(el_hash, newActiveState);
+                }
+");
  } 
             this.Write("            }\r\n\r\n            /* (2) Start new activations from the start state(s)" +
                     " */\r\n            ");
