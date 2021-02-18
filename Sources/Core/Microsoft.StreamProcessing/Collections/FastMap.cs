@@ -251,24 +251,22 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public unsafe void Clear()
+        public void Clear()
         {
-            fixed (int* bucketHeadArray = this.bucketHeads)
+            // Clear all bucket linked-lists.
+            int bucketsHeadIndex = 0;
+            for (int i = this.capacity; i > 0; i--)
             {
-                // Clear all bucket linked-lists.
-                int* bucketsHeadPtr = bucketHeadArray;
-                for (int i = this.capacity; i > 0; i--)
-                {
-                    *bucketsHeadPtr++ = EndOfList;
-                }
-
-                // Setting 'initialized' to zero puts all values back in free pool, so also
-                // reset free linked-list.
-                this.freeHead = EndOfInvisibleList;
-                this.invisibleHead = EndOfInvisibleList;
-                this.count = 0;
-                this.initialized = 0;
+                this.bucketHeads[bucketsHeadIndex] = EndOfList;
+                bucketsHeadIndex++;
             }
+
+            // Setting 'initialized' to zero puts all values back in free pool, so also
+            // reset free linked-list.
+            this.freeHead = EndOfInvisibleList;
+            this.invisibleHead = EndOfInvisibleList;
+            this.count = 0;
+            this.initialized = 0;
         }
 
         /// <summary>
@@ -345,7 +343,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             return ++this.initialized;
         }
 
-        private unsafe void Grow()
+        private void Grow()
         {
             // Throw exception if already at max capacity.
             if (this.primeIndex == PrimeFuncs.Primes.Length - 1)
@@ -369,45 +367,41 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Array.Copy(oldValues, 1, this.values, 1, this.initialized);
 
             // Re-insert keys into hash table.
-            fixed (long* oldHashAndNextArray = oldHashAndNext)
-            fixed (long* hashAndNextArray = this.hashAndNext)
-            fixed (int* bucketHeadArray = this.bucketHeads)
             {
-                long* oldHashNextPtr = oldHashAndNextArray + 1;
-                long* hashNextPtr = hashAndNextArray + 1;
+                int oldHashNextIndex = 1;
+                int hashNextIndex = 1;
                 for (int index = 1; index <= this.initialized; index++)
                 {
                     // Insert value into new hash table.
-                    long oldHashNext = *oldHashNextPtr;
+                    long oldHashNext = oldHashAndNext[oldHashNextIndex];
                     int oldNext = (int)oldHashNext;
                     if (oldNext >= 0)
                     {
                         // Value is in "visible" list so needs to be rehashed.
                         int oldHash = (int)(oldHashNext >> 32);
                         int bucketPos = (oldHash & NotHighestBit) % this.capacity;
-                        int bucketHead = *(bucketHeadArray + bucketPos);
-                        *hashNextPtr = (oldHashNext & OnlyHashBits) | (uint)bucketHead;
-                        *(bucketHeadArray + bucketPos) = index;
+                        int bucketHead = this.bucketHeads[bucketPos];
+                        this.hashAndNext[hashNextIndex] = (oldHashNext & OnlyHashBits) | (uint)bucketHead;
+                        this.bucketHeads[bucketPos] = index;
                     }
                     else
                     {
                         // Value is in "invisible" list and does not need to be rehashed.
-                        *hashNextPtr = oldHashNext;
+                        this.hashAndNext[hashNextIndex] = oldHashNext;
                     }
 
-                    oldHashNextPtr++;
-                    hashNextPtr++;
+                    oldHashNextIndex++;
+                    hashNextIndex++;
                 }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private unsafe long RemoveFromList(int index)
+        private long RemoveFromList(int index)
         {
-            fixed (long* hashNextArray = this.hashAndNext)
             {
                 // Save values for item to remove.
-                long removedHashNext = *(hashNextArray + index);
+                long removedHashNext = this.hashAndNext[index];
                 int removedNext = (int)removedHashNext;
 
                 // Remove from linked-list.
@@ -445,11 +439,11 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 // Handle case of index NOT being first in linked-list.
                 while (true)
                 {
-                    long currHashNext = *(hashNextArray + prevIndex);
+                    long currHashNext = this.hashAndNext[prevIndex];
                     int currNext = (int)currHashNext;
                     if (currNext == index)
                     {
-                        *(hashNextArray + prevIndex) = (currHashNext & OnlyHashBits) | (uint)removedNext;
+                        this.hashAndNext[prevIndex] = (currHashNext & OnlyHashBits) | (uint)removedNext;
                         return removedHashNext;
                     }
 
@@ -513,7 +507,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public unsafe bool Find(int hash)
+            public bool Find(int hash)
             {
                 this.currIndex = (hash & NotHighestBit) % this.map.capacity;
                 this.nextIndex = this.map.bucketHeads[this.currIndex];
@@ -533,9 +527,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public unsafe bool Next(out int index)
+            public bool Next(out int index)
             {
-                fixed (long* hashAndNextArray = this.map.hashAndNext)
                 {
                     // While not at end of list.
                     while (this.nextIndex != EndOfList)
@@ -545,7 +538,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                         this.prevIndexIsHead = this.currIndexIsHead;
                         this.currIndex = this.nextIndex;
                         this.currIndexIsHead = false;
-                        long currHashNext = *(hashAndNextArray + this.currIndex);
+                        long currHashNext = this.map.hashAndNext[this.currIndex];
                         this.nextIndex = (int)currHashNext;
 
                         // If hash for currIndex matches, then return true.
@@ -659,18 +652,15 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public unsafe bool Next(out int index, out int hash)
+            public bool Next(out int index, out int hash)
             {
-                fixed (long* hashAndNextArray = this.map.hashAndNext)
                 {
-                    long* hashNextPtr = hashAndNextArray + this.currIndex;
                     int initialized = this.map.initialized;
                     while (this.currIndex < initialized)
                     {
                         this.currIndex++;
-                        hashNextPtr++;
 
-                        long currHashNext = *hashNextPtr;
+                        long currHashNext = this.map.hashAndNext[this.currIndex];
                         int currNext = (int)currHashNext;
                         if (currNext >= 0)
                         {
@@ -739,9 +729,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <returns></returns>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public unsafe bool Next(out int index, out int hash)
+            public bool Next(out int index, out int hash)
             {
-                fixed (long* hashAndNextArray = this.map.hashAndNext)
                 {
                     // Return false if at end of list.
                     if (this.nextIndex == EndOfList)
@@ -756,7 +745,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                     this.prevIndexIsHead = this.currIndexIsHead;
                     this.currIndex = this.nextIndex;
                     this.currIndexIsHead = false;
-                    long currHashNext = *(hashAndNextArray + this.currIndex);
+                    long currHashNext = this.map.hashAndNext[this.currIndex];
                     this.nextIndex = ~(int)currHashNext;
 
                     // Return true with current index and hash.
