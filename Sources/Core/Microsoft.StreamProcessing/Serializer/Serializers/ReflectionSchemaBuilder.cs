@@ -85,6 +85,8 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             if (currentDepth == this.settings.MaxItemsInSchemaTree)
                 throw new SerializationException("Maximum depth of object graph reached.");
 
+            this.knownTypes.UnionWith(type.GetAllKnownTypes() ?? new List<Type>());
+
             var surrogate = this.settings.Surrogate;
             if (surrogate != null)
             {
