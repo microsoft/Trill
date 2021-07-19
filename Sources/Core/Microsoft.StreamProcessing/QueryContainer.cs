@@ -127,7 +127,7 @@ namespace Microsoft.StreamProcessing
             lock (this.sentinel)
             {
                 // Restoration should not happen until after all streams have been both registered and subscribed
-                if (this.ingressSites.Count != this.ingressPipes.Count) throw new StreamProcessingException("Not all output data sources have been subscribed to.");
+                if (this.ingressSites.Count != this.ingressPipes.Count) throw new StreamProcessingException("Not all input data sources have been subscribed to.");
                 if (this.egressSites.Count != this.egressPipes.Count) throw new StreamProcessingException("Not all output data sources have been subscribed to.");
 
                 var process = new Process(this.ingressPipes.Clone(), this.egressPipes.Clone());
