@@ -542,6 +542,10 @@ using Microsoft.StreamProcessing.Aggregates;
                     }
                     else
                     {
+                        // Update instance of key in case consumer tracks lifetime of the key object.
+                        // Otherwise it may live past the Window lifetime.
+                        this.aggregateByKey.entries[aggindex].key = currentKey;
+
                         currentState = this.aggregateByKey.entries[aggindex].value;
                         if (syncTime > currentState.timestamp)
                         {
