@@ -181,28 +181,35 @@ namespace Microsoft.StreamProcessing
 
                         // No output because initial state is empty
                     }
-                    else if (entry.heldAggregates.Add(aggindex))
-                    {
-                        // First time group is active for this time
-                        heldState = this.aggregateByKey.entries[aggindex].value;
-                        if (syncTime > heldState.timestamp)
-                        {
-                            // Output end edge
-                            int c = this.batch.Count;
-                            this.batch.vsync.col[c] = syncTime;
-                            this.batch.vother.col[c] = heldState.timestamp;
-                            this.batch.payload.col[c] = this.computeResult(heldState.state);
-                            this.batch.key.col[c] = colkey[i];
-                            this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
-                            this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
-                            heldState.timestamp = syncTime;
-                        }
-                    }
                     else
                     {
-                        // read new currentState from _heldAgg index
-                        heldState = this.aggregateByKey.entries[aggindex].value;
+                        // Update instance of key in case consumer tracks lifetime of the key object.
+                        // Otherwise it may live past the Window lifetime.
+                        this.aggregateByKey.entries[aggindex].key = colkey[i];
+
+                        if (entry.heldAggregates.Add(aggindex))
+                        {
+                            // First time group is active for this time
+                            heldState = this.aggregateByKey.entries[aggindex].value;
+                            if (syncTime > heldState.timestamp)
+                            {
+                                // Output end edge
+                                int c = this.batch.Count;
+                                this.batch.vsync.col[c] = syncTime;
+                                this.batch.vother.col[c] = heldState.timestamp;
+                                this.batch.payload.col[c] = this.computeResult(heldState.state);
+                                this.batch.key.col[c] = colkey[i];
+                                this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
+                                this.batch.Count++;
+                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                                heldState.timestamp = syncTime;
+                            }
+                        }
+                        else
+                        {
+                            // read new currentState from _heldAgg index
+                            heldState = this.aggregateByKey.entries[aggindex].value;
+                        }
                     }
 
                     heldState.state = this.accumulate(heldState.state, col_vsync[i], colpayload[i]);
