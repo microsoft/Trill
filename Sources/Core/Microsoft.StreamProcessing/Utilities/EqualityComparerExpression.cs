@@ -3,6 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -37,27 +38,27 @@ namespace Microsoft.StreamProcessing
 
     internal static class EqualityComparerExpressionCache
     {
-        private static readonly Dictionary<Type, object> typeComparerCache = new Dictionary<Type, object>();
-        private static readonly Dictionary<Type, object> equalsCache = new Dictionary<Type, object>();
-        private static readonly Dictionary<Type, object> getHashCodeCache = new Dictionary<Type, object>();
+        private static readonly ConcurrentDictionary<Type, object> typeComparerCache = new ConcurrentDictionary<Type, object>();
+        private static readonly ConcurrentDictionary<Type, object> equalsCache = new ConcurrentDictionary<Type, object>();
+        private static readonly ConcurrentDictionary<Type, object> getHashCodeCache = new ConcurrentDictionary<Type, object>();
 
         static EqualityComparerExpressionCache()
         {
-            typeComparerCache.Add(typeof(byte), new PrimitiveEqualityComparerExpression<byte>((x, y) => x == y, (obj) => obj));
-            typeComparerCache.Add(typeof(sbyte), new PrimitiveEqualityComparerExpression<sbyte>((x, y) => x == y, (obj) => obj));
-            typeComparerCache.Add(typeof(char), new PrimitiveEqualityComparerExpression<char>((x, y) => x == y, (obj) => obj));
-            typeComparerCache.Add(typeof(short), new PrimitiveEqualityComparerExpression<short>((x, y) => x == y, (obj) => obj));
-            typeComparerCache.Add(typeof(ushort), new PrimitiveEqualityComparerExpression<ushort>((x, y) => x == y, (obj) => obj));
-            typeComparerCache.Add(typeof(int), new PrimitiveEqualityComparerExpression<int>((x, y) => x == y, (obj) => obj));
-            typeComparerCache.Add(typeof(uint), new PrimitiveEqualityComparerExpression<uint>((x, y) => x == y, (obj) => (int)obj));
-            typeComparerCache.Add(typeof(long), new PrimitiveEqualityComparerExpression<long>((x, y) => x == y, (obj) => (int)obj));
-            typeComparerCache.Add(typeof(ulong), new PrimitiveEqualityComparerExpression<ulong>((x, y) => x == y, (obj) => (int)obj));
-            typeComparerCache.Add(typeof(decimal), new ComparerExpressionForIEquatable<decimal>());
-            typeComparerCache.Add(typeof(string), new StringEqualityComparerExpression());
-            typeComparerCache.Add(typeof(TimeSpan), new ComparerExpressionForIEquatable<TimeSpan>());
-            typeComparerCache.Add(typeof(DateTime), new ComparerExpressionForIEquatable<DateTime>());
-            typeComparerCache.Add(typeof(DateTimeOffset), new ComparerExpressionForIEquatable<DateTimeOffset>());
-            typeComparerCache.Add(typeof(Empty), new PrimitiveEqualityComparerExpression<Empty>((x, y) => true, (obj) => 0));
+            typeComparerCache.TryAdd(typeof(byte), new PrimitiveEqualityComparerExpression<byte>((x, y) => x == y, (obj) => obj));
+            typeComparerCache.TryAdd(typeof(sbyte), new PrimitiveEqualityComparerExpression<sbyte>((x, y) => x == y, (obj) => obj));
+            typeComparerCache.TryAdd(typeof(char), new PrimitiveEqualityComparerExpression<char>((x, y) => x == y, (obj) => obj));
+            typeComparerCache.TryAdd(typeof(short), new PrimitiveEqualityComparerExpression<short>((x, y) => x == y, (obj) => obj));
+            typeComparerCache.TryAdd(typeof(ushort), new PrimitiveEqualityComparerExpression<ushort>((x, y) => x == y, (obj) => obj));
+            typeComparerCache.TryAdd(typeof(int), new PrimitiveEqualityComparerExpression<int>((x, y) => x == y, (obj) => obj));
+            typeComparerCache.TryAdd(typeof(uint), new PrimitiveEqualityComparerExpression<uint>((x, y) => x == y, (obj) => (int)obj));
+            typeComparerCache.TryAdd(typeof(long), new PrimitiveEqualityComparerExpression<long>((x, y) => x == y, (obj) => (int)obj));
+            typeComparerCache.TryAdd(typeof(ulong), new PrimitiveEqualityComparerExpression<ulong>((x, y) => x == y, (obj) => (int)obj));
+            typeComparerCache.TryAdd(typeof(decimal), new ComparerExpressionForIEquatable<decimal>());
+            typeComparerCache.TryAdd(typeof(string), new StringEqualityComparerExpression());
+            typeComparerCache.TryAdd(typeof(TimeSpan), new ComparerExpressionForIEquatable<TimeSpan>());
+            typeComparerCache.TryAdd(typeof(DateTime), new ComparerExpressionForIEquatable<DateTime>());
+            typeComparerCache.TryAdd(typeof(DateTimeOffset), new ComparerExpressionForIEquatable<DateTimeOffset>());
+            typeComparerCache.TryAdd(typeof(Empty), new PrimitiveEqualityComparerExpression<Empty>((x, y) => true, (obj) => 0));
         }
 
         public static bool TryGetCachedComparer<T>(out IEqualityComparerExpression<T> comparer)
@@ -96,11 +97,11 @@ namespace Microsoft.StreamProcessing
             return false;
         }
 
-        public static void Add<T>(IEqualityComparerExpression<T> comparer) => typeComparerCache.Add(typeof(T), comparer);
+        public static void Add<T>(IEqualityComparerExpression<T> comparer) => typeComparerCache.TryAdd(typeof(T), comparer);
 
-        public static void Add<T>(Func<T, T, bool> equalsFunction) => equalsCache.Add(typeof(T), equalsFunction);
+        public static void Add<T>(Func<T, T, bool> equalsFunction) => equalsCache.TryAdd(typeof(T), equalsFunction);
 
-        public static void Add<T>(Func<T, int> getHashCodeFunction) => getHashCodeCache.Add(typeof(T), getHashCodeFunction);
+        public static void Add<T>(Func<T, int> getHashCodeFunction) => getHashCodeCache.TryAdd(typeof(T), getHashCodeFunction);
     }
 
     /// <summary>

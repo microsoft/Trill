@@ -3,6 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,58 +14,60 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 {
     internal sealed class ReflectionSchemaBuilder
     {
-        private static readonly Dictionary<Type, Func<ObjectSerializerBase>> RuntimeTypeToSerializer =
-            new Dictionary<Type, Func<ObjectSerializerBase>>
-            {
-                { typeof(char),           () => PrimitiveSerializer.Char },
-                { typeof(byte),           () => PrimitiveSerializer.Byte },
-                { typeof(sbyte),          () => PrimitiveSerializer.SByte },
-                { typeof(short),          () => PrimitiveSerializer.Short },
-                { typeof(ushort),         () => PrimitiveSerializer.UShort },
-                { typeof(int),            () => PrimitiveSerializer.Int },
-                { typeof(uint),           () => PrimitiveSerializer.UInt },
-                { typeof(bool),           () => PrimitiveSerializer.Boolean },
-                { typeof(long),           () => PrimitiveSerializer.Long },
-                { typeof(ulong),          () => PrimitiveSerializer.ULong },
-                { typeof(float),          () => PrimitiveSerializer.Float },
-                { typeof(double),         () => PrimitiveSerializer.Double },
-                { typeof(decimal),        () => PrimitiveSerializer.Decimal },
-                { typeof(string),         () => PrimitiveSerializer.String },
-                { typeof(Uri),            () => PrimitiveSerializer.Uri },
-                { typeof(TimeSpan),       () => PrimitiveSerializer.TimeSpan },
-                { typeof(DateTime),       () => PrimitiveSerializer.DateTime },
-                { typeof(DateTimeOffset), () => PrimitiveSerializer.DateTimeOffset },
-                { typeof(Guid),           () => PrimitiveSerializer.Guid },
-
-                { typeof(char[]),         () => PrimitiveSerializer.CreateForArray<char>() },
-                { typeof(byte[]),         () => PrimitiveSerializer.ByteArray },
-                { typeof(short[]),        () => PrimitiveSerializer.CreateForArray<short>() },
-                { typeof(ushort[]),       () => PrimitiveSerializer.CreateForArray<ushort>() },
-                { typeof(int[]),          () => PrimitiveSerializer.CreateForArray<int>() },
-                { typeof(uint[]),         () => PrimitiveSerializer.CreateForArray<uint>() },
-                { typeof(long[]),         () => PrimitiveSerializer.CreateForArray<long>() },
-                { typeof(ulong[]),        () => PrimitiveSerializer.CreateForArray<ulong>() },
-                { typeof(float[]),        () => PrimitiveSerializer.CreateForArray<float>() },
-                { typeof(double[]),       () => PrimitiveSerializer.CreateForArray<double>() },
-                { typeof(string[]),       () => PrimitiveSerializer.StringArray },
-
-                { typeof(ColumnBatch<char>),     () => PrimitiveSerializer.CreateForColumnBatch<char>() },
-                { typeof(ColumnBatch<short>),    () => PrimitiveSerializer.CreateForColumnBatch<short>() },
-                { typeof(ColumnBatch<ushort>),   () => PrimitiveSerializer.CreateForColumnBatch<ushort>() },
-                { typeof(ColumnBatch<int>),      () => PrimitiveSerializer.CreateForColumnBatch<int>() },
-                { typeof(ColumnBatch<uint>),     () => PrimitiveSerializer.CreateForColumnBatch<uint>() },
-                { typeof(ColumnBatch<long>),     () => PrimitiveSerializer.CreateForColumnBatch<long>() },
-                { typeof(ColumnBatch<ulong>),    () => PrimitiveSerializer.CreateForColumnBatch<ulong>() },
-                { typeof(ColumnBatch<float>),    () => PrimitiveSerializer.CreateForColumnBatch<float>() },
-                { typeof(ColumnBatch<double>),   () => PrimitiveSerializer.CreateForColumnBatch<double>() },
-                { typeof(ColumnBatch<string>),   () => PrimitiveSerializer.StringColumnBatch },
-
-                { typeof(CharArrayWrapper),      () => PrimitiveSerializer.CharArray },
-            };
+        private static readonly ConcurrentDictionary<Type, Func<ObjectSerializerBase>> RuntimeTypeToSerializer =
+            new ConcurrentDictionary<Type, Func<ObjectSerializerBase>>();
 
         private readonly SerializerSettings settings;
         private readonly HashSet<Type> knownTypes;
         private readonly Dictionary<Type, ObjectSerializerBase> seenTypes = new Dictionary<Type, ObjectSerializerBase>();
+
+        static ReflectionSchemaBuilder()
+        {
+            RuntimeTypeToSerializer[typeof(char)] =                  () => PrimitiveSerializer.Char;
+            RuntimeTypeToSerializer[typeof(byte)] =                  () => PrimitiveSerializer.Byte;
+            RuntimeTypeToSerializer[typeof(sbyte)] =                 () => PrimitiveSerializer.SByte;
+            RuntimeTypeToSerializer[typeof(short)] =                 () => PrimitiveSerializer.Short;
+            RuntimeTypeToSerializer[typeof(ushort)] =                () => PrimitiveSerializer.UShort;
+            RuntimeTypeToSerializer[typeof(int)] =                   () => PrimitiveSerializer.Int;
+            RuntimeTypeToSerializer[typeof(uint)] =                  () => PrimitiveSerializer.UInt;
+            RuntimeTypeToSerializer[typeof(bool)] =                  () => PrimitiveSerializer.Boolean;
+            RuntimeTypeToSerializer[typeof(long)] =                  () => PrimitiveSerializer.Long;
+            RuntimeTypeToSerializer[typeof(ulong)] =                 () => PrimitiveSerializer.ULong;
+            RuntimeTypeToSerializer[typeof(float)] =                 () => PrimitiveSerializer.Float;
+            RuntimeTypeToSerializer[typeof(double)] =                () => PrimitiveSerializer.Double;
+            RuntimeTypeToSerializer[typeof(decimal)] =               () => PrimitiveSerializer.Decimal;
+            RuntimeTypeToSerializer[typeof(string)] =                () => PrimitiveSerializer.String;
+            RuntimeTypeToSerializer[typeof(Uri)] =                   () => PrimitiveSerializer.Uri;
+            RuntimeTypeToSerializer[typeof(TimeSpan)] =              () => PrimitiveSerializer.TimeSpan;
+            RuntimeTypeToSerializer[typeof(DateTime)] =              () => PrimitiveSerializer.DateTime;
+            RuntimeTypeToSerializer[typeof(DateTimeOffset)] =        () => PrimitiveSerializer.DateTimeOffset;
+            RuntimeTypeToSerializer[typeof(Guid)] =                  () => PrimitiveSerializer.Guid;
+
+            RuntimeTypeToSerializer[typeof(char[])] =                () => PrimitiveSerializer.CreateForArray<char>();
+            RuntimeTypeToSerializer[typeof(byte[])] =                () => PrimitiveSerializer.ByteArray;
+            RuntimeTypeToSerializer[typeof(short[])] =               () => PrimitiveSerializer.CreateForArray<short>();
+            RuntimeTypeToSerializer[typeof(ushort[])] =              () => PrimitiveSerializer.CreateForArray<ushort>();
+            RuntimeTypeToSerializer[typeof(int[])] =                 () => PrimitiveSerializer.CreateForArray<int>();
+            RuntimeTypeToSerializer[typeof(uint[])] =                () => PrimitiveSerializer.CreateForArray<uint>();
+            RuntimeTypeToSerializer[typeof(long[])] =                () => PrimitiveSerializer.CreateForArray<long>();
+            RuntimeTypeToSerializer[typeof(ulong[])] =               () => PrimitiveSerializer.CreateForArray<ulong>();
+            RuntimeTypeToSerializer[typeof(float[])] =               () => PrimitiveSerializer.CreateForArray<float>();
+            RuntimeTypeToSerializer[typeof(double[])] =              () => PrimitiveSerializer.CreateForArray<double>();
+            RuntimeTypeToSerializer[typeof(string[])] =              () => PrimitiveSerializer.StringArray;
+
+            RuntimeTypeToSerializer[typeof(ColumnBatch<char>)] =     () => PrimitiveSerializer.CreateForColumnBatch<char>();
+            RuntimeTypeToSerializer[typeof(ColumnBatch<short>)] =    () => PrimitiveSerializer.CreateForColumnBatch<short>();
+            RuntimeTypeToSerializer[typeof(ColumnBatch<ushort>)] =   () => PrimitiveSerializer.CreateForColumnBatch<ushort>();
+            RuntimeTypeToSerializer[typeof(ColumnBatch<int>)] =      () => PrimitiveSerializer.CreateForColumnBatch<int>();
+            RuntimeTypeToSerializer[typeof(ColumnBatch<uint>)] =     () => PrimitiveSerializer.CreateForColumnBatch<uint>();
+            RuntimeTypeToSerializer[typeof(ColumnBatch<long>)] =     () => PrimitiveSerializer.CreateForColumnBatch<long>();
+            RuntimeTypeToSerializer[typeof(ColumnBatch<ulong>)] =    () => PrimitiveSerializer.CreateForColumnBatch<ulong>();
+            RuntimeTypeToSerializer[typeof(ColumnBatch<float>)] =    () => PrimitiveSerializer.CreateForColumnBatch<float>();
+            RuntimeTypeToSerializer[typeof(ColumnBatch<double>)] =   () => PrimitiveSerializer.CreateForColumnBatch<double>();
+            RuntimeTypeToSerializer[typeof(ColumnBatch<string>)] =   () => PrimitiveSerializer.StringColumnBatch;
+
+            RuntimeTypeToSerializer[typeof(CharArrayWrapper)] = () => PrimitiveSerializer.CharArray;
+        }
 
         public ReflectionSchemaBuilder(SerializerSettings settings)
         {

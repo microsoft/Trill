@@ -3,6 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Globalization;
@@ -19,21 +20,18 @@ namespace Microsoft.StreamProcessing
     {
         static TypeExtensions()
         {
-            OperatorNameLookup = new Dictionary<string, string>
-            {
-                { "+", "op_Addition" },
-                { "-", "op_Subtraction" },
-                { "*", "op_Multiply" },
-                { "*d", "op_Multiply" },
-                { "/", "op_Division" },
-                { "/d", "op_Division" },
-                { "%", "op_Modulus" },
-                { "%d", "op_Modulus" },
-            };
+            OperatorNameLookup["+"] = "op_Addition";
+            OperatorNameLookup["-"] = "op_Subtraction";
+            OperatorNameLookup["*"] = "op_Multiply";
+            OperatorNameLookup["*d"] = "op_Multiply";
+            OperatorNameLookup["/"] = "op_Division";
+            OperatorNameLookup["/d"] = "op_Division";
+            OperatorNameLookup["%"] = "op_Modulus";
+            OperatorNameLookup["%d"] = "op_Modulus";
 
             foreach (var pair in OperatorNameLookup)
             {
-                KnownSupportedOperators.Add(
+                KnownSupportedOperators.TryAdd(
                     pair.Key, new HashSet<Type> { typeof(long), typeof(ulong), typeof(int), typeof(uint), typeof(short), typeof(ushort), typeof(double), typeof(float), typeof(decimal), typeof(byte), typeof(sbyte) });
             }
         }
@@ -121,9 +119,9 @@ namespace Microsoft.StreamProcessing
                 : Tuple.Create(new MyFieldInfo(t).Yield(), true);
         }
 
-        private static readonly Dictionary<string, string> OperatorNameLookup;
+        private static readonly ConcurrentDictionary<string, string> OperatorNameLookup = new ConcurrentDictionary<string, string>();
 
-        private static readonly Dictionary<string, HashSet<Type>> KnownSupportedOperators = new Dictionary<string, HashSet<Type>>();
+        private static readonly ConcurrentDictionary<string, HashSet<Type>> KnownSupportedOperators = new ConcurrentDictionary<string, HashSet<Type>>();
 
         public static bool SupportsOperator(this Type t, string @operator)
         {

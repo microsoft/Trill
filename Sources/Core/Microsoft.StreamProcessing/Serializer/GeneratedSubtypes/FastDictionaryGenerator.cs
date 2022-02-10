@@ -3,7 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using Microsoft.StreamProcessing.Internal.Collections;
@@ -15,7 +15,7 @@ namespace Microsoft.StreamProcessing.Internal
         private const string Prefix = "GeneratedFastDictionary_";
         private static readonly object sentinel = new object();
         private static int classCounter = 0;
-        private static readonly Dictionary<Tuple<string, Type, Type>, Type> generatorCache = new Dictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> generatorCache = new ConcurrentDictionary<Tuple<string, Type, Type>, Type>();
 
         public static Func<FastDictionary<TKey, TValue>> CreateFastDictionaryGenerator<TKey, TValue>(
             this IEqualityComparerExpression<TKey> comparerExp, int capacity, Func<TKey, TKey, bool> equalsFunc, Func<TKey, int> getHashCodeFunc, QueryContainer container)
@@ -37,21 +37,21 @@ namespace Microsoft.StreamProcessing.Internal
             Type temp;
             lock (sentinel)
             {
-                if (!generatorCache.TryGetValue(key, out temp))
+                temp = generatorCache.GetOrAdd(key, (newKey) =>
                 {
                     string typeName = Prefix + classCounter++;
                     var builderCode = new GeneratedFastDictionary(typeName, string.Empty).TransformText();
                     var a = Transformer.CompileSourceCode(builderCode, Array.Empty<Assembly>(), out string errorMessages);
 
-                    temp = a.GetType(typeName + "`2");
-                    temp = temp.MakeGenericType(typeof(TKey), typeof(TValue));
-                    MethodInfo init = temp.GetTypeInfo().GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+                    Type type = a.GetType(typeName + "`2");
+                    type = type.MakeGenericType(typeof(TKey), typeof(TValue));
+                    MethodInfo init = type.GetTypeInfo().GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
                     init.Invoke(null, new object[] { equalsFunc, getHashCodeFunc, capacity });
-                    generatorCache.Add(key, temp);
-                }
+                    return type;
+                });
                 if (!container.TryGetFastDictionaryType(key, out Type other))
                     container.RegisterFastDictionaryType(key, temp);
-           }
+            }
 
             return () => (FastDictionary<TKey, TValue>)Activator.CreateInstance(temp);
         }
@@ -61,7 +61,7 @@ namespace Microsoft.StreamProcessing.Internal
         private const string Prefix = "GeneratedFastDictionary2_";
         private static readonly object sentinel = new object();
         private static int classCounter = 0;
-        private static readonly Dictionary<Tuple<string, Type, Type>, Type> generatorCache = new Dictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> generatorCache = new ConcurrentDictionary<Tuple<string, Type, Type>, Type>();
 
         public static Func<FastDictionary2<TKey, TValue>> CreateFastDictionary2Generator<TKey, TValue>(
             this IEqualityComparerExpression<TKey> comparerExp, int capacity, Func<TKey, TKey, bool> equalsFunc, Func<TKey, int> getHashCodeFunc, QueryContainer container)
@@ -83,21 +83,21 @@ namespace Microsoft.StreamProcessing.Internal
             Type temp;
             lock (sentinel)
             {
-                if (!generatorCache.TryGetValue(key, out temp))
+                temp = generatorCache.GetOrAdd(key, (newKey) =>
                 {
                     string typeName = Prefix + classCounter++;
                     var builderCode = new GeneratedFastDictionary(typeName, "2").TransformText();
                     var a = Transformer.CompileSourceCode(builderCode, Array.Empty<Assembly>(), out string errorMessages);
 
-                    temp = a.GetType(typeName + "`2");
-                    temp = temp.MakeGenericType(typeof(TKey), typeof(TValue));
-                    MethodInfo init = temp.GetTypeInfo().GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+                    Type type = a.GetType(typeName + "`2");
+                    type = type.MakeGenericType(typeof(TKey), typeof(TValue));
+                    MethodInfo init = type.GetTypeInfo().GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
                     init.Invoke(null, new object[] { equalsFunc, getHashCodeFunc, capacity });
-                    generatorCache.Add(key, temp);
-                }
+                    return type;
+                });
                 if (!container.TryGetFastDictionary2Type(key, out Type other))
                     container.RegisterFastDictionary2Type(key, temp);
-           }
+            }
 
             return () => (FastDictionary2<TKey, TValue>)Activator.CreateInstance(temp);
         }
@@ -107,7 +107,7 @@ namespace Microsoft.StreamProcessing.Internal
         private const string Prefix = "GeneratedFastDictionary3_";
         private static readonly object sentinel = new object();
         private static int classCounter = 0;
-        private static readonly Dictionary<Tuple<string, Type, Type>, Type> generatorCache = new Dictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> generatorCache = new ConcurrentDictionary<Tuple<string, Type, Type>, Type>();
 
         public static Func<FastDictionary3<TKey, TValue>> CreateFastDictionary3Generator<TKey, TValue>(
             this IEqualityComparerExpression<TKey> comparerExp, int capacity, Func<TKey, TKey, bool> equalsFunc, Func<TKey, int> getHashCodeFunc, QueryContainer container)
@@ -129,21 +129,21 @@ namespace Microsoft.StreamProcessing.Internal
             Type temp;
             lock (sentinel)
             {
-                if (!generatorCache.TryGetValue(key, out temp))
+                temp = generatorCache.GetOrAdd(key, (newKey) =>
                 {
                     string typeName = Prefix + classCounter++;
                     var builderCode = new GeneratedFastDictionary(typeName, "3").TransformText();
                     var a = Transformer.CompileSourceCode(builderCode, Array.Empty<Assembly>(), out string errorMessages);
 
-                    temp = a.GetType(typeName + "`2");
-                    temp = temp.MakeGenericType(typeof(TKey), typeof(TValue));
-                    MethodInfo init = temp.GetTypeInfo().GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+                    Type type = a.GetType(typeName + "`2");
+                    type = type.MakeGenericType(typeof(TKey), typeof(TValue));
+                    MethodInfo init = type.GetTypeInfo().GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
                     init.Invoke(null, new object[] { equalsFunc, getHashCodeFunc, capacity });
-                    generatorCache.Add(key, temp);
-                }
+                    return type;
+                });
                 if (!container.TryGetFastDictionary3Type(key, out Type other))
                     container.RegisterFastDictionary3Type(key, temp);
-           }
+            }
 
             return () => (FastDictionary3<TKey, TValue>)Activator.CreateInstance(temp);
         }
