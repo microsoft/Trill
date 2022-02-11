@@ -3,7 +3,6 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -16,7 +15,7 @@ namespace Microsoft.StreamProcessing.Internal
     {
         private const string Prefix = "GeneratedSortedDictionary";
         private static readonly object sentinel = new object();
-        private static readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> DictionaryTypes = new ConcurrentDictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly Dictionary<Tuple<string, Type, Type>, Type> DictionaryTypes = new Dictionary<Tuple<string, Type, Type>, Type>();
 
         public static Expression<Func<SortedDictionary<TKey, TValue>>> CreateSortedDictionaryGenerator<TKey, TValue>(this IComparerExpression<TKey> comparerExp, QueryContainer container)
         {
@@ -54,7 +53,7 @@ namespace Microsoft.StreamProcessing.Internal
                     temp = temp.MakeGenericType(typeof(TKey), typeof(TValue));
                     var init = temp.GetTypeInfo().GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
                     init.Invoke(null, new object[] { Comparer<TKey>.Create(expr.Compile()) });
-                    DictionaryTypes.TryAdd(key, temp);
+                    DictionaryTypes.Add(key, temp);
                 }
                 if (!container.TryGetSortedDictionaryType(key, out var other))
                     container.RegisterSortedDictionaryType(key, temp);
