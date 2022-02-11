@@ -3,7 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using Microsoft.StreamProcessing.Serializer.Serializers;
 
 namespace Microsoft.StreamProcessing.Serializer
@@ -13,8 +13,8 @@ namespace Microsoft.StreamProcessing.Serializer
     /// </summary>
     public static class StreamSerializer
     {
-        private static readonly Dictionary<Tuple<Type, SerializerSettings>, object> TypedSerializers
-            = new Dictionary<Tuple<Type, SerializerSettings>, object>();
+        private static readonly ConcurrentDictionary<Tuple<Type, SerializerSettings>, object> TypedSerializers
+            = new ConcurrentDictionary<Tuple<Type, SerializerSettings>, object>();
 
         /// <summary>
         /// Create instance of serializer for given object type
@@ -48,7 +48,7 @@ namespace Microsoft.StreamProcessing.Serializer
             var reader = new ReflectionSchemaBuilder(settings).BuildSchema(typeof(T));
             var serializerTyped = new StateSerializer<T>(reader);
 
-            if (settings.UseCache) TypedSerializers.Add(key, serializerTyped);
+            if (settings.UseCache) TypedSerializers.TryAdd(key, serializerTyped);
             return serializerTyped;
         }
     }

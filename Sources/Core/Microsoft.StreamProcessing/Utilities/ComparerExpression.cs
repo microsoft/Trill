@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -26,25 +27,25 @@ namespace Microsoft.StreamProcessing
 
     internal sealed class ComparerExpressionCache
     {
-        private static readonly Dictionary<Type, object> typeComparerCache = new Dictionary<Type, object>();
+        private static readonly ConcurrentDictionary<Type, object> typeComparerCache = new ConcurrentDictionary<Type, object>();
 
         static ComparerExpressionCache()
         {
-            typeComparerCache.Add(typeof(byte), new PrimitiveComparerExpression<byte>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(sbyte), new PrimitiveComparerExpression<sbyte>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(char), new PrimitiveComparerExpression<char>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(short), new PrimitiveComparerExpression<short>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(ushort), new PrimitiveComparerExpression<ushort>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(int), new PrimitiveComparerExpression<int>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(uint), new PrimitiveComparerExpression<uint>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(long), new PrimitiveComparerExpression<long>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(ulong), new PrimitiveComparerExpression<ulong>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(decimal), new PrimitiveComparerExpression<decimal>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.Add(typeof(string), new GenericComparableExpression<string>());
-            typeComparerCache.Add(typeof(TimeSpan), new GenericComparableExpression<TimeSpan>());
-            typeComparerCache.Add(typeof(DateTime), new GenericComparableExpression<DateTime>());
-            typeComparerCache.Add(typeof(DateTimeOffset), new GenericComparableExpression<DateTimeOffset>());
-            typeComparerCache.Add(typeof(Empty), new PrimitiveComparerExpression<Empty>((x, y) => 0));
+            typeComparerCache.TryAdd(typeof(byte), new PrimitiveComparerExpression<byte>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(sbyte), new PrimitiveComparerExpression<sbyte>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(char), new PrimitiveComparerExpression<char>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(short), new PrimitiveComparerExpression<short>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(ushort), new PrimitiveComparerExpression<ushort>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(int), new PrimitiveComparerExpression<int>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(uint), new PrimitiveComparerExpression<uint>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(long), new PrimitiveComparerExpression<long>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(ulong), new PrimitiveComparerExpression<ulong>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(decimal), new PrimitiveComparerExpression<decimal>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(string), new GenericComparableExpression<string>());
+            typeComparerCache.TryAdd(typeof(TimeSpan), new GenericComparableExpression<TimeSpan>());
+            typeComparerCache.TryAdd(typeof(DateTime), new GenericComparableExpression<DateTime>());
+            typeComparerCache.TryAdd(typeof(DateTimeOffset), new GenericComparableExpression<DateTimeOffset>());
+            typeComparerCache.TryAdd(typeof(Empty), new PrimitiveComparerExpression<Empty>((x, y) => 0));
         }
 
         public static bool TryGetCachedComparer<T>(out IComparerExpression<T> comparer)
@@ -59,7 +60,7 @@ namespace Microsoft.StreamProcessing
             return false;
         }
 
-        public static void Add<T>(IComparerExpression<T> comparer) => typeComparerCache.Add(typeof(T), comparer);
+        public static void Add<T>(IComparerExpression<T> comparer) => typeComparerCache.TryAdd(typeof(T), comparer);
     }
 
     internal class ComparerExpression<T> : IComparerExpression<T>
