@@ -2,8 +2,10 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -534,6 +536,182 @@ namespace SimpleTesting
             var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
 
             Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void GroupedSessionSnapshotPunctuationsAreNotBlockedRow()
+        {
+            var input = new Subject<StreamEvent<MyData>>();
+            var qc = new QueryContainer();
+            var inputStream = qc.RegisterInput(input);
+
+            var query = inputStream
+                .GroupApply(
+                    keySelector: o => true,
+                    applyFunc: o => o.SessionTimeoutWindow(5, 10).Sum(x => x.field1),
+                    resultSelector: (k, sum) => sum);
+            var output = new List<StreamEvent<int>>();
+            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            // Punctuations preceding data events should flow through the system
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(1));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(2));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(3));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(4));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(5));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(6));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(7));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(8));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(9));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(10));
+            var expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(1),
+                StreamEvent.CreatePunctuation<int>(2),
+                StreamEvent.CreatePunctuation<int>(3),
+                StreamEvent.CreatePunctuation<int>(4),
+                StreamEvent.CreatePunctuation<int>(5),
+                StreamEvent.CreatePunctuation<int>(6),
+                StreamEvent.CreatePunctuation<int>(7),
+                StreamEvent.CreatePunctuation<int>(8),
+                StreamEvent.CreatePunctuation<int>(9),
+                StreamEvent.CreatePunctuation<int>(10),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // A session should retain and emit all of its contained punctuations
+            input.OnNext(StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(11));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(12));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(13));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(14));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(15));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreateStart(10, 1),
+                StreamEvent.CreatePunctuation<int>(11),
+                StreamEvent.CreatePunctuation<int>(12),
+                StreamEvent.CreatePunctuation<int>(13),
+                StreamEvent.CreatePunctuation<int>(14),
+                StreamEvent.CreateEnd(15, 10, 1),
+                StreamEvent.CreatePunctuation<int>(15),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // Future punctuations should not be blocked while no session is active
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(16));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(17));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(18));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(19));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(20));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(16),
+                StreamEvent.CreatePunctuation<int>(17),
+                StreamEvent.CreatePunctuation<int>(18),
+                StreamEvent.CreatePunctuation<int>(19),
+                StreamEvent.CreatePunctuation<int>(20),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            input.OnCompleted();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void UngroupedSessionSnapshotPunctuationsAreNotBlockedRow()
+        {
+            var input = new Subject<StreamEvent<MyData>>();
+            var qc = new QueryContainer();
+            var inputStream = qc.RegisterInput(input);
+
+            var query = inputStream
+                .SessionTimeoutWindow(5, 10)
+                .Sum(x => x.field1);
+            var output = new List<StreamEvent<int>>();
+            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            // Punctuations preceding data events should flow through the system
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(1));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(2));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(3));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(4));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(5));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(6));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(7));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(8));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(9));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(10));
+            var expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(1),
+                StreamEvent.CreatePunctuation<int>(2),
+                StreamEvent.CreatePunctuation<int>(3),
+                StreamEvent.CreatePunctuation<int>(4),
+                StreamEvent.CreatePunctuation<int>(5),
+                StreamEvent.CreatePunctuation<int>(6),
+                StreamEvent.CreatePunctuation<int>(7),
+                StreamEvent.CreatePunctuation<int>(8),
+                StreamEvent.CreatePunctuation<int>(9),
+                StreamEvent.CreatePunctuation<int>(10),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // A session should retain and emit all of its contained punctuations
+            input.OnNext(StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(11));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(12));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(13));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(14));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(15));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreateStart(10, 1),
+                StreamEvent.CreatePunctuation<int>(11),
+                StreamEvent.CreatePunctuation<int>(12),
+                StreamEvent.CreatePunctuation<int>(13),
+                StreamEvent.CreatePunctuation<int>(14),
+                StreamEvent.CreateEnd(15, 10, 1),
+                StreamEvent.CreatePunctuation<int>(15),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // Future punctuations should not be blocked while no session is active
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(16));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(17));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(18));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(19));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(20));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(16),
+                StreamEvent.CreatePunctuation<int>(17),
+                StreamEvent.CreatePunctuation<int>(18),
+                StreamEvent.CreatePunctuation<int>(19),
+                StreamEvent.CreatePunctuation<int>(20),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            input.OnCompleted();
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1330,6 +1508,182 @@ namespace SimpleTesting
         }
 
         [TestMethod, TestCategory("Gated")]
+        public void GroupedSessionSnapshotPunctuationsAreNotBlockedRowSmallBatch()
+        {
+            var input = new Subject<StreamEvent<MyData>>();
+            var qc = new QueryContainer();
+            var inputStream = qc.RegisterInput(input);
+
+            var query = inputStream
+                .GroupApply(
+                    keySelector: o => true,
+                    applyFunc: o => o.SessionTimeoutWindow(5, 10).Sum(x => x.field1),
+                    resultSelector: (k, sum) => sum);
+            var output = new List<StreamEvent<int>>();
+            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            // Punctuations preceding data events should flow through the system
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(1));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(2));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(3));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(4));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(5));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(6));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(7));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(8));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(9));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(10));
+            var expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(1),
+                StreamEvent.CreatePunctuation<int>(2),
+                StreamEvent.CreatePunctuation<int>(3),
+                StreamEvent.CreatePunctuation<int>(4),
+                StreamEvent.CreatePunctuation<int>(5),
+                StreamEvent.CreatePunctuation<int>(6),
+                StreamEvent.CreatePunctuation<int>(7),
+                StreamEvent.CreatePunctuation<int>(8),
+                StreamEvent.CreatePunctuation<int>(9),
+                StreamEvent.CreatePunctuation<int>(10),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // A session should retain and emit all of its contained punctuations
+            input.OnNext(StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(11));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(12));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(13));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(14));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(15));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreateStart(10, 1),
+                StreamEvent.CreatePunctuation<int>(11),
+                StreamEvent.CreatePunctuation<int>(12),
+                StreamEvent.CreatePunctuation<int>(13),
+                StreamEvent.CreatePunctuation<int>(14),
+                StreamEvent.CreateEnd(15, 10, 1),
+                StreamEvent.CreatePunctuation<int>(15),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // Future punctuations should not be blocked while no session is active
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(16));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(17));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(18));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(19));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(20));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(16),
+                StreamEvent.CreatePunctuation<int>(17),
+                StreamEvent.CreatePunctuation<int>(18),
+                StreamEvent.CreatePunctuation<int>(19),
+                StreamEvent.CreatePunctuation<int>(20),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            input.OnCompleted();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void UngroupedSessionSnapshotPunctuationsAreNotBlockedRowSmallBatch()
+        {
+            var input = new Subject<StreamEvent<MyData>>();
+            var qc = new QueryContainer();
+            var inputStream = qc.RegisterInput(input);
+
+            var query = inputStream
+                .SessionTimeoutWindow(5, 10)
+                .Sum(x => x.field1);
+            var output = new List<StreamEvent<int>>();
+            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            // Punctuations preceding data events should flow through the system
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(1));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(2));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(3));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(4));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(5));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(6));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(7));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(8));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(9));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(10));
+            var expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(1),
+                StreamEvent.CreatePunctuation<int>(2),
+                StreamEvent.CreatePunctuation<int>(3),
+                StreamEvent.CreatePunctuation<int>(4),
+                StreamEvent.CreatePunctuation<int>(5),
+                StreamEvent.CreatePunctuation<int>(6),
+                StreamEvent.CreatePunctuation<int>(7),
+                StreamEvent.CreatePunctuation<int>(8),
+                StreamEvent.CreatePunctuation<int>(9),
+                StreamEvent.CreatePunctuation<int>(10),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // A session should retain and emit all of its contained punctuations
+            input.OnNext(StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(11));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(12));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(13));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(14));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(15));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreateStart(10, 1),
+                StreamEvent.CreatePunctuation<int>(11),
+                StreamEvent.CreatePunctuation<int>(12),
+                StreamEvent.CreatePunctuation<int>(13),
+                StreamEvent.CreatePunctuation<int>(14),
+                StreamEvent.CreateEnd(15, 10, 1),
+                StreamEvent.CreatePunctuation<int>(15),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // Future punctuations should not be blocked while no session is active
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(16));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(17));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(18));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(19));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(20));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(16),
+                StreamEvent.CreatePunctuation<int>(17),
+                StreamEvent.CreatePunctuation<int>(18),
+                StreamEvent.CreatePunctuation<int>(19),
+                StreamEvent.CreatePunctuation<int>(20),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            input.OnCompleted();
+        }
+
+        [TestMethod, TestCategory("Gated")]
         public void SessionSnapshotTrivialGroup1RowSmallBatch()
         {
             var input = new StreamEvent<MyData>[]
@@ -2119,6 +2473,182 @@ namespace SimpleTesting
             var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
 
             Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void GroupedSessionSnapshotPunctuationsAreNotBlockedColumnar()
+        {
+            var input = new Subject<StreamEvent<MyData>>();
+            var qc = new QueryContainer();
+            var inputStream = qc.RegisterInput(input);
+
+            var query = inputStream
+                .GroupApply(
+                    keySelector: o => true,
+                    applyFunc: o => o.SessionTimeoutWindow(5, 10).Sum(x => x.field1),
+                    resultSelector: (k, sum) => sum);
+            var output = new List<StreamEvent<int>>();
+            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            // Punctuations preceding data events should flow through the system
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(1));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(2));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(3));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(4));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(5));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(6));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(7));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(8));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(9));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(10));
+            var expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(1),
+                StreamEvent.CreatePunctuation<int>(2),
+                StreamEvent.CreatePunctuation<int>(3),
+                StreamEvent.CreatePunctuation<int>(4),
+                StreamEvent.CreatePunctuation<int>(5),
+                StreamEvent.CreatePunctuation<int>(6),
+                StreamEvent.CreatePunctuation<int>(7),
+                StreamEvent.CreatePunctuation<int>(8),
+                StreamEvent.CreatePunctuation<int>(9),
+                StreamEvent.CreatePunctuation<int>(10),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // A session should retain and emit all of its contained punctuations
+            input.OnNext(StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(11));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(12));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(13));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(14));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(15));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreateStart(10, 1),
+                StreamEvent.CreatePunctuation<int>(11),
+                StreamEvent.CreatePunctuation<int>(12),
+                StreamEvent.CreatePunctuation<int>(13),
+                StreamEvent.CreatePunctuation<int>(14),
+                StreamEvent.CreateEnd(15, 10, 1),
+                StreamEvent.CreatePunctuation<int>(15),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // Future punctuations should not be blocked while no session is active
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(16));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(17));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(18));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(19));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(20));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(16),
+                StreamEvent.CreatePunctuation<int>(17),
+                StreamEvent.CreatePunctuation<int>(18),
+                StreamEvent.CreatePunctuation<int>(19),
+                StreamEvent.CreatePunctuation<int>(20),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            input.OnCompleted();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void UngroupedSessionSnapshotPunctuationsAreNotBlockedColumnar()
+        {
+            var input = new Subject<StreamEvent<MyData>>();
+            var qc = new QueryContainer();
+            var inputStream = qc.RegisterInput(input);
+
+            var query = inputStream
+                .SessionTimeoutWindow(5, 10)
+                .Sum(x => x.field1);
+            var output = new List<StreamEvent<int>>();
+            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            // Punctuations preceding data events should flow through the system
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(1));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(2));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(3));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(4));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(5));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(6));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(7));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(8));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(9));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(10));
+            var expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(1),
+                StreamEvent.CreatePunctuation<int>(2),
+                StreamEvent.CreatePunctuation<int>(3),
+                StreamEvent.CreatePunctuation<int>(4),
+                StreamEvent.CreatePunctuation<int>(5),
+                StreamEvent.CreatePunctuation<int>(6),
+                StreamEvent.CreatePunctuation<int>(7),
+                StreamEvent.CreatePunctuation<int>(8),
+                StreamEvent.CreatePunctuation<int>(9),
+                StreamEvent.CreatePunctuation<int>(10),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // A session should retain and emit all of its contained punctuations
+            input.OnNext(StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(11));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(12));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(13));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(14));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(15));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreateStart(10, 1),
+                StreamEvent.CreatePunctuation<int>(11),
+                StreamEvent.CreatePunctuation<int>(12),
+                StreamEvent.CreatePunctuation<int>(13),
+                StreamEvent.CreatePunctuation<int>(14),
+                StreamEvent.CreateEnd(15, 10, 1),
+                StreamEvent.CreatePunctuation<int>(15),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // Future punctuations should not be blocked while no session is active
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(16));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(17));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(18));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(19));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(20));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(16),
+                StreamEvent.CreatePunctuation<int>(17),
+                StreamEvent.CreatePunctuation<int>(18),
+                StreamEvent.CreatePunctuation<int>(19),
+                StreamEvent.CreatePunctuation<int>(20),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            input.OnCompleted();
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2912,6 +3442,182 @@ namespace SimpleTesting
             var result = query.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData).ToEnumerable().ToArray();
 
             Assert.IsTrue(result.SequenceEqual(expected));
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void GroupedSessionSnapshotPunctuationsAreNotBlockedColumnarSmallBatch()
+        {
+            var input = new Subject<StreamEvent<MyData>>();
+            var qc = new QueryContainer();
+            var inputStream = qc.RegisterInput(input);
+
+            var query = inputStream
+                .GroupApply(
+                    keySelector: o => true,
+                    applyFunc: o => o.SessionTimeoutWindow(5, 10).Sum(x => x.field1),
+                    resultSelector: (k, sum) => sum);
+            var output = new List<StreamEvent<int>>();
+            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            // Punctuations preceding data events should flow through the system
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(1));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(2));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(3));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(4));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(5));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(6));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(7));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(8));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(9));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(10));
+            var expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(1),
+                StreamEvent.CreatePunctuation<int>(2),
+                StreamEvent.CreatePunctuation<int>(3),
+                StreamEvent.CreatePunctuation<int>(4),
+                StreamEvent.CreatePunctuation<int>(5),
+                StreamEvent.CreatePunctuation<int>(6),
+                StreamEvent.CreatePunctuation<int>(7),
+                StreamEvent.CreatePunctuation<int>(8),
+                StreamEvent.CreatePunctuation<int>(9),
+                StreamEvent.CreatePunctuation<int>(10),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // A session should retain and emit all of its contained punctuations
+            input.OnNext(StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(11));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(12));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(13));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(14));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(15));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreateStart(10, 1),
+                StreamEvent.CreatePunctuation<int>(11),
+                StreamEvent.CreatePunctuation<int>(12),
+                StreamEvent.CreatePunctuation<int>(13),
+                StreamEvent.CreatePunctuation<int>(14),
+                StreamEvent.CreateEnd(15, 10, 1),
+                StreamEvent.CreatePunctuation<int>(15),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // Future punctuations should not be blocked while no session is active
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(16));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(17));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(18));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(19));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(20));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(16),
+                StreamEvent.CreatePunctuation<int>(17),
+                StreamEvent.CreatePunctuation<int>(18),
+                StreamEvent.CreatePunctuation<int>(19),
+                StreamEvent.CreatePunctuation<int>(20),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            input.OnCompleted();
+        }
+
+        [TestMethod, TestCategory("Gated")]
+        public void UngroupedSessionSnapshotPunctuationsAreNotBlockedColumnarSmallBatch()
+        {
+            var input = new Subject<StreamEvent<MyData>>();
+            var qc = new QueryContainer();
+            var inputStream = qc.RegisterInput(input);
+
+            var query = inputStream
+                .SessionTimeoutWindow(5, 10)
+                .Sum(x => x.field1);
+            var output = new List<StreamEvent<int>>();
+            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var process = qc.Restore();
+
+            // Punctuations preceding data events should flow through the system
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(1));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(2));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(3));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(4));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(5));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(6));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(7));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(8));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(9));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(10));
+            var expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(1),
+                StreamEvent.CreatePunctuation<int>(2),
+                StreamEvent.CreatePunctuation<int>(3),
+                StreamEvent.CreatePunctuation<int>(4),
+                StreamEvent.CreatePunctuation<int>(5),
+                StreamEvent.CreatePunctuation<int>(6),
+                StreamEvent.CreatePunctuation<int>(7),
+                StreamEvent.CreatePunctuation<int>(8),
+                StreamEvent.CreatePunctuation<int>(9),
+                StreamEvent.CreatePunctuation<int>(10),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // A session should retain and emit all of its contained punctuations
+            input.OnNext(StreamEvent.CreatePoint(10, new MyData { field1 = 1, field2 = "A" }));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(11));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(12));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(13));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(14));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(15));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreateStart(10, 1),
+                StreamEvent.CreatePunctuation<int>(11),
+                StreamEvent.CreatePunctuation<int>(12),
+                StreamEvent.CreatePunctuation<int>(13),
+                StreamEvent.CreatePunctuation<int>(14),
+                StreamEvent.CreateEnd(15, 10, 1),
+                StreamEvent.CreatePunctuation<int>(15),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            // Future punctuations should not be blocked while no session is active
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(16));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(17));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(18));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(19));
+            input.OnNext(StreamEvent.CreatePunctuation<MyData>(20));
+            expected = new List<StreamEvent<int>>
+            {
+                StreamEvent.CreatePunctuation<int>(16),
+                StreamEvent.CreatePunctuation<int>(17),
+                StreamEvent.CreatePunctuation<int>(18),
+                StreamEvent.CreatePunctuation<int>(19),
+                StreamEvent.CreatePunctuation<int>(20),
+            };
+
+            process.Flush();
+            Assert.IsTrue(output.SequenceEqual(expected));
+            output.Clear();
+
+            input.OnCompleted();
         }
 
         [TestMethod, TestCategory("Gated")]

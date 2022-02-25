@@ -95,7 +95,7 @@ namespace Microsoft.StreamProcessing
         {
             if (isData && this.maximumDuration < StreamEvent.InfinitySyncTime)
             {
-
+                // Evaluate new windowEndTime from maximumDuration and new data event timestamp
                 if (this.windowEndTime == StreamEvent.InfinitySyncTime)
                 {
                     long mod = timestamp % this.maximumDuration;
@@ -105,13 +105,21 @@ namespace Microsoft.StreamProcessing
                 {
                     this.windowEndTime = timestamp - (timestamp % this.maximumDuration) + this.maximumDuration;
                 }
-
             }
 
-            var threshhold = this.lastDataTime == long.MinValue
-                ? this.windowEndTime
-                : Math.Min(this.lastDataTime + this.sessionTimeout, this.windowEndTime);
-            if (timestamp >= threshhold)
+            long threshold;
+            if (this.lastDataTime == long.MinValue)
+            {
+                threshold = isData
+                    ? this.windowEndTime // first ever data event, start retaining batches for this session
+                    : 0; // still have never seen a data event, flush any punctuation-only batches
+            }
+            else
+            {
+                threshold = Math.Min(this.lastDataTime + this.sessionTimeout, this.windowEndTime);
+            }
+
+            if (timestamp >= threshold)
             {
                 StreamMessage<TKey, TPayload> batch;
                 while (this.batches.Any())
@@ -126,14 +134,14 @@ namespace Microsoft.StreamProcessing
                     {
                         for (; this.windowStartIdx < count; this.windowStartIdx++)
                         {
-                            if (vsync[this.windowStartIdx] >= threshhold)
+                            if (vsync[this.windowStartIdx] >= threshold)
                             {
                                 this.windowEndTime = (timestamp < this.lastDataTime + this.sessionTimeout) ? StreamEvent.MaxSyncTime : StreamEvent.InfinitySyncTime;
                                 if (vother[this.windowStartIdx] != StreamEvent.PunctuationOtherTime)
                                     return;
                             }
                             if ((bv[this.windowStartIdx >> 6] & (1L << (this.windowStartIdx & 0x3f))) == 0)
-                                vother[this.windowStartIdx] = threshhold;
+                                vother[this.windowStartIdx] = threshold;
                         }
                         if (this.windowStartIdx == count)
                         {
