@@ -26,8 +26,9 @@ namespace Microsoft.StreamProcessing
 {
     internal static class Transformer
     {
-        private static readonly bool IsNetCore = RuntimeInformation.FrameworkDescription.Contains(".NET Core") ||
-            RuntimeInformation.FrameworkDescription.Contains(".NET 5") || RuntimeInformation.FrameworkDescription.Contains(".NET 6");
+        // For .Net Framework, the framework name is like ".NET Framework 4.x.x.x", and uses Net Framework Assembly
+        // For .Net Core and .Net, the framework name is like ".NET Core 3.x.x" or ".NET 5.x.x", and use Net Core Assembly
+        private static readonly bool IsNetCore = !RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework");
 
         private static readonly Lazy<IEnumerable<MetadataReference>> baseAssemblyReferences
             = new Lazy<IEnumerable<MetadataReference>>(() => IsNetCore ? GetNetCoreAssemblyReferences() : GetNetFrameworkAssemblyReferences());
