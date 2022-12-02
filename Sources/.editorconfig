@@ -51,3 +51,13 @@ csharp_new_line_before_finally = true
 csharp_indent_case_contents = true
 csharp_indent_switch_labels = true
 csharp_preserve_single_line_statements = false
+[*.cs]
+
+# Default severity for analyzer diagnostics with category 'StyleCop.CSharp.NamingRules'
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.NamingRules.severity = none
+
+# Default severity for all analyzer diagnostics
+dotnet_analyzer_diagnostic.severity = none
+
+# SA1314: Type parameter names should begin with T
+dotnet_diagnostic.SA1314.severity = none

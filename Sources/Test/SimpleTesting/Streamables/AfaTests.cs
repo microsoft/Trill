@@ -845,15 +845,15 @@ namespace SimpleTesting
             var source = new StreamEvent<Tuple<string, int>>[]
             {
                 StreamEvent.CreateStart(0, new Tuple<string, int>("A", 1)),
-                    StreamEvent.CreateStart(1, new Tuple<string, int>("A", 2)),
-                    StreamEvent.CreateStart(2, new Tuple<string, int>("B", 2)),
+                StreamEvent.CreateStart(1, new Tuple<string, int>("A", 2)),
+                StreamEvent.CreateStart(2, new Tuple<string, int>("B", 2)),
                 StreamEvent.CreateStart(3, new Tuple<string, int>("A", 1)),
                 StreamEvent.CreateStart(4, new Tuple<string, int>("B", 1)),
-                    StreamEvent.CreateStart(5, new Tuple<string, int>("B", 2)),
+                StreamEvent.CreateStart(5, new Tuple<string, int>("B", 2)),
                 StreamEvent.CreateStart(6, new Tuple<string, int>("B", 1)),
                 StreamEvent.CreateStart(7, new Tuple<string, int>("C", 1)),
-                    StreamEvent.CreateStart(8, new Tuple<string, int>("B", 2)),
-                    StreamEvent.CreateStart(9, new Tuple<string, int>("A", 2)),
+                StreamEvent.CreateStart(8, new Tuple<string, int>("B", 2)),
+                StreamEvent.CreateStart(9, new Tuple<string, int>("A", 2)),
             }.ToObservable()
                 .ToStreamable()
                 .AlterEventDuration(7);
@@ -893,18 +893,18 @@ namespace SimpleTesting
             var source = new StreamEvent<Tuple<string, int>>[]
             {
                 StreamEvent.CreateStart(0, new Tuple<string, int>("A", 1)),
-                    StreamEvent.CreateStart(1, new Tuple<string, int>("A", 2)),
-                    StreamEvent.CreateStart(1, new Tuple<string, int>("B", 2)),
+                StreamEvent.CreateStart(1, new Tuple<string, int>("A", 2)),
+                StreamEvent.CreateStart(1, new Tuple<string, int>("B", 2)),
                 StreamEvent.CreateStart(3, new Tuple<string, int>("A", 1)),
 
                 StreamEvent.CreatePunctuation<Tuple<string, int>>(4),
 
                 StreamEvent.CreateStart(4, new Tuple<string, int>("B", 1)),
-                    StreamEvent.CreateStart(4, new Tuple<string, int>("B", 2)),
+                StreamEvent.CreateStart(4, new Tuple<string, int>("B", 2)),
                 StreamEvent.CreateStart(5, new Tuple<string, int>("B", 1)),
                 StreamEvent.CreateStart(5, new Tuple<string, int>("C", 1)),
-                    StreamEvent.CreateStart(6, new Tuple<string, int>("B", 2)),
-                    StreamEvent.CreateStart(7, new Tuple<string, int>("A", 2)),
+                StreamEvent.CreateStart(6, new Tuple<string, int>("B", 2)),
+                StreamEvent.CreateStart(7, new Tuple<string, int>("A", 2)),
 
                 StreamEvent.CreatePunctuation<Tuple<string, int>>(7),
             }.ToObservable()
@@ -959,23 +959,23 @@ namespace SimpleTesting
             var source = new PartitionedStreamEvent<int, string>[]
             {
                 PartitionedStreamEvent.CreateStart(1, 0, "A"),
-                            PartitionedStreamEvent.CreateStart(2, 0, "A"),
+                PartitionedStreamEvent.CreateStart(2, 0, "A"),
                 PartitionedStreamEvent.CreateStart(1, 1, "B"),
                 PartitionedStreamEvent.CreateStart(1, 2, "B"),
-                            PartitionedStreamEvent.CreateStart(2, 2, "B"),
+                PartitionedStreamEvent.CreateStart(2, 2, "B"),
                 PartitionedStreamEvent.CreateStart(1, 3, "A"),
                 PartitionedStreamEvent.CreateStart(1, 4, "C"),
-                            PartitionedStreamEvent.CreateStart(2, 3, "C"),
-                            PartitionedStreamEvent.CreateStart(2, 4, "A"),
+                PartitionedStreamEvent.CreateStart(2, 3, "C"),
+                PartitionedStreamEvent.CreateStart(2, 4, "A"),
                 PartitionedStreamEvent.CreateStart(1, 5, "A"),
                 PartitionedStreamEvent.CreateStart(1, 6, "B"),
-                            PartitionedStreamEvent.CreateStart(2, 5, "B"),
+                PartitionedStreamEvent.CreateStart(2, 5, "B"),
                 PartitionedStreamEvent.CreateStart(1, 7, "B"),
-                            PartitionedStreamEvent.CreateStart(2, 6, "B"),
+                PartitionedStreamEvent.CreateStart(2, 6, "B"),
                 PartitionedStreamEvent.CreateStart(1, 8, "B"),
                 PartitionedStreamEvent.CreateStart(1, 9, "A"),
-                            PartitionedStreamEvent.CreateStart(2, 7, "A"),
-                            PartitionedStreamEvent.CreateStart(2, 8, "B")
+                PartitionedStreamEvent.CreateStart(2, 7, "A"),
+                PartitionedStreamEvent.CreateStart(2, 8, "B")
             }.ToObservable()
                 .ToStreamable()
                 .AlterEventDuration(7);
@@ -1016,23 +1016,23 @@ namespace SimpleTesting
             var source = new PartitionedStreamEvent<int, string>[]
             {
                 PartitionedStreamEvent.CreateStart(1, 0, "A"),
-                            PartitionedStreamEvent.CreateStart(2, 0, "A"),
+                PartitionedStreamEvent.CreateStart(2, 0, "A"),
                 PartitionedStreamEvent.CreateStart(1, 1, "B"),
                 PartitionedStreamEvent.CreateStart(1, 1, "B"),
-                            PartitionedStreamEvent.CreateStart(2, 0, "B"),
+                PartitionedStreamEvent.CreateStart(2, 0, "B"),
                 PartitionedStreamEvent.CreateStart(1, 3, "A"),
                 PartitionedStreamEvent.CreateStart(1, 4, "C"),
-                            PartitionedStreamEvent.CreateStart(2, 3, "C"),
-                            PartitionedStreamEvent.CreateStart(2, 4, "A"),
+                PartitionedStreamEvent.CreateStart(2, 3, "C"),
+                PartitionedStreamEvent.CreateStart(2, 4, "A"),
                 PartitionedStreamEvent.CreateStart(1, 5, "A"),
                 PartitionedStreamEvent.CreateStart(1, 6, "B"),
-                            PartitionedStreamEvent.CreateStart(2, 4, "B"),
+                PartitionedStreamEvent.CreateStart(2, 4, "B"),
                 PartitionedStreamEvent.CreateStart(1, 7, "B"),
-                            PartitionedStreamEvent.CreateStart(2, 6, "B"),
+                PartitionedStreamEvent.CreateStart(2, 6, "B"),
                 PartitionedStreamEvent.CreateStart(1, 8, "B"),
                 PartitionedStreamEvent.CreateStart(1, 9, "A"),
-                            PartitionedStreamEvent.CreateStart(2, 7, "A"),
-                            PartitionedStreamEvent.CreateStart(2, 8, "B")
+                PartitionedStreamEvent.CreateStart(2, 7, "A"),
+                PartitionedStreamEvent.CreateStart(2, 8, "B")
             }.ToObservable()
                 .ToStreamable()
                 .AlterEventDuration(7);
