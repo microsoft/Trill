@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net6.0;net7.0;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net7.0;net6.0;net472</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
@@ -10,13 +10,6 @@
     <PackageReference Include="System.Reactive" Version="5.0.0" />
     <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="StyleCop.Analyzers" Version="1.1.118">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
   <PropertyGroup>
