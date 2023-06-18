@@ -82,8 +82,8 @@ namespace SimpleTesting
             var query =
             leftStream.LeftOuterJoin(rightStream, e => e.field1, e => e.field3,
                (l, r) => l.field2 != "E",
-                (l) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = tmp1, field4 = tmp2 },
-                (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
+               (l) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = tmp1, field4 = tmp2 },
+               (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
 
             var result = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData);
             var resultAsync = result.ForEachAsync(o => output.Add(o));
@@ -144,8 +144,8 @@ namespace SimpleTesting
             var query =
             leftStream.LeftOuterJoin(rightStream, e => e.field1, e => e.field3,
                (l, r) => l.field2 != "E",
-                (l) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = tmp1, field4 = tmp2 },
-                (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
+               (l) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = tmp1, field4 = tmp2 },
+               (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
 
             var result = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData);
             var resultAsync = result.ForEachAsync(o => output.Add(o));
@@ -205,8 +205,8 @@ namespace SimpleTesting
             var query =
             leftStream.LeftOuterJoin(rightStream, e => e.field1, e => e.field3,
                (l, r) => l.field2 != "E",
-                (l) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = tmp1, field4 = tmp2 },
-                (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
+               (l) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = tmp1, field4 = tmp2 },
+               (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
 
             var result = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData);
             var resultAsync = result.ForEachAsync(o => output.Add(o));
@@ -267,8 +267,8 @@ namespace SimpleTesting
             var query =
             leftStream.LeftOuterJoin(rightStream, e => e.field1, e => e.field3,
                (l, r) => l.field2 != "E",
-                (l) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = tmp1, field4 = tmp2 },
-                (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
+               (l) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = tmp1, field4 = tmp2 },
+               (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
 
             var result = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData);
             var resultAsync = result.ForEachAsync(o => output.Add(o));

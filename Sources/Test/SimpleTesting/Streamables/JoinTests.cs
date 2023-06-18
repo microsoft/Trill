@@ -83,7 +83,7 @@ namespace SimpleTesting
                     input2,
                     e => e.field1,
                     e => e,
-                (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+                    (l, r) => new GameData() { EventType = l.field1, GameId = r, });
             var result = query
                 .ToPayloadEnumerable()
                 .ToArray();
@@ -446,7 +446,7 @@ namespace SimpleTesting
                     input2,
                     e => e.field1,
                     e => e,
-                (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+                    (l, r) => new GameData() { EventType = l.field1, GameId = r, });
             var result = query
                 .ToPayloadEnumerable()
                 .ToArray();
@@ -810,7 +810,7 @@ namespace SimpleTesting
                     input2,
                     e => e.field1,
                     e => e,
-                (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+                    (l, r) => new GameData() { EventType = l.field1, GameId = r, });
             var result = query
                 .ToPayloadEnumerable()
                 .ToArray();
@@ -1174,7 +1174,7 @@ namespace SimpleTesting
                     input2,
                     e => e.field1,
                     e => e,
-                (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+                    (l, r) => new GameData() { EventType = l.field1, GameId = r, });
             var result = query
                 .ToPayloadEnumerable()
                 .ToArray();
@@ -1537,7 +1537,7 @@ namespace SimpleTesting
                     input2,
                     e => e.field1,
                     e => e,
-                (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+                    (l, r) => new GameData() { EventType = l.field1, GameId = r, });
             var result = query
                 .ToPayloadEnumerable()
                 .ToArray();
@@ -1900,7 +1900,7 @@ namespace SimpleTesting
                     input2,
                     e => e.field1,
                     e => e,
-                (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+                    (l, r) => new GameData() { EventType = l.field1, GameId = r, });
             var result = query
                 .ToPayloadEnumerable()
                 .ToArray();
@@ -2264,7 +2264,7 @@ namespace SimpleTesting
                     input2,
                     e => e.field1,
                     e => e,
-                (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+                    (l, r) => new GameData() { EventType = l.field1, GameId = r, });
             var result = query
                 .ToPayloadEnumerable()
                 .ToArray();
@@ -2628,7 +2628,7 @@ namespace SimpleTesting
                     input2,
                     e => e.field1,
                     e => e,
-                (l, r) => new GameData() { EventType = l.field1, GameId = r, });
+                    (l, r) => new GameData() { EventType = l.field1, GameId = r, });
             var result = query
                 .ToPayloadEnumerable()
                 .ToArray();
