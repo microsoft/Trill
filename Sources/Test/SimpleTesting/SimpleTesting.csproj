@@ -160,7 +160,4 @@
       <DependentUpon>ShuffleStreamableTests.tt</DependentUpon>
     </Compile>
   </ItemGroup>
-  
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(MSBuildAssemblyVersion)\TextTemplating\Microsoft.TextTemplating.targets" />
-
 </Project>
