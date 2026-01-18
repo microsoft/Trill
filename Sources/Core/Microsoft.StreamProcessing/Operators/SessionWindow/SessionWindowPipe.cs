@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Microsoft.StreamProcessing.Internal;
 using Microsoft.StreamProcessing.Internal.Collections;
@@ -25,7 +26,7 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private StreamMessage<TKey, TPayload> output;
 
-        private LinkedList<TKey> orderedKeys = new LinkedList<TKey>();
+        private Queue<SessionThreshold> orderedKeys = new Queue<SessionThreshold>();
         [DataMember]
         private FastDictionary2<TKey, long> windowEndTimeDictionary = new FastDictionary2<TKey, long>();
         [DataMember]
@@ -68,13 +69,21 @@ namespace Microsoft.StreamProcessing
                 }
             }
 
-            var current = this.orderedKeys.First;
-            while (current != null)
+            while (this.orderedKeys.Count > 0)
             {
-                this.lastDataTimeDictionary.Lookup(current.Value, out int cIndex);
+                var current = this.orderedKeys.Peek();
+                this.lastDataTimeDictionary.Lookup(current.Key, out int cIndex);
                 var threshold = this.lastDataTimeDictionary.entries[cIndex].value == long.MinValue
                     ? this.windowEndTimeDictionary.entries[cIndex].value
-                    : Math.Min(this.lastDataTimeDictionary.entries[cIndex].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[cIndex].value);
+                    : CalculateThreshold(this.lastDataTimeDictionary.entries[cIndex].value, cIndex);
+
+                // Skip stale threshold entries (can happen when threshold is updated and new entry is enqueued)
+                if (current.Threshold != threshold)
+                {
+                    this.orderedKeys.Dequeue();
+                    continue;
+                }
+
                 if (timestamp >= threshold)
                 {
                     var queue = this.stateDictionary.entries[cIndex].value;
@@ -95,13 +104,12 @@ namespace Microsoft.StreamProcessing
                         this.windowEndTimeDictionary.entries[cIndex].value = StreamEvent.MaxSyncTime;
                     else
                     {
-                        this.windowEndTimeDictionary.Remove(current.Value);
-                        this.lastDataTimeDictionary.Remove(current.Value);
-                        this.stateDictionary.Remove(current.Value);
+                        this.windowEndTimeDictionary.Remove(current.Key);
+                        this.lastDataTimeDictionary.Remove(current.Key);
+                        this.stateDictionary.Remove(current.Key);
                     }
 
-                    this.orderedKeys.RemoveFirst();
-                    current = this.orderedKeys.First;
+                    this.orderedKeys.Dequeue();
                 }
                 else break;
             }
@@ -142,17 +150,18 @@ namespace Microsoft.StreamProcessing
                             if (!this.lastDataTimeDictionary.Lookup(batch.key.col[i], out keyIndex))
                                 keyIndex = AllocatePartition(batch.key.col[i]);
 
+                            var newThreshold = CalculateThreshold(vsync[i], keyIndex);
+
                             if (!this.stateDictionary.entries[keyIndex].value.Any())
-                                this.orderedKeys.AddLast(new LinkedListNode<TKey>(batch.key.col[i]));
+                            {
+                                this.orderedKeys.Enqueue(new SessionThreshold { Key = batch.key.col[i], Threshold = newThreshold });
+                            }
                             else
                             {
-                                var oldThreshold = Math.Min(this.lastDataTimeDictionary.entries[keyIndex].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[keyIndex].value);
-                                var newThreshold = Math.Min(vsync[i] + this.sessionTimeout, this.windowEndTimeDictionary.entries[keyIndex].value);
+                                var oldThreshold = CalculateThreshold(this.lastDataTimeDictionary.entries[keyIndex].value, keyIndex);
                                 if (newThreshold > oldThreshold)
                                 {
-                                    var node = this.orderedKeys.Find(batch.key.col[i]);
-                                    this.orderedKeys.Remove(node);
-                                    this.orderedKeys.AddLast(node);
+                                    this.orderedKeys.Enqueue(new SessionThreshold { Key = batch.key.col[i], Threshold = newThreshold });
                                 }
                             }
 
@@ -227,10 +236,10 @@ namespace Microsoft.StreamProcessing
                 {
                     temp.Add(Tuple.Create(
                         this.windowEndTimeDictionary.entries[iter].key,
-                        Math.Min(this.lastDataTimeDictionary.entries[iter].value + this.sessionTimeout, this.windowEndTimeDictionary.entries[iter].value)));
+                        CalculateThreshold(this.lastDataTimeDictionary.entries[iter].value, iter)));
                 }
             }
-            foreach (var item in temp.OrderBy(o => o.Item2)) this.orderedKeys.AddLast(new LinkedListNode<TKey>(item.Item1));
+            foreach (var item in temp.OrderBy(o => o.Item2)) this.orderedKeys.Enqueue(new SessionThreshold { Key = item.Item1, Threshold = item.Item2 });
             base.UpdatePointers();
         }
 
@@ -241,6 +250,10 @@ namespace Microsoft.StreamProcessing
             this.lastDataTimeDictionary.Clear();
             this.stateDictionary.Clear();
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private long CalculateThreshold(long lastDataTime, int keyIndex) =>
+            Math.Min(lastDataTime + this.sessionTimeout, this.windowEndTimeDictionary.entries[keyIndex].value);
 
         [DataContract]
         private struct ActiveEvent
@@ -255,6 +268,16 @@ namespace Microsoft.StreamProcessing
             public long Sync;
 
             public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
+        }
+
+        [DataContract]
+        private struct SessionThreshold
+        {
+            [DataMember]
+            public long Threshold;
+
+            [DataMember]
+            public TKey Key;
         }
     }
 }
