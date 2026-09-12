@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     public sealed class PooledElasticCircularBuffer<T> : IEnumerable<T>, IDisposable
     {
         private const int Capacity = 0xff;
-        private readonly LinkedList<PooledCircularBuffer<T>> buffers = new LinkedList<PooledCircularBuffer<T>>();
+        private readonly LinkedList<PooledCircularBuffer<T>> buffers = new();
         private LinkedListNode<PooledCircularBuffer<T>> head;
         private LinkedListNode<PooledCircularBuffer<T>> tail;
         private readonly ColumnPool<T> pool;
@@ -116,8 +116,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         {
             if (this.tail.Value.IsFull())
             {
-                var next = this.tail.Next;
-                if (next == null) next = this.buffers.First;
+                var next = this.tail.Next ?? this.buffers.First;
                 if (!next.Value.IsEmpty())
                 {
                     next = new LinkedListNode<PooledCircularBuffer<T>>(new PooledCircularBuffer<T>(Capacity, this.pool));
@@ -136,7 +135,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// </summary>
         /// <param name="value"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Add(T value) => Enqueue(ref value);
+        public void Add(T value) => this.Enqueue(ref value);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -182,7 +181,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 this.head = this.head.Next;
                 oldHead.Value.Return();
                 this.buffers.Remove(oldHead);
-                if (this.head == null) this.head = this.buffers.First;
+                this.head ??= this.buffers.First;
             }
             return true;
         }
@@ -253,7 +252,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             }
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.GetEnumerator();
 
         /// <summary>
         /// Currently for internal use only - do not use directly.

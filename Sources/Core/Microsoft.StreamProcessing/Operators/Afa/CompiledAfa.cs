@@ -30,7 +30,7 @@ namespace Microsoft.StreamProcessing
             this.uncompiledAfa = afa;
             this.defaultRegister = afa.DefaultRegister;
             this.defaultAccumulator = afa.DefaultAccumulator;
-            CompileAfa(afa);
+            this.CompileAfa(afa);
         }
 
         private void CompileAfa(Afa<TPayload, TRegister, TAccumulator> afa)

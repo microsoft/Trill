@@ -30,9 +30,9 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private long lastSyncTime = long.MinValue;
         [DataMember]
-        private EndPointHeap endPointHeap = new EndPointHeap();
+        private EndPointHeap endPointHeap = new();
         [DataMember]
-        private FastMap<ActiveEvent> intervalMap = new FastMap<ActiveEvent>();
+        private FastMap<ActiveEvent> intervalMap = new();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public QuantizeLifetimePipe() { }
@@ -68,7 +68,7 @@ namespace Microsoft.StreamProcessing
                 this.output[ind] = this.intervalMap.Values[index].Payload;
                 this.output.hash.col[ind] = this.intervalMap.Values[index].Hash;
 
-                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
 
                 this.intervalMap.Remove(index);
             }
@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing
                 {
                     if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
                     {
-                        if (vsync[i] > this.lastSyncTime) ReachTime(vsync[i]);
+                        if (vsync[i] > this.lastSyncTime) this.ReachTime(vsync[i]);
 
                         if (vother[i] == StreamEvent.InfinitySyncTime) // Start edge
                         {
@@ -98,7 +98,7 @@ namespace Microsoft.StreamProcessing
                             this.output.key.col[ind] = batch.key.col[i];
                             this.output.payload.col[ind] = batch.payload.col[i];
                             this.output.hash.col[ind] = batch.hash.col[i];
-                            if (this.output.Count == Config.DataBatchSize) FlushContents();
+                            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         else if (vother[i] > vsync[i]) // Interval
                         {
@@ -109,7 +109,7 @@ namespace Microsoft.StreamProcessing
                             this.output.key.col[ind] = batch.key.col[i];
                             this.output[ind] = batch[i];
                             this.output.hash.col[ind] = batch.hash.col[i];
-                            if (this.output.Count == Config.DataBatchSize) FlushContents();
+                            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         else // End edge
                         {
@@ -121,7 +121,7 @@ namespace Microsoft.StreamProcessing
                     }
                     else if (vother[i] == long.MinValue) // Punctuation
                     {
-                        if (vsync[i] > this.lastSyncTime) ReachTime(vsync[i]);
+                        if (vsync[i] > this.lastSyncTime) this.ReachTime(vsync[i]);
 
                         int ind = this.output.Count++;
                         this.output.vsync.col[ind] = vsync[i] - ((vsync[i] - this.offset) % this.progress + this.progress) % this.progress;
@@ -130,7 +130,7 @@ namespace Microsoft.StreamProcessing
                         this.output.payload.col[ind] = default;
                         this.output.hash.col[ind] = batch.hash.col[i];
                         this.output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                 }
             }
@@ -172,7 +172,7 @@ namespace Microsoft.StreamProcessing
                 this.Other = other;
             }
 
-            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
+            public override readonly string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
 
     }

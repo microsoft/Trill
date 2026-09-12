@@ -29,9 +29,9 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<TKey, TResult> output;
 
         [DataMember]
-        private FastMap<ActiveEvent<TLeft>> leftEdgeMap = new FastMap<ActiveEvent<TLeft>>(DefaultCapacity);
+        private FastMap<ActiveEvent<TLeft>> leftEdgeMap = new(DefaultCapacity);
         [DataMember]
-        private FastMap<ActiveEvent<TRight>> rightEdgeMap = new FastMap<ActiveEvent<TRight>>(DefaultCapacity);
+        private FastMap<ActiveEvent<TRight>> rightEdgeMap = new(DefaultCapacity);
         [DataMember]
         private long nextLeftTime = long.MinValue;
         [DataMember]
@@ -89,7 +89,7 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
+            this.UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
 
             if (!GoToVisibleRow(rightBatch))
             {
@@ -98,7 +98,7 @@ namespace Microsoft.StreamProcessing
                 return;
             }
 
-            UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
+            this.UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
 
             FastMap<ActiveEvent<TRight>>.FindTraverser rightEdges = default;
             FastMap<ActiveEvent<TLeft>>.FindTraverser leftEdges = default;
@@ -111,7 +111,7 @@ namespace Microsoft.StreamProcessing
                 {
                     if (leftPunctuation)
                     {
-                        AddPunctuationToBatch(this.nextLeftTime);
+                        this.AddPunctuationToBatch(this.nextLeftTime);
                     }
                     else
                     {
@@ -129,7 +129,7 @@ namespace Microsoft.StreamProcessing
                                 if (this.keyComparer(key, this.rightEdgeMap.Values[rightIndex].Key))
                                 {
                                     payload = leftBatch[leftBatch.iter];
-                                    OutputStartEdge(this.nextLeftTime, ref key, ref payload, ref this.rightEdgeMap.Values[rightIndex].Payload, hash);
+                                    this.OutputStartEdge(this.nextLeftTime, ref key, ref payload, ref this.rightEdgeMap.Values[rightIndex].Payload, hash);
                                 }
                             }
                         }
@@ -154,13 +154,13 @@ namespace Microsoft.StreamProcessing
                         return;
                     }
 
-                    UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
+                    this.UpdateNextLeftTime(leftBatch.vsync.col[leftBatch.iter]);
                 }
                 else
                 {
                     if (rightPunctuation)
                     {
-                        AddPunctuationToBatch(this.nextRightTime);
+                        this.AddPunctuationToBatch(this.nextRightTime);
                     }
                     else
                     {
@@ -178,7 +178,7 @@ namespace Microsoft.StreamProcessing
                                 if (this.keyComparer(key, this.leftEdgeMap.Values[leftIndex].Key))
                                 {
                                     payload = rightBatch[rightBatch.iter];
-                                    OutputStartEdge(this.nextRightTime, ref key, ref this.leftEdgeMap.Values[leftIndex].Payload, ref payload, hash);
+                                    this.OutputStartEdge(this.nextRightTime, ref key, ref this.leftEdgeMap.Values[leftIndex].Payload, ref payload, hash);
                                 }
                             }
                         }
@@ -201,7 +201,7 @@ namespace Microsoft.StreamProcessing
                         return;
                     }
 
-                    UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
+                    this.UpdateNextRightTime(rightBatch.vsync.col[rightBatch.iter]);
                 }
             }
         }
@@ -218,7 +218,7 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateNextLeftTime(batch.vsync.col[batch.iter]);
+                this.UpdateNextLeftTime(batch.vsync.col[batch.iter]);
 
                 if (this.nextLeftTime > this.nextRightTime)
                 {
@@ -228,7 +228,7 @@ namespace Microsoft.StreamProcessing
 
                 if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
                 {
-                    AddPunctuationToBatch(batch.vsync.col[batch.iter]);
+                    this.AddPunctuationToBatch(batch.vsync.col[batch.iter]);
                     batch.iter++;
                     continue;
                 }
@@ -248,7 +248,7 @@ namespace Microsoft.StreamProcessing
                         if (this.keyComparer(key, this.rightEdgeMap.Values[rightIndex].Key))
                         {
                             payload = batch[batch.iter];
-                            OutputStartEdge(this.nextLeftTime, ref key, ref payload, ref this.rightEdgeMap.Values[rightIndex].Payload, hash);
+                            this.OutputStartEdge(this.nextLeftTime, ref key, ref payload, ref this.rightEdgeMap.Values[rightIndex].Payload, hash);
                         }
                     }
                 }
@@ -278,7 +278,7 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateNextRightTime(batch.vsync.col[batch.iter]);
+                this.UpdateNextRightTime(batch.vsync.col[batch.iter]);
 
                 if (this.nextRightTime > this.nextLeftTime)
                 {
@@ -288,7 +288,7 @@ namespace Microsoft.StreamProcessing
 
                 if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
                 {
-                    AddPunctuationToBatch(batch.vsync.col[batch.iter]);
+                    this.AddPunctuationToBatch(batch.vsync.col[batch.iter]);
                     batch.iter++;
                     continue;
                 }
@@ -308,7 +308,7 @@ namespace Microsoft.StreamProcessing
                         if (this.keyComparer(key, this.leftEdgeMap.Values[leftIndex].Key))
                         {
                             payload = batch[batch.iter];
-                            OutputStartEdge(this.nextRightTime, ref key, ref this.leftEdgeMap.Values[leftIndex].Payload, ref payload, hash);
+                            this.OutputStartEdge(this.nextRightTime, ref key, ref this.leftEdgeMap.Values[leftIndex].Payload, ref payload, hash);
                         }
                     }
                 }
@@ -372,7 +372,7 @@ namespace Microsoft.StreamProcessing
                 this.output.hash.col[index] = 0;
                 this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
 
-                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
             }
         }
 
@@ -386,7 +386,7 @@ namespace Microsoft.StreamProcessing
             this.output[index] = this.selector(leftPayload, rightPayload);
             this.output.hash.col[index] = hash;
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         protected override void FlushContents()
@@ -414,7 +414,7 @@ namespace Microsoft.StreamProcessing
                 this.Payload = payload;
             }
 
-            public override string ToString()
+            public override readonly string ToString()
             {
                 return "[Key='" + this.Key + "', Payload='" + this.Payload + "']";
             }

@@ -148,7 +148,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public int Insert(int hash)
         {
             // Allocate free value to store new value.
-            int index = AllocateValue();
+            int index = this.AllocateValue();
 
             // Insert 'index' into bucket linked-list.
             int bucketPos = (hash & NotHighestBit) % this.capacity;
@@ -168,7 +168,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int Insert(int hash, T value)
         {
-            int index = Insert(hash);
+            int index = this.Insert(hash);
             this.values[index] = value;
             return index;
         }
@@ -183,7 +183,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public int InsertInvisible(int hash)
         {
             // Allocate free value to store new value.
-            int index = AllocateValue();
+            int index = this.AllocateValue();
 
             // Insert 'index' into invisible linked-list.
             this.hashAndNext[index] = ((long)hash << 32) | (uint)this.invisibleHead;
@@ -202,7 +202,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Assume(index > 0 && index <= this.initialized);
 
             // Remove from current list.
-            long hashNext = RemoveFromList(index);
+            long hashNext = this.RemoveFromList(index);
 
             // Insert into invisible list (with inverted index to denote invisible list).
             this.hashAndNext[index] = (hashNext & OnlyHashBits) | (uint)this.invisibleHead;
@@ -225,7 +225,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             }
 
             // Remove from current list.
-            RemoveFromList(index);
+            this.RemoveFromList(index);
 
             // Insert into free list (with inverted index to denote invisible list).
             this.hashAndNext[index] = (uint)this.freeHead;
@@ -276,7 +276,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public FindTraverser Find(int hash) => new FindTraverser(this, hash);
+        public FindTraverser Find(int hash) => new(this, hash);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -310,7 +310,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public VisibleTraverser Traverse() => new VisibleTraverser(this);
+        public VisibleTraverser Traverse() => new(this);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -318,7 +318,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public InvisibleTraverser TraverseInvisible() => new InvisibleTraverser(this);
+        public InvisibleTraverser TraverseInvisible() => new(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int AllocateValue()
@@ -336,7 +336,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             if (this.initialized >= this.capacity)
             {
                 // No free entries available, so resize.
-                Grow();
+                this.Grow();
             }
 
             this.count++;
@@ -682,14 +682,14 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public void Remove() => this.map.Remove(this.currIndex);
+            public readonly void Remove() => this.map.Remove(this.currIndex);
 
             /// <summary>
             /// Currently for internal use only - do not use directly.
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public void MakeInvisible() => this.map.MakeInvisible(this.currIndex);
+            public readonly void MakeInvisible() => this.map.MakeInvisible(this.currIndex);
         }
 
         /// <summary>

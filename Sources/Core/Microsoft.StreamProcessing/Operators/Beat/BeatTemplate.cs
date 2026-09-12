@@ -439,7 +439,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(";\r\n    }\r\n\r\n    protected override void FlushContents()\r\n    {\r\n        if (outpu" +
                     "t.Count == 0) return;\r\n        this.Observer.OnNext(output);\r\n        GetOutputB" +
                     "atch();\r\n    }\r\n\r\n");
- if (!noFields && !this.payloadType.GetTypeInfo().IsValueType) { 
+ if (!noFields && !this.payloadType.IsValueType) { 
             this.Write("    [DataContract]\r\n    private struct ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ActiveEventType));
             this.Write("\r\n    {\r\n        ");

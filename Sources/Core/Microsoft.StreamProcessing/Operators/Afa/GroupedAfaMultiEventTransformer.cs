@@ -13,8 +13,8 @@ namespace Microsoft.StreamProcessing
     internal partial class GroupedAfaMultiEventTemplate : AfaTemplate
     {
         private Func<string, string, string> keyEqualityComparer;
-        protected readonly List<Tuple<int, List<MultiEdgeInfo>>> edgeInfos = new List<Tuple<int, List<MultiEdgeInfo>>>();
-        protected readonly List<Tuple<int, List<MultiEdgeInfo>>> startEdgeInfos = new List<Tuple<int, List<MultiEdgeInfo>>>();
+        protected readonly List<Tuple<int, List<MultiEdgeInfo>>> edgeInfos = [];
+        protected readonly List<Tuple<int, List<MultiEdgeInfo>>> startEdgeInfos = [];
 
         private GroupedAfaMultiEventTemplate(string className, Type keyType, Type payloadType, Type registerType, Type accumulatorType)
             : base(className, keyType, payloadType, registerType, accumulatorType)
@@ -36,8 +36,8 @@ namespace Microsoft.StreamProcessing
         internal static Tuple<Type, string> GenerateAFA<TKey, TPayload, TRegister, TAccumulator>(
             AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream)
         {
-            Contract.Requires(stream != null);
-            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TRegister>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            ArgumentNullException.ThrowIfNull(stream);
+            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TRegister>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             var className = $"GeneratedGroupedAfaMultiEvent_{AFASequenceNumber++}";
             var template = new GroupedAfaMultiEventTemplate(className, typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(TAccumulator))

@@ -10,14 +10,12 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing.Serializer
 {
-    internal abstract class BinaryBase
+    internal abstract class BinaryBase(Stream stream)
     {
-        protected Stream stream;
+        protected readonly Stream stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
-        private static readonly ConcurrentDictionary<Tuple<Type, int>, object> columnPools = new ConcurrentDictionary<Tuple<Type, int>, object>();
-        private static readonly ConcurrentDictionary<int, object> bitVectorPools = new ConcurrentDictionary<int, object>();
-
-        protected BinaryBase(Stream stream) => this.stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        private static readonly ConcurrentDictionary<Tuple<Type, int>, object> columnPools = [];
+        private static readonly ConcurrentDictionary<int, object> bitVectorPools = [];
 
         protected static ColumnBatch<T> AllocateColumnBatch<T>(int size)
         {
@@ -33,7 +31,7 @@ namespace Microsoft.StreamProcessing.Serializer
                 pool.Get(out var result);
                 return result;
             }
-            return new ColumnBatch<T>(size);
+            return new(size);
         }
 
         protected static T[] AllocateArray<T>(int size)

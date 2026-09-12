@@ -30,8 +30,8 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState1, TResult1> aggregate1,
             Expression<Func<TResult1, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[1];
             Expression<Func<StructTuple<TState1>, TState1>> target1 = state => state.Item1;
@@ -93,9 +93,9 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState2, TResult2> aggregate2,
             Expression<Func<TResult1, TResult2, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[2];
             Expression<Func<StructTuple<TState1, TState2>, TState1>> target1 = state => state.Item1;
@@ -171,10 +171,10 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState3, TResult3> aggregate3,
             Expression<Func<TResult1, TResult2, TResult3, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[3];
             Expression<Func<StructTuple<TState1, TState2, TState3>, TState1>> target1 = state => state.Item1;
@@ -268,11 +268,11 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState4, TResult4> aggregate4,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[4];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4>, TState1>> target1 = state => state.Item1;
@@ -388,12 +388,12 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState5, TResult5> aggregate5,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[5];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5>, TState1>> target1 = state => state.Item1;
@@ -535,13 +535,13 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState6, TResult6> aggregate6,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[6];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TState1>> target1 = state => state.Item1;
@@ -713,14 +713,14 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState7, TResult7> aggregate7,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(aggregate7 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[7];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TState1>> target1 = state => state.Item1;
@@ -926,15 +926,15 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState8, TResult8> aggregate8,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(aggregate7 != null);
-            Contract.Requires(aggregate8 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[8];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TState1>> target1 = state => state.Item1;
@@ -1178,16 +1178,16 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState9, TResult9> aggregate9,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8, TResult9, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(aggregate7 != null);
-            Contract.Requires(aggregate8 != null);
-            Contract.Requires(aggregate9 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[9];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TState1>> target1 = state => state.Item1;
@@ -1473,17 +1473,17 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState10, TResult10> aggregate10,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8, TResult9, TResult10, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(aggregate7 != null);
-            Contract.Requires(aggregate8 != null);
-            Contract.Requires(aggregate9 != null);
-            Contract.Requires(aggregate10 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[10];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TState1>> target1 = state => state.Item1;
@@ -1815,18 +1815,18 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState11, TResult11> aggregate11,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8, TResult9, TResult10, TResult11, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(aggregate7 != null);
-            Contract.Requires(aggregate8 != null);
-            Contract.Requires(aggregate9 != null);
-            Contract.Requires(aggregate10 != null);
-            Contract.Requires(aggregate11 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[11];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TState1>> target1 = state => state.Item1;
@@ -2208,19 +2208,19 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState12, TResult12> aggregate12,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8, TResult9, TResult10, TResult11, TResult12, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(aggregate7 != null);
-            Contract.Requires(aggregate8 != null);
-            Contract.Requires(aggregate9 != null);
-            Contract.Requires(aggregate10 != null);
-            Contract.Requires(aggregate11 != null);
-            Contract.Requires(aggregate12 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[12];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TState1>> target1 = state => state.Item1;
@@ -2656,20 +2656,20 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState13, TResult13> aggregate13,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8, TResult9, TResult10, TResult11, TResult12, TResult13, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(aggregate7 != null);
-            Contract.Requires(aggregate8 != null);
-            Contract.Requires(aggregate9 != null);
-            Contract.Requires(aggregate10 != null);
-            Contract.Requires(aggregate11 != null);
-            Contract.Requires(aggregate12 != null);
-            Contract.Requires(aggregate13 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[13];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TState1>> target1 = state => state.Item1;
@@ -3163,21 +3163,21 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState14, TResult14> aggregate14,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8, TResult9, TResult10, TResult11, TResult12, TResult13, TResult14, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(aggregate7 != null);
-            Contract.Requires(aggregate8 != null);
-            Contract.Requires(aggregate9 != null);
-            Contract.Requires(aggregate10 != null);
-            Contract.Requires(aggregate11 != null);
-            Contract.Requires(aggregate12 != null);
-            Contract.Requires(aggregate13 != null);
-            Contract.Requires(aggregate14 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[14];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TState1>> target1 = state => state.Item1;
@@ -3733,22 +3733,22 @@ namespace Microsoft.StreamProcessing.Aggregates
             IAggregate<TInput, TState15, TResult15> aggregate15,
             Expression<Func<TResult1, TResult2, TResult3, TResult4, TResult5, TResult6, TResult7, TResult8, TResult9, TResult10, TResult11, TResult12, TResult13, TResult14, TResult15, TResult>> merger)
         {
-            Contract.Requires(aggregate1 != null);
-            Contract.Requires(aggregate2 != null);
-            Contract.Requires(aggregate3 != null);
-            Contract.Requires(aggregate4 != null);
-            Contract.Requires(aggregate5 != null);
-            Contract.Requires(aggregate6 != null);
-            Contract.Requires(aggregate7 != null);
-            Contract.Requires(aggregate8 != null);
-            Contract.Requires(aggregate9 != null);
-            Contract.Requires(aggregate10 != null);
-            Contract.Requires(aggregate11 != null);
-            Contract.Requires(aggregate12 != null);
-            Contract.Requires(aggregate13 != null);
-            Contract.Requires(aggregate14 != null);
-            Contract.Requires(aggregate15 != null);
-            Contract.Requires(merger != null);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(aggregate15);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[15];
             Expression<Func<StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TState1>> target1 = state => state.Item1;

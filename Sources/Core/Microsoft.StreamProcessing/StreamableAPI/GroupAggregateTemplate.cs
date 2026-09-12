@@ -32,10 +32,10 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>> aggregate1,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(merger);
 
             if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
             {
@@ -70,10 +70,10 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState1, TOutput1> aggregate1,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(merger);
 
             return source.Map(keySelector).Reduce(s => s.Aggregate(aggregate1), merger);
         }
@@ -102,11 +102,11 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState2, TOutput2>> aggregate2,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, StructTuple<TOutput1, TOutput2>>> aggregateMerger =
                 (output1, output2) => new StructTuple<TOutput1, TOutput2>
@@ -163,11 +163,11 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState2, TOutput2> aggregate2,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, StructTuple<TOutput1, TOutput2>>> aggregateMerger =
                 (output1, output2) => new StructTuple<TOutput1, TOutput2>
@@ -212,12 +212,12 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState3, TOutput3>> aggregate3,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, StructTuple<TOutput1, TOutput2, TOutput3>>> aggregateMerger =
                 (output1, output2, output3) => new StructTuple<TOutput1, TOutput2, TOutput3>
@@ -281,12 +281,12 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState3, TOutput3> aggregate3,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, StructTuple<TOutput1, TOutput2, TOutput3>>> aggregateMerger =
                 (output1, output2, output3) => new StructTuple<TOutput1, TOutput2, TOutput3>
@@ -336,13 +336,13 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState4, TOutput4>> aggregate4,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>>> aggregateMerger =
                 (output1, output2, output3, output4) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>
@@ -413,13 +413,13 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState4, TOutput4> aggregate4,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>>> aggregateMerger =
                 (output1, output2, output3, output4) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4>
@@ -474,14 +474,14 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState5, TOutput5>> aggregate5,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>>> aggregateMerger =
                 (output1, output2, output3, output4, output5) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>
@@ -559,14 +559,14 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState5, TOutput5> aggregate5,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>>> aggregateMerger =
                 (output1, output2, output3, output4, output5) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>
@@ -626,15 +626,15 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState6, TOutput6>> aggregate6,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>
@@ -719,15 +719,15 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState6, TOutput6> aggregate6,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6>
@@ -792,16 +792,16 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState7, TOutput7>> aggregate7,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>
@@ -893,16 +893,16 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState7, TOutput7> aggregate7,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7>
@@ -972,17 +972,17 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState8, TOutput8>> aggregate8,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>
@@ -1081,17 +1081,17 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState8, TOutput8> aggregate8,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8>
@@ -1166,18 +1166,18 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState9, TOutput9>> aggregate9,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>
@@ -1283,18 +1283,18 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState9, TOutput9> aggregate9,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9>
@@ -1374,19 +1374,19 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState10, TOutput10>> aggregate10,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>
@@ -1499,19 +1499,19 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState10, TOutput10> aggregate10,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10>
@@ -1596,20 +1596,20 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState11, TOutput11>> aggregate11,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>
@@ -1729,20 +1729,20 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState11, TOutput11> aggregate11,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11>
@@ -1832,21 +1832,21 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState12, TOutput12>> aggregate12,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>
@@ -1973,21 +1973,21 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState12, TOutput12> aggregate12,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12>
@@ -2082,22 +2082,22 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState13, TOutput13>> aggregate13,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>
@@ -2231,22 +2231,22 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState13, TOutput13> aggregate13,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13>
@@ -2346,23 +2346,23 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState14, TOutput14>> aggregate14,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(aggregate14, nameof(aggregate14));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>
@@ -2503,23 +2503,23 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState14, TOutput14> aggregate14,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(aggregate14, nameof(aggregate14));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14>
@@ -2624,24 +2624,24 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState15, TOutput15>> aggregate15,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(aggregate14, nameof(aggregate14));
-            Invariant.IsNotNull(aggregate15, nameof(aggregate15));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(aggregate15);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14, output15) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>
@@ -2789,24 +2789,24 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState15, TOutput15> aggregate15,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(aggregate14, nameof(aggregate14));
-            Invariant.IsNotNull(aggregate15, nameof(aggregate15));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(aggregate15);
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15, StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>>> aggregateMerger =
                 (output1, output2, output3, output4, output5, output6, output7, output8, output9, output10, output11, output12, output13, output14, output15) => new StructTuple<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15>

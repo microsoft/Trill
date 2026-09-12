@@ -35,14 +35,14 @@ namespace Microsoft.StreamProcessing
         /// FastMap visibility is not used.
         /// </summary>
         [DataMember]
-        private FastMap<ActiveInterval<TLeft>> leftIntervalMap = new FastMap<ActiveInterval<TLeft>>();
+        private FastMap<ActiveInterval<TLeft>> leftIntervalMap = new();
 
         /// <summary>
         /// Stores right intervals valid for <see cref="currTime"/>.
         /// FastMap visibility is not used.
         /// </summary>
         [DataMember]
-        private FastMap<ActiveInterval<TRight>> rightIntervalMap = new FastMap<ActiveInterval<TRight>>();
+        private FastMap<ActiveInterval<TRight>> rightIntervalMap = new();
 
         /// <summary>
         /// Stores end edges for the current join intervals, i.e. after <see cref="currTime"/>.
@@ -126,14 +126,14 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.nextLeftTime <= this.nextRightTime)
                 {
-                    UpdateTime(this.nextLeftTime);
+                    this.UpdateTime(this.nextLeftTime);
                     if (leftBatch.vother.col[leftBatch.iter] == StreamEvent.PunctuationOtherTime)
                     {
-                        AddPunctuationToBatch(this.nextLeftTime);
+                        this.AddPunctuationToBatch(this.nextLeftTime);
                     }
                     else
                     {
-                        ProcessLeftEvent(
+                        this.ProcessLeftEvent(
                             this.nextLeftTime,
                             ref leftBatch.key.col[leftBatch.iter],
                             leftBatch[leftBatch.iter],
@@ -153,14 +153,14 @@ namespace Microsoft.StreamProcessing
                 }
                 else
                 {
-                    UpdateTime(this.nextRightTime);
+                    this.UpdateTime(this.nextRightTime);
                     if (rightBatch.vother.col[rightBatch.iter] == StreamEvent.PunctuationOtherTime)
                     {
-                        AddPunctuationToBatch(this.nextRightTime);
+                        this.AddPunctuationToBatch(this.nextRightTime);
                     }
                     else
                     {
-                        ProcessRightEvent(
+                        this.ProcessRightEvent(
                             this.nextRightTime,
                             ref rightBatch.key.col[rightBatch.iter],
                             rightBatch[rightBatch.iter],
@@ -201,15 +201,15 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateTime(this.nextLeftTime);
+                this.UpdateTime(this.nextLeftTime);
 
                 if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
                 {
-                    AddPunctuationToBatch(this.nextLeftTime);
+                    this.AddPunctuationToBatch(this.nextLeftTime);
                 }
                 else
                 {
-                    ProcessLeftEvent(
+                    this.ProcessLeftEvent(
                         this.nextLeftTime,
                         ref batch.key.col[batch.iter],
                         batch[batch.iter],
@@ -240,15 +240,15 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateTime(this.nextRightTime);
+                this.UpdateTime(this.nextRightTime);
 
                 if (batch.vother.col[batch.iter] == StreamEvent.PunctuationOtherTime)
                 {
-                    AddPunctuationToBatch(this.nextRightTime);
+                    this.AddPunctuationToBatch(this.nextRightTime);
                 }
                 else
                 {
-                    ProcessRightEvent(
+                    this.ProcessRightEvent(
                         this.nextRightTime,
                         ref batch.key.col[batch.iter],
                         batch[batch.iter],
@@ -274,7 +274,7 @@ namespace Microsoft.StreamProcessing
             if (time != this.currTime)
             {
                 this.currTime = time;
-                ReachTime();
+                this.ReachTime();
             }
         }
 
@@ -283,7 +283,7 @@ namespace Microsoft.StreamProcessing
         {
             int index = this.leftIntervalMap.Insert(hash);
             this.leftIntervalMap.Values[index].Populate(start, ref key, ref payload);
-            CreateOutputForStartInterval(start, ref key, ref payload, hash);
+            this.CreateOutputForStartInterval(start, ref key, ref payload, hash);
             this.endPointHeap.Insert(start + this.leftDuration, index);
         }
 
@@ -292,7 +292,7 @@ namespace Microsoft.StreamProcessing
         {
             int index = this.rightIntervalMap.Insert(hash);
             this.rightIntervalMap.Values[index].Populate(start, ref key, ref payload);
-            CreateOutputForStartInterval(start, ref key, ref payload, hash);
+            this.CreateOutputForStartInterval(start, ref key, ref payload, hash);
             this.endPointHeap.Insert(start + this.rightDuration, ~index);
         }
 
@@ -324,7 +324,7 @@ namespace Microsoft.StreamProcessing
                 {
                     long leftEnd = currentTime + this.leftDuration;
                     long rightEnd = rin.Start + this.rightDuration;
-                    AddToBatch(
+                    this.AddToBatch(
                         currentTime,
                         leftEnd < rightEnd ? leftEnd : rightEnd,
                         ref key,
@@ -347,7 +347,7 @@ namespace Microsoft.StreamProcessing
                 {
                     long rightEnd = currentTime + this.rightDuration;
                     long leftEnd = lin.Start + this.leftDuration;
-                    AddToBatch(
+                    this.AddToBatch(
                         currentTime,
                         rightEnd < leftEnd ? rightEnd : leftEnd,
                         ref key,
@@ -373,7 +373,7 @@ namespace Microsoft.StreamProcessing
                 this.output.hash.col[index] = 0;
                 this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
 
-                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
             }
         }
 
@@ -387,7 +387,7 @@ namespace Microsoft.StreamProcessing
             this.output[index] = this.selector(leftPayload, rightPayload);
             this.output.hash.col[index] = hash;
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         protected override void FlushContents()
@@ -421,7 +421,7 @@ namespace Microsoft.StreamProcessing
                 this.Payload = payload;
             }
 
-            public override string ToString() => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
+            public override readonly string ToString() => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
     }
 }

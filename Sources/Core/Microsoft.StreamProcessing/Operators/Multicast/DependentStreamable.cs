@@ -5,12 +5,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Threading;
 
 namespace Microsoft.StreamProcessing
 {
     internal sealed class NWayMulticast<TKey, TSource>
     {
-        private readonly object subscriptionLock = new object();
+        private readonly Lock subscriptionLock = new();
         private ConnectableStreamable<TKey, TSource> connectableStream;
         private readonly IStreamable<TKey, TSource> source;
         private readonly int outputCount;
@@ -19,7 +20,7 @@ namespace Microsoft.StreamProcessing
 
         private NWayMulticast(IStreamable<TKey, TSource> source, int outputCount)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
             Contract.Requires(outputCount > 0);
 
             this.source = source;
@@ -39,7 +40,7 @@ namespace Microsoft.StreamProcessing
                 throw new InvalidOperationException("Cannot generate a streamable array more than once.");
             }
 
-            this.toSubscribe = new HashSet<int>();
+            this.toSubscribe = [];
 
             var output = new IStreamable<TKey, TSource>[this.outputCount];
             for (int i = 0; i < this.outputCount; i++)
@@ -51,25 +52,23 @@ namespace Microsoft.StreamProcessing
 
         private IDisposable Subscribe(IStreamObserver<TKey, TSource> observer, int index)
         {
+            using Lock.Scope _ = this.subscriptionLock.EnterScope();
             IDisposable child;
-            lock (this.subscriptionLock)
+            if (this.toSubscribe.Add(index))
             {
-                if (this.toSubscribe.Add(index))
-                {
-                    child = new ChildDisposable(this.connectableStream.Subscribe(observer), this.crew, index);
-                }
-                else
-                {
-                    throw new InvalidOperationException("Cannot subscribe to the same child streamable more than once.");
-                }
+                child = new ChildDisposable(this.connectableStream.Subscribe(observer), this.crew, index);
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot subscribe to the same child streamable more than once.");
+            }
 
-                if (this.toSubscribe.Count == this.outputCount)
-                {
-                    this.crew.SetListDisposable(this.connectableStream.Connect());
-                    this.crew = new DisposableManager(this.outputCount);
-                    this.connectableStream = new ConnectableStreamable<TKey, TSource>(this.source);
-                    this.toSubscribe.Clear();
-                }
+            if (this.toSubscribe.Count == this.outputCount)
+            {
+                this.crew.SetListDisposable(this.connectableStream.Connect());
+                this.crew = new(this.outputCount);
+                this.connectableStream = new(this.source);
+                this.toSubscribe.Clear();
             }
             return child;
         }
@@ -85,8 +84,8 @@ namespace Microsoft.StreamProcessing
                 int index)
                 : base(source.Properties)
             {
-                Contract.Requires(source != null);
-                Contract.Requires(leader != null);
+                ArgumentNullException.ThrowIfNull(source);
+                ArgumentNullException.ThrowIfNull(leader);
                 Contract.Requires(index >= 0);
 
                 this.leader = leader;
@@ -99,13 +98,13 @@ namespace Microsoft.StreamProcessing
 
         private sealed class DisposableManager
         {
-            private readonly object disposeLock = new object();
+            private readonly Lock disposeLock = new();
             private IDisposable last;
             private readonly HashSet<int> toDispose;
 
             public DisposableManager(int count)
             {
-                this.toDispose = new HashSet<int>();
+                this.toDispose = [];
                 for (int i = 0; i < count; i++)
                 {
                     this.toDispose.Add(i);
@@ -116,34 +115,21 @@ namespace Microsoft.StreamProcessing
 
             public void MarkAsDisposed(int index)
             {
-                lock (this.disposeLock)
+                using Lock.Scope _ = this.disposeLock.EnterScope();
+                this.toDispose.Remove(index);
+                if (this.toDispose.Count == 0)
                 {
-                    this.toDispose.Remove(index);
-                    if (this.toDispose.Count == 0)
-                    {
-                        this.last.Dispose();
-                    }
+                    this.last.Dispose();
                 }
             }
         }
 
-        private sealed class ChildDisposable : IDisposable
+        private sealed class ChildDisposable(IDisposable inner, DisposableManager crew, int index) : IDisposable
         {
-            private readonly IDisposable inner;
-            private readonly DisposableManager crew;
-            private readonly int index;
-
-            public ChildDisposable(IDisposable inner, DisposableManager crew, int index)
-            {
-                this.inner = inner;
-                this.crew = crew;
-                this.index = index;
-            }
-
             public void Dispose()
             {
-                this.inner.Dispose();
-                this.crew.MarkAsDisposed(this.index);
+                inner.Dispose();
+                crew.MarkAsDisposed(index);
             }
         }
     }

@@ -74,8 +74,16 @@ namespace Microsoft.StreamProcessing
             {
                 if (utid == pt.Id)
                 {
-                    long AffinityMask = 1 << processor;
-                    pt.ProcessorAffinity = (IntPtr)(AffinityMask); // Set affinity for this
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    {
+                        pt.IdealProcessor = processor;
+                    }
+
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        long AffinityMask = 1 << processor;
+                        pt.ProcessorAffinity = (IntPtr)(AffinityMask); // Set affinity for this
+                    }
                 }
             }
         }

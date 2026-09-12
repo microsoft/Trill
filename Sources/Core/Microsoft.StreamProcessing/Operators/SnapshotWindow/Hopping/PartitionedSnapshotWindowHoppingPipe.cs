@@ -20,7 +20,7 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class PartitionedSnapshotWindowHoppingPipe<TKey, TInput, TState, TOutput, TPartitionKey> : UnaryPipe<TKey, TInput, TOutput>
     {
-        private static readonly bool hasDisposableState = typeof(IDisposable).GetTypeInfo().IsAssignableFrom(typeof(TState));
+        private static readonly bool hasDisposableState = typeof(IDisposable).IsAssignableFrom(typeof(TState));
         private readonly int hopsPerDuration;
         private readonly MemoryPool<TKey, TOutput> pool;
         private readonly DataStructurePool<FastDictionary<TKey, StateAndActive<TState>>> ecqEntryPool;
@@ -55,7 +55,7 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary2<TKey, HeldState<TState>> aggregateByKey;
         [DataMember]
-        private FastDictionary2<TPartitionKey, PartitionEntry> partitionData = new FastDictionary2<TPartitionKey, PartitionEntry>();
+        private FastDictionary2<TPartitionKey, PartitionEntry> partitionData = new();
 
         private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
@@ -92,7 +92,7 @@ namespace Microsoft.StreamProcessing
 
             this.aggregateByKey = comparer.CreateFastDictionary2Generator<TKey, HeldState<TState>>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer).Invoke();
             var stateDictGenerator = comparer.CreateFastDictionaryGenerator<TKey, StateAndActive<TState>>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer);
-            this.ecqEntryPool = new DataStructurePool<FastDictionary<TKey, StateAndActive<TState>>>(() => stateDictGenerator.Invoke());
+            this.ecqEntryPool = new DataStructurePool<FastDictionary<TKey, StateAndActive<TState>>>(stateDictGenerator.Invoke);
             this.hopsPerDuration = (int)(stream.Source.Properties.ConstantDurationLength.Value / stream.Source.Properties.ConstantHopLength) + 1;
         }
 
@@ -120,7 +120,7 @@ namespace Microsoft.StreamProcessing
                     {
                         if (col_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
                         {
-                            OnLowWatermark(col_vsync[i]);
+                            this.OnLowWatermark(col_vsync[i]);
 
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
@@ -129,7 +129,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.hash.col[c] = 0;
                             this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         else if (col_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
                         {
@@ -139,7 +139,7 @@ namespace Microsoft.StreamProcessing
                             if (!this.partitionData.Lookup(p, out int partitionIndex))
                                 this.partitionData.Insert(p, partitionEntry = new PartitionEntry { lastSyncTime = col_vsync[i], ecq = new CircularBuffer<EcqState>(this.hopsPerDuration) });
                             else partitionEntry = this.partitionData.entries[partitionIndex].value;
-                            OnPunctuation(partitionEntry, col_vsync[i]);
+                            this.OnPunctuation(partitionEntry, col_vsync[i]);
 
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
@@ -148,7 +148,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.hash.col[c] = this.keyComparerGetHashCode(colkey[i]);
                             this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         continue;
                     }
@@ -161,7 +161,7 @@ namespace Microsoft.StreamProcessing
                     // Handle time moving forward
                     if (!this.partitionData.Lookup(partition, out int pIndex))
                         this.partitionData.Insert(partition, entry = new PartitionEntry { lastSyncTime = syncTime, ecq = new CircularBuffer<EcqState>(this.hopsPerDuration) });
-                    else if (syncTime > (entry = this.partitionData.entries[pIndex].value).lastSyncTime) AdvanceTime(entry, syncTime);
+                    else if (syncTime > (entry = this.partitionData.entries[pIndex].value).lastSyncTime) this.AdvanceTime(entry, syncTime);
 
                     // Need to retrieve the key from the dictionary
                     if (!this.aggregateByKey.Lookup(colkey[i], col_hash[i], out int aggindex))
@@ -197,7 +197,7 @@ namespace Microsoft.StreamProcessing
                                     if (this.batch.Count == Config.DataBatchSize)
                                     {
                                         this.batch.iter = batch.iter;
-                                        FlushContents();
+                                        this.FlushContents();
                                         this.batch.iter = batch.iter;
                                     }
                                 }
@@ -285,7 +285,7 @@ namespace Microsoft.StreamProcessing
                 var partition = this.partitionData.entries[iter].value;
                 if (syncTime > partition.lastSyncTime)
                 {
-                    OnPunctuation(partition, syncTime);
+                    this.OnPunctuation(partition, syncTime);
 
                     bool partitionHasValidOutstandingState = false;
                     if (partition.ecq != null)
@@ -313,7 +313,7 @@ namespace Microsoft.StreamProcessing
 
         private void OnPunctuation(PartitionEntry partition, long syncTime)
         {
-            if (syncTime > partition.lastSyncTime) AdvanceTime(partition, syncTime);
+            if (syncTime > partition.lastSyncTime) this.AdvanceTime(partition, syncTime);
         }
 
         private void AdvanceTime(PartitionEntry partition, long syncTime)
@@ -332,7 +332,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.key.col[c] = iter1entry.key;
                     this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                     this.batch.Count++;
-                    if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                    if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                 }
                 else
                     this.aggregateByKey.Remove(iter1entry.key);
@@ -364,7 +364,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.key.col[c] = ecqState.states.entries[iter].key;
                             this.batch.hash.col[c] = this.keyComparerGetHashCode(ecqState.states.entries[iter].key);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
 
                         // Update aggregate
@@ -386,7 +386,7 @@ namespace Microsoft.StreamProcessing
                                 this.batch.key.col[c] = ecqState.states.entries[iter].key;
                                 this.batch.hash.col[c] = this.keyComparerGetHashCode(ecqState.states.entries[iter].key);
                                 this.batch.Count++;
-                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                                if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                             }
                             else
                                 this.aggregateByKey.Remove(ecqState.states.entries[iter].key);
@@ -466,7 +466,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public CircularBuffer<EcqState> ecq;
             [DataMember]
-            public HashSet<int> heldAggregates = new HashSet<int>();
+            public HashSet<int> heldAggregates = [];
             [DataMember]
             public long lastSyncTime = long.MinValue;
         }

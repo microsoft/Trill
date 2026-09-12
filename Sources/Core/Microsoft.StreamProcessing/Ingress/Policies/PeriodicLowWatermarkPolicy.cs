@@ -46,7 +46,7 @@ namespace Microsoft.StreamProcessing
         /// Don't inject any low watermarks. This is the default policy.
         /// </summary>
         /// <returns>An instance of PeriodicLowWatermarkPolicy</returns>
-        public static PeriodicLowWatermarkPolicy None() => new PeriodicLowWatermarkPolicy();
+        public static PeriodicLowWatermarkPolicy None() => new();
 
         /// <summary>
         /// Inject low watermarks every <paramref name="generationPeriod"/> time ticks, rounded down to the previous
@@ -65,10 +65,7 @@ namespace Microsoft.StreamProcessing
         {
             Contract.Requires(lowWatermarkTimestampLag <= long.MaxValue);
 
-            if (lowWatermarkTimestampLag > long.MaxValue)
-            {
-                throw new ArgumentOutOfRangeException(nameof(lowWatermarkTimestampLag));
-            }
+            ArgumentOutOfRangeException.ThrowIfGreaterThan<ulong>(lowWatermarkTimestampLag, long.MaxValue);
 
             return new PeriodicLowWatermarkPolicy(PeriodicLowWatermarkPolicyType.Time, generationPeriod, (long)lowWatermarkTimestampLag);
         }
@@ -86,15 +83,12 @@ namespace Microsoft.StreamProcessing
         /// <returns>A string representation for the PeriodicLowWatermarkPolicy object.</returns>
         public override string ToString()
         {
-            switch (this.type)
+            return this.type switch
             {
-                case PeriodicLowWatermarkPolicyType.None:
-                    return "PeriodicLowWatermarkPolicy.None";
-                case PeriodicLowWatermarkPolicyType.Time:
-                    return $"PeriodicLowWatermarkPolicy.Time({this.generationPeriod}, {this.lowWatermarkTimestampLag})";
-                default:
-                    return "Unknown PeriodicLowWatermarkPolicy (" + this.type.ToString() + ")";
-            }
+                PeriodicLowWatermarkPolicyType.None => "PeriodicLowWatermarkPolicy.None",
+                PeriodicLowWatermarkPolicyType.Time => $"PeriodicLowWatermarkPolicy.Time({this.generationPeriod}, {this.lowWatermarkTimestampLag})",
+                _ => "Unknown PeriodicLowWatermarkPolicy (" + this.type.ToString() + ")",
+            };
         }
     }
 }

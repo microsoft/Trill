@@ -42,8 +42,8 @@ namespace Microsoft.StreamProcessing
 
         public static Tuple<Type, string> Generate<TKey, TInput, TState, TOutput>(SnapshotWindowStreamable<TKey, TInput, TState, TOutput> stream, AggregatePipeType pipeType)
         {
-            Contract.Requires(stream != null);
-            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(IStreamObserver<TKey, TInput>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            ArgumentNullException.ThrowIfNull(stream);
+            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(IStreamObserver<TKey, TInput>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             var container = stream.Properties.QueryContainer;
             string generatedClassName = string.Format("Aggregate_{0}", sequenceNumber++);
@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing
 
                 template.outputFields = new ColumnarRepresentation(outputType).AllFields;
 
-                assemblyReferences = new List<Assembly>();
+                assemblyReferences = [];
 
                 #region Key Comparer
                 IEqualityComparerExpression<TKey> keyComparer;
@@ -241,20 +241,19 @@ namespace Microsoft.StreamProcessing
                 expandedCode = template.TransformText();
 
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(typeof(TKey), typeof(TInput), typeof(TState), typeof(TOutput), typeof(FastDictionaryGenerator), typeof(SortedDictionary<,>)));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TInput>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TOutput>());
                 assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TOutput>());
-                if (container != null) assemblyReferences.AddRange(container.CollectedGeneratedTypes.Select(o => o.GetTypeInfo().Assembly));
+                if (container != null) assemblyReferences.AddRange(container.CollectedGeneratedTypes.Select(o => o.Assembly));
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(generatedClassName), out errorMessages);
                 if (keyType.IsAnonymousType())
                 {
-                    if (errorMessages == null) errorMessages = string.Empty;
+                    errorMessages ??= string.Empty;
                     errorMessages += "\nCodegen Warning: The key type for an aggregate is an anonymous type (or contains an anonymous type), preventing the inlining of the key equality and hashcode functions. This may lead to poor performance.\n";
                 }
-                var t = a.GetType(generatedClassName);
-                if (t.GetTypeInfo().IsGenericType)
+                if (t.IsGenericType)
                 {
                     var list = typeof(TKey).GetAnonymousTypes();
                     list.AddRange(typeof(TInput).GetAnonymousTypes());
@@ -280,7 +279,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         private static Expression/*?*/ Transform(NewExpression newExpression, Type outputBatchType)
         {
-            Contract.Requires(newExpression != null);
+            ArgumentNullException.ThrowIfNull(newExpression);
 
             Contract.Assume(newExpression != null && newExpression.Type.IsAnonymousType());
             Contract.Assume(newExpression.Arguments != null);
@@ -290,7 +289,7 @@ namespace Microsoft.StreamProcessing
             var assignments = new List<Expression>();
             var indexVariable = Expression.Variable(typeof(int), "c");
             var batch = Expression.Variable(outputBatchType, "batch");
-            var outputFields = outputBatchType.GetTypeInfo().GetFields();
+            var outputFields = outputBatchType.GetFields();
             if (outputFields == null || outputFields.Length == 0) return null; // can this really happen?
             for (int i = 0; i < newExpression.Arguments.Count; i++)
             {
@@ -302,7 +301,7 @@ namespace Microsoft.StreamProcessing
                 if (columnBatchField == null) return null; // this also should be an error, shouldn't be able to happen.
                 var columnBatch = Expression.MakeMemberAccess(batch, columnBatchField);
                 var columnBatchType = typeof(ColumnBatch<>).MakeGenericType(destinationField.PropertyType);
-                var arrayInColumnBatch = Expression.MakeMemberAccess(columnBatch, columnBatchType.GetTypeInfo().GetField("col"));
+                var arrayInColumnBatch = Expression.MakeMemberAccess(columnBatch, columnBatchType.GetField("col"));
                 var lhs = Expression.ArrayAccess(arrayInColumnBatch, indexVariable);
                 var assign = Expression.Assign(lhs, argument);
                 assignments.Add(assign);

@@ -26,13 +26,13 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private StreamMessage<TKey, TPayload> output;
 
-        private Dictionary<TPartitionKey, LinkedList<TKey>> orderedKeysDictionary = new Dictionary<TPartitionKey, LinkedList<TKey>>();
+        private Dictionary<TPartitionKey, LinkedList<TKey>> orderedKeysDictionary = [];
         [DataMember]
-        private FastDictionary2<TKey, long> windowEndTimeDictionary = new FastDictionary2<TKey, long>();
+        private FastDictionary2<TKey, long> windowEndTimeDictionary = new();
         [DataMember]
-        private FastDictionary2<TKey, long> lastDataTimeDictionary = new FastDictionary2<TKey, long>();
+        private FastDictionary2<TKey, long> lastDataTimeDictionary = new();
         [DataMember]
-        private FastDictionary2<TKey, Queue<ActiveEvent>> stateDictionary = new FastDictionary2<TKey, Queue<ActiveEvent>>();
+        private FastDictionary2<TKey, Queue<ActiveEvent>> stateDictionary = new();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public PartitionedSessionWindowPipe() { }
@@ -56,7 +56,7 @@ namespace Microsoft.StreamProcessing
 
         private void ReachTime(long timestamp)
         {
-            foreach (var pKey in this.orderedKeysDictionary.Keys) ReachTime(-1, timestamp, pKey);
+            foreach (var pKey in this.orderedKeysDictionary.Keys) this.ReachTime(-1, timestamp, pKey);
         }
 
         private void ReachTime(int pIndex, long timestamp, TPartitionKey pKey)
@@ -86,7 +86,7 @@ namespace Microsoft.StreamProcessing
                 if (timestamp >= threshhold)
                 {
                     var queue = this.stateDictionary.entries[cIndex].value;
-                    while (queue.Any())
+                    while (queue.Count != 0)
                     {
                         var active = queue.Dequeue();
 
@@ -97,7 +97,7 @@ namespace Microsoft.StreamProcessing
                         this.output[ind] = active.Payload;
                         this.output.hash.col[ind] = active.Hash;
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                     if (timestamp < this.lastDataTimeDictionary.entries[cIndex].value + this.sessionTimeout)
                         this.windowEndTimeDictionary.entries[cIndex].value = StreamEvent.MaxSyncTime;
@@ -138,20 +138,20 @@ namespace Microsoft.StreamProcessing
                         var partition = this.getPartitionKey(batch.key.col[i]);
                         if (vsync[i] > vother[i]) // We have an end edge
                         {
-                            ReachTime(-1, vsync[i], partition);
+                            this.ReachTime(-1, vsync[i], partition);
                         }
                         else
                         {
                             // Check to see if the key is already being tracked
                             if (!this.lastDataTimeDictionary.Lookup(batch.key.col[i], out int keyIndex))
-                                keyIndex = AllocatePartition(batch.key.col[i], partition);
-                            ReachTime(keyIndex, vsync[i], partition);
+                                keyIndex = this.AllocatePartition(batch.key.col[i], partition);
+                            this.ReachTime(keyIndex, vsync[i], partition);
 
                             // Check to see if advancing time removed the key
                             if (!this.lastDataTimeDictionary.Lookup(batch.key.col[i], out keyIndex))
-                                keyIndex = AllocatePartition(batch.key.col[i], partition);
+                                keyIndex = this.AllocatePartition(batch.key.col[i], partition);
 
-                            if (!this.stateDictionary.entries[keyIndex].value.Any())
+                            if (this.stateDictionary.entries[keyIndex].value.Count == 0)
                                 this.orderedKeysDictionary[partition].AddLast(new LinkedListNode<TKey>(batch.key.col[i]));
                             else
                             {
@@ -182,12 +182,12 @@ namespace Microsoft.StreamProcessing
                             this.output[ind] = batch.payload.col[i];
                             this.output.hash.col[ind] = hash[i];
 
-                            if (this.output.Count == Config.DataBatchSize) FlushContents();
+                            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                         }
                     }
                     else if (vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
                     {
-                        ReachTime(vsync[i]);
+                        this.ReachTime(vsync[i]);
 
                         int ind = this.output.Count++;
                         this.output.vsync.col[ind] = vsync[i];
@@ -197,17 +197,17 @@ namespace Microsoft.StreamProcessing
                         this.output.hash.col[ind] = 0;
                         this.output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                     else if (vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
                     {
                         var partition = this.getPartitionKey(batch.key.col[i]);
                         if (!this.lastDataTimeDictionary.Lookup(batch.key.col[i], out int keyIndex))
                         {
-                            keyIndex = AllocatePartition(batch.key.col[i], partition);
+                            keyIndex = this.AllocatePartition(batch.key.col[i], partition);
                         }
 
-                        ReachTime(-1, vsync[i], partition);
+                        this.ReachTime(-1, vsync[i], partition);
 
                         int ind = this.output.Count++;
                         this.output.vsync.col[ind] = vsync[i];
@@ -217,7 +217,7 @@ namespace Microsoft.StreamProcessing
                         this.output.hash.col[ind] = hash[i];
                         this.output.bitvector.col[ind >> 6] |= (1L << (ind & 0x3f));
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                 }
             }
@@ -253,7 +253,7 @@ namespace Microsoft.StreamProcessing
             var temp = new List<Tuple<TKey, long, TPartitionKey>>();
             while (this.lastDataTimeDictionary.Iterate(ref iter))
             {
-                if (this.stateDictionary.entries[iter].value.Any())
+                if (this.stateDictionary.entries[iter].value.Count != 0)
                 {
                     temp.Add(Tuple.Create(
                         this.lastDataTimeDictionary.entries[iter].key,
@@ -293,7 +293,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public long Sync;
 
-            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
+            public override readonly string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
     }
 }

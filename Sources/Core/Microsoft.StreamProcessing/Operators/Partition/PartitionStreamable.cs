@@ -20,8 +20,8 @@ namespace Microsoft.StreamProcessing
             IStreamable<Empty, TPayload> source, Expression<Func<TPayload, TPartitionKey>> keySelector, long partitionLag)
             : base(source.Properties.Partition(keySelector))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(keySelector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
 
             this.Source = source;
             this.KeySelector = keySelector;

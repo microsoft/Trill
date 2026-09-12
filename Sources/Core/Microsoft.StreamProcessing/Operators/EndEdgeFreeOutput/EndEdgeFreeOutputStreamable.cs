@@ -12,11 +12,11 @@ namespace Microsoft.StreamProcessing
     internal sealed class EndEdgeFreeOutputStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
         public EndEdgeFreeOutputStreamable(IStreamable<TKey, TPayload> source)
             : base(source, source.Properties.ToIntervalFree(false))
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             // This operator uses the equality method on payloads
             if (this.Properties.IsColumnar && !this.Properties.PayloadEqualityComparer.CanUsePayloadEquality())
@@ -24,13 +24,13 @@ namespace Microsoft.StreamProcessing
                 throw new InvalidOperationException($"Type of payload, '{typeof(TPayload).FullName}', to EndEdgeFreeOutputStreamable does not have a valid equality operator for columnar mode.");
             }
 
-            Initialize();
+            this.Initialize();
         }
 
         public override sealed IDisposable Subscribe(IStreamObserver<TKey, TPayload> observer)
             => this.Source.Properties.IsConstantDuration
                 ? this.Source.Subscribe(observer)
-                : this.Source.Subscribe(CreatePipe(observer));
+                : this.Source.Subscribe(this.CreatePipe(observer));
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
         {
@@ -38,7 +38,7 @@ namespace Microsoft.StreamProcessing
             if (part == null)
             {
                 return this.Source.Properties.IsColumnar
-                    ? GetPipe(observer)
+                    ? this.GetPipe(observer)
                     : new EndEdgeFreeOutputPipe<TKey, TPayload>(this, observer);
             }
 

@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
         /// When the interval is not joined, it is "invisible".
         /// </summary>
         [DataMember]
-        private FastMap<LeftEvent> leftIntervalMap = new FastMap<LeftEvent>();
+        private FastMap<LeftEvent> leftIntervalMap = new();
 
         /// <summary>
         /// Stores left start edges at <see cref="currTime"/>
@@ -43,7 +43,7 @@ namespace Microsoft.StreamProcessing
         /// When the interval is not joined, it is "invisible".
         /// </summary>
         [DataMember]
-        private FastMap<LeftEvent> leftEdgeMap = new FastMap<LeftEvent>();
+        private FastMap<LeftEvent> leftEdgeMap = new();
 
         /// <summary>
         /// Stores left end edges at some point in the future, i.e. after <see cref="currTime"/>.
@@ -56,13 +56,13 @@ namespace Microsoft.StreamProcessing
         /// Stores the right events present at <see cref="currTime"/>
         /// </summary>
         [DataMember]
-        private FastMap<RightEvent> rightMap = new FastMap<RightEvent>();
+        private FastMap<RightEvent> rightMap = new();
 
         /// <summary>
         /// Stores right end edges for <see cref="currTime"/>, excluding interval endpoints
         /// </summary>
         [DataMember]
-        private FastStack<QueuedEndEdge> rightEndEdges = new FastStack<QueuedEndEdge>();
+        private FastStack<QueuedEndEdge> rightEndEdges = new();
 
         /// <summary>
         /// Stores right endpoints at some point in the future, i.e. after <see cref="currTime"/>, originating
@@ -152,9 +152,9 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.nextLeftTime <= this.nextRightTime)
                 {
-                    UpdateTime(this.nextLeftTime);
+                    this.UpdateTime(this.nextLeftTime);
 
-                    ProcessLeftEvent(
+                    this.ProcessLeftEvent(
                         this.nextLeftTime,
                         leftBatch.vother.col[leftBatch.iter],
                         ref leftBatch.key.col[leftBatch.iter],
@@ -174,9 +174,9 @@ namespace Microsoft.StreamProcessing
                 }
                 else
                 {
-                    UpdateTime(this.nextRightTime);
+                    this.UpdateTime(this.nextRightTime);
 
-                    ProcessRightEvent(
+                    this.ProcessRightEvent(
                         this.nextRightTime,
                         rightBatch.vother.col[rightBatch.iter],
                         ref rightBatch.key.col[rightBatch.iter],
@@ -216,9 +216,9 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateTime(this.nextLeftTime);
+                this.UpdateTime(this.nextLeftTime);
 
-                ProcessLeftEvent(
+                this.ProcessLeftEvent(
                     this.nextLeftTime,
                     batch.vother.col[batch.iter],
                     ref batch.key.col[batch.iter],
@@ -249,9 +249,9 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateTime(this.nextRightTime);
+                this.UpdateTime(this.nextRightTime);
 
-                ProcessRightEvent(
+                this.ProcessRightEvent(
                     this.nextRightTime,
                     batch.vother.col[batch.iter],
                     ref batch.key.col[batch.iter],
@@ -277,9 +277,9 @@ namespace Microsoft.StreamProcessing
         {
             if (time != this.currTime)
             {
-                LeaveTime();
+                this.LeaveTime();
                 this.currTime = time;
-                ReachTime();
+                this.ReachTime();
             }
         }
 
@@ -294,7 +294,7 @@ namespace Microsoft.StreamProcessing
                 var map = isInterval ? this.leftIntervalMap : this.leftEdgeMap;
                 if (isProcessable)
                 {
-                    if (FindOnRight(ref key, hash, out _))
+                    if (this.FindOnRight(ref key, hash, out _))
                     {
                         // Row joins with something on right, so not currently visible.
                         int index = map.Insert(hash);
@@ -312,7 +312,7 @@ namespace Microsoft.StreamProcessing
                         if (isFullyOutputtable)
                         {
                             // Will never join because right has advanced beyond endtime, so output interval.
-                            AddToBatch(start, end, ref key, ref payload, hash);
+                            this.AddToBatch(start, end, ref key, ref payload, hash);
                         }
                         else
                         {
@@ -320,7 +320,7 @@ namespace Microsoft.StreamProcessing
                             int index = map.Insert(hash);
                             map.Values[index].Populate(start, start, end, ref key, ref payload);
 
-                            AddToBatch(start, StreamEvent.InfinitySyncTime, ref key, ref payload, hash);
+                            this.AddToBatch(start, StreamEvent.InfinitySyncTime, ref key, ref payload, hash);
                             if (isInterval)
                             {
                                 this.leftEndPointHeap.Insert(end, index);
@@ -337,7 +337,7 @@ namespace Microsoft.StreamProcessing
             }
             else if (end == StreamEvent.PunctuationOtherTime)
             {
-                AddPunctuationToBatch(start);
+                this.AddPunctuationToBatch(start);
             }
             else
             {
@@ -347,13 +347,13 @@ namespace Microsoft.StreamProcessing
                 while (leftEvents.Next(out int index))
                 {
                     var temp = this.leftEdgeMap.Values[index];
-                    if (AreSame(end, StreamEvent.InfinitySyncTime, ref key, ref payload, ref temp))
+                    if (this.AreSame(end, StreamEvent.InfinitySyncTime, ref key, ref payload, ref temp))
                     {
                         long currentStart = this.leftEdgeMap.Values[index].CurrentStart;
                         if (currentStart != NotActive)
                         {
                             // Matching left start edge is currently visible, so output end edge.
-                            AddToBatch(start, currentStart, ref key, ref payload, hash);
+                            this.AddToBatch(start, currentStart, ref key, ref payload, hash);
                         }
                         leftEvents.Remove();
 
@@ -369,7 +369,7 @@ namespace Microsoft.StreamProcessing
             if (start < end)
             {
                 // Row is a start edge or interval.
-                if (FindOnRight(ref key, hash, out int index))
+                if (this.FindOnRight(ref key, hash, out int index))
                 {
                     // Corresponding key already exists in map, so any joining on left and already not active.
                     this.rightMap.Values[index].Count++;
@@ -379,7 +379,7 @@ namespace Microsoft.StreamProcessing
                     // First instance of this key, so insert and make any joining left entries not active.
                     index = this.rightMap.Insert(hash);
                     this.rightMap.Values[index].Initialize(ref key);
-                    MakeMatchingLeftInvisible(start, ref key, hash);
+                    this.MakeMatchingLeftInvisible(start, ref key, hash);
                 }
 
                 if (end != StreamEvent.InfinitySyncTime)
@@ -390,7 +390,7 @@ namespace Microsoft.StreamProcessing
             }
             else if (end == StreamEvent.PunctuationOtherTime)
             {
-                AddPunctuationToBatch(start);
+                this.AddPunctuationToBatch(start);
             }
             else
             {
@@ -412,7 +412,7 @@ namespace Microsoft.StreamProcessing
 
                 hash = this.rightEndEdges.Values[i].Hash;
                 var keyTemp = this.rightEndEdges.Values[i].Key;
-                if (FindOnRight(ref keyTemp, hash, out int index))
+                if (this.FindOnRight(ref keyTemp, hash, out int index))
                 {
                     int count = this.rightMap.Values[index].Count - 1;
                     if (count > 0)
@@ -420,7 +420,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         var key = this.rightMap.Values[index];
-                        MakeMatchingLeftVisible(this.currTime, ref key.Key, hash);
+                        this.MakeMatchingLeftVisible(this.currTime, ref key.Key, hash);
                         this.rightMap.Remove(index);
                     }
                 }
@@ -434,7 +434,7 @@ namespace Microsoft.StreamProcessing
             {
                 var leftIntervalItem = this.leftIntervalMap.Values[index];
                 long end = leftIntervalItem.End;
-                if (FindOnRight(ref this.leftIntervalMap.Values[index].Key, hash, out _))
+                if (this.FindOnRight(ref this.leftIntervalMap.Values[index].Key, hash, out _))
                 {
                     leftEvents.MakeVisible();
                     this.leftEndPointHeap.Insert(end, index);
@@ -445,7 +445,7 @@ namespace Microsoft.StreamProcessing
                     bool isFullyOutputtable = this.nextRightTime >= end;
                     if (isFullyOutputtable)
                     {
-                        AddToBatch(
+                        this.AddToBatch(
                             this.currTime,
                             end,
                             ref leftIntervalItem.Key,
@@ -458,7 +458,7 @@ namespace Microsoft.StreamProcessing
                     {
                         leftEvents.MakeVisible();
                         this.leftIntervalMap.Values[index].CurrentStart = this.currTime;
-                        AddToBatch(
+                        this.AddToBatch(
                             this.currTime,
                             StreamEvent.InfinitySyncTime,
                             ref leftIntervalItem.Key,
@@ -474,12 +474,12 @@ namespace Microsoft.StreamProcessing
             leftEvents = this.leftEdgeMap.TraverseInvisible();
             while (leftEvents.Next(out int index, out hash))
             {
-                if (!FindOnRight(ref this.leftEdgeMap.Values[index].Key, hash, out _))
+                if (!this.FindOnRight(ref this.leftEdgeMap.Values[index].Key, hash, out _))
                 {
                     // Row does not join, so output start edge.
                     var leftEdgeItem = this.leftEdgeMap.Values[index];
                     this.leftEdgeMap.Values[index].CurrentStart = this.currTime;
-                    AddToBatch(
+                    this.AddToBatch(
                         this.currTime,
                         StreamEvent.InfinitySyncTime,
                         ref leftEdgeItem.Key,
@@ -516,7 +516,7 @@ namespace Microsoft.StreamProcessing
                     if (currentStart != NotActive)
                     {
                         // Matching left start edge is currently visible, so output end edge.
-                        AddToBatch(
+                        this.AddToBatch(
                             leftTime,
                             currentStart,
                             ref leftIntervalItem.Key,
@@ -540,7 +540,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         var key = this.rightMap.Values[rightIndex].Key;
-                        MakeMatchingLeftVisible(rightTime, ref key, this.rightMap.GetHash(rightIndex));
+                        this.MakeMatchingLeftVisible(rightTime, ref key, this.rightMap.GetHash(rightIndex));
                         this.rightMap.Remove(rightIndex);
                     }
 
@@ -582,7 +582,7 @@ namespace Microsoft.StreamProcessing
                 {
                     // Output end edge.
                     var leftIntervalItem = this.leftIntervalMap.Values[index];
-                    AddToBatch(
+                    this.AddToBatch(
                         time,
                         leftIntervalItem.CurrentStart,
                         ref leftIntervalItem.Key,
@@ -602,7 +602,7 @@ namespace Microsoft.StreamProcessing
                 {
                     // Output end edge.
                     var leftEdgeItem = this.leftEdgeMap.Values[index];
-                    AddToBatch(
+                    this.AddToBatch(
                         time,
                         leftEdgeItem.CurrentStart,
                         ref leftEdgeItem.Key,
@@ -631,7 +631,7 @@ namespace Microsoft.StreamProcessing
                     if (isFullyOutputtable)
                     {
                         // Output interval.
-                        AddToBatch(
+                        this.AddToBatch(
                             time,
                             end,
                             ref leftIntervalItem.Key,
@@ -644,7 +644,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         // Output start edge.
-                        AddToBatch(
+                        this.AddToBatch(
                             time,
                             StreamEvent.InfinitySyncTime,
                             ref leftIntervalItem.Key,
@@ -665,7 +665,7 @@ namespace Microsoft.StreamProcessing
                 if (this.keyComparerEquals(key, leftEdgeItem.Key))
                 {
                     // Output start edge.
-                    AddToBatch(
+                    this.AddToBatch(
                         time,
                         StreamEvent.InfinitySyncTime,
                         ref leftEdgeItem.Key,
@@ -693,7 +693,7 @@ namespace Microsoft.StreamProcessing
                 this.output.hash.col[index] = 0;
                 this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
 
-                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
             }
         }
 
@@ -712,7 +712,7 @@ namespace Microsoft.StreamProcessing
             this.output[index] = payload;
             this.output.hash.col[index] = hash;
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -756,7 +756,7 @@ namespace Microsoft.StreamProcessing
                 this.Payload = payload;
             }
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[Start=" + this.Start + ", CurrentStart=" + this.CurrentStart + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
@@ -775,7 +775,7 @@ namespace Microsoft.StreamProcessing
                 this.Count = 1;
             }
 
-            public override string ToString() => "[Key='" + this.Key + "', Count=" + this.Count + "]";
+            public override readonly string ToString() => "[Key='" + this.Key + "', Count=" + this.Count + "]";
         }
 
         [DataContract]
@@ -793,7 +793,7 @@ namespace Microsoft.StreamProcessing
                 this.Hash = hash;
             }
 
-            public override string ToString() => "[Key='" + this.Key + "', Hash=" + this.Hash + "]";
+            public override readonly string ToString() => "[Key='" + this.Key + "', Hash=" + this.Hash + "]";
         }
     }
 }

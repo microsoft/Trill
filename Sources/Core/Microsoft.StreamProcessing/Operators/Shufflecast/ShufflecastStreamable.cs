@@ -24,7 +24,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TInnerKey, int, TSource, int[]>> destinationSelector = null)
             : base(source.Properties)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
             Contract.Requires(totalBranchesL2 > 0);
 
             this.Source = source;
@@ -50,7 +50,7 @@ namespace Microsoft.StreamProcessing
             this.numBranches++;
             if (this.pipe == null)
             {
-                this.pipe = CreatePipe(observer);
+                this.pipe = this.CreatePipe(observer);
             }
             var o = observer;
             this.pipe.AddObserver(o);

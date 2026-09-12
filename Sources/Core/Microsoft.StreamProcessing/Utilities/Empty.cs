@@ -19,26 +19,26 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="other">An Empty value to compare to the current Empty value.</param>
         /// <returns>Because there is only one value of type Empty, this always returns true.</returns>
-        public bool Equals(Empty other) => true;
+        public readonly bool Equals(Empty other) => true;
 
         /// <summary>
         /// Determines whether the specified System.Object is equal to the current Empty.
         /// </summary>
         /// <param name="obj">The System.Object to compare with the current Empty.</param>
         /// <returns>true if the specified System.Object is a Empty value; otherwise, false.</returns>
-        public override bool Equals(object obj) => obj is Empty;
+        public override readonly bool Equals(object obj) => obj is Empty;
 
         /// <summary>
         /// Returns the hash code for the Empty value.
         /// </summary>
         /// <returns>A hash code for the Empty value.</returns>
-        public override int GetHashCode() => 0;
+        public override readonly int GetHashCode() => 0;
 
         /// <summary>
         /// Returns a string representation of the Empty value.
         /// </summary>
         /// <returns>String representation of the Empty value.</returns>
-        public override string ToString() => "()";
+        public override readonly string ToString() => "()";
 
         /// <summary>
         /// Determines whether the two specified Emtpy values are equal. Because Empty has a single value, this always returns true.

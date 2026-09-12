@@ -807,7 +807,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
 <# } #>
     }
 
-<# if (!noLeftFields && !this.leftType.GetTypeInfo().IsValueType) { #>
+<# if (!noLeftFields && !this.leftType.IsValueType) { #>
     [DataContract]
     private struct <#= ActiveEventType #>
     {

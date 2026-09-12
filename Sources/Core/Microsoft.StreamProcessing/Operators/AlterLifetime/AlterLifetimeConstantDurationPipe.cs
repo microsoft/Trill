@@ -33,7 +33,7 @@ namespace Microsoft.StreamProcessing
         public AlterLifetimeConstantDurationPipe(AlterLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            Contract.Requires(stream != null);
+            ArgumentNullException.ThrowIfNull(stream);
 
             this.constantDurationSelector = (long)((ConstantExpression)stream.DurationSelector.Body).Value;
             this.startTimeSelector = (Expression<Func<long, long>>)stream.StartTimeSelector;

@@ -20,7 +20,7 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class SnapshotWindowPriorityQueuePipe<TKey, TInput, TState, TOutput> : UnaryPipe<TKey, TInput, TOutput>
     {
-        private static readonly bool hasDisposableState = typeof(IDisposable).GetTypeInfo().IsAssignableFrom(typeof(TState));
+        private static readonly bool hasDisposableState = typeof(IDisposable).IsAssignableFrom(typeof(TState));
         private readonly MemoryPool<TKey, TOutput> pool;
         private readonly DataStructurePool<FastDictionary<TKey, StateAndActive<TState>>> ecqEntryPool;
         private readonly string errorMessages;
@@ -54,9 +54,9 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary2<TKey, HeldState<TState>> aggregateByKey;
         [DataMember]
-        private HashSet<int> heldAggregates = new HashSet<int>();
+        private HashSet<int> heldAggregates = [];
         [DataMember]
-        private SortedDictionary<long, FastDictionary<TKey, StateAndActive<TState>>> ecq = new SortedDictionary<long, FastDictionary<TKey, StateAndActive<TState>>>();
+        private SortedDictionary<long, FastDictionary<TKey, StateAndActive<TState>>> ecq = [];
         [DataMember]
         private long lastSyncTime = long.MinValue;
 
@@ -93,7 +93,7 @@ namespace Microsoft.StreamProcessing
 
             this.aggregateByKey = comparer.CreateFastDictionary2Generator<TKey, HeldState<TState>>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer).Invoke();
             var stateDictGenerator = comparer.CreateFastDictionaryGenerator<TKey, StateAndActive<TState>>(1, this.keyComparerEquals, this.keyComparerGetHashCode, stream.Properties.QueryContainer);
-            this.ecqEntryPool = new DataStructurePool<FastDictionary<TKey, StateAndActive<TState>>>(() => stateDictGenerator.Invoke());
+            this.ecqEntryPool = new DataStructurePool<FastDictionary<TKey, StateAndActive<TState>>>(stateDictGenerator.Invoke);
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -121,7 +121,7 @@ namespace Microsoft.StreamProcessing
                         if (col_vother[i] == StreamEvent.PunctuationOtherTime)
                         {
                             // We have found a row that corresponds to punctuation
-                            OnPunctuation(col_vsync[i]);
+                            this.OnPunctuation(col_vsync[i]);
 
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
@@ -130,7 +130,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.hash.col[c] = 0;
                             this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         continue;
                     }
@@ -138,7 +138,7 @@ namespace Microsoft.StreamProcessing
                     var syncTime = col_vsync[i];
 
                     // Handle time moving forward
-                    if (syncTime > this.lastSyncTime) AdvanceTime(syncTime);
+                    if (syncTime > this.lastSyncTime) this.AdvanceTime(syncTime);
 
                     // Need to retrieve the key from the dictionary
                     HeldState<TState> heldState;
@@ -175,7 +175,7 @@ namespace Microsoft.StreamProcessing
                                     if (this.batch.Count == Config.DataBatchSize)
                                     {
                                         this.batch.iter = batch.iter;
-                                        FlushContents();
+                                        this.FlushContents();
                                         this.batch.iter = batch.iter;
                                     }
                                 }
@@ -245,7 +245,7 @@ namespace Microsoft.StreamProcessing
         public void OnPunctuation(long syncTime)
         {
             // Handle time moving forward
-            if (syncTime > this.lastSyncTime) AdvanceTime(syncTime);
+            if (syncTime > this.lastSyncTime) this.AdvanceTime(syncTime);
         }
 
         private void AdvanceTime(long syncTime)
@@ -264,7 +264,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.key.col[c] = iter1entry.key;
                     this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                     this.batch.Count++;
-                    if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                    if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                 }
                 else
                     this.aggregateByKey.Remove(iter1entry.key);
@@ -294,7 +294,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.key.col[c] = ecqState.entries[iter].key;
                         this.batch.hash.col[c] = this.keyComparerGetHashCode(ecqState.entries[iter].key);
                         this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                     }
 
                     // Update aggregate
@@ -316,7 +316,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.key.col[c] = ecqState.entries[iter].key;
                             this.batch.hash.col[c] = this.keyComparerGetHashCode(ecqState.entries[iter].key);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         else
                             this.aggregateByKey.Remove(ecqState.entries[iter].key);

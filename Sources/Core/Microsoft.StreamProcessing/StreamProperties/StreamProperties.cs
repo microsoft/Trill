@@ -39,8 +39,8 @@ namespace Microsoft.StreamProcessing
     public class StreamProperties<TKey, TPayload>
     {
         internal static StreamProperties<TKey, TPayload> Default
-            => new StreamProperties<TKey, TPayload>(
-                Config.ForceRowBasedExecution ? false : true,
+            => new(
+                !Config.ForceRowBasedExecution,
                 false, null,
                 false, null, null,
                 false, false,
@@ -49,8 +49,8 @@ namespace Microsoft.StreamProcessing
                 EqualityComparerExpression<TPayload>.Default,
                 null,
                 null,
-                new Dictionary<Expression, object>(),
-                new Dictionary<Expression, Guid?>(),
+                [],
+                [],
                 null);
 
         internal static StreamProperties<TKey, TPayload> DefaultIngress(LambdaExpression startEdgeSelector, LambdaExpression endEdgeSelector)
@@ -79,8 +79,8 @@ namespace Microsoft.StreamProcessing
                     EqualityComparerExpression<TPayload>.Default,
                     null,
                     null,
-                    new Dictionary<Expression, object>(),
-                    new Dictionary<Expression, Guid?>(),
+                    [],
+                    [],
                     null);
         }
 
@@ -88,9 +88,12 @@ namespace Microsoft.StreamProcessing
         private Func<bool> predicate = () => true;
 
         /// <summary>
-        /// Indicates whether the stream contains data in columnar payload format.
+        /// Indicates whether the stream contains data in columnar payload format. Reading this
+        /// property resolves any pending codegen-dependent determination (see
+        /// <see cref="ToDelayedColumnar"/>) - the first read for a given ingress may trigger a
+        /// compilation of the columnar pipeline to find out whether one can be generated at all.
         /// </summary>
-        internal bool IsColumnar
+        public bool IsColumnar
         {
             get
             {
@@ -98,7 +101,7 @@ namespace Microsoft.StreamProcessing
                 this.predicate = () => true;
                 return this.isColumnar;
             }
-            set
+            internal set
             {
                 this.isColumnar = value;
                 this.predicate = () => true;
@@ -262,7 +265,7 @@ namespace Microsoft.StreamProcessing
 
         internal StreamProperties<TKey, TPayload> ToDecrementable()
         {
-            var result = Clone();
+            var result = this.Clone();
             result.IsConstantDuration = false;
             result.ConstantDurationLength = null;
             return result;
@@ -270,28 +273,28 @@ namespace Microsoft.StreamProcessing
 
         internal StreamProperties<TKey, TPayload> ToColumnar()
         {
-            var result = Clone();
+            var result = this.Clone();
             result.IsColumnar = true;
             return result;
         }
 
         internal StreamProperties<TKey, TPayload> ToDelayedColumnar(Func<bool> predicate)
         {
-            var result = CloneDelayed();
+            var result = this.CloneDelayed();
             result.predicate = predicate;
             return result;
         }
 
         internal StreamProperties<TKey, TPayload> ToRowBased()
         {
-            var result = Clone();
+            var result = this.Clone();
             result.IsColumnar = false;
             return result;
         }
 
         internal StreamProperties<TKey, TPayload> ToConstantDuration(bool value, long? durationLength = null)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.IsConstantDuration = value;
             result.ConstantDurationLength = durationLength;
             result.IsIntervalFree = false;
@@ -301,14 +304,14 @@ namespace Microsoft.StreamProcessing
 
         internal StreamProperties<TKey, TPayload> SetQueryContainer(QueryContainer container)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.QueryContainer = container;
             return result;
         }
 
         internal StreamProperties<TKey, TPayload> ToConstantHop(bool value, long? hopLength = null, long? hopOffset = null)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.IsConstantHop = value;
             result.ConstantHopLength = hopLength;
             result.ConstantHopOffset = hopOffset;
@@ -319,14 +322,14 @@ namespace Microsoft.StreamProcessing
 
         internal StreamProperties<TKey, TPayload> ToIntervalFree(bool value)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.IsIntervalFree = value;
             return result;
         }
 
         internal StreamProperties<TKey, TPayload> ToSyncTimeSimultaneityFree(bool value)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.IsSyncTimeSimultaneityFree = value;
             if (!value) result.IsEventOverlappingFree = false;
             return result;
@@ -334,7 +337,7 @@ namespace Microsoft.StreamProcessing
 
         internal StreamProperties<TKey, TPayload> ToEventOverlappingFree(bool value)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.IsEventOverlappingFree = value;
             if (value) result.IsSyncTimeSimultaneityFree = true;
             return result;
@@ -342,35 +345,35 @@ namespace Microsoft.StreamProcessing
 
         internal StreamProperties<TKey, TPayload> ToMulticore(bool value)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.IsMulticore = value;
             return result;
         }
 
         internal StreamProperties<TKey, TPayload> ToPayloadEqualityComparer(IEqualityComparerExpression<TPayload> comparer)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.PayloadEqualityComparer = comparer;
             return result;
         }
 
         internal StreamProperties<TKey, TPayload> ToPayloadComparer(IComparerExpression<TPayload> comparer)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.PayloadComparer = comparer;
             return result;
         }
 
         internal StreamProperties<TKey, TPayload> ToKeyEqualityComparer(IEqualityComparerExpression<TKey> comparer)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.KeyEqualityComparer = comparer;
             return result;
         }
 
         internal StreamProperties<TKey, TPayload> ToEqualityComparer<T>(Expression<Func<TPayload, T>> streamSelector, IEqualityComparerExpression<T> comparer)
         {
-            var result = Clone();
+            var result = this.Clone();
             result.EqualityComparerSelectorMap.Add(streamSelector, comparer);
             return result;
         }
@@ -380,11 +383,11 @@ namespace Microsoft.StreamProcessing
             if (isSnapshotSorted)
             {
                 Expression<Func<TPayload, TPayload>> sortFieldSelector = (e => e);
-                return ToSnapshotSorted(isSnapshotSorted, sortFieldSelector, packingScheme);
+                return this.ToSnapshotSorted(isSnapshotSorted, sortFieldSelector, packingScheme);
             }
             else
             {
-                var result = Clone();
+                var result = this.Clone();
                 result.IsSnapshotSorted = false;
                 result.PayloadComparer = null;
                 result.KeyComparer = null;
@@ -397,9 +400,9 @@ namespace Microsoft.StreamProcessing
             bool isSnapshotSorted, Expression<Func<TPayload, T>> sortFieldsSelector, Guid? packingScheme)
         {
             Contract.Requires(isSnapshotSorted == true);
-            Contract.Requires(sortFieldsSelector != null);
+            ArgumentNullException.ThrowIfNull(sortFieldsSelector);
 
-            var result = Clone();
+            var result = this.Clone();
             result.IsSnapshotSorted = isSnapshotSorted;
 
             // Remove pre-existing selector to replace with new version
@@ -432,18 +435,18 @@ namespace Microsoft.StreamProcessing
             StreamProperties<TRightKey, TRightPayload> rightProperties,
             Func<IStreamable<TKey, TPayload>, IStreamable<TRightKey, TRightPayload>, IStreamable<TResultKey, TResultPayload>> selector)
         {
-            Contract.Requires(selector != null);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return selector(new NullStreamable<TKey, TPayload>(this), new NullStreamable<TRightKey, TRightPayload>(rightProperties)).Properties;
         }
 
         internal IEqualityComparerExpression<T2> FindEqualityComparer<T1, T2>(Expression<Func<T1, T2>> keySelector)
         {
-            foreach (var kvp in this.EqualityComparerSelectorMap)
+            foreach ((Expression key, object value) in this.EqualityComparerSelectorMap)
             {
-                if (kvp.Key.ExpressionEquals(keySelector))
+                if (key.ExpressionEquals(keySelector))
                 {
-                    return kvp.Value as IEqualityComparerExpression<T2>;
+                    return value as IEqualityComparerExpression<T2>;
                 }
             }
             return null;
@@ -451,9 +454,9 @@ namespace Microsoft.StreamProcessing
 
         internal IComparerExpression<T2> FindComparer<T1, T2>(Expression<Func<T1, T2>> keySelector)
         {
-            foreach (var kvp in this.SortSelectorMap)
+            foreach (Expression key in this.SortSelectorMap.Keys)
             {
-                if (kvp.Key.ExpressionEquals(keySelector))
+                if (key.ExpressionEquals(keySelector))
                 {
                     return ComparerExpression<T2>.Default;
                 }
@@ -464,11 +467,11 @@ namespace Microsoft.StreamProcessing
 
         internal IComparerExpression<TPayload> GetSprayComparerExpression<T1, T2>(Expression<Func<T1, T2>> keySelector)
         {
-            foreach (var kvp in this.SortSelectorMap)
+            foreach (Expression key in this.SortSelectorMap.Keys)
             {
-                if (kvp.Key.ExpressionEquals(keySelector))
+                if (key.ExpressionEquals(keySelector))
                 {
-                    var packSelector = kvp.Key as Expression<Func<TPayload, T2>>;
+                    var packSelector = key as Expression<Func<TPayload, T2>>;
                     return new ComparerExpression<TPayload>
                         (Utility.CreateCompoundComparer(packSelector, ComparerExpression<T2>.Default.GetCompareExpr()));
                 }
@@ -479,9 +482,9 @@ namespace Microsoft.StreamProcessing
 
         internal bool CanSpray<T1, T2>(Expression<Func<T1, T2>> keySelector)
         {
-            foreach (var kvp in this.SortSelectorMap)
+            foreach ((Expression key, Guid? value) in this.SortSelectorMap)
             {
-                if (kvp.Key.ExpressionEquals(keySelector) && (kvp.Value.HasValue))
+                if (key.ExpressionEquals(keySelector) && value.HasValue)
                 {
                     return true;
                 }
@@ -513,15 +516,13 @@ namespace Microsoft.StreamProcessing
         /// Clone
         /// </summary>
         internal StreamProperties<TKey, TPayload> Clone()
-            => new StreamProperties<TKey, TPayload>
-                (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer, this.PayloadEqualityComparer, this.KeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
+            => new                (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer, this.PayloadEqualityComparer, this.KeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
 
         /// <summary>
         /// Clone
         /// </summary>
         internal StreamProperties<TKey, TPayload> CloneDelayed()
-            => new StreamProperties<TKey, TPayload>
-                (this.isColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer, this.PayloadEqualityComparer, this.KeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
+            => new                (this.isColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer, this.PayloadEqualityComparer, this.KeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
 
         /// <summary>
         /// Clone
@@ -529,8 +530,7 @@ namespace Microsoft.StreamProcessing
         internal StreamProperties<TNewKey, TPayload> CloneToNewKeyType<TNewKey>(
             IEqualityComparerExpression<TNewKey> newKeyEqualityComparer,
             IComparerExpression<TNewKey> newKeyComparer)
-            => new StreamProperties<TNewKey, TPayload>
-                (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree,
+            => new                (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree,
                     newKeyEqualityComparer, this.PayloadEqualityComparer,
                     newKeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
 
@@ -540,8 +540,7 @@ namespace Microsoft.StreamProcessing
         internal StreamProperties<TKey, TNewPayload> CloneToNewPayloadType<TNewPayload>(
             IEqualityComparerExpression<TNewPayload> newPayloadEqualityComparer,
             IComparerExpression<TNewPayload> newPayloadComparer)
-            => new StreamProperties<TKey, TNewPayload>
-                (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer,
+            => new                (this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree, this.KeyEqualityComparer,
                     newPayloadEqualityComparer, this.KeyComparer,
                     newPayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
 
@@ -605,8 +604,8 @@ namespace Microsoft.StreamProcessing
                 this.IsIntervalFree, false, this.IsSnapshotSorted, false,
                 this.KeyEqualityComparer, EqualityComparerExpression<TResult>.Default,
                 this.KeyComparer, newPayloadComparer,
-                new Dictionary<Expression, object>(),
-                new Dictionary<Expression, Guid?>(),
+                [],
+                [],
                 this.QueryContainer);
         }
 
@@ -627,10 +626,10 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         internal StreamProperties<TInnerKey, TPayload> Group<TInnerKey>(Expression<Func<TPayload, TInnerKey>> keySelector)
         {
-            var innerEqualityComparer = FindEqualityComparer(keySelector);
+            var innerEqualityComparer = this.FindEqualityComparer(keySelector);
             if (innerEqualityComparer == null) innerEqualityComparer = EqualityComparerExpression<TInnerKey>.Default;
 
-            var innerKeyComparer = FindComparer(keySelector);
+            var innerKeyComparer = this.FindComparer(keySelector);
 
             return new StreamProperties<TInnerKey, TPayload>(this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree,
                 innerEqualityComparer, this.PayloadEqualityComparer, innerKeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
@@ -642,7 +641,7 @@ namespace Microsoft.StreamProcessing
         internal StreamProperties<CompoundGroupKey<TKey, TInnerKey>, TPayload> GroupNested<TInnerKey>
             (Expression<Func<TPayload, TInnerKey>> keySelector)
         {
-            var innerEqualityComparer = FindEqualityComparer(keySelector);
+            var innerEqualityComparer = this.FindEqualityComparer(keySelector);
 
             var newKeyEqualityComparer =
                 new CompoundGroupKeyEqualityComparer<TKey, TInnerKey>(this.KeyEqualityComparer, innerEqualityComparer);
@@ -650,7 +649,7 @@ namespace Microsoft.StreamProcessing
             IComparerExpression<CompoundGroupKey<TKey, TInnerKey>> newKeyComparer = null;
             if ((this.KeyComparer != null) || (typeof(TKey) == typeof(Empty)))
             {
-                var innerKeyComparer = FindComparer(keySelector);
+                var innerKeyComparer = this.FindComparer(keySelector);
                 if (innerKeyComparer != null)
                 {
                     newKeyComparer = new CompoundGroupKeyComparer<TKey, TInnerKey>(this.KeyComparer, innerKeyComparer);
@@ -659,9 +658,9 @@ namespace Microsoft.StreamProcessing
 
             return new StreamProperties<CompoundGroupKey<TKey, TInnerKey>, TPayload>(
                 this.IsColumnar
-                    && (typeof(TInnerKey).GetTypeInfo().IsVisible || typeof(TInnerKey).IsAnonymousTypeName())
-                    && (typeof(TPayload).GetTypeInfo().IsVisible || typeof(TPayload).IsAnonymousTypeName())
-                    && (typeof(TKey).GetTypeInfo().IsVisible || typeof(TKey).IsAnonymousTypeName()), this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree,
+                    && (typeof(TInnerKey).IsVisible || typeof(TInnerKey).IsAnonymousTypeName())
+                    && (typeof(TPayload).IsVisible || typeof(TPayload).IsAnonymousTypeName())
+                    && (typeof(TKey).IsVisible || typeof(TKey).IsAnonymousTypeName()), this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree, this.IsSnapshotSorted, this.IsEventOverlappingFree,
                 newKeyEqualityComparer, this.PayloadEqualityComparer, newKeyComparer, this.PayloadComparer, this.EqualityComparerSelectorMap.Clone(), this.SortSelectorMap.Clone(), this.QueryContainer);
         }
 
@@ -670,7 +669,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         internal StreamProperties<TKey, TPayload> Union(StreamProperties<TKey, TPayload> right)
         {
-            var result = Clone();
+            var result = this.Clone();
 
             // find intersection
             foreach (var kvp1 in this.EqualityComparerSelectorMap)
@@ -718,7 +717,7 @@ namespace Microsoft.StreamProcessing
             result.IsSnapshotSorted = false;
             result.KeyComparer = null;
             result.PayloadComparer = null;
-            result.SortSelectorMap = new Dictionary<Expression, Guid?>();
+            result.SortSelectorMap = [];
 
             // Union can be columnar only if both are
             result.IsColumnar = this.IsColumnar && right.IsColumnar;
@@ -774,8 +773,8 @@ namespace Microsoft.StreamProcessing
                     EqualityComparerExpression<TResult>.Default,
                     newKeyComparer,
                     null,
-                    new Dictionary<Expression, object>(),
-                    new Dictionary<Expression, Guid?>(), this.QueryContainer);
+                    [],
+                    [], this.QueryContainer);
         }
 
         /// <summary>
@@ -809,7 +808,7 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// Clip
         /// </summary>
-        internal StreamProperties<TKey, TPayload> Clip<TRight>(StreamProperties<TKey, TRight> right) => LASJ(right.ToDecrementable().ToSnapshotSorted(false));
+        internal StreamProperties<TKey, TPayload> Clip<TRight>(StreamProperties<TKey, TRight> right) => this.LASJ(right.ToDecrementable().ToSnapshotSorted(false));
 
         /// <summary>
         /// AlterLifetime
@@ -820,9 +819,9 @@ namespace Microsoft.StreamProcessing
             if (durationExpression == null) return this;
 
             if (durationExpression.Body is ConstantExpression constant)
-                return ToConstantDuration(true, (long)(constant.Value));
+                return this.ToConstantDuration(true, (long)(constant.Value));
 
-            return ToDecrementable().ToSnapshotSorted(false);
+            return this.ToDecrementable().ToSnapshotSorted(false);
         }
 
         internal StreamProperties<TKey, TOutput> Snapshot<TState, TOutput>
@@ -867,7 +866,7 @@ namespace Microsoft.StreamProcessing
 
         internal StreamProperties<TKey, TPayload> PointAtEnd()
         {
-            var temp = ToConstantDuration(true, 1);
+            var temp = this.ToConstantDuration(true, 1);
             return temp;
         }
     }
@@ -907,11 +906,11 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private long? constantHopOffset = null;
         [DataMember]
-        private readonly Dictionary<TKey, long> lastSyncTimeForSimultaneous = new Dictionary<TKey, long>();
+        private readonly Dictionary<TKey, long> lastSyncTimeForSimultaneous = [];
         [DataMember]
         private long lastSeenTimestamp = StreamEvent.MinSyncTime;
         [DataMember]
-        private readonly Dictionary<object, long> lastSeenTimestampPartitioned = new Dictionary<object, long>();
+        private readonly Dictionary<object, long> lastSeenTimestampPartitioned = [];
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public VerifyPropertiesPipe() { }
@@ -921,13 +920,13 @@ namespace Microsoft.StreamProcessing
         {
             if (properties.IsConstantDuration)
             {
-                this.ConstantDurationValidator = ConstantDurationValidation;
+                this.ConstantDurationValidator = this.ConstantDurationValidation;
                 this.constantDuration = properties.ConstantDurationLength;
             }
 
             if (properties.IsConstantHop)
             {
-                this.ConstantHopValidator = ConstantHopValidation;
+                this.ConstantHopValidator = this.ConstantHopValidation;
                 this.constantHopLength = properties.ConstantHopLength;
                 this.constantHopOffset = properties.ConstantHopOffset;
             }
@@ -938,17 +937,17 @@ namespace Microsoft.StreamProcessing
             }
             if (properties.IsSyncTimeSimultaneityFree)
             {
-                this.SyncTimeSimultaneityFreeValidator = SyncTimeSimulteneityFreeValidation;
+                this.SyncTimeSimultaneityFreeValidator = this.SyncTimeSimulteneityFreeValidation;
             }
 
             if (typeof(TKey).GetPartitionType() != null)
             {
-                this.SyncTimeValidator = PartitionedValidation;
+                this.SyncTimeValidator = this.PartitionedValidation;
                 this.getPartitionKey = GetPartitionExtractor<object, TKey>();
             }
             else
             {
-                this.SyncTimeValidator = SimpleValidation;
+                this.SyncTimeValidator = this.SimpleValidation;
             }
         }
 

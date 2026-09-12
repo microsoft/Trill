@@ -10,7 +10,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 {
     internal abstract class ListAggregateBase<T, R> : IAggregate<T, List<T>, R>
     {
-        private static readonly Expression<Func<List<T>>> init = () => new List<T>();
+        private static readonly Expression<Func<List<T>>> init = () => new();
         public Expression<Func<List<T>>> InitialState() => init;
 
         public Expression<Func<List<T>, long, T, List<T>>> Accumulate()

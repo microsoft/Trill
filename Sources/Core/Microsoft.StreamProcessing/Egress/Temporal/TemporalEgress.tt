@@ -97,7 +97,7 @@ namespace Microsoft.StreamProcessing
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None<# } #><# if (hasContainer) { #>,
             string identifier = null<# } #>)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.To<#= infixName #>Observable(
                 <#= constructorParameters #><#= hasContainer ? "container" : "null" #>, <# if (hasContainer) { #>identifier ?? <# } #>Guid.NewGuid().ToString()<# if (egressType == "StreamEvent") { #>, reshapingPolicy<# } #>);
@@ -116,7 +116,7 @@ namespace Microsoft.StreamProcessing
             string identifier<# if (egressType == "StreamEvent") { #>,
             ReshapingPolicy reshapingPolicy<# } #>)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             if (stream is IFusibleStreamable<<#= inputKey #>, TPayload> f && f.CanFuseEgressObservable)
             {

@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
@@ -29,8 +28,6 @@ namespace SimpleTesting.ColumnarTests
     /// See SelectTransformer.Transform and SelectTransformer.ProjectionReturningResultInstance.
     /// This class covers all consumers of SelectTransformer.Transform
     /// </summary>
-    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1008", Justification = "Reviewed.")]
-    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009", Justification = "Reviewed.")]
     [TestClass]
     public class GeneralProjectionFallbackTests : ColumnarTestBase
     {
@@ -61,7 +58,7 @@ namespace SimpleTesting.ColumnarTests
         [TestMethod, TestCategory("Gated")]
         public void FixedIntervalEquiJoinTemplate() => EquiJoinWorker(constantDuration: 10);
 
-        private void EquiJoinWorker(long? constantDuration = null)
+        private static void EquiJoinWorker(long? constantDuration = null)
         {
             var left = new[]
             {
@@ -86,7 +83,7 @@ namespace SimpleTesting.ColumnarTests
             var output = new List<StreamEvent<(int, int)>>();
             left.Join(right, (l, r) => CreateValueTuple(l, r))
                 .ToStreamEventObservable()
-                .ForEachAsync(e => output.Add(e))
+                .ForEachAsync(output.Add)
                 .Wait();
 
             var correct = new[]
@@ -100,9 +97,7 @@ namespace SimpleTesting.ColumnarTests
 
             if (constantDuration.HasValue && constantDuration.Value != StreamEvent.InfinitySyncTime)
             {
-                correct = correct
-                    .Select(e => e.IsPunctuation ? e : StreamEvent.CreateInterval(e.StartTime, e.StartTime + constantDuration.Value, e.Payload))
-                    .ToArray();
+                correct = [.. correct.Select(e => e.IsPunctuation ? e : StreamEvent.CreateInterval(e.StartTime, e.StartTime + constantDuration.Value, e.Payload))];
             }
 
             Assert.IsTrue(correct.SequenceEqual(output));
@@ -132,7 +127,7 @@ namespace SimpleTesting.ColumnarTests
             input
                 .GroupAggregate(s => true, w => w.Count(), (g, c) => CreateValueTuple(g.Key, c))
                 .ToStreamEventObservable()
-                .ForEachAsync(e => output.Add(e))
+                .ForEachAsync(output.Add)
                 .Wait();
 
             var correct = new[]
@@ -144,7 +139,7 @@ namespace SimpleTesting.ColumnarTests
             Assert.IsTrue(correct.SequenceEqual(output));
         }
 
-        private void SelectWorker(bool selectMany, bool fuse)
+        private static void SelectWorker(bool selectMany, bool fuse)
         {
             var input = new[]
             {
@@ -175,7 +170,7 @@ namespace SimpleTesting.ColumnarTests
 
             selectStreamable
                 .ToStreamEventObservable()
-                .ForEachAsync(e => output.Add(e))
+                .ForEachAsync(output.Add)
                 .Wait();
 
             var correct = new[]

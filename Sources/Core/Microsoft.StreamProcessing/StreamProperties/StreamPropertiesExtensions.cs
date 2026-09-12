@@ -38,8 +38,8 @@ namespace Microsoft.StreamProcessing
                 EqualityComparerExpression<TResult>.Default,
                 newKeyComparer,
                 null,
-                new Dictionary<Expression, object>(),
-                new Dictionary<Expression, Guid?>(),
+                [],
+                [],
                 source.QueryContainer);
         }
 
@@ -59,8 +59,8 @@ namespace Microsoft.StreamProcessing
                 EqualityComparerExpression<TResult>.Default,
                 null,
                 null,
-                new Dictionary<Expression, object>(),
-                new Dictionary<Expression, Guid?>(),
+                [],
+                [],
                 source.QueryContainer);
         }
 

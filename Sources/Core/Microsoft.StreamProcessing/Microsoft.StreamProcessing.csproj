@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
 
@@ -10,15 +10,46 @@
     <RootNamespace>Microsoft.StreamProcessing</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>Trill.StreamProcessing</PackageId>
+    <IsPackable>true</IsPackable>
+    <Authors>Microsoft, Amir Burbea</Authors>
+    <Description>Trill is a high-performance one-pass in-memory streaming analytics engine, updated for .NET 10. Includes the core streaming library (IStreamable, operators, ingress/egress).</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/amirburbea/trill</PackageProjectUrl>
+    <PackageTags>Streaming Temporal Data Analytics</PackageTags>
+    <RepositoryUrl>https://github.com/amirburbea/trill</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>PACKAGE_README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0|x64'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <NoWarn>1701;1702;0009</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0|AnyCPU'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <NoWarn>1701;1702;0009</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0|x64'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <NoWarn>1701;1702;0009</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0|AnyCPU'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <NoWarn>1701;1702;0009</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="3.1.0" />
-    <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
-    <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
-    <PackageReference Include="System.Linq.Expressions" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="5.9.0" />
+    <PackageReference Include="System.Numerics.Tensors" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\PACKAGE_README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
   <ItemGroup>
@@ -1316,8 +1347,4 @@
     </None>
   </ItemGroup>
 
-<!--  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.StreamProcessing.Provider\Microsoft.StreamProcessing.Provider.csproj" />
-  </ItemGroup> -->
-  
 </Project>

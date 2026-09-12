@@ -43,12 +43,12 @@ namespace Microsoft.StreamProcessing
             var getHashCode = compoundEqualityExpr.GetGetHashCodeExpr().Compile();
 
             var generator = compoundEqualityExpr.CreateFastDictionary2Generator<ActiveEvent, int>(1, equals, getHashCode, stream.Properties.QueryContainer);
-            this.dictPool = new DataStructurePool<FastDictionary2<ActiveEvent, int>>(() => generator.Invoke());
+            this.dictPool = new DataStructurePool<FastDictionary2<ActiveEvent, int>>(generator.Invoke);
 
             this.pool.Get(out this.output);
             this.output.Allocate();
 
-            this.eventMap = new SortedDictionary<long, FastDictionary2<ActiveEvent, int>>();
+            this.eventMap = [];
             this.lastSyncTime = StreamEvent.MinSyncTime;
             this.lastCti = StreamEvent.MinSyncTime;
         }
@@ -84,7 +84,7 @@ namespace Microsoft.StreamProcessing
                         this.output[ind] = outevt.Payload;
                         this.output.hash.col[ind] = outevt.Hash;
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                     kvp.Value.Remove(outevt);
                 }
@@ -114,7 +114,7 @@ namespace Microsoft.StreamProcessing
                         this.output[ind] = outevt.Payload;
                         this.output.hash.col[ind] = outevt.Hash;
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                 }
             }
@@ -136,13 +136,13 @@ namespace Microsoft.StreamProcessing
                         if (batch.vother.col[i] == long.MinValue) // Punctuation
                         {
                             if (vsync[i] == StreamEvent.InfinitySyncTime)
-                                OutputAllEvents();
+                                this.OutputAllEvents();
                             else
-                                OutputCompletedIntervals();
+                                this.OutputCompletedIntervals();
 
                             this.lastCti = Math.Max(vsync[i], this.lastCti);
                             this.lastSyncTime = Math.Max(vsync[i], this.lastSyncTime);
-                            AddPunctuationToBatch(batch.vsync.col[i]);
+                            this.AddPunctuationToBatch(batch.vsync.col[i]);
                         }
                         else if (vsync[i] < vother[i]) // Start edge or interval
                         {
@@ -197,7 +197,7 @@ namespace Microsoft.StreamProcessing
                                 entry.Insert(lookupevt, 1);
                             else
                                 entry.entries[index].value++;
-                            OutputCompletedIntervals(); // Can make this more efficient by trying only if the first event in index got completed
+                            this.OutputCompletedIntervals(); // Can make this more efficient by trying only if the first event in index got completed
                         }
                     }
                 }
@@ -216,7 +216,7 @@ namespace Microsoft.StreamProcessing
             this.output.hash.col[index] = 0;
             this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -260,7 +260,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public int Hash;
 
-            public override string ToString() => "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
+            public override readonly string ToString() => "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
     }
 }

@@ -3,6 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Buffers;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -17,7 +18,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     /// <typeparam name="TValue"></typeparam>
     [DataContract]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class FastDictionary<TKey, TValue>
+    public class FastDictionary<TKey, TValue> : IDisposable
     {
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -51,6 +52,16 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         private byte[] bitvector;
 
         /// <summary>
+        /// True when <see cref="bitvector"/> was obtained from <see cref="ArrayPool{T}"/> (resize path);
+        /// not serialized — after deserialization the array is always a normal array.
+        /// </summary>
+        [IgnoreDataMember]
+        private bool bitvectorFromPool;
+
+        [IgnoreDataMember]
+        private bool disposed;
+
+        /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -69,7 +80,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         {
             this.Size = HashHelpers.GetPrime(capacity);
             this.entries = new Entry<TKey, TValue>[this.Size];
-            this.bitvector = new byte[1 + (this.Size >> 3)];
+            this.bitvector = new byte[HashHelpers.BitvectorByteLength(this.Size)];
             this.comparerEquals = equals;
             this.comparerGetHashCode = getHashCode;
             this.resizeThreshold = this.Size >> 1;
@@ -141,9 +152,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             this.Count++;
             if (this.Count > this.resizeThreshold)
             {
-                Resize();
+                this.Resize();
                 /* resizing may make index obsolete, hence we compute the index */
-                Lookup(key, out index);
+                this.Lookup(key, out index);
             }
         }
 
@@ -177,16 +188,18 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public void Clear()
         {
             this.Count = 0;
-            Array.Clear(this.bitvector, 0, 1 + (this.Size >> 3));
+            this.bitvector.AsSpan(0, HashHelpers.BitvectorByteLength(this.Size)).Clear();
             if (Config.ClearColumnsOnReturn)
-                Array.Clear(this.entries, 0, this.entries.Length);
+                this.entries.AsSpan().Clear();
         }
 
         private void Resize()
         {
             int newSize = HashHelpers.ExpandPrime(this.Size * 2);
             var newEntries = new Entry<TKey, TValue>[newSize];
-            byte[] newBitvector = new byte[1 + (newSize >> 3)];
+            int newBvLen = HashHelpers.BitvectorByteLength(newSize);
+            byte[] newBitvector = ArrayPool<byte>.Shared.Rent(newBvLen);
+            newBitvector.AsSpan(0, newBvLen).Clear();
 
             int index = 0;
             int num, newindex;
@@ -208,10 +221,40 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 index++;
             }
 
+            byte[] oldBitvector = this.bitvector;
+            if (this.bitvectorFromPool)
+            {
+                ArrayPool<byte>.Shared.Return(oldBitvector);
+            }
+
             this.Size = newSize;
             this.entries = newEntries;
             this.bitvector = newBitvector;
+            this.bitvectorFromPool = true;
             this.resizeThreshold = this.Size >> 1;
+        }
+
+        /// <summary>
+        /// Returns pooled bitvector storage to <see cref="ArrayPool{T}.Shared"/> when applicable.
+        /// After disposal, do not use this instance.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void Dispose()
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            this.disposed = true;
+
+            if (this.bitvectorFromPool)
+            {
+                ArrayPool<byte>.Shared.Return(this.bitvector);
+                this.bitvectorFromPool = false;
+            }
+
+            this.bitvector = [];
         }
     }
 }

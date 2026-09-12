@@ -35,59 +35,59 @@ namespace Microsoft.StreamProcessing
             afa.AddArc(0, 1, new SingleElementArc<TPayload, TRegister> { Fence = condition, Transfer = aggregator });
             afa.Seal();
 
-            return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, afa));
+            return this.Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, afa));
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<long, TPayload, TRegister, bool>> condition, Expression<Func<TPayload, TRegister, TRegister>> aggregator)
         {
             Expression<Func<long, TPayload, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
-            return SingleElement(condition, aggregatorTemplate.InlineCalls());
+            return this.SingleElement(condition, aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<long, TPayload, TRegister, bool>> condition, Expression<Func<TPayload, TRegister>> aggregator)
         {
             Expression<Func<long, TPayload, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
-            return SingleElement(condition, aggregatorTemplate.InlineCalls());
+            return this.SingleElement(condition, aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, TRegister, bool>> condition, Expression<Func<long, TPayload, TRegister, TRegister>> aggregator = null)
         {
             Expression<Func<long, TPayload, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
-            return SingleElement(conditionTemplate.InlineCalls(), aggregator);
+            return this.SingleElement(conditionTemplate.InlineCalls(), aggregator);
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, TRegister, bool>> condition, Expression<Func<TPayload, TRegister, TRegister>> aggregator)
         {
             Expression<Func<long, TPayload, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             Expression<Func<long, TPayload, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
-            return SingleElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
+            return this.SingleElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, TRegister, bool>> condition, Expression<Func<TPayload, TRegister>> aggregator)
         {
             Expression<Func<long, TPayload, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             Expression<Func<long, TPayload, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
-            return SingleElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
+            return this.SingleElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, bool>> condition, Expression<Func<long, TPayload, TRegister, TRegister>> aggregator = null)
         {
             Expression<Func<long, TPayload, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
-            return SingleElement(conditionTemplate.InlineCalls(), aggregator);
+            return this.SingleElement(conditionTemplate.InlineCalls(), aggregator);
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, bool>> condition, Expression<Func<TPayload, TRegister, TRegister>> aggregator)
         {
             Expression<Func<long, TPayload, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             Expression<Func<long, TPayload, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
-            return SingleElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
+            return this.SingleElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> SingleElement(Expression<Func<TPayload, bool>> condition, Expression<Func<TPayload, TRegister>> aggregator)
         {
             Expression<Func<long, TPayload, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             Expression<Func<long, TPayload, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
-            return SingleElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
+            return this.SingleElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
         }
         #endregion
 
@@ -98,59 +98,59 @@ namespace Microsoft.StreamProcessing
             afa.AddArc(0, 1, new ListElementArc<TPayload, TRegister> { Fence = condition, Transfer = aggregator });
             afa.Seal();
 
-            return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, afa));
+            return this.Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, afa));
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<long, List<TPayload>, TRegister, bool>> condition, Expression<Func<List<TPayload>, TRegister, TRegister>> aggregator)
         {
             Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
-            return ListElement(condition, aggregatorTemplate.InlineCalls());
+            return this.ListElement(condition, aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<long, List<TPayload>, TRegister, bool>> condition, Expression<Func<List<TPayload>, TRegister>> aggregator)
         {
             Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
-            return ListElement(condition, aggregatorTemplate.InlineCalls());
+            return this.ListElement(condition, aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, TRegister, bool>> condition, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null)
         {
             Expression<Func<long, List<TPayload>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
-            return ListElement(conditionTemplate.InlineCalls(), aggregator);
+            return this.ListElement(conditionTemplate.InlineCalls(), aggregator);
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, TRegister, bool>> condition, Expression<Func<List<TPayload>, TRegister, TRegister>> aggregator)
         {
             Expression<Func<long, List<TPayload>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
-            return ListElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
+            return this.ListElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, TRegister, bool>> condition, Expression<Func<List<TPayload>, TRegister>> aggregator)
         {
             Expression<Func<long, List<TPayload>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev, r);
             Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
-            return ListElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
+            return this.ListElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, bool>> condition, Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregator = null)
         {
             Expression<Func<long, List<TPayload>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
-            return ListElement(conditionTemplate.InlineCalls(), aggregator);
+            return this.ListElement(conditionTemplate.InlineCalls(), aggregator);
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, bool>> condition, Expression<Func<List<TPayload>, TRegister, TRegister>> aggregator)
         {
             Expression<Func<long, List<TPayload>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev, r);
-            return ListElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
+            return this.ListElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> ListElement(Expression<Func<List<TPayload>, bool>> condition, Expression<Func<List<TPayload>, TRegister>> aggregator)
         {
             Expression<Func<long, List<TPayload>, TRegister, bool>> conditionTemplate = (ts, ev, r) => CallInliner.Call(condition, ev);
             Expression<Func<long, List<TPayload>, TRegister, TRegister>> aggregatorTemplate = (ts, ev, r) => CallInliner.Call(aggregator, ev);
-            return ListElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
+            return this.ListElement(conditionTemplate.InlineCalls(), aggregatorTemplate.InlineCalls());
         }
         #endregion
 
@@ -161,7 +161,7 @@ namespace Microsoft.StreamProcessing
             afa.AddArc(0, 1, new EpsilonArc<TPayload, TRegister> { });
             afa.Seal();
 
-            return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, afa));
+            return this.Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, afa));
         }
         #endregion
 
@@ -180,7 +180,7 @@ namespace Microsoft.StreamProcessing
             });
             afa.Seal();
 
-            return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, afa));
+            return this.Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, afa));
         }
         #endregion
 
@@ -212,11 +212,11 @@ namespace Microsoft.StreamProcessing
             result.finalStates.Add(pattern_.StartState);
             result.StartState = pattern_.StartState;
 
-            return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, result));
+            return this.Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, result));
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> KleenePlus(Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern)
-            => Concat(pattern, x => x.KleeneStar(pattern));
+            => this.Concat(pattern, x => x.KleeneStar(pattern));
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> Concat(
             Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern,
@@ -248,7 +248,7 @@ namespace Microsoft.StreamProcessing
 
             var result = ConcatWorker(true, afa1, afa2, afa);
 
-            return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, result));
+            return this.Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, result));
         }
 
         public IPattern<TKey, TPayload, TRegister, TAccumulator> Or(
@@ -301,7 +301,7 @@ namespace Microsoft.StreamProcessing
             }
             result.StartState = 0;
 
-            return Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, result));
+            return this.Concat(x => new PatternMatcher<TKey, TPayload, TRegister, TAccumulator>(this.source, result));
         }
         #endregion
 

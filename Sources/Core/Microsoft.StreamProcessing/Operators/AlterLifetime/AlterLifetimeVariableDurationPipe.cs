@@ -34,7 +34,7 @@ namespace Microsoft.StreamProcessing
         public AlterLifetimeVariableDurationPipe(AlterLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            Contract.Requires(stream != null);
+            ArgumentNullException.ThrowIfNull(stream);
 
             this.durationSelector = (Expression<Func<long, long, long>>)stream.DurationSelector;
             this.startTimeSelector = (Expression<Func<long, long>>)stream.StartTimeSelector;

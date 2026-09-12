@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<TState, long, TInput, TState>> deaccumulate,
             Expression<Func<TState, TState, TState>> difference,
             Expression<Func<TState, TResult>> computeResult)
-            => new GeneratedAggregate<TInput, TState, TResult>(initialState, accumulate, deaccumulate, difference, computeResult);
+            => new(initialState, accumulate, deaccumulate, difference, computeResult);
     }
 
     internal class GeneratedAggregate<TInput, TState, TResult> : IAggregate<TInput, TState, TResult>
@@ -39,11 +39,11 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<TState, TState, TState>> difference,
             Expression<Func<TState, TResult>> computeResult)
         {
-            Contract.Requires(initialState != null);
-            Contract.Requires(accumulate != null);
-            Contract.Requires(deaccumulate != null);
-            Contract.Requires(difference != null);
-            Contract.Requires(computeResult != null);
+            ArgumentNullException.ThrowIfNull(initialState);
+            ArgumentNullException.ThrowIfNull(accumulate);
+            ArgumentNullException.ThrowIfNull(deaccumulate);
+            ArgumentNullException.ThrowIfNull(difference);
+            ArgumentNullException.ThrowIfNull(computeResult);
             this.initialState = initialState;
             this.accumulate = accumulate;
             this.deaccumulate = deaccumulate;

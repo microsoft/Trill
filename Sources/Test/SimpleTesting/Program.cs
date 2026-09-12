@@ -10,6 +10,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using Microsoft.StreamProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -55,15 +56,34 @@ namespace SimpleTesting
             var negativeOne = Expression.Constant(-1, typeof(int));
             var positiveOne = Expression.Constant(1, typeof(int));
             var zero = Expression.Constant(0, typeof(int));
-            Expression body = Expression.Condition(Expression.LessThan(Expression.Property(left, p), Expression.Property(right, p)), negativeOne,
-                Expression.Condition(Expression.Equal(Expression.Property(left, p), Expression.Property(right, p)), zero, positiveOne));
-            for (int i = n - 2; i >= 0; i--)
-            {
-                p = properties[i];
-                body = Expression.Condition(Expression.LessThan(Expression.Property(left, p), Expression.Property(right, p)), negativeOne,
-                Expression.Condition(Expression.Equal(Expression.Property(left, p), Expression.Property(right, p)), body, positiveOne));
-            }
+            var body = properties
+                .Reverse()
+                .Select(p => Compare(Expression.Property(left, p), Expression.Property(right, p)))
+                .Aggregate((Expression)Expression.Constant(0), (inner, outer) => Expression.Condition(
+                    Expression.NotEqual(
+                        outer,
+                        Expression.Constant(0)
+                    ),
+                    outer,
+                    inner
+                ));
             return Expression.Lambda(body, left, right);
+
+            static Expression Compare(Expression left, Expression right)
+            {
+                Type comparer = typeof(Comparer<>).MakeGenericType(left.Type);
+                PropertyInfo property = comparer.GetProperty(nameof(Comparer<>.Default), BindingFlags.Public | BindingFlags.Static);
+                MethodInfo compare = property.PropertyType.GetMethod(nameof(Comparer<>.Compare), BindingFlags.Public|BindingFlags.Instance, [left.Type, right.Type]);
+                return Expression.Call(
+                    Expression.Property(
+                        null,
+                        property
+                    ),
+                    compare,
+                    left,
+                    right
+                );
+            }
         }
 
         public static bool TestEquality<T, U>(IEnumerable<T> enumerable, Expression<Func<T, U>> selectFunction)
@@ -101,16 +121,16 @@ namespace SimpleTesting
             var s = x3.ExpressionToCSharp();
         }
 
-        public static void Main(string[] args)
+        public static void Main()
         {
             Alpha();
             var meths = typeof(int).GetMethods();
             var x = new { A = 3, B = 'a' };
             var y = EqualsExprForAnonymousType(x.GetType());
             var z = TestEquality(Enumerable.Range(0, 5), i => new { X = i, Y = (char)('a' + i), });
-            z = TestEquality(new int[] { 3, 3, 3 }, i => new { Z = i, A = (char)('a' + i), W = "abc", });
-            var ii = TestHash(new int[] { 3, 3, 3 }, i => new { Z = i, A = (char)('a' + i), W = "abc", });
-            ii = TestComparer(new int[] { 3, 3, 3 }, i => new { Z = i, A = (char)('a' + i), W = "abc" });
+            z = TestEquality([3, 3, 3], i => new { Z = i, A = (char)('a' + i), W = "abc", });
+            var ii = TestHash([3, 3, 3], i => new { Z = i, A = (char)('a' + i), W = "abc", });
+            ii = TestComparer([3, 3, 3], i => new { Z = i, A = (char)('a' + i), W = "abc" });
             NativeMethods.AffinitizeThread(0);
             Config.ForceRowBasedExecution = true;
 

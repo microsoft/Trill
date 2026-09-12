@@ -24,8 +24,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<TPayload, TResult>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelect(selector, false, false)
                 ? s.FuseSelect(selector)
@@ -41,8 +41,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<long, TPayload, TResult>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelect(selector, true, false)
                 ? s.FuseSelect(selector)
@@ -58,8 +58,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<TKey, TPayload, TResult>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelect(selector, false, true)
                 ? s.FuseSelectWithKey(selector)
@@ -75,8 +75,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<long, TKey, TPayload, TResult>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelect(selector, true, true)
                 ? s.FuseSelectWithKey(selector)
@@ -98,15 +98,15 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TNew>> initializer,
             IDictionary<string, Expression<Func<TOld, object>>> newColumnFormulas = null) where TNew : new()
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(initializer, nameof(initializer));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(initializer);
 
             // Validate that the dictionary parameter references proper fields
             if (newColumnFormulas == null) newColumnFormulas = new Dictionary<string, Expression<Func<TOld, object>>>();
             Type newType = typeof(TNew);
             foreach (var pair in newColumnFormulas)
             {
-                if (newType.GetTypeInfo().GetMember(pair.Key).Length == 0) throw new ArgumentException("Dictionary keys must refer to valid members of the destination type", nameof(newColumnFormulas));
+                if (newType.GetMember(pair.Key).Length == 0) throw new ArgumentException("Dictionary keys must refer to valid members of the destination type", nameof(newColumnFormulas));
             }
 
             if (!(initializer.Body is NewExpression newExpression)) throw new ArgumentException("Initializer must return a constructor expression.", nameof(initializer));
@@ -134,8 +134,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TNew, TField1>> fieldSelector1,
             Expression<Func<TOld, TField1>> fieldInitializer1) where TNew : new()
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(initializer, nameof(initializer));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(initializer);
 
             // Validate that the field selector formulas are actually selector expressions
             if (fieldSelector1.Body.NodeType != ExpressionType.MemberAccess)
@@ -174,8 +174,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TNew, TField2>> fieldSelector2,
             Expression<Func<TOld, TField2>> fieldInitializer2) where TNew : new()
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(initializer, nameof(initializer));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(initializer);
 
             // Validate that the field selector formulas are actually selector expressions
             if (fieldSelector1.Body.NodeType != ExpressionType.MemberAccess)
@@ -204,25 +204,25 @@ namespace Microsoft.StreamProcessing
             var inputParameter = Expression.Parameter(oldType, "input");
 
             var oldPublicFields =
-                oldType.GetTypeInfo().GetFields(BindingFlags.Public | BindingFlags.Instance).Select(o => o.Name)
+                oldType.GetFields(BindingFlags.Public | BindingFlags.Instance).Select(o => o.Name)
                 .Union(
-                oldType.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).Select(o => o.Name));
+                oldType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).Select(o => o.Name));
 
             var newPublicFields =
-                newType.GetTypeInfo().GetFields(BindingFlags.Public | BindingFlags.Instance).Select(o => o.Name)
+                newType.GetFields(BindingFlags.Public | BindingFlags.Instance).Select(o => o.Name)
                 .Union(
-                newType.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).Select(o => o.Name));
+                newType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).Select(o => o.Name));
 
             var fieldsInCommon = oldPublicFields.Intersect(newPublicFields).Except(newColumnFormulas.Keys);
 
             var commonFieldAssignments = fieldsInCommon.Select(
-                o => Expression.Bind(newType.GetTypeInfo().GetMember(o).Single(), Expression.PropertyOrField(inputParameter, o)));
+                o => Expression.Bind(newType.GetMember(o).Single(), Expression.PropertyOrField(inputParameter, o)));
 
             var newFieldAssignments = newColumnFormulas.Select(
-                o => Expression.Bind(newType.GetTypeInfo().GetMember(o.Key).Single(), o.Value.RemoveCastToObject().ReplaceParametersInBody(inputParameter)));
+                o => Expression.Bind(newType.GetMember(o.Key).Single(), o.Value.RemoveCastToObject().ReplaceParametersInBody(inputParameter)));
 
             var member = Expression.MemberInit(newExpression, commonFieldAssignments.Concat(newFieldAssignments).ToArray());
-            var lambda = Expression.Lambda<Func<TOld, TNew>>(member, new ParameterExpression[] { inputParameter });
+            var lambda = Expression.Lambda<Func<TOld, TNew>>(member, [inputParameter]);
             return lambda;
         }
     }

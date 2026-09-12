@@ -20,8 +20,8 @@ namespace Microsoft.StreamProcessing
             IStreamable<TKey, TRight> right, bool registerInputs = false)
             : base(properties)
         {
-            Contract.Requires(left != null);
-            Contract.Requires(right != null);
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             this.Left = left;
             this.Right = right;
@@ -30,7 +30,7 @@ namespace Microsoft.StreamProcessing
 
         public override sealed IDisposable Subscribe(IStreamObserver<TKey, TResult> observer)
         {
-            var binaryPipe = CreatePipe(observer);
+            var binaryPipe = this.CreatePipe(observer);
             return Utility.CreateDisposable(this.Left.Subscribe(this.registerInputs ? Config.StreamScheduler.RegisterStreamObserver(binaryPipe.Left) : binaryPipe.Left), this.Right.Subscribe(this.registerInputs ? Config.StreamScheduler.RegisterStreamObserver(binaryPipe.Right) : binaryPipe.Right));
         }
 
@@ -40,7 +40,7 @@ namespace Microsoft.StreamProcessing
         {
             if (this.Left.Properties.IsColumnar && this.Right.Properties.IsColumnar)
             {
-                if (!CanGenerateColumnar())
+                if (!this.CanGenerateColumnar())
                 {
                     this.properties = this.properties.ToRowBased();
                     this.Left = this.Left.ColumnToRow();

@@ -96,13 +96,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1 }.ToString();
+        public override readonly string ToString() => new { this.Item1 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
         }
@@ -135,13 +135,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -183,13 +183,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -240,13 +240,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -306,13 +306,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -381,13 +381,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -465,13 +465,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -558,13 +558,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -660,13 +660,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -771,13 +771,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -891,13 +891,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -1020,13 +1020,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -1158,13 +1158,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12, this.Item13 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12, this.Item13 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -1305,13 +1305,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12, this.Item13, this.Item14 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12, this.Item13, this.Item14 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -1461,13 +1461,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12, this.Item13, this.Item14, this.Item15 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12, this.Item13, this.Item14, this.Item15 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();
@@ -1626,13 +1626,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// Prints a string representation of the StructTuple.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12, this.Item13, this.Item14, this.Item15, this.Item16 }.ToString();
+        public override readonly string ToString() => new { this.Item1, this.Item2, this.Item3, this.Item4, this.Item5, this.Item6, this.Item7, this.Item8, this.Item9, this.Item10, this.Item11, this.Item12, this.Item13, this.Item14, this.Item15, this.Item16 }.ToString();
 
         /// <summary>
         /// Disposes the struct by testing each constituent component for disposability.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Dispose()
+        public readonly void Dispose()
         {
            (this.Item1 as IDisposable)?.Dispose();
            (this.Item2 as IDisposable)?.Dispose();

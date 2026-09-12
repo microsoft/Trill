@@ -30,13 +30,13 @@ namespace Microsoft.StreamProcessing
         /// Stores intervals for active left events.
         /// </summary>
         [DataMember]
-        private FastMap<LeftInterval> leftIntervalMap = new FastMap<LeftInterval>();
+        private FastMap<LeftInterval> leftIntervalMap = new();
 
         /// <summary>
         /// Stores left start edges at <see cref="currTime"/>
         /// </summary>
         [DataMember]
-        private FastMap<LeftEdge> leftEdgeMap = new FastMap<LeftEdge>();
+        private FastMap<LeftEdge> leftEdgeMap = new();
 
         /// <summary>
         /// Stores left end edges at some point in the future, i.e. after <see cref="currTime"/>.
@@ -108,8 +108,8 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.nextLeftTime <= this.nextRightTime)
                 {
-                    UpdateTime(this.nextLeftTime);
-                    ProcessLeftEvent(
+                    this.UpdateTime(this.nextLeftTime);
+                    this.ProcessLeftEvent(
                         this.nextLeftTime,
                         leftBatch.vother.col[leftBatch.iter],
                         ref leftBatch.key.col[leftBatch.iter],
@@ -129,8 +129,8 @@ namespace Microsoft.StreamProcessing
                 }
                 else
                 {
-                    UpdateTime(this.nextRightTime);
-                    ProcessRightEvent(
+                    this.UpdateTime(this.nextRightTime);
+                    this.ProcessRightEvent(
                         this.nextRightTime,
                         rightBatch.vother.col[rightBatch.iter],
                         ref rightBatch.key.col[rightBatch.iter],
@@ -170,9 +170,9 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateTime(this.nextLeftTime);
+                this.UpdateTime(this.nextLeftTime);
 
-                ProcessLeftEvent(
+                this.ProcessLeftEvent(
                     this.nextLeftTime,
                     batch.vother.col[batch.iter],
                     ref batch.key.col[batch.iter],
@@ -203,9 +203,9 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                UpdateTime(this.nextRightTime);
+                this.UpdateTime(this.nextRightTime);
 
-                ProcessRightEvent(
+                this.ProcessRightEvent(
                     this.nextRightTime,
                     batch.vother.col[batch.iter],
                     ref batch.key.col[batch.iter],
@@ -230,7 +230,7 @@ namespace Microsoft.StreamProcessing
             if (time != this.currTime)
             {
                 this.currTime = time;
-                ReachTime();
+                this.ReachTime();
             }
         }
 
@@ -247,7 +247,7 @@ namespace Microsoft.StreamProcessing
                     if (isFullyOutputtable)
                     {
                         // Output full interval.
-                        AddToBatch(start, end, ref key, ref payload, hash);
+                        this.AddToBatch(start, end, ref key, ref payload, hash);
                     }
                     else
                     {
@@ -261,7 +261,7 @@ namespace Microsoft.StreamProcessing
                         this.leftIntervalMap.Values[mapIndex].Initialize(start, ref key, ref payload, heapIndex);
 
                         // Output start edge.
-                        AddToBatch(start, StreamEvent.InfinitySyncTime, ref key, ref payload, hash);
+                        this.AddToBatch(start, StreamEvent.InfinitySyncTime, ref key, ref payload, hash);
                     }
                 }
                 else
@@ -270,12 +270,12 @@ namespace Microsoft.StreamProcessing
                     this.leftEdgeMap.Values[index].Populate(start, ref key, ref payload);
 
                     // Output start edge.
-                    AddToBatch(start, StreamEvent.InfinitySyncTime, ref key, ref payload, hash);
+                    this.AddToBatch(start, StreamEvent.InfinitySyncTime, ref key, ref payload, hash);
                 }
             }
             else if (end == StreamEvent.PunctuationOtherTime)
             {
-                AddPunctuationToBatch(start);
+                this.AddPunctuationToBatch(start);
             }
             else
             {
@@ -283,10 +283,10 @@ namespace Microsoft.StreamProcessing
                 var leftEvents = this.leftEdgeMap.Find(hash);
                 while (leftEvents.Next(out int index))
                 {
-                    if (AreSame(end, ref key, ref payload, ref this.leftEdgeMap.Values[index]))
+                    if (this.AreSame(end, ref key, ref payload, ref this.leftEdgeMap.Values[index]))
                     {
                         // Output end edge.
-                        AddToBatch(start, end, ref key, ref payload, hash);
+                        this.AddToBatch(start, end, ref key, ref payload, hash);
 
                         // Remove from leftMap.
                         leftEvents.Remove();
@@ -301,7 +301,7 @@ namespace Microsoft.StreamProcessing
         {
             if (end == StreamEvent.PunctuationOtherTime)
             {
-                AddPunctuationToBatch(start);
+                this.AddPunctuationToBatch(start);
                 return;
             }
             else if (start >= end)
@@ -320,7 +320,7 @@ namespace Microsoft.StreamProcessing
                 if (leftStart < start && this.keyComparerEquals(key, this.leftIntervalMap.Values[index].Key))
                 {
                     // Output end edge.
-                    AddToBatch(
+                    this.AddToBatch(
                         start,
                         leftStart,
                         ref this.leftIntervalMap.Values[index].Key,
@@ -341,7 +341,7 @@ namespace Microsoft.StreamProcessing
                 if (leftStart < start && this.keyComparerEquals(key, this.leftEdgeMap.Values[index].Key))
                 {
                     // Output end edge.
-                    AddToBatch(
+                    this.AddToBatch(
                         start,
                         leftStart,
                         ref this.leftEdgeMap.Values[index].Key,
@@ -361,7 +361,7 @@ namespace Microsoft.StreamProcessing
             while (this.leftEndPointHeap.TryGetNextInclusive(this.currTime, out long endPointTime, out int index))
             {
                 // Output end edge.
-                AddToBatch(
+                this.AddToBatch(
                     endPointTime, this.leftIntervalMap.Values[index].Start,
                     ref this.leftIntervalMap.Values[index].Key,
                     ref this.leftIntervalMap.Values[index].Payload, this.leftIntervalMap.GetHash(index));
@@ -386,7 +386,7 @@ namespace Microsoft.StreamProcessing
                 this.output.hash.col[index] = 0;
                 this.output.bitvector.col[index >> 6] |= 1L << (index & 0x3f);
 
-                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
             }
         }
 
@@ -405,7 +405,7 @@ namespace Microsoft.StreamProcessing
             this.output[index] = payload;
             this.output.hash.col[index] = hash;
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -444,7 +444,7 @@ namespace Microsoft.StreamProcessing
                 this.HeapIndex = heapIndex;
             }
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "', HeapIndex=" + this.HeapIndex + "]";
         }
 
@@ -466,7 +466,7 @@ namespace Microsoft.StreamProcessing
                 this.Payload = payload;
             }
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "]";
         }
     }

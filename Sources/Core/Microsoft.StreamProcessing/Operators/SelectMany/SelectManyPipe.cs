@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing
 
                             if (this.iter == Config.DataBatchSize)
                             {
-                                FlushContents();
+                                this.FlushContents();
                                 this.batch.iter = batch.iter;
                                 dest_vsync = this.batch.vsync.col;
                                 dest_vother = this.batch.vother.col;
@@ -110,7 +110,7 @@ namespace Microsoft.StreamProcessing
 
                         if (this.iter == Config.DataBatchSize)
                         {
-                            FlushContents();
+                            this.FlushContents();
                             this.batch.iter = batch.iter;
                             dest_vsync = this.batch.vsync.col;
                             dest_vother = this.batch.vother.col;
@@ -216,7 +216,7 @@ namespace Microsoft.StreamProcessing
 
                             if (this.iter == Config.DataBatchSize)
                             {
-                                FlushContents();
+                                this.FlushContents();
                                 this.batch.iter = batch.iter;
                                 dest_vsync = this.batch.vsync.col;
                                 dest_vother = this.batch.vother.col;
@@ -238,7 +238,7 @@ namespace Microsoft.StreamProcessing
 
                         if (this.iter == Config.DataBatchSize)
                         {
-                            FlushContents();
+                            this.FlushContents();
                             this.batch.iter = batch.iter;
                             dest_vsync = this.batch.vsync.col;
                             dest_vother = this.batch.vother.col;
@@ -344,7 +344,7 @@ namespace Microsoft.StreamProcessing
 
                             if (this.iter == Config.DataBatchSize)
                             {
-                                FlushContents();
+                                this.FlushContents();
                                 this.batch.iter = batch.iter;
                                 dest_vsync = this.batch.vsync.col;
                                 dest_vother = this.batch.vother.col;
@@ -366,7 +366,7 @@ namespace Microsoft.StreamProcessing
 
                         if (this.iter == Config.DataBatchSize)
                         {
-                            FlushContents();
+                            this.FlushContents();
                             this.batch.iter = batch.iter;
                             dest_vsync = this.batch.vsync.col;
                             dest_vother = this.batch.vother.col;
@@ -472,7 +472,7 @@ namespace Microsoft.StreamProcessing
 
                             if (this.iter == Config.DataBatchSize)
                             {
-                                FlushContents();
+                                this.FlushContents();
                                 this.batch.iter = batch.iter;
                                 dest_vsync = this.batch.vsync.col;
                                 dest_vother = this.batch.vother.col;
@@ -494,7 +494,7 @@ namespace Microsoft.StreamProcessing
 
                         if (this.iter == Config.DataBatchSize)
                         {
-                            FlushContents();
+                            this.FlushContents();
                             this.batch.iter = batch.iter;
                             dest_vsync = this.batch.vsync.col;
                             dest_vother = this.batch.vother.col;

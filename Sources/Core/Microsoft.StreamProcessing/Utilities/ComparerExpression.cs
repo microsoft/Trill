@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace Microsoft.StreamProcessing
 {
@@ -27,25 +28,25 @@ namespace Microsoft.StreamProcessing
 
     internal sealed class ComparerExpressionCache
     {
-        private static readonly ConcurrentDictionary<Type, object> typeComparerCache = new ConcurrentDictionary<Type, object>();
+        private static readonly ConcurrentDictionary<Type, object> typeComparerCache = new();
 
         static ComparerExpressionCache()
         {
-            typeComparerCache.TryAdd(typeof(byte), new PrimitiveComparerExpression<byte>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.TryAdd(typeof(sbyte), new PrimitiveComparerExpression<sbyte>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.TryAdd(typeof(char), new PrimitiveComparerExpression<char>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.TryAdd(typeof(short), new PrimitiveComparerExpression<short>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.TryAdd(typeof(ushort), new PrimitiveComparerExpression<ushort>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.TryAdd(typeof(int), new PrimitiveComparerExpression<int>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.TryAdd(typeof(uint), new PrimitiveComparerExpression<uint>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.TryAdd(typeof(long), new PrimitiveComparerExpression<long>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.TryAdd(typeof(ulong), new PrimitiveComparerExpression<ulong>((x, y) => x < y ? -1 : x == y ? 0 : 1));
-            typeComparerCache.TryAdd(typeof(decimal), new PrimitiveComparerExpression<decimal>((x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(byte), new PrimitiveComparerExpression<byte>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(sbyte), new PrimitiveComparerExpression<sbyte>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(char), new PrimitiveComparerExpression<char>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(short), new PrimitiveComparerExpression<short>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(ushort), new PrimitiveComparerExpression<ushort>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(int), new PrimitiveComparerExpression<int>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(uint), new PrimitiveComparerExpression<uint>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(long), new PrimitiveComparerExpression<long>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(ulong), new PrimitiveComparerExpression<ulong>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
+            typeComparerCache.TryAdd(typeof(decimal), new PrimitiveComparerExpression<decimal>(static (x, y) => x < y ? -1 : x == y ? 0 : 1));
             typeComparerCache.TryAdd(typeof(string), new GenericComparableExpression<string>());
             typeComparerCache.TryAdd(typeof(TimeSpan), new GenericComparableExpression<TimeSpan>());
             typeComparerCache.TryAdd(typeof(DateTime), new GenericComparableExpression<DateTime>());
             typeComparerCache.TryAdd(typeof(DateTimeOffset), new GenericComparableExpression<DateTimeOffset>());
-            typeComparerCache.TryAdd(typeof(Empty), new PrimitiveComparerExpression<Empty>((x, y) => 0));
+            typeComparerCache.TryAdd(typeof(Empty), new PrimitiveComparerExpression<Empty>(static (x, y) => 0));
         }
 
         public static bool TryGetCachedComparer<T>(out IComparerExpression<T> comparer)
@@ -63,20 +64,17 @@ namespace Microsoft.StreamProcessing
         public static void Add<T>(IComparerExpression<T> comparer) => typeComparerCache.TryAdd(typeof(T), comparer);
     }
 
-    internal class ComparerExpression<T> : IComparerExpression<T>
+    internal class ComparerExpression<T>(Expression<Comparison<T>> compareExpr) : IComparerExpression<T>
     {
-        private static readonly object sentinel = new object();
-        private readonly Expression<Comparison<T>> CompareExpr;
-
-        public ComparerExpression(Expression<Comparison<T>> compareExpr) => this.CompareExpr = compareExpr;
+        private static readonly Lock sentinel = new();
 
         public static IComparerExpression<T> Default
         {
             get
             {
-                var type = typeof(T).GetTypeInfo();
+                var type = typeof(T);
 
-                lock (sentinel)
+                using (sentinel.EnterScope())
                 {
                     if (ComparerExpressionCache.TryGetCachedComparer(out IComparerExpression<T> comparer))
                         return comparer;
@@ -85,17 +83,17 @@ namespace Microsoft.StreamProcessing
                     {
                         // equivalent to: return new CompoundGroupKeyComparer<T1, T2>(ComparerExpression<T1>.Default, ComparerExpression<T2>.Default);
                         var comparerExpressionOfT1 = typeof(ComparerExpression<>).MakeGenericType(t1);
-                        var defaultPropertyForT1 = comparerExpressionOfT1.GetTypeInfo().GetProperty("Default");
+                        var defaultPropertyForT1 = comparerExpressionOfT1.GetProperty("Default");
                         var default1 = defaultPropertyForT1.GetValue(null);
 
                         var comparerExpressionOfT2 = typeof(ComparerExpression<>).MakeGenericType(t2);
-                        var defaultPropertyForT2 = comparerExpressionOfT2.GetTypeInfo().GetProperty("Default");
+                        var defaultPropertyForT2 = comparerExpressionOfT2.GetProperty("Default");
                         var default2 = defaultPropertyForT2.GetValue(null);
 
                         var cgkc = typeof(CompoundGroupKeyComparer<,>);
                         var genericInstance = cgkc.MakeGenericType(t1, t2);
-                        var ctor = genericInstance.GetTypeInfo().GetConstructor(new Type[] { comparerExpressionOfT1, comparerExpressionOfT2, });
-                        var result = ctor.Invoke(new object[] { default1, default2, });
+                        var ctor = genericInstance.GetConstructor([comparerExpressionOfT1, comparerExpressionOfT2,]);
+                        var result = ctor.Invoke([default1, default2,]);
                         comparer = (IComparerExpression<T>)result;
                         ComparerExpressionCache.Add(comparer);
                         return comparer;
@@ -114,10 +112,10 @@ namespace Microsoft.StreamProcessing
                         // then fall back to using a lambda of the form:
                         // (x,y) => x.CompareTo(y)
                         var genericInstanceOfComparerExpressionForGenericIComparable = typeof(GenericComparableExpression<>).MakeGenericType(type);
-                        var ctorForComparerExpressionForGenericIComparer = genericInstanceOfComparerExpressionForGenericIComparable.GetTypeInfo().GetConstructor(Array.Empty<Type>());
+                        var ctorForComparerExpressionForGenericIComparer = genericInstanceOfComparerExpressionForGenericIComparable.GetConstructor([]);
                         if (ctorForComparerExpressionForGenericIComparer != null)
                         {
-                            comparer = (IComparerExpression<T>)ctorForComparerExpressionForGenericIComparer.Invoke(Array.Empty<object>());
+                            comparer = (IComparerExpression<T>)ctorForComparerExpressionForGenericIComparer.Invoke([]);
                             ComparerExpressionCache.Add(comparer);
                             return comparer;
                         }
@@ -129,16 +127,16 @@ namespace Microsoft.StreamProcessing
                         // (x,y) => o.IComparer<T>.Compare(x,y)
                         // for an arbitrary o that is created of type T by calling its nullary ctor (if such a ctor exists)
                         var genericInstanceOfComparerExpressionForGenericIComparer = typeof(ComparerExpressionForGenericIComparer<>).MakeGenericType(type);
-                        var ctorForComparerExpressionForGenericIComparer = genericInstanceOfComparerExpressionForGenericIComparer.GetTypeInfo().GetConstructor(new Type[] { type, });
+                        var ctorForComparerExpressionForGenericIComparer = genericInstanceOfComparerExpressionForGenericIComparer.GetConstructor([type,]);
                         if (ctorForComparerExpressionForGenericIComparer != null)
                         {
                             var ctorForType = type.GetConstructor(Type.EmptyTypes);
                             if (ctorForType != null)
                             {
-                                var instanceOfType = ctorForType.Invoke(Array.Empty<object>());
+                                var instanceOfType = ctorForType.Invoke([]);
                                 if (instanceOfType != null)
                                 {
-                                    comparer = (IComparerExpression<T>)ctorForComparerExpressionForGenericIComparer.Invoke(new object[] { instanceOfType, });
+                                    comparer = (IComparerExpression<T>)ctorForComparerExpressionForGenericIComparer.Invoke([instanceOfType,]);
                                     ComparerExpressionCache.Add(comparer);
                                     return comparer;
                                 }
@@ -146,22 +144,22 @@ namespace Microsoft.StreamProcessing
                         }
                     }
 
-                    if (type.GetInterface("System.Collections.IComparer") != null)
+                    if (typeof(IComparer).IsAssignableFrom(type))
                     {
                         // then fall back to using a lambda of the form:
                         // (x,y) => o.IComparer.Compare(x,y)
                         // for an arbitrary o that is created of type T by calling its nullary ctor (if such a ctor exists)
                         var genericInstanceOfComparerExpressionForNonGenericIComparer = typeof(ComparerExpressionForNonGenericIComparer<>).MakeGenericType(type);
-                        var ctorForComparerExpressionForNonGenericIComparer = genericInstanceOfComparerExpressionForNonGenericIComparer.GetTypeInfo().GetConstructor(new Type[] { type, });
+                        var ctorForComparerExpressionForNonGenericIComparer = genericInstanceOfComparerExpressionForNonGenericIComparer.GetConstructor([type,]);
                         if (ctorForComparerExpressionForNonGenericIComparer != null)
                         {
                             var ctorForType = type.GetConstructor(Type.EmptyTypes);
                             if (ctorForType != null)
                             {
-                                var instanceOfType = ctorForType.Invoke(Array.Empty<object>());
+                                var instanceOfType = ctorForType.Invoke([]);
                                 if (instanceOfType != null)
                                 {
-                                    comparer = (IComparerExpression<T>)ctorForComparerExpressionForNonGenericIComparer.Invoke(new object[] { instanceOfType, });
+                                    comparer = (IComparerExpression<T>)ctorForComparerExpressionForNonGenericIComparer.Invoke([instanceOfType,]);
                                     ComparerExpressionCache.Add(comparer);
                                     return comparer;
                                 }
@@ -202,7 +200,7 @@ namespace Microsoft.StreamProcessing
         private static Expression<Comparison<T>> ComparerExprForAnonymousType(Type t)
         {
             if (t == null || !t.IsAnonymousTypeName()) return null;
-            var properties = t.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var properties = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             if (properties.Length == 0) return null;
             var left = Expression.Parameter(t, "left");
             var right = Expression.Parameter(t, "right");
@@ -232,43 +230,40 @@ namespace Microsoft.StreamProcessing
         private static ConditionalExpression MakeComparisonExpression(ParameterExpression left, ParameterExpression right, PropertyInfo p, Expression e)
         {
             var comparerTypeForPropertyType = typeof(ComparerExpression<>).MakeGenericType(p.PropertyType);
-            var comparerDefaultProperty = comparerTypeForPropertyType.GetTypeInfo().GetProperty("Default");
+            var comparerDefaultProperty = comparerTypeForPropertyType.GetProperty("Default");
             var getter = comparerDefaultProperty.GetMethod;
             var comparerExpressionObject = getter.Invoke(null, null);
-            var comparerExpression = (LambdaExpression)comparerExpressionObject.GetType().GetTypeInfo()
+            var comparerExpression = (LambdaExpression)comparerExpressionObject.GetType()
                 .GetMethod("GetCompareExpr").Invoke(comparerExpressionObject, null);
             var inlinedComparerExpression = comparerExpression.ReplaceParametersInBody(Expression.Property(left, p), Expression.Property(right, p));
             return Expression.Condition(Expression.Equal(inlinedComparerExpression, zero), e, inlinedComparerExpression);
         }
 
-        public Expression<Comparison<T>> GetCompareExpr() => this.CompareExpr;
+        public Expression<Comparison<T>> GetCompareExpr() => compareExpr;
 
         internal static bool IsSimpleDefault(IComparerExpression<T> input)
             => input == Default && input is PrimitiveComparerExpression<T>;
     }
 
-    internal class PrimitiveComparerExpression<T> : ComparerExpression<T>
+    internal class PrimitiveComparerExpression<T>(Expression<Comparison<T>> compareExpr) : ComparerExpression<T>(compareExpr)
     {
-        public PrimitiveComparerExpression(Expression<Comparison<T>> compareExpr) : base(compareExpr) { }
     }
 
     internal sealed class GenericComparerExpression<T> : ComparerExpression<T>
     {
-        public GenericComparerExpression() : base(compareExpr: (x, y) => Comparer<T>.Default.Compare(x, y)) { }
+        public GenericComparerExpression() : base(compareExpr: static (x, y) => Comparer<T>.Default.Compare(x, y)) { }
     }
 
     internal sealed class GenericComparableExpression<T> : ComparerExpression<T> where T : IComparable<T>
     {
-        public GenericComparableExpression() : base(compareExpr: (x, y) => x.CompareTo(y)) { }
+        public GenericComparableExpression() : base(compareExpr: static (x, y) => x.CompareTo(y)) { }
     }
 
-    internal sealed class ComparerExpressionForGenericIComparer<T> : ComparerExpression<T> where T : IComparer<T>
+    internal sealed class ComparerExpressionForGenericIComparer<T>(T t) : ComparerExpression<T>(compareExpr: (x, y) => t.Compare(x, y)) where T : IComparer<T>
     {
-        public ComparerExpressionForGenericIComparer(T t) : base(compareExpr: (x, y) => t.Compare(x, y)) { }
     }
 
-    internal sealed class ComparerExpressionForNonGenericIComparer<T> : ComparerExpression<T> where T : IComparer
+    internal sealed class ComparerExpressionForNonGenericIComparer<T>(T t) : ComparerExpression<T>(compareExpr: (x, y) => t.Compare(x, y)) where T : IComparer
     {
-        public ComparerExpressionForNonGenericIComparer(T t) : base(compareExpr: (x, y) => t.Compare(x, y)) { }
     }
 }

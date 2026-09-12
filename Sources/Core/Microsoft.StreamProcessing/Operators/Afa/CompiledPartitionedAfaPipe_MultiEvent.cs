@@ -21,9 +21,9 @@ namespace Microsoft.StreamProcessing
 
         // The follow fields' keys need to be updated in lock step
         [DataMember]
-        private FastDictionary2<TPartitionKey, FastMap<TKey>> keyHeads = new FastDictionary2<TPartitionKey, FastMap<TKey>>();
+        private FastDictionary2<TPartitionKey, FastMap<TKey>> keyHeads = new();
         [DataMember]
-        private FastDictionary2<TPartitionKey, long> lastSyncTime = new FastDictionary2<TPartitionKey, long>();
+        private FastDictionary2<TPartitionKey, long> lastSyncTime = new();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledPartitionedAfaPipe_MultiEvent() { }
@@ -75,7 +75,7 @@ namespace Microsoft.StreamProcessing
                                     this.iter++;
 
                                     if (this.iter == Config.DataBatchSize)
-                                        FlushContents();
+                                        this.FlushContents();
                                 }
 
                                 if (this.hasOutgoingArcs[state2.toState])
@@ -111,13 +111,13 @@ namespace Microsoft.StreamProcessing
                         if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0)
                         {
                             var partitionKey = this.getPartitionKey(srckey[i]);
-                            int partitionIndex = EnsurePartition(partitionKey);
+                            int partitionIndex = this.EnsurePartition(partitionKey);
 
                             long synctime = src_vsync[i];
 
                             if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                             {
-                                ProcessCurrentTimestamp(partitionIndex);
+                                this.ProcessCurrentTimestamp(partitionIndex);
                                 this.lastSyncTime.entries[partitionIndex].value = synctime;
                             }
 
@@ -255,23 +255,23 @@ namespace Microsoft.StreamProcessing
                             {
                                 if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                                 {
-                                    ProcessCurrentTimestamp(partitionIndex);
+                                    this.ProcessCurrentTimestamp(partitionIndex);
                                     this.lastSyncTime.entries[partitionIndex].value = synctime;
                                 }
                             }
 
-                            OnLowWatermark(synctime);
+                            this.OnLowWatermark(synctime);
                         }
                         else if (src_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
                         {
                             var partitionKey = this.getPartitionKey(srckey[i]);
-                            int partitionIndex = EnsurePartition(partitionKey);
+                            int partitionIndex = this.EnsurePartition(partitionKey);
 
                             long synctime = src_vsync[i];
 
                             if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                             {
-                                ProcessCurrentTimestamp(partitionIndex);
+                                this.ProcessCurrentTimestamp(partitionIndex);
                                 this.lastSyncTime.entries[partitionIndex].value = synctime;
                             }
                         }

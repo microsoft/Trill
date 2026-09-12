@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class SnapshotWindowPriorityQueuePipeSimple<TInput, TState, TOutput> : UnaryPipe<Empty, TInput, TOutput>
     {
-        private static readonly bool hasDisposableState = typeof(IDisposable).GetTypeInfo().IsAssignableFrom(typeof(TState));
+        private static readonly bool hasDisposableState = typeof(IDisposable).IsAssignableFrom(typeof(TState));
         private readonly MemoryPool<Empty, TOutput> pool;
         private readonly string errorMessages;
 
@@ -44,7 +44,7 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<Empty, TOutput> batch;
 
         [DataMember]
-        private SortedDictionary<long, HeldState<TState>> ecq = new SortedDictionary<long, HeldState<TState>>();
+        private SortedDictionary<long, HeldState<TState>> ecq = [];
         [DataMember]
         private long lastSyncTime = long.MinValue;
         [DataMember]
@@ -102,7 +102,7 @@ namespace Microsoft.StreamProcessing
                         if (col_vother[i] == StreamEvent.PunctuationOtherTime)
                         {
                             // We have found a row that corresponds to punctuation
-                            OnPunctuation(col_vsync[i]);
+                            this.OnPunctuation(col_vsync[i]);
 
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
@@ -112,7 +112,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.hash.col[c] = 0;
                             this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         continue;
                     }
@@ -120,7 +120,7 @@ namespace Microsoft.StreamProcessing
                     var syncTime = col_vsync[i];
 
                     // Handle time moving forward
-                    if (syncTime > this.lastSyncTime) AdvanceTime(syncTime);
+                    if (syncTime > this.lastSyncTime) this.AdvanceTime(syncTime);
 
                     if (this.currentState == null)
                     {
@@ -143,7 +143,7 @@ namespace Microsoft.StreamProcessing
                                 this.batch.key.col[c] = Empty.Default;
                                 this.batch.hash.col[c] = 0;
                                 this.batch.Count++;
-                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                                if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                             }
 
                             this.currentState.timestamp = syncTime;
@@ -194,7 +194,7 @@ namespace Microsoft.StreamProcessing
         public void OnPunctuation(long syncTime)
         {
             // Handle time moving forward
-            if (syncTime > this.lastSyncTime) AdvanceTime(syncTime);
+            if (syncTime > this.lastSyncTime) this.AdvanceTime(syncTime);
         }
 
         private void AdvanceTime(long syncTime)
@@ -211,7 +211,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.key.col[c] = Empty.Default;
                     this.batch.hash.col[c] = 0;
                     this.batch.Count++;
-                    if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                    if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                 }
 
                 this.held = false;
@@ -231,7 +231,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.key.col[c] = Empty.Default;
                     this.batch.hash.col[c] = 0;
                     this.batch.Count++;
-                    if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                    if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                 }
 
                 // Update aggregate
@@ -251,7 +251,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.key.col[c] = Empty.Default;
                         this.batch.hash.col[c] = 0;
                         this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                     }
                     else
                     {

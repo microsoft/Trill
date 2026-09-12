@@ -14,7 +14,7 @@ namespace Microsoft.StreamProcessing
         UnaryStreamable<Empty, TInput, TResult>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private readonly StreamProperties<Empty, TInput> sourceProps;
         internal Expression<Func<TInput, TKey>> KeySelector;
@@ -25,7 +25,7 @@ namespace Microsoft.StreamProcessing
         public GroupedWindowStreamable(IStreamable<Empty, TInput> source, IAggregate<TInput, TState, TOutput> aggregate, Expression<Func<TInput, TKey>> keySelector, Expression<Func<TKey, TOutput, TResult>> resultSelector)
             : base(source, source.Properties.Group(keySelector).Snapshot(aggregate).Ungroup(resultSelector))
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.Aggregate = aggregate;
             this.sourceProps = source.Properties;
@@ -33,11 +33,11 @@ namespace Microsoft.StreamProcessing
             this.ResultSelector = resultSelector;
             if (!this.sourceProps.IsStartEdgeOnly) throw new InvalidOperationException("Cannot use this streamable if the input stream is not guaranteed to be start-edge only.");
 
-            Initialize();
+            this.Initialize();
         }
 
         internal override IStreamObserver<Empty, TInput> CreatePipe(IStreamObserver<Empty, TResult> observer)
-            => this.Properties.IsColumnar ? GetPipe(observer) : new GroupedWindowPipe<TKey, TInput, TState, TOutput, TResult>(this, observer);
+            => this.Properties.IsColumnar ? this.GetPipe(observer) : new GroupedWindowPipe<TKey, TInput, TState, TOutput, TResult>(this, observer);
 
         protected override bool CanGenerateColumnar()
         {

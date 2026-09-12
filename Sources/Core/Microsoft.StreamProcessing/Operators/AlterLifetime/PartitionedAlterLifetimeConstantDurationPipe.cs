@@ -25,7 +25,7 @@ namespace Microsoft.StreamProcessing
         private readonly Func<long, long> startTimeSelectorCompiled;
 
         [DataMember]
-        private FastDictionary<TPartitionKey, long> lastSync = new FastDictionary<TPartitionKey, long>();
+        private FastDictionary<TPartitionKey, long> lastSync = new();
 
         private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
         public PartitionedAlterLifetimeConstantDurationPipe(AlterLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            Contract.Requires(stream != null);
+            ArgumentNullException.ThrowIfNull(stream);
 
             this.constantDurationSelector = (long)((ConstantExpression)stream.DurationSelector.Body).Value;
             this.startTimeSelector = (Expression<Func<long, long>>)stream.StartTimeSelector;
@@ -142,6 +142,11 @@ namespace Microsoft.StreamProcessing
             }
 
             this.Observer.OnNext(batch);
+        }
+
+        protected override void DisposeState()
+        {
+            this.lastSync.Dispose();
         }
 
         public override int CurrentlyBufferedOutputCount => 0;

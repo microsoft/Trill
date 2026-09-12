@@ -27,7 +27,7 @@ namespace Microsoft.StreamProcessing
         public AlterLifetimeStartDependentDurationStatelessPipe(AlterLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            Contract.Requires(stream != null);
+            ArgumentNullException.ThrowIfNull(stream);
 
             this.startTimeDurationSelector = (Expression<Func<long, long>>)stream.DurationSelector;
             this.startTimeDurationSelectorCompiled = this.startTimeDurationSelector.Compile();

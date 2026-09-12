@@ -41,40 +41,40 @@ namespace Microsoft.StreamProcessing
         {
             this.isColumnar = isColumnar;
             this.container = container;
-            this.schemaHashCode = new Lazy<int>(GetSchemaHashCode);
-            this.serializerMethod = new Lazy<MethodInfo>(GetSerializerMethod);
-            this.deserializerMethod = new Lazy<MethodInfo>(GetDeserializerMethod);
-            this.schemaFields = new Lazy<List<FieldInfo>>(GetSchemaFields);
-            this.serializationFields = new Lazy<List<FieldInfo>>(GetSerializationFields);
+            this.schemaHashCode = new Lazy<int>(this.GetSchemaHashCode);
+            this.serializerMethod = new Lazy<MethodInfo>(this.GetSerializerMethod);
+            this.deserializerMethod = new Lazy<MethodInfo>(this.GetDeserializerMethod);
+            this.schemaFields = new Lazy<List<FieldInfo>>(this.GetSchemaFields);
+            this.serializationFields = new Lazy<List<FieldInfo>>(this.GetSerializationFields);
         }
 
         private int GetSchemaHashCode()
-            => this.schemaFields.Value.Aggregate(GetType().ToString().StableHash(), (a, f) => a ^ (f.GetValue(this) ?? string.Empty).ToString().StableHash());
+            => this.schemaFields.Value.Aggregate(this.GetType().ToString().StableHash(), (a, f) => a ^ (f.GetValue(this) ?? string.Empty).ToString().StableHash());
 
-        private object Serializer => this.container?.GetOrCreateSerializer(GetType());
+        private object Serializer => this.container?.GetOrCreateSerializer(this.GetType());
 
         private MethodInfo GetSerializerMethod()
-            => this.Serializer.GetType().GetTypeInfo().GetMethod("Serialize", new Type[] { typeof(Stream), GetType() });
+            => this.Serializer.GetType().GetMethod("Serialize", [typeof(Stream), this.GetType()]);
 
         private MethodInfo GetDeserializerMethod()
-            => this.Serializer.GetType().GetTypeInfo().GetMethod("Deserialize", new Type[] { typeof(Stream) });
+            => this.Serializer.GetType().GetMethod("Deserialize", [typeof(Stream)]);
 
         private List<FieldInfo> GetSerializationFields()
-            => GetType().GetAllFields().Where(f => f.IsDefined(typeof(DataMemberAttribute))).ToList();
+            => this.GetType().GetAllFields().Where(f => f.IsDefined(typeof(DataMemberAttribute))).ToList();
 
         private List<FieldInfo> GetSchemaFields()
-            => GetType().GetAllFields().Where(f => f.IsDefined(typeof(SchemaSerializationAttribute))).ToList();
+            => this.GetType().GetAllFields().Where(f => f.IsDefined(typeof(SchemaSerializationAttribute))).ToList();
 
         private void Serialize(Stream stream)
-            => this.serializerMethod.Value.Invoke(this.Serializer, new object[] { stream, this });
+            => this.serializerMethod.Value.Invoke(this.Serializer, [stream, this]);
 
         private void Deserialize(Stream stream)
         {
-            object newObject = this.deserializerMethod.Value.Invoke(this.Serializer, new object[] { stream });
+            object newObject = this.deserializerMethod.Value.Invoke(this.Serializer, [stream]);
 
             foreach (var field in this.serializationFields.Value) field.SetValue(this, field.GetValue(newObject));
 
-            UpdatePointers();
+            this.UpdatePointers();
         }
 
         /// <summary>
@@ -83,8 +83,8 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual void Checkpoint(Stream stream)
         {
-            CheckpointSchema(stream);
-            Serialize(stream);
+            this.CheckpointSchema(stream);
+            this.Serialize(stream);
         }
 
         /// <summary>
@@ -99,8 +99,8 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual void Restore(Stream stream)
         {
-            ValidateSchema(stream);
-            Deserialize(stream);
+            this.ValidateSchema(stream);
+            this.Deserialize(stream);
         }
 
         /// <summary>
@@ -115,11 +115,15 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected void ValidateSchema(Stream stream)
         {
-            byte[] hashCodeBytes = new byte[sizeof(int)];
+            Span<byte> hashCodeBytes = stackalloc byte[sizeof(int)];
             try
             {
-                stream.ReadAllRequiredBytes(hashCodeBytes, 0, sizeof(int));
-                int hashCode = BitConverter.ToInt32(hashCodeBytes, 0);
+                if (stream.ReadAllRequiredBytes(hashCodeBytes) != sizeof(int))
+                {
+                    throw new EndOfStreamException();
+                }
+
+                int hashCode = BitConverter.ToInt32(hashCodeBytes);
                 if (this.schemaHashCode.Value != hashCode)
                 {
                     throw new StreamProcessingException("The input serialization state does not match the schema of the query.");

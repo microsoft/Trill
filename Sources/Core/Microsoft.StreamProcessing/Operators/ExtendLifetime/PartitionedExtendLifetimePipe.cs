@@ -23,11 +23,11 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<TKey, TPayload> output;
 
         [DataMember]
-        private FastDictionary<TPartitionKey, long> lastSyncTimeDictionary = new FastDictionary<TPartitionKey, long>();
+        private FastDictionary<TPartitionKey, long> lastSyncTimeDictionary = new();
         [DataMember]
-        private FastDictionary<TPartitionKey, FastMap<ActiveEvent>> endPointMapDictionary = new FastDictionary<TPartitionKey, FastMap<ActiveEvent>>();
+        private FastDictionary<TPartitionKey, FastMap<ActiveEvent>> endPointMapDictionary = new();
         [DataMember]
-        private FastDictionary<TPartitionKey, EndPointHeap> endPointHeapDictionary = new FastDictionary<TPartitionKey, EndPointHeap>();
+        private FastDictionary<TPartitionKey, EndPointHeap> endPointHeapDictionary = new();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public PartitionedExtendLifetimePipe() { }
@@ -51,7 +51,7 @@ namespace Microsoft.StreamProcessing
         private void ReachTime(long timestamp)
         {
             int partitionKey = FastDictionary<TPartitionKey, long>.IteratorStart;
-            while (this.lastSyncTimeDictionary.Iterate(ref partitionKey)) ReachTime(this.lastSyncTimeDictionary.entries[partitionKey].key, timestamp);
+            while (this.lastSyncTimeDictionary.Iterate(ref partitionKey)) this.ReachTime(this.lastSyncTimeDictionary.entries[partitionKey].key, timestamp);
         }
 
         private void ReachTime(TPartitionKey pKey, long timestamp)
@@ -71,7 +71,7 @@ namespace Microsoft.StreamProcessing
                 this.output[ind] = endPointMap.Values[index].Payload;
                 this.output.hash.col[ind] = endPointMap.Values[index].Hash;
 
-                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
 
                 endPointMap.Remove(index);
             }
@@ -102,9 +102,9 @@ namespace Microsoft.StreamProcessing
                         var partition = this.getPartitionKey(batch.key.col[i]);
                         if (!this.lastSyncTimeDictionary.Lookup(partition, out int timeIndex))
                         {
-                            AllocatePartition(partition, batch.vsync.col[i]);
+                            this.AllocatePartition(partition, batch.vsync.col[i]);
                         }
-                        else if (batch.vsync.col[i] > this.lastSyncTimeDictionary.entries[timeIndex].value) ReachTime(batch.vsync.col[i]);
+                        else if (batch.vsync.col[i] > this.lastSyncTimeDictionary.entries[timeIndex].value) this.ReachTime(batch.vsync.col[i]);
 
                         if (batch.vother.col[i] == StreamEvent.InfinitySyncTime) // For start events, copy directly across
                         {
@@ -115,7 +115,7 @@ namespace Microsoft.StreamProcessing
                             this.output[ind] = batch[i];
                             this.output.hash.col[ind] = batch.hash.col[i];
 
-                            if (this.output.Count == Config.DataBatchSize) FlushContents();
+                            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         else if (batch.vother.col[i] > batch.vsync.col[i]) // For intervals, just extend the duration
                         {
@@ -126,7 +126,7 @@ namespace Microsoft.StreamProcessing
                             this.output[ind] = batch[i];
                             this.output.hash.col[ind] = batch.hash.col[i];
 
-                            if (this.output.Count == Config.DataBatchSize) FlushContents();
+                            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         else
                         {
@@ -143,7 +143,7 @@ namespace Microsoft.StreamProcessing
                     }
                     else if (batch.vother.col[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
                     {
-                        ReachTime(batch.vsync.col[i]);
+                        this.ReachTime(batch.vsync.col[i]);
 
                         int ind = this.output.Count++;
                         this.output.vsync.col[ind] = batch.vsync.col[i];
@@ -153,12 +153,12 @@ namespace Microsoft.StreamProcessing
                         this.output.hash.col[ind] = batch.hash.col[i];
                         this.output.bitvector.col[ind >> 6] |= 1L << (ind & 0x3f);
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                     else if (batch.vother.col[i] == PartitionedStreamEvent.PunctuationOtherTime)
                     {
                         var partition = this.getPartitionKey(batch.key.col[i]);
-                        ReachTime(partition, batch.vsync.col[i]);
+                        this.ReachTime(partition, batch.vsync.col[i]);
 
                         int ind = this.output.Count++;
                         this.output.vsync.col[ind] = batch.vsync.col[i];
@@ -168,7 +168,7 @@ namespace Microsoft.StreamProcessing
                         this.output.hash.col[ind] = batch.hash.col[i];
                         this.output.bitvector.col[ind >> 6] |= 1L << (ind & 0x3f);
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                 }
             }
@@ -184,7 +184,13 @@ namespace Microsoft.StreamProcessing
             this.output.Allocate();
         }
 
-        protected override void DisposeState() => this.output.Free();
+        protected override void DisposeState()
+        {
+            this.lastSyncTimeDictionary.Dispose();
+            this.endPointMapDictionary.Dispose();
+            this.endPointHeapDictionary.Dispose();
+            this.output.Free();
+        }
 
         public override int CurrentlyBufferedOutputCount => this.output.Count;
 
@@ -219,7 +225,7 @@ namespace Microsoft.StreamProcessing
                 this.Hash = hash;
             }
 
-            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
+            public override readonly string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
     }
 

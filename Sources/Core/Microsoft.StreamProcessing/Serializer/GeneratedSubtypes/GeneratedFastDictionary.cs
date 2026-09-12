@@ -34,13 +34,13 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
 [DataContract]
 public sealed class ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(this.classname));
+            this.Write(this.ToStringHelper.ToStringWithCulture(classname));
             this.Write("<TKey, TValue> : FastDictionary");
-            this.Write(this.ToStringHelper.ToStringWithCulture(this.dictType));
+            this.Write(this.ToStringHelper.ToStringWithCulture(dictType));
             this.Write("<TKey, TValue>\r\n{\r\n    private static Func<TKey, TKey, bool> equalsFunc;\r\n    pri" +
                     "vate static Func<TKey, int> getHashCodeFunc;\r\n    private static int defaultSize" +
                     " = 10;\r\n\r\n    public ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(this.classname));
+            this.Write(this.ToStringHelper.ToStringWithCulture(classname));
             this.Write(@"() : base(defaultSize, equalsFunc ?? EqualityComparerExpression<TKey>.DefaultEqualsFunction, getHashCodeFunc ?? EqualityComparerExpression<TKey>.DefaultGetHashCodeFunction) { }
 
     public static void Initialize(Func<TKey, TKey, bool> equals, Func<TKey, int> getHashCode, int size = 10) {

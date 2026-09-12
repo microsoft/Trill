@@ -59,7 +59,7 @@ foreach (string ingressType in new string[] { "StreamEvent", "StartEdge", "Inter
             QueryContainer container,
             string identifier)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.source = source;
 <#  if (ingressType == "StartEdge" || ingressType == "Interval")
@@ -99,7 +99,7 @@ foreach (string ingressType in new string[] { "StreamEvent", "StartEdge", "Inter
         private bool CanGenerateColumnar()
         {
             if (<#= !string.IsNullOrEmpty(partitionString) ? "typeof(TKey).IsAnonymousTypeName() || " : string.Empty #>typeof(TPayload).IsAnonymousTypeName()<#= ingressType != "StreamEvent" ? " || typeof(TResult).IsAnonymousTypeName()" : string.Empty#>) return false;
-            if (<#= !string.IsNullOrEmpty(partitionString) ? "!typeof(TKey).GetTypeInfo().IsVisible || " : string.Empty #>!typeof(TPayload).GetTypeInfo().IsVisible<#= ingressType != "StreamEvent" ? " || !typeof(TResult).GetTypeInfo().IsVisible" : string.Empty#>) return false;
+            if (<#= !string.IsNullOrEmpty(partitionString) ? "!typeof(TKey).IsVisible || " : string.Empty #>!typeof(TPayload).IsVisible<#= ingressType != "StreamEvent" ? " || !typeof(TResult).IsVisible" : string.Empty#>) return false;
 
             var lookupKey = CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));

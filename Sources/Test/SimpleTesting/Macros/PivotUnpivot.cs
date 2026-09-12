@@ -66,13 +66,13 @@ namespace SimpleTesting
 
             var expected = new List<UnpivotStruct1>
             {
-                new UnpivotStruct1 { Key1 = "a", Attribute = "i5", Value = 5 },
-                new UnpivotStruct1 { Key1 = "a", Attribute = "i9", Value = 9 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i1", Value = 11 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i14", Value = 100 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i2", Value = 9 },
-                new UnpivotStruct1 { Key1 = "c", Attribute = "i15", Value = 0 },
-                new UnpivotStruct1 { Key1 = "c", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Attribute = "o", Value = 9 },
             };
 
             Assert.IsTrue(input.SequenceEqual(expected));
@@ -94,13 +94,13 @@ namespace SimpleTesting
 
             var expected = new List<UnpivotStruct2>
             {
-                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
-                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
-                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
-                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
             };
 
             Assert.IsTrue(input.SequenceEqual(expected));
@@ -122,13 +122,13 @@ namespace SimpleTesting
         {
             var input = new List<UnpivotStruct1N>
             {
-                new UnpivotStruct1N { Key1 = "a", Attribute = "i5", Value = 5 },
-                new UnpivotStruct1N { Key1 = "a", Attribute = "i9", Value = 9 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i1", Value = 11 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i2", Value = 9 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i14", Value = 100 },
-                new UnpivotStruct1N { Key1 = "c", Attribute = "i15", Value = 0 },
-                new UnpivotStruct1N { Key1 = "c", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Attribute = "i2", Value = 9 },
+                new() { Key1 = "b", Attribute = "i14", Value = 100 },
+                new() { Key1 = "c", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Attribute = "o", Value = 9 },
             }.ToStreamable()
             .Pivot(
                 () => new WideStruct1(),
@@ -150,13 +150,13 @@ namespace SimpleTesting
         {
             var input = new List<UnpivotStruct2N>
             {
-                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
-                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
-                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
-                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
             }.ToStreamable()
             .Pivot(
                 () => new WideStruct2(),
@@ -201,13 +201,13 @@ namespace SimpleTesting
 
             var expected = new List<UnpivotStruct1>
             {
-                new UnpivotStruct1 { Key1 = "a", Attribute = "i5", Value = 5 },
-                new UnpivotStruct1 { Key1 = "a", Attribute = "i9", Value = 9 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i1", Value = 11 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i14", Value = 100 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i2", Value = 9 },
-                new UnpivotStruct1 { Key1 = "c", Attribute = "i15", Value = 0 },
-                new UnpivotStruct1 { Key1 = "c", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Attribute = "o", Value = 9 },
             };
 
             Assert.IsTrue(input.SequenceEqual(expected));
@@ -229,13 +229,13 @@ namespace SimpleTesting
 
             var expected = new List<UnpivotStruct2>
             {
-                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
-                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
-                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
-                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
             };
 
             Assert.IsTrue(input.SequenceEqual(expected));
@@ -258,13 +258,13 @@ namespace SimpleTesting
         {
             var input = new List<UnpivotStruct1N>
             {
-                new UnpivotStruct1N { Key1 = "a", Attribute = "i5", Value = 5 },
-                new UnpivotStruct1N { Key1 = "a", Attribute = "i9", Value = 9 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i1", Value = 11 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i2", Value = 9 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i14", Value = 100 },
-                new UnpivotStruct1N { Key1 = "c", Attribute = "i15", Value = 0 },
-                new UnpivotStruct1N { Key1 = "c", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Attribute = "i2", Value = 9 },
+                new() { Key1 = "b", Attribute = "i14", Value = 100 },
+                new() { Key1 = "c", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Attribute = "o", Value = 9 },
             }.ToStreamable()
             .Pivot(
                 () => new WideStruct1(),
@@ -286,13 +286,13 @@ namespace SimpleTesting
         {
             var input = new List<UnpivotStruct2N>
             {
-                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
-                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
-                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
-                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
             }.ToStreamable()
             .Pivot(
                 () => new WideStruct2(),
@@ -336,13 +336,13 @@ namespace SimpleTesting
 
             var expected = new List<UnpivotStruct1>
             {
-                new UnpivotStruct1 { Key1 = "a", Attribute = "i5", Value = 5 },
-                new UnpivotStruct1 { Key1 = "a", Attribute = "i9", Value = 9 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i1", Value = 11 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i14", Value = 100 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i2", Value = 9 },
-                new UnpivotStruct1 { Key1 = "c", Attribute = "i15", Value = 0 },
-                new UnpivotStruct1 { Key1 = "c", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Attribute = "o", Value = 9 },
             };
 
             Assert.IsTrue(input.SequenceEqual(expected));
@@ -364,13 +364,13 @@ namespace SimpleTesting
 
             var expected = new List<UnpivotStruct2>
             {
-                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
-                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
-                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
-                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
             };
 
             Assert.IsTrue(input.SequenceEqual(expected));
@@ -392,13 +392,13 @@ namespace SimpleTesting
         {
             var input = new List<UnpivotStruct1N>
             {
-                new UnpivotStruct1N { Key1 = "a", Attribute = "i5", Value = 5 },
-                new UnpivotStruct1N { Key1 = "a", Attribute = "i9", Value = 9 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i1", Value = 11 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i2", Value = 9 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i14", Value = 100 },
-                new UnpivotStruct1N { Key1 = "c", Attribute = "i15", Value = 0 },
-                new UnpivotStruct1N { Key1 = "c", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Attribute = "i2", Value = 9 },
+                new() { Key1 = "b", Attribute = "i14", Value = 100 },
+                new() { Key1 = "c", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Attribute = "o", Value = 9 },
             }.ToStreamable()
             .Pivot(
                 () => new WideStruct1(),
@@ -420,13 +420,13 @@ namespace SimpleTesting
         {
             var input = new List<UnpivotStruct2N>
             {
-                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
-                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
-                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
-                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
             }.ToStreamable()
             .Pivot(
                 () => new WideStruct2(),
@@ -471,13 +471,13 @@ namespace SimpleTesting
 
             var expected = new List<UnpivotStruct1>
             {
-                new UnpivotStruct1 { Key1 = "a", Attribute = "i5", Value = 5 },
-                new UnpivotStruct1 { Key1 = "a", Attribute = "i9", Value = 9 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i1", Value = 11 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i14", Value = 100 },
-                new UnpivotStruct1 { Key1 = "b", Attribute = "i2", Value = 9 },
-                new UnpivotStruct1 { Key1 = "c", Attribute = "i15", Value = 0 },
-                new UnpivotStruct1 { Key1 = "c", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Attribute = "o", Value = 9 },
             };
 
             Assert.IsTrue(input.SequenceEqual(expected));
@@ -499,13 +499,13 @@ namespace SimpleTesting
 
             var expected = new List<UnpivotStruct2>
             {
-                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
-                new UnpivotStruct2 { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
-                new UnpivotStruct2 { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
-                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
-                new UnpivotStruct2 { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
             };
 
             Assert.IsTrue(input.SequenceEqual(expected));
@@ -528,13 +528,13 @@ namespace SimpleTesting
         {
             var input = new List<UnpivotStruct1N>
             {
-                new UnpivotStruct1N { Key1 = "a", Attribute = "i5", Value = 5 },
-                new UnpivotStruct1N { Key1 = "a", Attribute = "i9", Value = 9 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i1", Value = 11 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i2", Value = 9 },
-                new UnpivotStruct1N { Key1 = "b", Attribute = "i14", Value = 100 },
-                new UnpivotStruct1N { Key1 = "c", Attribute = "i15", Value = 0 },
-                new UnpivotStruct1N { Key1 = "c", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Attribute = "i2", Value = 9 },
+                new() { Key1 = "b", Attribute = "i14", Value = 100 },
+                new() { Key1 = "c", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Attribute = "o", Value = 9 },
             }.ToStreamable()
             .Pivot(
                 () => new WideStruct1(),
@@ -556,13 +556,13 @@ namespace SimpleTesting
         {
             var input = new List<UnpivotStruct2N>
             {
-                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
-                new UnpivotStruct2N { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
-                new UnpivotStruct2N { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
-                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
-                new UnpivotStruct2N { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i5", Value = 5 },
+                new() { Key1 = "a", Key2 = "d", Attribute = "i9", Value = 9 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i1", Value = 11 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i14", Value = 100 },
+                new() { Key1 = "b", Key2 = "d", Attribute = "i2", Value = 9 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "i15", Value = 0 },
+                new() { Key1 = "c", Key2 = "e", Attribute = "o", Value = 9 },
             }.ToStreamable()
             .Pivot(
                 () => new WideStruct2(),

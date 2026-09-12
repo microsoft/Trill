@@ -14,7 +14,7 @@ namespace Microsoft.StreamProcessing
         public SetPropertyStreamable(IStreamable<TKey, TPayload> source, Func<StreamProperties<TKey, TPayload>, StreamProperties<TKey, TPayload>> propertySetter)
             : base(propertySetter(source.Properties))
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.Source = source;
         }

@@ -17,8 +17,8 @@ namespace Microsoft.StreamProcessing
         protected Type accumulatorType;
         protected bool hasRegister;
         protected bool isSyncTimeSimultaneityFree;
-        protected readonly List<Tuple<int, List<EdgeInfo>>> currentlyActiveInfo = new List<Tuple<int, List<EdgeInfo>>>();
-        protected readonly List<Tuple<int, List<EdgeInfo>>> newActivationInfo = new List<Tuple<int, List<EdgeInfo>>>();
+        protected readonly List<Tuple<int, List<EdgeInfo>>> currentlyActiveInfo = [];
+        protected readonly List<Tuple<int, List<EdgeInfo>>> newActivationInfo = [];
         protected string TKey;
         protected string TPayload;
         protected string TRegister;
@@ -48,7 +48,7 @@ namespace Microsoft.StreamProcessing
             if (Config.ForceRowBasedExecution)
             {
                 // then need to use the field "payload" that is defined on the generic StreamMessage
-                this.sourceFields = new MyFieldInfo[] { new MyFieldInfo(payloadType, "payload") };
+                this.sourceFields = [new(payloadType, "payload")];
             }
             else
             {
@@ -64,7 +64,7 @@ namespace Microsoft.StreamProcessing
             string errorMessages = null;
             try
             {
-                var expandedCode = TransformText();
+                var expandedCode = this.TransformText();
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(
                     typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(Stack<>), typeof(IStreamable<,>));
@@ -72,14 +72,13 @@ namespace Microsoft.StreamProcessing
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TRegister>());
                 assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TRegister>());
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(this.className);
-                if (t.GetTypeInfo().IsGenericType)
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(this.className), out errorMessages);
+                if (t.IsGenericType)
                 {
                     var list = typeof(TKey).GetAnonymousTypes();
                     list.AddRange(this.payloadType.GetAnonymousTypes());
                     list.AddRange(this.registerType.GetAnonymousTypes());
-                    t = t.MakeGenericType(list.ToArray());
+                    t = t.MakeGenericType([.. list]);
                 }
                 return Tuple.Create(t, errorMessages);
             }
@@ -159,7 +158,7 @@ namespace Microsoft.StreamProcessing
             var newRegisterValue = !this.hasRegister || e.Transfer == null
                 ? defaultRegisterValue
                 : e.Transfer(ts, payloadList, reg);
-            WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
+            this.WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
             return;
         }
 
@@ -168,7 +167,7 @@ namespace Microsoft.StreamProcessing
             var newRegisterValue = e.Transfer == null
                 ? defaultRegisterValue
                 : e.Transfer(ts, acc, reg);
-            WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
+            this.WriteLine("{0}var newReg = {1};", this.CurrentIndent, newRegisterValue);
             return;
         }
 

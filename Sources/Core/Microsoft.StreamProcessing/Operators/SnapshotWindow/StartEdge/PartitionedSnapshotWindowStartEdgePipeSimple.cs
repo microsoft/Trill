@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class PartitionedSnapshotWindowStartEdgePipeSimple<TInput, TState, TOutput, TPartitionKey> : UnaryPipe<PartitionKey<TPartitionKey>, TInput, TOutput>
     {
-        private static readonly bool hasDisposableState = typeof(IDisposable).GetTypeInfo().IsAssignableFrom(typeof(TState));
+        private static readonly bool hasDisposableState = typeof(IDisposable).IsAssignableFrom(typeof(TState));
         private readonly MemoryPool<PartitionKey<TPartitionKey>, TOutput> pool;
         private readonly string errorMessages;
 
@@ -38,7 +38,7 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<PartitionKey<TPartitionKey>, TOutput> batch;
 
         [DataMember]
-        private FastDictionary2<TPartitionKey, PartitionEntry> partitionData = new FastDictionary2<TPartitionKey, PartitionEntry>();
+        private FastDictionary2<TPartitionKey, PartitionEntry> partitionData = new();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public PartitionedSnapshotWindowStartEdgePipeSimple() { }
@@ -86,7 +86,7 @@ namespace Microsoft.StreamProcessing
                     {
                         if (col_vother[i] == PartitionedStreamEvent.LowWatermarkOtherTime)
                         {
-                            OnLowWatermark(col_vsync[i]);
+                            this.OnLowWatermark(col_vsync[i]);
 
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
@@ -95,7 +95,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.hash.col[c] = 0;
                             this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         else if (col_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
                         {
@@ -105,7 +105,7 @@ namespace Microsoft.StreamProcessing
                             if (!this.partitionData.Lookup(p, out int partitionIndex))
                                 this.partitionData.Insert(p, (partitionEntry = new PartitionEntry { lastSyncTime = col_vsync[i], currentKey = colkey[i], currentHash = col_hash[i] }));
                             else partitionEntry = this.partitionData.entries[partitionIndex].value;
-                            OnPunctuation(partitionEntry, col_vsync[i]);
+                            this.OnPunctuation(partitionEntry, col_vsync[i]);
 
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
@@ -114,7 +114,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.hash.col[c] = partitionEntry.currentHash;
                             this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         continue;
                     }
@@ -139,7 +139,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.key.col[c] = entry.currentKey;
                             this.batch.hash.col[c] = entry.currentHash;
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                             entry.held = false;
                         }
 
@@ -164,7 +164,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.key.col[c] = entry.currentKey;
                             this.batch.hash.col[c] = entry.currentHash;
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
 
                             entry.currentState.timestamp = syncTime;
                             entry.held = true;
@@ -191,7 +191,7 @@ namespace Microsoft.StreamProcessing
                 var partition = this.partitionData.entries[iter].value;
                 if (syncTime > partition.lastSyncTime)
                 {
-                    OnPunctuation(partition, syncTime);
+                    this.OnPunctuation(partition, syncTime);
                     if (partition.currentState == null)
                         deprecated.Add(this.partitionData.entries[iter].key);
                 }
@@ -213,7 +213,7 @@ namespace Microsoft.StreamProcessing
                     this.batch.key.col[c] = partition.currentKey;
                     this.batch.hash.col[c] = partition.currentHash;
                     this.batch.Count++;
-                    if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                    if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
 
                     partition.held = false;
                 }

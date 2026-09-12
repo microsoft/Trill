@@ -609,11 +609,11 @@ namespace SimpleTesting
                         {
                             if ((result.col[i >> 6] & (1L << (i & 0x3f))) == 0)
                             {
-                                Assert.IsTrue(input[i].Contains(pattern));
+                                Assert.Contains(pattern, input[i]);
                             }
                             else
                             {
-                                Assert.IsFalse(input[i].Contains(pattern));
+                                Assert.DoesNotContain(pattern, input[i]);
                             }
                         }
                         inBV.ReturnClear();

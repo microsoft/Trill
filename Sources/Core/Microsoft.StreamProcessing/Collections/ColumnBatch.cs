@@ -2,6 +2,7 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // Licensed under the MIT License
 // *********************************************************************
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -22,7 +23,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// Used to make sure this class is thread-safe when it makes decisions
         /// about the reference count. (See <see cref="MakeWritable"/>.
         /// </summary>
-        private readonly object columnBatchLock = new object();
+        private readonly Lock columnBatchLock = new();
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -61,7 +62,7 @@ namespace Microsoft.StreamProcessing.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void IncrementRefCount(int cnt)
         {
-            lock (this.columnBatchLock)
+            using (this.columnBatchLock.EnterScope())
             {
                 Interlocked.Add(ref this.RefCount, cnt);
             }
@@ -76,7 +77,7 @@ namespace Microsoft.StreamProcessing.Internal
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ColumnBatch<T> MakeWritable(ColumnPool<T> pool)
         {
-            lock (this.columnBatchLock)
+            using (this.columnBatchLock.EnterScope())
             {
                 if (this.RefCount == 1)
                 {
@@ -85,7 +86,7 @@ namespace Microsoft.StreamProcessing.Internal
                 else
                 {
                     pool.Get(out var result);
-                    System.Array.Copy(this.col, result.col, this.col.Length);
+                    this.col.AsSpan().CopyTo(result.col);
                     result.UsedLength = this.UsedLength;
                     Interlocked.Decrement(ref this.RefCount);
                     return result;
@@ -96,14 +97,16 @@ namespace Microsoft.StreamProcessing.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void Return()
         {
-            lock (this.columnBatchLock)
+            using (this.columnBatchLock.EnterScope())
             {
                 int localRefCount = Interlocked.Decrement(ref this.RefCount);
 
                 if (localRefCount == 0)
                 {
                     if (Config.ClearColumnsOnReturn)
-                        System.Array.Clear(this.col, 0, this.col.Length);
+                    {
+                        this.col.AsSpan().Clear();
+                    }
                     if ((this.pool != null) && (!Config.DisableMemoryPooling))
                     {
                         this.UsedLength = 0;
@@ -116,14 +119,14 @@ namespace Microsoft.StreamProcessing.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void ReturnClear()
         {
-            lock (this.columnBatchLock)
+            using (this.columnBatchLock.EnterScope())
             {
                 int localRefCount = Interlocked.Decrement(ref this.RefCount);
 
                 if (localRefCount == 0)
                 {
-                    System.Array.Clear(this.col, 0, this.col.Length);
-                    if ((this.pool != null) && (!Config.DisableMemoryPooling))
+                    this.col.AsSpan().Clear();
+                    if (this.pool != null && !Config.DisableMemoryPooling)
                     {
                         this.UsedLength = 0;
                         this.pool.Return(this);

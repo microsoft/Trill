@@ -19,9 +19,9 @@ namespace Microsoft.StreamProcessing
 
         internal static Tuple<Type, string> Generate<TKey, TPayload>(RowToColumnStreamable<TKey, TPayload> stream)
         {
-            Contract.Requires(stream != null);
+            ArgumentNullException.ThrowIfNull(stream);
             Contract.Ensures(Contract.Result<Tuple<Type, string>>() != null);
-            Contract.Ensures(typeof(UnaryPipe<TKey, TPayload, TPayload>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            Contract.Ensures(typeof(UnaryPipe<TKey, TPayload, TPayload>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             var keyType = typeof(TKey);
             var payloadType = typeof(TPayload);
@@ -31,15 +31,13 @@ namespace Microsoft.StreamProcessing
             var expandedCode = template.TransformText();
 
             var assemblyReferences = Transformer.AssemblyReferencesNeededFor(keyType, payloadType);
-            assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+            assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
             assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
             assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TPayload>());
 
             generatedClassName = generatedClassName.AddNumberOfNecessaryGenericArguments(keyType, payloadType);
 
-            var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out string errorMessages);
-
-            var t = a.GetType(generatedClassName);
+            var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a=> a.GetType(generatedClassName), out string errorMessages);
             return Tuple.Create(t.InstantiateAsNecessary(typeof(TKey), typeof(TPayload)), errorMessages);
         }
     }

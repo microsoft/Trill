@@ -24,7 +24,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         {
             var surrogate = Expression.Constant(this.Surrogate);
             var stream = Expression.Field(encoder, "stream");
-            return Expression.Call(surrogate, this.serialize, new[] { value, stream });
+            return Expression.Call(surrogate, this.serialize, [value, stream]);
         }
 
         protected override Expression BuildDeserializerSafe(Expression decoder)

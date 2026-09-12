@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.StreamProcessing.Internal.Collections
@@ -14,30 +15,17 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public sealed class DataStructurePool<T> : IDisposable where T : new()
+    public sealed class DataStructurePool<T>(Func<T> creator) : IDisposable where T : new()
     {
-        private readonly ConcurrentQueue<T> queue;
-        private readonly Func<T> creator;
+        private readonly ConcurrentQueue<T> queue = [];
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public DataStructurePool()
-        {
-            this.queue = new ConcurrentQueue<T>();
-            this.creator = () => new T();
-        }
-
-        /// <summary>
-        /// Currently for internal use only - do not use directly.
-        /// </summary>
-        /// <param name="creator"></param>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public DataStructurePool(Func<T> creator)
-        {
-            this.queue = new ConcurrentQueue<T>();
-            this.creator = creator;
+            : this(static () => new())
+        {            
         }
 
         /// <summary>
@@ -59,7 +47,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Get(out T result)
         {
-            if (!this.queue.TryDequeue(out result)) result = this.creator();
+            if (!this.queue.TryDequeue(out result)) result = creator();
         }
 
         /// <summary>
@@ -68,9 +56,9 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Dispose()
         {
-            foreach (var q in this.queue)
+            foreach (var q in this.queue.OfType<IDisposable>())
             {
-                if (q is IDisposable d) d.Dispose();
+                q.Dispose();
             }
         }
     }

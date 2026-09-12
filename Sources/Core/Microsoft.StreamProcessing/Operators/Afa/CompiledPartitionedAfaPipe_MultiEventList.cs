@@ -20,14 +20,14 @@ namespace Microsoft.StreamProcessing
 
         // The follow three fields' keys need to be updated in lock step
         [DataMember]
-        private FastDictionary2<TPartitionKey, long> lastSyncTime = new FastDictionary2<TPartitionKey, long>();
+        private FastDictionary2<TPartitionKey, long> lastSyncTime = new();
         [DataMember]
-        private FastDictionary2<TPartitionKey, FastMap<SavedEventList<TKey, TPayload>>> currentTimestampEventList = new FastDictionary2<TPartitionKey, FastMap<SavedEventList<TKey, TPayload>>>();
+        private FastDictionary2<TPartitionKey, FastMap<SavedEventList<TKey, TPayload>>> currentTimestampEventList = new();
 
         private FastMap<GroupedActiveState<TKey, TRegister>>.FindTraverser activeFindTraverser;
 
         // Field instead of local variable to avoid re-initializing it
-        private readonly Stack<int> stack = new Stack<int>();
+        private readonly Stack<int> stack = new();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledPartitionedAfaPipe_MultiEventList() { }
@@ -110,7 +110,7 @@ namespace Microsoft.StreamProcessing
                                                     this.batch.hash.col[this.iter] = el_hash;
                                                     this.iter++;
 
-                                                    if (this.iter == Config.DataBatchSize) FlushContents();
+                                                    if (this.iter == Config.DataBatchSize) this.FlushContents();
                                                 }
 
                                                 if (this.hasOutgoingArcs[ns])
@@ -187,7 +187,7 @@ namespace Microsoft.StreamProcessing
                                                     this.batch.hash.col[this.iter] = el_hash;
                                                     this.iter++;
 
-                                                    if (this.iter == Config.DataBatchSize) FlushContents();
+                                                    if (this.iter == Config.DataBatchSize) this.FlushContents();
                                                 }
 
                                                 if (this.hasOutgoingArcs[ns])
@@ -272,7 +272,7 @@ namespace Microsoft.StreamProcessing
                                                     this.batch.hash.col[this.iter] = el_hash;
                                                     this.iter++;
 
-                                                    if (this.iter == Config.DataBatchSize) FlushContents();
+                                                    if (this.iter == Config.DataBatchSize) this.FlushContents();
                                                 }
 
                                                 if (this.hasOutgoingArcs[ns])
@@ -373,7 +373,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = el_hash;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize) this.FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -431,7 +431,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = el_hash;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize) this.FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -496,7 +496,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = el_hash;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize) this.FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -549,7 +549,7 @@ namespace Microsoft.StreamProcessing
                         if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0)
                         {
                             var partitionKey = this.getPartitionKey(srckey[i]);
-                            int partitionIndex = EnsurePartition(partitionKey);
+                            int partitionIndex = this.EnsurePartition(partitionKey);
 
                             long synctime = src_vsync[i];
 
@@ -557,7 +557,7 @@ namespace Microsoft.StreamProcessing
 
                             if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                             {
-                                ProcessCurrentTimestamp(partitionIndex);
+                                this.ProcessCurrentTimestamp(partitionIndex);
                                 this.lastSyncTime.entries[partitionIndex].value = synctime;
                             }
 
@@ -600,23 +600,23 @@ namespace Microsoft.StreamProcessing
                             {
                                 if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                                 {
-                                    ProcessCurrentTimestamp(partitionIndex);
+                                    this.ProcessCurrentTimestamp(partitionIndex);
                                     this.lastSyncTime.entries[partitionIndex].value = synctime;
                                 }
                             }
 
-                            OnLowWatermark(synctime);
+                            this.OnLowWatermark(synctime);
                         }
                         else if (src_vother[i] == PartitionedStreamEvent.PunctuationOtherTime)
                         {
                             var partitionKey = this.getPartitionKey(srckey[i]);
-                            int partitionIndex = EnsurePartition(partitionKey);
+                            int partitionIndex = this.EnsurePartition(partitionKey);
 
                             long synctime = src_vsync[i];
 
                             if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                             {
-                                ProcessCurrentTimestamp(partitionIndex);
+                                this.ProcessCurrentTimestamp(partitionIndex);
                                 this.lastSyncTime.entries[partitionIndex].value = synctime;
                             }
                         }

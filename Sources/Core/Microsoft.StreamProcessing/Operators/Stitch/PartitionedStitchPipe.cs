@@ -29,20 +29,20 @@ namespace Microsoft.StreamProcessing
 
         [DataMember]
         private FastDictionary<TPartitionKey, FastDictionary2<KHP, int>> CurrentTimeOpenEventBuffer =
-            new FastDictionary<TPartitionKey, FastDictionary2<KHP, int>>();
+            new();
         private readonly Func<FastDictionary2<KHP, int>> CurrentTimeOpenEventBufferGenerator;
         [DataMember]
         private int CurrentTimeOpenEventBufferIndex;
 
         [DataMember]
         private FastDictionary<TPartitionKey, long> CurrentTimeOpenEventBufferTime =
-            new FastDictionary<TPartitionKey, long>();
+            new();
         [DataMember]
         private int CurrentTimeOpenEventBufferTimeIndex;
 
         [DataMember]
         private FastDictionary<TPartitionKey, long> now =
-            new FastDictionary<TPartitionKey, long>();
+            new();
         [DataMember]
         private int nowIndex;
 
@@ -52,7 +52,7 @@ namespace Microsoft.StreamProcessing
         // The VALUE version in this dictionary has the ORIGINAL, EARLY Start Time
         [DataMember]
         private FastDictionary<TPartitionKey, FastDictionary2<KHP, List<ActiveEventExt>>> OpenEvents =
-            new FastDictionary<TPartitionKey, FastDictionary2<KHP, List<ActiveEventExt>>>();
+            new();
         private readonly Func<FastDictionary2<KHP, List<ActiveEventExt>>> OpenEventsGenerator;
         [DataMember]
         private int OpenEventsIndex;
@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing
         // The End event moves an item from the OpenEvent to the ClosedEvent set
         [DataMember]
         private FastDictionary<TPartitionKey, SortedDictionary<long, FastDictionary2<KHP, List<ActiveEvent>>>> ClosedEvents =
-            new FastDictionary<TPartitionKey, SortedDictionary<long, FastDictionary2<KHP, List<ActiveEvent>>>>();
+            new();
         [DataMember]
         private int ClosedEventsIndex;
 
@@ -85,13 +85,13 @@ namespace Microsoft.StreamProcessing
             var getHashCode = khpcomparer.GetGetHashCodeExpr().Compile();
 
             var generator1 = khpcomparer.CreateFastDictionary2Generator<KHP, List<ActiveEvent>>(1, equals, getHashCode, stream.Properties.QueryContainer);
-            this.dictPool = new DataStructurePool<FastDictionary2<KHP, List<ActiveEvent>>>(() => generator1.Invoke());
+            this.dictPool = new DataStructurePool<FastDictionary2<KHP, List<ActiveEvent>>>(generator1.Invoke);
 
             var generator2 = khpcomparer.CreateFastDictionary2Generator<KHP, int>(1, equals, getHashCode, stream.Properties.QueryContainer);
-            this.CurrentTimeOpenEventBufferGenerator = () => generator2.Invoke();
+            this.CurrentTimeOpenEventBufferGenerator = generator2.Invoke;
 
             var generator3 = khpcomparer.CreateFastDictionary2Generator<KHP, List<ActiveEventExt>>(1, equals, getHashCode, stream.Properties.QueryContainer);
-            this.OpenEventsGenerator = () => generator3.Invoke();
+            this.OpenEventsGenerator = generator3.Invoke;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -105,7 +105,7 @@ namespace Microsoft.StreamProcessing
             }
             else
             {
-                lst = new List<V>();
+                lst = [];
                 events.Insert(key, lst);
                 lst.Add(value);
             }
@@ -172,7 +172,7 @@ namespace Microsoft.StreamProcessing
                 return rv;
             }
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
@@ -185,7 +185,7 @@ namespace Microsoft.StreamProcessing
             public TKey Key;
             public int Hash;
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[OriginalStart=" + this.OriginalStart + ", Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
@@ -195,7 +195,7 @@ namespace Microsoft.StreamProcessing
             public TKey Key;
             public int Hash;
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
@@ -225,7 +225,7 @@ namespace Microsoft.StreamProcessing
                     if ((src_bv[i >> 6] & (1L << (i & 0x3f))) == 0 || *vother < 0)
                     {
                         var partitionKey = this.getPartitionKey(input.key.col[i]);
-                        if (!this.ClosedEvents.Lookup(partitionKey, out this.ClosedEventsIndex)) this.ClosedEvents.Insert(ref this.ClosedEventsIndex, partitionKey, new SortedDictionary<long, FastDictionary2<KHP, List<ActiveEvent>>>());
+                        if (!this.ClosedEvents.Lookup(partitionKey, out this.ClosedEventsIndex)) this.ClosedEvents.Insert(ref this.ClosedEventsIndex, partitionKey, []);
                         if (!this.OpenEvents.Lookup(partitionKey, out this.OpenEventsIndex)) this.OpenEvents.Insert(ref this.OpenEventsIndex, partitionKey, this.OpenEventsGenerator());
                         if (!this.now.Lookup(partitionKey, out this.nowIndex)) this.now.Insert(ref this.nowIndex, partitionKey, StreamEvent.MinSyncTime);
                         if (!this.CurrentTimeOpenEventBufferTime.Lookup(partitionKey, out this.CurrentTimeOpenEventBufferTimeIndex)) this.CurrentTimeOpenEventBufferTime.Insert(ref this.CurrentTimeOpenEventBufferTimeIndex, partitionKey, StreamEvent.MinSyncTime);
@@ -235,16 +235,16 @@ namespace Microsoft.StreamProcessing
                         if (this.now.entries[this.nowIndex].value < sync)
                         {
                             this.now.entries[this.nowIndex].value = sync;
-                            Purge(this.now.entries[this.nowIndex].value);
+                            this.Purge(this.now.entries[this.nowIndex].value);
                         }
 
                         if (*vother == StreamEvent.InfinitySyncTime)
                         {
-                            ActOnStart(input.payload.col[i], input.key.col[i], *hash, *vsync);
+                            this.ActOnStart(input.payload.col[i], input.key.col[i], *hash, *vsync);
                         }
                         else if (*vother == PartitionedStreamEvent.LowWatermarkOtherTime)
                         {
-                            PurgeGlobal(*vsync);
+                            this.PurgeGlobal(*vsync);
 
                             this.batch.vsync.col[this.outputCount] = *vsync;
                             this.batch.vother.col[this.outputCount] = *vother;
@@ -254,20 +254,20 @@ namespace Microsoft.StreamProcessing
                             this.batch.bitvector.col[this.outputCount >> 6] |= 1L << (this.outputCount & 0x3f);
                             this.outputCount++;
 
-                            if (this.outputCount == Config.DataBatchSize) FlushContents();
+                            if (this.outputCount == Config.DataBatchSize) this.FlushContents();
                         }
                         else if (*vother == PartitionedStreamEvent.PunctuationOtherTime)
                         {
-                            Purge(*vsync);
+                            this.Purge(*vsync);
                         }
                         else if (*vsync < *vother)
                         {
-                            ActOnStart(input.payload.col[i], input.key.col[i], *hash, *vsync);
-                            ActOnEnd(input.payload.col[i], input.key.col[i], *hash, *vsync, *vother);
+                            this.ActOnStart(input.payload.col[i], input.key.col[i], *hash, *vsync);
+                            this.ActOnEnd(input.payload.col[i], input.key.col[i], *hash, *vsync, *vother);
                         }
                         else
                         {
-                            ActOnEnd(input.payload.col[i], input.key.col[i], *hash, *vother, *vsync);
+                            this.ActOnEnd(input.payload.col[i], input.key.col[i], *hash, *vother, *vsync);
                         }
                     }
 
@@ -347,7 +347,7 @@ namespace Microsoft.StreamProcessing
                     };
 
                     // brand new event! Issue a public version
-                    Emit(ActiveEvent.FromExt(activeEventExt));
+                    this.Emit(ActiveEvent.FromExt(activeEventExt));
                     InsertOrAppend(this.OpenEvents.entries[this.OpenEventsIndex].value, lookupStart, activeEventExt);
                 }
             }
@@ -388,7 +388,7 @@ namespace Microsoft.StreamProcessing
                 var partitionKey = this.ClosedEvents.entries[this.ClosedEventsIndex].key;
                 this.CurrentTimeOpenEventBufferTime.Lookup(partitionKey, out this.CurrentTimeOpenEventBufferTimeIndex);
                 this.CurrentTimeOpenEventBuffer.Lookup(partitionKey, out this.CurrentTimeOpenEventBufferIndex);
-                Purge(time);
+                this.Purge(time);
             }
         }
 
@@ -402,7 +402,7 @@ namespace Microsoft.StreamProcessing
                 {
                     var e = this.CurrentTimeOpenEventBuffer.entries[this.CurrentTimeOpenEventBufferIndex].value.entries[it].key;
                     for (int i = 0; i < this.CurrentTimeOpenEventBuffer.entries[this.CurrentTimeOpenEventBufferIndex].value.entries[it].value; i++)
-                        ActOnStart(e.Payload, e.Key, e.Hash, this.CurrentTimeOpenEventBufferTime.entries[this.CurrentTimeOpenEventBufferTimeIndex].value, true);
+                        this.ActOnStart(e.Payload, e.Key, e.Hash, this.CurrentTimeOpenEventBufferTime.entries[this.CurrentTimeOpenEventBufferTimeIndex].value, true);
 
                 }
 
@@ -414,7 +414,7 @@ namespace Microsoft.StreamProcessing
                 var iterator = FastDictionary2<TPayload, ActiveEvent>.IteratorStart;
                 while (closed.Value.Iterate(ref iterator))
                 {
-                    foreach (var v in closed.Value.entries[iterator].value) Emit(v);
+                    foreach (var v in closed.Value.entries[iterator].value) this.Emit(v);
                 }
                 closed.Value.Initialize();
                 this.ClosedEvents.entries[this.ClosedEventsIndex].value.Remove(closed.Key);
@@ -448,7 +448,7 @@ namespace Microsoft.StreamProcessing
             dest_hash[this.outputCount] = evt.Hash;
             this.outputCount++;
 
-            if (this.outputCount == Config.DataBatchSize) FlushContents();
+            if (this.outputCount == Config.DataBatchSize) this.FlushContents();
         }
 
         public override int CurrentlyBufferedOutputCount => this.outputCount;

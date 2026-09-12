@@ -75,11 +75,10 @@ namespace Microsoft.StreamProcessing
                 var expandedCode = template.TransformText();
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(keyType, typeof(TPayload));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<Empty, TPayload>());
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(template.className);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(template.className), out errorMessages);
                 return Tuple.Create(t, errorMessages);
             }
             catch
@@ -112,11 +111,10 @@ namespace Microsoft.StreamProcessing
                 var expandedCode = template.TransformText();
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(keyType, typeof(TPayload), typeof(TResult));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<Empty, TPayload>());
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(template.className);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(template.className), out errorMessages);
                 return Tuple.Create(t, errorMessages);
             }
             catch
@@ -150,11 +148,10 @@ namespace Microsoft.StreamProcessing
                 var expandedCode = template.TransformText();
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(keyType, typeof(TPayload), typeof(TResult));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<Empty, TPayload>());
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(template.className);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(template.className), out errorMessages);
                 return Tuple.Create(t, errorMessages);
             }
             catch
@@ -178,11 +175,10 @@ namespace Microsoft.StreamProcessing
                 var expandedCode = template.TransformText();
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(keyType, typeof(TPayload));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<PartitionKey<TKey>, TPayload>());
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(template.className);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(template.className), out errorMessages);
                 return Tuple.Create(t, errorMessages);
             }
             catch
@@ -216,11 +212,10 @@ namespace Microsoft.StreamProcessing
                 var expandedCode = template.TransformText();
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(keyType, typeof(TPayload), typeof(TResult));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<PartitionKey<TKey>, TPayload>());
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(template.className);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(template.className), out errorMessages);
                 return Tuple.Create(t, errorMessages);
             }
             catch
@@ -255,11 +250,10 @@ namespace Microsoft.StreamProcessing
                 var expandedCode = template.TransformText();
 
                 var assemblyReferences = Transformer.AssemblyReferencesNeededFor(keyType, typeof(TPayload), typeof(TResult));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<PartitionKey<TKey>, TPayload>());
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(template.className);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(template.className), out errorMessages);
                 return Tuple.Create(t, errorMessages);
             }
             catch

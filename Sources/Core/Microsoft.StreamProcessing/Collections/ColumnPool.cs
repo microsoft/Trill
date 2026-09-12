@@ -53,7 +53,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class ColumnPool<T> : ColumnPoolBase
     {
-        private readonly ConcurrentQueue<ColumnBatch<T>> queue = new ConcurrentQueue<ColumnBatch<T>>();
+        private readonly ConcurrentQueue<ColumnBatch<T>> queue = new();
         private long createdObjects;
         private readonly int size;
 
@@ -96,14 +96,14 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override string GetStatusReport()
             => string.Format(CultureInfo.InvariantCulture, "[{0}] Objects Created - {1,5} - Queue Size - {2,5}\t{3}",
-                !SomethingIsWrong() ? " " : "X", this.createdObjects, this.queue.Count, typeof(T).GetCSharpSourceSyntax());
+                !this.SomethingIsWrong() ? " " : "X", this.createdObjects, this.queue.Count, typeof(T).GetCSharpSourceSyntax());
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override ColumnPoolBase Leaked
-            => ((!Config.DisableMemoryPooling) && SomethingIsWrong()) ? this : null;
+            => ((!Config.DisableMemoryPooling) && this.SomethingIsWrong()) ? this : null;
 
         private bool SomethingIsWrong()
             => (this.createdObjects != this.queue.Count) || this.queue.Any(cb => cb.RefCount != 0);

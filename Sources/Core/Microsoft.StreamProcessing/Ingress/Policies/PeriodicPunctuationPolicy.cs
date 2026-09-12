@@ -43,7 +43,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns>An instance of the punctuation policy</returns>
         public static PeriodicPunctuationPolicy None()
-            => new PeriodicPunctuationPolicy(PeriodicPunctuationPolicyType.None, 0);
+            => new(PeriodicPunctuationPolicyType.None, 0);
 
         /// <summary>
         /// Inject punctuations every <paramref name="generationPeriod"/> time ticks, rounded down to the previous

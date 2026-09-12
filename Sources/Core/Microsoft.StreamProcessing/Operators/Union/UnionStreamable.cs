@@ -10,18 +10,18 @@ namespace Microsoft.StreamProcessing
     internal sealed class UnionStreamable<TKey, TPayload> : BinaryStreamable<TKey, TPayload, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         public UnionStreamable(IStreamable<TKey, TPayload> left, IStreamable<TKey, TPayload> right, bool registerInputs = false)
             : base(left.Properties.Union(right.Properties), left, right, registerInputs)
-            => Initialize();
+            => this.Initialize();
 
         protected override IBinaryObserver<TKey, TPayload, TPayload, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
         {
             var part = typeof(TKey).GetPartitionType();
             if (part == null)
             {
-                if (this.Left.Properties.IsColumnar && this.Right.Properties.IsColumnar) return GetPipe(observer);
+                if (this.Left.Properties.IsColumnar && this.Right.Properties.IsColumnar) return this.GetPipe(observer);
                 else return new UnionPipe<TKey, TPayload>(this, observer);
             }
 

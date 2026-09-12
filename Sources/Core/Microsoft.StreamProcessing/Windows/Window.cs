@@ -34,7 +34,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         protected Window(Expression<Func<TSource, bool>> filter, StreamProperties<TKey, TSource> properties)
         {
-            Invariant.IsNotNull(filter, nameof(filter));
+            ArgumentNullException.ThrowIfNull(filter);
             this.Filter = filter;
             this.Properties = properties;
         }
@@ -44,7 +44,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public FilteredWindow<TKey, TSource> Where(Expression<Func<TSource, bool>> predicate)
         {
-            Invariant.IsNotNull(predicate, nameof(predicate));
+            ArgumentNullException.ThrowIfNull(predicate);
             if (this.Filter == null) return new FilteredWindow<TKey, TSource>(predicate, this.Properties);
             Expression<Func<TSource, bool>> andedExpressionTemplate =
                 input => CallInliner.Call(this.Filter, input) && CallInliner.Call(predicate, input);
@@ -75,7 +75,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public IAggregate<TSource, ulong, ulong> CountNotNull<TValue>(Expression<Func<TSource, TValue>> selector)
         {
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new CountAggregate<TValue>();
             return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -85,7 +85,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(Expression<Func<TSource, TValue>> selector)
         {
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(selector);
 
             var aggregate = this.Properties.IsTumbling
                 ? new TumblingMinAggregate<TValue>()
@@ -102,8 +102,8 @@ namespace Microsoft.StreamProcessing
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(
             Expression<Func<TSource, TValue>> selector, IComparerExpression<TValue> comparer)
         {
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsNotNull(comparer, nameof(comparer));
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentNullException.ThrowIfNull(comparer);
 
             var aggregate = this.Properties.IsTumbling
                 ? new TumblingMinAggregate<TValue>(comparer)
@@ -118,14 +118,14 @@ namespace Microsoft.StreamProcessing
         /// Computes a time-sensitive minimum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Min<TValue>(Expression<Func<TSource, TValue>> selector, Expression<Comparison<TValue>> comparer)
-            => Min(selector, new ComparerExpression<TValue>(comparer));
+            => this.Min(selector, new ComparerExpression<TValue>(comparer));
 
         /// <summary>
         /// Computes a time-sensitive maximum aggregate using snapshot semantics.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Max<TValue>(Expression<Func<TSource, TValue>> selector)
         {
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(selector);
 
             var aggregate = this.Properties.IsTumbling
                 ? new TumblingMaxAggregate<TValue>()
@@ -141,8 +141,8 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Max<TValue>(Expression<Func<TSource, TValue>> selector, IComparerExpression<TValue> comparer)
         {
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsNotNull(comparer, nameof(comparer));
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentNullException.ThrowIfNull(comparer);
 
             var aggregate = this.Properties.IsTumbling
                 ? new TumblingMaxAggregate<TValue>(comparer)
@@ -157,15 +157,15 @@ namespace Microsoft.StreamProcessing
         /// Computes a time-sensitive maximum aggregate using snapshot semantics with the provided ordering comparer.
         /// </summary>
         public IAggregate<TSource, MinMaxState<TValue>, TValue> Max<TValue>(Expression<Func<TSource, TValue>> selector, Expression<Comparison<TValue>> comparer)
-            => Max(selector, new ComparerExpression<TValue>(comparer));
+            => this.Max(selector, new ComparerExpression<TValue>(comparer));
 
         /// <summary>
         /// Computes a time-sensitive top-k aggregate using snapshot semantics based on a key selector.
         /// </summary>
         public IAggregate<TSource, SortedMultiSet<TSource>, List<RankedEvent<TSource>>> TopK<TOrderValue>(Expression<Func<TSource, TOrderValue>> orderer, int k)
         {
-            Invariant.IsNotNull(orderer, nameof(orderer));
-            Invariant.IsPositive(k, nameof(k));
+            ArgumentNullException.ThrowIfNull(orderer);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(k);
             var orderComparer = ComparerExpression<TOrderValue>.Default.TransformInput(orderer);
             var aggregate = new TopKAggregate<TSource>(k, orderComparer, this.Properties.QueryContainer);
             return aggregate.SkipNulls().ApplyFilter(this.Filter);
@@ -176,9 +176,9 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public IAggregate<TSource, SortedMultiSet<TSource>, List<RankedEvent<TSource>>> TopK<TOrderValue>(Expression<Func<TSource, TOrderValue>> orderer, IComparerExpression<TOrderValue> comparer, int k)
         {
-            Invariant.IsNotNull(orderer, nameof(orderer));
-            Invariant.IsNotNull(comparer, nameof(comparer));
-            Invariant.IsPositive(k, nameof(k));
+            ArgumentNullException.ThrowIfNull(orderer);
+            ArgumentNullException.ThrowIfNull(comparer);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(k);
             var orderComparer = comparer.TransformInput(orderer);
             var aggregate = new TopKAggregate<TSource>(k, orderComparer, this.Properties.QueryContainer);
             return aggregate.SkipNulls().ApplyFilter(this.Filter);
@@ -191,9 +191,10 @@ namespace Microsoft.StreamProcessing
             double percentile,
             Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsTrue(percentile >= 0.0 && percentile <= 1.0, "percentile must be within [0.0 .. 1.0].");
-            var aggregate = new PercentileContinuousDoubleAggregate(percentile, this.Properties.QueryContainer);
+            ArgumentNullException.ThrowIfNull(selector);
+			ArgumentOutOfRangeException.ThrowIfNegative(percentile);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(percentile, 1.0);
+			var aggregate = new PercentileContinuousDoubleAggregate(percentile, this.Properties.QueryContainer);
             return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
 
@@ -205,9 +206,10 @@ namespace Microsoft.StreamProcessing
             double percentile,
             Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(comparer, nameof(comparer));
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsTrue(percentile >= 0.0 && percentile <= 1.0, "percentile must be within [0.0 .. 1.0].");
+            ArgumentNullException.ThrowIfNull(comparer);
+            ArgumentNullException.ThrowIfNull(selector);
+			ArgumentOutOfRangeException.ThrowIfNegative(percentile);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(percentile, 1.0);
             var aggregate = new PercentileContinuousDoubleAggregate(percentile, new ComparerExpression<double>(comparer), this.Properties.QueryContainer);
             return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -219,9 +221,10 @@ namespace Microsoft.StreamProcessing
             double percentile,
             Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsTrue(percentile >= 0.0 && percentile <= 1.0, "percentile must be within [0.0 .. 1.0].");
-            var aggregate = new PercentileDiscreteDoubleAggregate(percentile, this.Properties.QueryContainer);
+            ArgumentNullException.ThrowIfNull(selector);
+			ArgumentOutOfRangeException.ThrowIfNegative(percentile);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(percentile, 1.0);
+			var aggregate = new PercentileDiscreteDoubleAggregate(percentile, this.Properties.QueryContainer);
             return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
 
@@ -233,10 +236,11 @@ namespace Microsoft.StreamProcessing
             double percentile,
             Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(comparer, nameof(comparer));
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsTrue(percentile >= 0.0 && percentile <= 1.0, "percentile must be within [0.0 .. 1.0].");
-            var aggregate = new PercentileDiscreteDoubleAggregate(percentile, new ComparerExpression<double>(comparer), this.Properties.QueryContainer);
+            ArgumentNullException.ThrowIfNull(comparer);
+            ArgumentNullException.ThrowIfNull(selector);
+			ArgumentOutOfRangeException.ThrowIfNegative(percentile);
+			ArgumentOutOfRangeException.ThrowIfGreaterThan(percentile, 1.0);
+			var aggregate = new PercentileDiscreteDoubleAggregate(percentile, new ComparerExpression<double>(comparer), this.Properties.QueryContainer);
             return aggregate.SkipNulls().Wrap(selector).ApplyFilter(this.Filter);
         }
 

@@ -23,7 +23,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<Empty, TPayload> stream,
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventObservable(
                 null, Guid.NewGuid().ToString(), reshapingPolicy);
@@ -44,7 +44,7 @@ namespace Microsoft.StreamProcessing
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventObservable(
                 container, identifier ?? Guid.NewGuid().ToString(), reshapingPolicy);
@@ -56,7 +56,7 @@ namespace Microsoft.StreamProcessing
             string identifier,
             ReshapingPolicy reshapingPolicy)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             if (stream is IFusibleStreamable<Empty, TPayload> f && f.CanFuseEgressObservable)
             {
@@ -84,7 +84,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<Empty, TPayload> stream,
             Expression<Func<long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalObservable(
                 constructor, null, Guid.NewGuid().ToString());
@@ -107,7 +107,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalObservable(
                 constructor, container, identifier ?? Guid.NewGuid().ToString());
@@ -119,7 +119,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             if (stream is IFusibleStreamable<Empty, TPayload> f && f.CanFuseEgressObservable)
             {
@@ -145,7 +145,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<Empty, TPayload> stream,
             Expression<Func<long, long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalObservable(
                 constructor, null, Guid.NewGuid().ToString());
@@ -168,7 +168,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalObservable(
                 constructor, container, identifier ?? Guid.NewGuid().ToString());
@@ -180,7 +180,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             if (stream is IFusibleStreamable<Empty, TPayload> f && f.CanFuseEgressObservable)
             {
@@ -215,7 +215,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<PartitionKey<TKey>, TPayload> stream,
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventObservable(
                 null, Guid.NewGuid().ToString(), reshapingPolicy);
@@ -237,7 +237,7 @@ namespace Microsoft.StreamProcessing
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventObservable(
                 container, identifier ?? Guid.NewGuid().ToString(), reshapingPolicy);
@@ -249,7 +249,7 @@ namespace Microsoft.StreamProcessing
             string identifier,
             ReshapingPolicy reshapingPolicy)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             if (stream is IFusibleStreamable<PartitionKey<TKey>, TPayload> f && f.CanFuseEgressObservable)
             {
@@ -278,7 +278,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<PartitionKey<TKey>, TPayload> stream,
             Expression<Func<TKey, long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalObservable(
                 constructor, null, Guid.NewGuid().ToString());
@@ -302,7 +302,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TKey, long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalObservable(
                 constructor, container, identifier ?? Guid.NewGuid().ToString());
@@ -314,7 +314,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             if (stream is IFusibleStreamable<PartitionKey<TKey>, TPayload> f && f.CanFuseEgressObservable)
             {
@@ -349,7 +349,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<PartitionKey<TKey>, TPayload> stream,
             Expression<Func<TKey, long, long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalObservable(
                 constructor, null, Guid.NewGuid().ToString());
@@ -373,7 +373,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TKey, long, long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalObservable(
                 constructor, container, identifier ?? Guid.NewGuid().ToString());
@@ -385,7 +385,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             if (stream is IFusibleStreamable<PartitionKey<TKey>, TPayload> f && f.CanFuseEgressObservable)
             {

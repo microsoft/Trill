@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
         private bool error;
         private readonly List<Tuple<MyFieldInfo, MyFieldInfo>> swingingFields;
         private readonly Dictionary<MyFieldInfo, Expression> computedFields;
-        private readonly ColumnarRepresentation resultTypeInformation;
+        private readonly ColumnarRepresentation resultColumnarRepresentation;
         private readonly bool noSwingingFields;
         private readonly Dictionary<ParameterExpression, SelectParameterInformation> parameterInformation;
         private readonly Expression ProjectionReturningResultInstance;
@@ -47,22 +47,22 @@ namespace Microsoft.StreamProcessing
         internal static SelectTransformationResult Transform(
             LambdaExpression function,
             IEnumerable<Tuple<ParameterExpression, SelectParameterInformation>> substitutionInformation,
-            ColumnarRepresentation resultTypeInformation,
+            ColumnarRepresentation resultColumnarRepresentation,
             bool noSwingingFields = false,
             bool hasStartEdge = false)
         {
-            Contract.Requires(function != null);
-            Contract.Requires(substitutionInformation != null);
-            Contract.Requires(resultTypeInformation != null);
+            ArgumentNullException.ThrowIfNull(function);
+            ArgumentNullException.ThrowIfNull(substitutionInformation);
+            ArgumentNullException.ThrowIfNull(resultColumnarRepresentation);
 
-            var me = new SelectTransformer(function, substitutionInformation, resultTypeInformation, noSwingingFields,
+            var me = new SelectTransformer(function, substitutionInformation, resultColumnarRepresentation, noSwingingFields,
                 Config.UseMultiString && ((Config.MultiStringTransforms & Config.CodegenOptions.MultiStringFlags.VectorOperations) != 0), hasStartEdge);
 
             // Need to find any unmentioned fields from the result type
             var unmentionedFields = new List<MyFieldInfo>();
             if (me.ProjectionReturningResultInstance == null)
             {
-                foreach (var kv in resultTypeInformation.Fields)
+                foreach (var kv in resultColumnarRepresentation.Fields)
                 {
                     var fieldInfo = kv.Value;
                     if (me.swingingFields.Any(t => t.Item1.Equals(fieldInfo))) continue;
@@ -91,60 +91,60 @@ namespace Microsoft.StreamProcessing
         private SelectTransformer(
             LambdaExpression function,
             IEnumerable<Tuple<ParameterExpression, SelectParameterInformation>> substitutionInformation,
-            ColumnarRepresentation resultTypeInformation,
+            ColumnarRepresentation resultColumnarRepresentation,
             bool noSwingingFields,
             bool doMultiStringTransform,
             bool hasStartEdge)
         {
-            this.parameterInformation = new Dictionary<ParameterExpression, SelectParameterInformation>();
+            this.parameterInformation = [];
             foreach (var tup in substitutionInformation)
             {
                 this.parameterInformation.Add(tup.Item1, tup.Item2);
             }
-            this.resultTypeInformation = resultTypeInformation;
+            this.resultColumnarRepresentation = resultColumnarRepresentation;
             this.noSwingingFields = noSwingingFields;
             this.doMultiStringTransform = doMultiStringTransform;
 
-            this.swingingFields = new List<Tuple<MyFieldInfo, MyFieldInfo>>();
-            this.computedFields = new Dictionary<MyFieldInfo, Expression>();
-            this.multiStringOperations = new List<string>();
-            this.multiStringResultFields = new List<MyFieldInfo>();
+            this.swingingFields = [];
+            this.computedFields = [];
+            this.multiStringOperations = [];
+            this.multiStringResultFields = [];
 
             var body = function.Body;
 
             // The projection might just be (e_1, e_2, ..., e_n) => e_i, i.e., projecting just the single parameter e_i.
             if (body is ParameterExpression parameter)
             {
-                TransformSingleParameterSelect(parameter, hasStartEdge);
+                this.TransformSingleParameterSelect(parameter, hasStartEdge);
                 return;
             }
 
             // The projection might just be (e_1, e_2, ..., e_n) => e_i.f, i.e., projecting just the single field f from one of the parameters e_i.
             if (body is MemberExpression memberExpression)
             {
-                TransformSingleFieldSelect(memberExpression);
+                this.TransformSingleFieldSelect(memberExpression);
                 return;
             }
 
             // Case: projection is (e_1, e_2, ..., e_n) => new { f1 = ..., f2 = ..., ...}), i.e., projecting into an anonymous type
             if (body is NewExpression newExpression && newExpression.Type.IsAnonymousType())
             {
-                Contract.Assume(newExpression.Type == resultTypeInformation.RepresentationFor);
+                Contract.Assume(newExpression.Type == resultColumnarRepresentation.RepresentationFor);
 
                 // REVIEW: Should these be turned into part of the if-test?
                 Contract.Assume(newExpression.Arguments != null);
                 Contract.Assume(newExpression.Members != null);
                 Contract.Assume(newExpression.Arguments.Count == newExpression.Members.Count);
 
-                TransformAnonymousTypeSelect(newExpression);
+                this.TransformAnonymousTypeSelect(newExpression);
                 return;
             }
 
             // Case: projection is (e_1, e_2, ..., e_n) => new T{ f1 = ..., f2 = ..., ... }), i.e., T is *not* an anonymous type
             // TODO: See if this can be unified with the code above for anonymous types.
-            if (body is MemberInitExpression && !this.resultTypeInformation.noFields)
+            if (body is MemberInitExpression && !this.resultColumnarRepresentation.noFields)
             {
-                Visit(body);
+                this.Visit(body);
                 return;
             }
 
@@ -153,16 +153,16 @@ namespace Microsoft.StreamProcessing
             // column's pseudo-field, "payload".
             // Note that f is either a real method call or else just an expression
             // that computes a result value (e.g., a type cast which shows up as a unary expression).
-            if (this.resultTypeInformation.noFields)
+            if (this.resultColumnarRepresentation.noFields)
             {
                 if (this.doMultiStringTransform && IsMultiStringCall(body, out string s))
                 {
-                    this.multiStringOperations.Add($"resultBatch.{this.resultTypeInformation.PseudoField.Name} = {s};");
+                    this.multiStringOperations.Add($"resultBatch.{this.resultColumnarRepresentation.PseudoField.Name} = {s};");
                 }
                 else
                 {
-                    var transformedBody = Visit(body);
-                    this.computedFields.Add(this.resultTypeInformation.PseudoField, transformedBody);
+                    var transformedBody = this.Visit(body);
+                    this.computedFields.Add(this.resultColumnarRepresentation.PseudoField, transformedBody);
                 }
                 return;
             }
@@ -172,14 +172,14 @@ namespace Microsoft.StreamProcessing
                 (methodCallBody.Method.ReflectedType == typeof(ValueTuple) || methodCallBody.Method.ReflectedType == typeof(Tuple)) &&
                 methodCallBody.Method.Name == "Create")
             {
-                TransformTupleCreateSelect(methodCallBody);
+                this.TransformTupleCreateSelect(methodCallBody);
                 return;
             }
 
             // Otherwise, degenerate case: need to just evaluate the expression (with source field access transformed to columnar).
             // That expression will be passed to the setter for the indexer on the generated batch.
             // REVIEW: this is where something should be signalled so the user knows it isn't as fast as it could be.
-            var transformedBody2 = Visit(body);
+            var transformedBody2 = this.Visit(body);
             this.ProjectionReturningResultInstance = transformedBody2;
             return;
         }
@@ -204,20 +204,20 @@ namespace Microsoft.StreamProcessing
                 return;
             }
             var columnarField = selectParameter.parameterRepresentation.Fields[fieldOrAutoProp.Name];
-            if (this.resultTypeInformation.noFields)
+            if (this.resultColumnarRepresentation.noFields)
             {
                 // Then e.f is of type R (the result type) where R is a primitive type or some type that doesn't get decomposed.
                 // In that case, there doesn't need to be a loop at all. The pointer to the column for f can just be swung to the
                 // corresponding field in the output batch.
                 if (this.noSwingingFields)
                 {
-                    var a = GetBatchColumnIndexer(parameter, columnarField);
-                    this.computedFields.Add(this.resultTypeInformation.PseudoField, a);
+                    var a = this.GetBatchColumnIndexer(parameter, columnarField);
+                    this.computedFields.Add(this.resultColumnarRepresentation.PseudoField, a);
                 }
                 else
                 {
                     this.swingingFields.Add(
-                        Tuple.Create(this.resultTypeInformation.PseudoField, columnarField));
+                        Tuple.Create(this.resultColumnarRepresentation.PseudoField, columnarField));
                 }
             }
             else
@@ -225,8 +225,8 @@ namespace Microsoft.StreamProcessing
                 // Then e.f is of type R where R is a type that gets decomposed into a column for each field/autoprop.
                 // So this has to behave as RowToCol: the value e.f needs to have its subfields assigned to
                 // the corresponding columns.
-                var indexVariable = GetIndexVariable(parameter);
-                foreach (var resultField in this.resultTypeInformation.Fields.Values)
+                var indexVariable = this.GetIndexVariable(parameter);
+                foreach (var resultField in this.resultColumnarRepresentation.Fields.Values)
                 {
                     var correspondingVariable = Expression.Variable(columnarField.Type.MakeArrayType(), columnarField.Name + "_col");
                     var arrayAccess = Expression.ArrayAccess(correspondingVariable, indexVariable);
@@ -257,7 +257,7 @@ namespace Microsoft.StreamProcessing
             var indexVariable = Expression.Variable(typeof(int), parameterInfo.IndexVariableName);
             if (column.Type.Equals(typeof(Internal.Collections.MultiString)))
             {
-                var indexer = typeof(Internal.Collections.MultiString).GetTypeInfo().GetProperty("Item");
+                var indexer = typeof(Internal.Collections.MultiString).GetProperty("Item");
                 return Expression.MakeIndex(column, indexer, new List<Expression>() { indexVariable });
             }
             else
@@ -277,27 +277,27 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         private void TransformSingleParameterSelect(ParameterExpression parameter, bool hasStartEdge)
         {
-            Contract.Assume(parameter.Type == this.resultTypeInformation.RepresentationFor);
+            Contract.Assume(parameter.Type == this.resultColumnarRepresentation.RepresentationFor);
 
             if (!this.parameterInformation.TryGetValue(parameter, out var selectParameter))
             {
-                if (!hasStartEdge && !this.resultTypeInformation.noFields)
+                if (!hasStartEdge && !this.resultColumnarRepresentation.noFields)
                 {
                     this.error = true;
                     return;
                 }
                 else
                 {
-                    this.computedFields.Add(this.resultTypeInformation.PseudoField, parameter);
+                    this.computedFields.Add(this.resultColumnarRepresentation.PseudoField, parameter);
                     return;
                 }
             }
-            foreach (var resultField in this.resultTypeInformation.AllFields)
+            foreach (var resultField in this.resultColumnarRepresentation.AllFields)
             {
                 var matchingField = selectParameter.parameterRepresentation.AllFields.First(f => f.OriginalName == resultField.OriginalName);
                 if (this.noSwingingFields)
                 {
-                    var a = GetBatchColumnIndexer(parameter, matchingField);
+                    var a = this.GetBatchColumnIndexer(parameter, matchingField);
                     this.computedFields.Add(resultField, a);
                 }
                 else
@@ -314,7 +314,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         private void TransformAnonymousTypeSelect(NewExpression newExpression)
         {
-            Contract.Requires(newExpression != null);
+            ArgumentNullException.ThrowIfNull(newExpression);
             Contract.Requires(newExpression.Arguments != null);
             Contract.Requires(newExpression.Members != null);
             Contract.Requires(newExpression.Arguments.Count == newExpression.Members.Count);
@@ -326,7 +326,7 @@ namespace Microsoft.StreamProcessing
                 Contract.Assume(destinationField != null);
                 var argument = newExpression.Arguments[i];
 
-                var resultField = this.resultTypeInformation.Fields[destinationField.Name]; // result type must have Fields
+                var resultField = this.resultColumnarRepresentation.Fields[destinationField.Name]; // result type must have Fields
 
                 // Special case for MultiString: right-hand side of the assignment could be a method call
                 // (or property, like Length) on a MultiString. This is optimized (but only if
@@ -341,10 +341,10 @@ namespace Microsoft.StreamProcessing
                     }
                 }
 
-                if (HandleSimpleAssignments(argument, resultField))
+                if (this.HandleSimpleAssignments(argument, resultField))
                     continue;
 
-                var e = Visit(argument);
+                var e = this.Visit(argument);
                 this.computedFields.Add(resultField, e);
             }
         }
@@ -354,13 +354,13 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         private void TransformTupleCreateSelect(MethodCallExpression methodCall)
         {
-            Contract.Requires(methodCall != null);
+            ArgumentNullException.ThrowIfNull(methodCall);
             Contract.Requires(methodCall.Arguments != null);
 
             for (int i = 0; i < methodCall.Arguments.Count; i++)
             {
                 var argument = methodCall.Arguments[i];
-                var resultField = this.resultTypeInformation.Fields[$"Item{i + 1}"];
+                var resultField = this.resultColumnarRepresentation.Fields[$"Item{i + 1}"];
 
                 // Special case for MultiString: right-hand side of the assignment could be a method call
                 // (or property, like Length) on a MultiString. This is optimized (but only if
@@ -371,9 +371,9 @@ namespace Microsoft.StreamProcessing
                     this.multiStringResultFields.Add(resultField);
                     this.multiStringOperations.Add($"resultBatch.{resultField.Name} = {s};");
                 }
-                else if (!HandleSimpleAssignments(argument, resultField))
+                else if (!this.HandleSimpleAssignments(argument, resultField))
                 {
-                    var e = Visit(argument);
+                    var e = this.Visit(argument);
                     this.computedFields.Add(resultField, e);
                 }
             }
@@ -394,15 +394,15 @@ namespace Microsoft.StreamProcessing
                 this.error = true;
                 return node;
             }
-            if (!m.DeclaringType.GetTypeInfo().IsAssignableFrom(this.resultTypeInformation.RepresentationFor))
+            if (!m.DeclaringType.IsAssignableFrom(this.resultColumnarRepresentation.RepresentationFor))
             {
                 this.error = true;
                 return node;
             }
 
-            var destinationColumn = this.resultTypeInformation.Fields[m.Name];
+            var destinationColumn = this.resultColumnarRepresentation.Fields[m.Name];
 
-            if (HandleSimpleAssignments(node.Expression, destinationColumn)) return node;
+            if (this.HandleSimpleAssignments(node.Expression, destinationColumn)) return node;
 
             // Otherwise it is either a MultiString vector operation or just a point-wise computation of a particular row for g
             if (this.doMultiStringTransform && IsMultiStringCall(node.Expression, out string s))
@@ -413,7 +413,7 @@ namespace Microsoft.StreamProcessing
             else
             {
                 // Transform all occurrences on the right-hand side into a columnar form.
-                this.computedFields.Add(destinationColumn, Visit(node.Expression));
+                this.computedFields.Add(destinationColumn, this.Visit(node.Expression));
             }
             return node;
         }
@@ -428,7 +428,7 @@ namespace Microsoft.StreamProcessing
                     if (this.parameterInformation.TryGetValue(parameter, out var selectParameter))
                     {
                         var columnarField = selectParameter.parameterRepresentation.Fields[member.Name];
-                        var a = GetBatchColumnIndexer(parameter, columnarField);
+                        var a = this.GetBatchColumnIndexer(parameter, columnarField);
                         return a;
                     }
                 }
@@ -467,7 +467,7 @@ namespace Microsoft.StreamProcessing
                 if (selectParameter.parameterRepresentation.noFields)
                 {
                     var columnarField = selectParameter.parameterRepresentation.PseudoField;
-                    var a = GetBatchColumnIndexer(node, columnarField);
+                    var a = this.GetBatchColumnIndexer(node, columnarField);
                     return a;
                 }
                 else
@@ -673,7 +673,7 @@ namespace Microsoft.StreamProcessing
                 var columnarField = spi.parameterRepresentation.Fields[simpleAssignedValue.Member.Name];
                 if (this.noSwingingFields)
                 {
-                    var a = GetBatchColumnIndexer(parameter, columnarField);
+                    var a = this.GetBatchColumnIndexer(parameter, columnarField);
                     this.computedFields.Add(destinationColumn, a);
                 }
                 else
@@ -693,7 +693,7 @@ namespace Microsoft.StreamProcessing
                     }
                     if (this.noSwingingFields)
                     {
-                        var a = GetBatchColumnIndexer(parameter, cr.PseudoField);
+                        var a = this.GetBatchColumnIndexer(parameter, cr.PseudoField);
                         this.computedFields.Add(destinationColumn, a);
                     }
                     else

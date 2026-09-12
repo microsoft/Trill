@@ -75,11 +75,11 @@ namespace Microsoft.StreamProcessing
         public static bool EqualityExpressionEquals(this object source, object other)
         {
             var t = source.GetType();
-            foreach (var iface in t.GetTypeInfo().GetInterfaces())
+            foreach (var iface in t.GetInterfaces())
             {
-                if (!iface.GetTypeInfo().IsGenericType) continue;
+                if (!iface.IsGenericType) continue;
                 if (!iface.GetGenericTypeDefinition().Equals(typeof(IEqualityComparerExpression<>))) continue;
-                if (iface.GetTypeInfo().IsAssignableFrom(other.GetType()))
+                if (iface.IsAssignableFrom(other.GetType()))
                     return TryIsEqualIECE(source, other);
             }
             return false;

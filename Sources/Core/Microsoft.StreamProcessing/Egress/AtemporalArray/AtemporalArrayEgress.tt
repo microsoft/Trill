@@ -50,7 +50,7 @@ namespace Microsoft.StreamProcessing
             Func<TPayload[]> generator<# } #><# if (hasContainer) { #>,
             string identifier = null<# } #>)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToAtemporalArrayObservable(
                 <#= hasGenerator ? "generator" : "() => new TPayload[Config.DataBatchSize]" #>,
@@ -64,7 +64,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new MonotonicArrayObservable<TPayload>(stream, generator, container, identifier);
         }

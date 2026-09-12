@@ -81,7 +81,7 @@ namespace SimpleTesting
 
             var output = container.RegisterOutput(outputStream);
             var result = new List<StreamEvent<string>>();
-            output.Subscribe(t => result.Add(t));
+            output.Subscribe(result.Add);
             container.Restore(null);
 
             Assert.IsTrue(result.SequenceEqual(compareTo));

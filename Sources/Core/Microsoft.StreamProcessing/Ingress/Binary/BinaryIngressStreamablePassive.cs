@@ -55,7 +55,7 @@ namespace Microsoft.StreamProcessing
         public override void Restore(Stream stream)
         {
             base.Restore(stream);
-            Enable();
+            this.Enable();
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -85,11 +85,11 @@ namespace Microsoft.StreamProcessing
                 {
                     done = true;
                 }
-                OnNext(message.Message);
+                this.OnNext(message.Message);
             }
             catch (Exception e)
             {
-                OnError(e);
+                this.OnError(e);
                 throw;
             }
             return !done;

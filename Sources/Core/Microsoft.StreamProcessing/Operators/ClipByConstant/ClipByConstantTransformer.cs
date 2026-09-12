@@ -3,6 +3,9 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+#if CODEGEN_TIMING
+using System.Diagnostics;
+#endif
 using System.Diagnostics.Contracts;
 using System.Reflection;
 
@@ -27,8 +30,8 @@ namespace Microsoft.StreamProcessing
         /// </returns>
         internal static Tuple<Type, string> Generate<TKey, TPayload>(ClipByConstantStreamable<TKey, TPayload> stream)
         {
-            Contract.Requires(stream != null);
-            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TPayload>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            ArgumentNullException.ThrowIfNull(stream);
+            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TPayload>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
 #if CODEGEN_TIMING
           Stopwatch sw = new Stopwatch();

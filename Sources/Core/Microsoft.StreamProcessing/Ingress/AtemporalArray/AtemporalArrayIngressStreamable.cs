@@ -25,8 +25,8 @@ namespace Microsoft.StreamProcessing
                 ? StreamProperties<Empty, TPayload>.Default.ToRowBased()
                 : StreamProperties<Empty, TPayload>.Default).ToConstantDuration(true, StreamEvent.InfinitySyncTime).SetQueryContainer(container))
         {
-            Contract.Requires(observable != null);
-            Contract.Requires(identifier != null);
+            ArgumentNullException.ThrowIfNull(observable);
+            ArgumentNullException.ThrowIfNull(identifier);
 
             this.IngressSiteIdentifier = identifier;
             this.observable = observable;

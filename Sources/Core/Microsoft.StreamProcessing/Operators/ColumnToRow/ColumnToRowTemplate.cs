@@ -189,7 +189,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(" );\r\n                    ");
  } else { 
             this.Write("                    ");
- if (!payloadType.GetTypeInfo().IsValueType) { 
+ if (!payloadType.IsValueType) { 
             this.Write("\r\n                    destpayload[i] = new ");
             this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
             this.Write("();\r\n                    ");

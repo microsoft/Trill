@@ -77,7 +77,7 @@ namespace Microsoft.StreamProcessing
         public override string ToString()
         {
             var builder = new StringBuilder();
-            PrintConciseSummary(builder, 0);
+            this.PrintConciseSummary(builder, 0);
             return builder.ToString();
         }
 
@@ -139,7 +139,7 @@ namespace Microsoft.StreamProcessing
 
         internal override void PrintConciseSummary(StringBuilder builder, int indentLevel)
         {
-            PrintConciseGeneralState(builder, indentLevel);
+            this.PrintConciseGeneralState(builder, indentLevel);
             builder.AppendLine(new string('\t', indentLevel + 1) + "Name: " + this.observer.IngressSiteIdentifier);
         }
 

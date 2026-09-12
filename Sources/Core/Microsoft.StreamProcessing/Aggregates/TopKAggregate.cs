@@ -22,8 +22,8 @@ namespace Microsoft.StreamProcessing.Aggregates
         public TopKAggregate(int k, IComparerExpression<T> rankComparer, IComparerExpression<T> overallComparer, QueryContainer container)
             : base(ThenOrderBy(Reverse(rankComparer), overallComparer), container)
         {
-            Contract.Requires(rankComparer != null);
-            Contract.Requires(overallComparer != null);
+            ArgumentNullException.ThrowIfNull(rankComparer);
+            ArgumentNullException.ThrowIfNull(overallComparer);
             Contract.Requires(k > 0);
             this.compiledRankComparer = Reverse(rankComparer).GetCompareExpr().Compile();
             this.k = k;
@@ -31,7 +31,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         private static IComparerExpression<T> Reverse(IComparerExpression<T> comparer)
         {
-            Contract.Requires(comparer != null);
+            ArgumentNullException.ThrowIfNull(comparer);
             var expression = comparer.GetCompareExpr();
             Expression<Comparison<T>> template = (left, right) => CallInliner.Call(expression, right, left);
             var reversedExpression = template.InlineCalls();
@@ -40,8 +40,8 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         private static IComparerExpression<T> ThenOrderBy(IComparerExpression<T> comparer1, IComparerExpression<T> comparer2)
         {
-            Contract.Requires(comparer1 != null);
-            Contract.Requires(comparer2 != null);
+            ArgumentNullException.ThrowIfNull(comparer1);
+            ArgumentNullException.ThrowIfNull(comparer2);
             var primary = comparer1.GetCompareExpr();
             var secondary = comparer2.GetCompareExpr();
             Expression<Comparison<T>> template =
@@ -53,7 +53,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             return new ComparerExpression<T>(newExpression);
         }
 
-        public override Expression<Func<SortedMultiSet<T>, List<RankedEvent<T>>>> ComputeResult() => set => GetTopK(set);
+        public override Expression<Func<SortedMultiSet<T>, List<RankedEvent<T>>>> ComputeResult() => set => this.GetTopK(set);
 
         private List<RankedEvent<T>> GetTopK(SortedMultiSet<T> set)
         {

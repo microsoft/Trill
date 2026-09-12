@@ -39,8 +39,8 @@ else { #>
             : base(source.Properties.Group(keySelector))
 <# } #>
         {
-            Contract.Requires(source != null);
-            Contract.Requires(keySelector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
 
             Source = source;
             KeySelector = keySelector;

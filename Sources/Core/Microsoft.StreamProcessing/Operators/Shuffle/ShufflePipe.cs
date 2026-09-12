@@ -56,7 +56,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = stream.ErrorMessages;
             this.l1Pool = MemoryManager.GetMemoryPool<CompoundGroupKey<TOuterKey, TInnerKey>, TSource>(stream.Properties.IsColumnar);
 
-            this.Observers = new List<IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TSource>>();
+            this.Observers = [];
 
             this.batches = new StreamMessage<CompoundGroupKey<TOuterKey, TInnerKey>, TSource>[totalBranchesL2];
             for (int i = 0; i < totalBranchesL2; i++)
@@ -71,7 +71,7 @@ namespace Microsoft.StreamProcessing
 
         public override void OnFlush()
         {
-            FlushContents();
+            this.FlushContents();
             for (int j = 0; j < this.totalBranchesL2; j++)
             {
                 this.Observers[j].OnFlush();
@@ -363,7 +363,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = stream.ErrorMessages;
             this.l1Pool = MemoryManager.GetMemoryPool<CompoundGroupKey<TOuterKey, TInnerKey>, TSource>(stream.Properties.IsColumnar);
 
-            this.Observers = new List<IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TSource>>();
+            this.Observers = [];
 
             this.batches = new StreamMessage<CompoundGroupKey<TOuterKey, TInnerKey>, TSource>[totalBranchesL2];
             for (int i = 0; i < totalBranchesL2; i++)
@@ -378,7 +378,7 @@ namespace Microsoft.StreamProcessing
 
         public override void OnFlush()
         {
-            FlushContents();
+            this.FlushContents();
             for (int j = 0; j < this.totalBranchesL2; j++)
             {
                 this.Observers[j].OnFlush();
@@ -652,7 +652,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = stream.ErrorMessages;
             this.l1Pool = MemoryManager.GetMemoryPool<TInnerKey, TSource>(stream.Properties.IsColumnar);
 
-            this.Observers = new List<IStreamObserver<TInnerKey, TSource>>();
+            this.Observers = [];
 
             this.batches = new StreamMessage<TInnerKey, TSource>[totalBranchesL2];
             for (int i = 0; i < totalBranchesL2; i++)
@@ -667,7 +667,7 @@ namespace Microsoft.StreamProcessing
 
         public override void OnFlush()
         {
-            FlushContents();
+            this.FlushContents();
             for (int j = 0; j < this.totalBranchesL2; j++)
             {
                 this.Observers[j].OnFlush();
@@ -926,7 +926,7 @@ namespace Microsoft.StreamProcessing
             this.errorMessages = stream.ErrorMessages;
             this.l1Pool = MemoryManager.GetMemoryPool<TOuterKey, TSource>(stream.Properties.IsColumnar);
 
-            this.Observers = new List<IStreamObserver<TOuterKey, TSource>>();
+            this.Observers = [];
 
             this.batches = new StreamMessage<TOuterKey, TSource>[totalBranchesL2];
             for (int i = 0; i < totalBranchesL2; i++)
@@ -941,7 +941,7 @@ namespace Microsoft.StreamProcessing
 
         public override void OnFlush()
         {
-            FlushContents();
+            this.FlushContents();
             for (int j = 0; j < this.totalBranchesL2; j++)
             {
                 this.Observers[j].OnFlush();

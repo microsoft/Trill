@@ -114,7 +114,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public int Insert()
         {
             // Allocate free value to store new value.
-            int index = AllocateValue();
+            int index = this.AllocateValue();
 
             // Insert 'index' into bucket linked-list.
             this.next[index] = this.listHead;
@@ -131,7 +131,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int Insert(T value)
         {
-            int index = Insert();
+            int index = this.Insert();
             this.values[index] = value;
             return index;
         }
@@ -147,7 +147,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Assume(index > 0 && index <= this.initialized);
 
             // Remove from current list.
-            RemoveFromList(index);
+            this.RemoveFromList(index);
 
             // Insert into free list (with inverted index to denote invisible list).
             this.next[index] = this.freeHead;
@@ -187,7 +187,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             if (this.initialized >= this.capacity)
             {
                 // No free entries available, so resize.
-                Grow();
+                this.Grow();
             }
 
             this.count++;

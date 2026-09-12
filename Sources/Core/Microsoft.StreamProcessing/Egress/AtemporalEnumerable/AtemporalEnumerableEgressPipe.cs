@@ -16,9 +16,9 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private long currentTimestamp = long.MinValue;
         [DataMember]
-        private SortedDictionary<long, List<TPayload>> toDelete = new SortedDictionary<long, List<TPayload>>();
+        private SortedDictionary<long, List<TPayload>> toDelete = [];
         [DataMember]
-        private List<ChangeListEvent<TPayload>> currentVersion = new List<ChangeListEvent<TPayload>>();
+        private List<ChangeListEvent<TPayload>> currentVersion = [];
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public AtemporalEnumerableEgressPipe() { }
@@ -35,7 +35,7 @@ namespace Microsoft.StreamProcessing
             for (int i = 0; i < batch.Count; i++)
             {
                 var currentSync = col_vsync[i];
-                Process(currentSync);
+                this.Process(currentSync);
 
                 if ((col_bv[i >> 6] & (1L << (i & 0x3f))) != 0) continue;
                 if (col_vother[i] == StreamEvent.InfinitySyncTime)
@@ -47,7 +47,7 @@ namespace Microsoft.StreamProcessing
                 {
                     // Interval: create an insertion event now, and a deletion later when time progresses
                     this.currentVersion.Add(ChangeListEvent.CreateInsertion(batch[i]));
-                    EnqueueDelete(col_vother[i], batch[i]);
+                    this.EnqueueDelete(col_vother[i], batch[i]);
                 }
                 else
                 {
@@ -86,7 +86,7 @@ namespace Microsoft.StreamProcessing
                 if (this.currentVersion.Count > 0)
                 {
                     this.observer.OnNext(this.currentVersion);
-                    this.currentVersion = new List<ChangeListEvent<TPayload>>();
+                    this.currentVersion = [];
                 }
             }
         }
@@ -95,7 +95,7 @@ namespace Microsoft.StreamProcessing
         {
             if (!this.toDelete.TryGetValue(currentTime, out List<TPayload> queue))
             {
-                queue = new List<TPayload>();
+                queue = [];
                 this.toDelete.Add(currentTime, queue);
             }
             queue.Add(payload);

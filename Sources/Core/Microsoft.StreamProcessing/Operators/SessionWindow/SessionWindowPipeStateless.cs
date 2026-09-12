@@ -23,7 +23,7 @@ namespace Microsoft.StreamProcessing
         private readonly long maximumDuration;
 
         [DataMember]
-        private Queue<StreamMessage<TKey, TPayload>> batches = new Queue<StreamMessage<TKey, TPayload>>();
+        private Queue<StreamMessage<TKey, TPayload>> batches = new();
 
         [DataMember]
         private int windowStartIdx = 0;
@@ -74,18 +74,18 @@ namespace Microsoft.StreamProcessing
                         if (vsync[i] > vother[i]) // We have an end edge
                         {
                             bv[i >> 6] |= (1L << (i & 0x3f));
-                            ReachTime(vsync[i], false);
+                            this.ReachTime(vsync[i], false);
                         }
                         else
                         {
-                            ReachTime(vsync[i], true);
+                            this.ReachTime(vsync[i], true);
 
                             this.lastDataTime = vsync[i];
                         }
                     }
                     else if (vother[i] == long.MinValue)
                     {
-                        ReachTime(vsync[i], false);
+                        this.ReachTime(vsync[i], false);
                     }
                 }
             }
@@ -122,7 +122,7 @@ namespace Microsoft.StreamProcessing
             if (timestamp >= threshold)
             {
                 StreamMessage<TKey, TPayload> batch;
-                while (this.batches.Any())
+                while (this.batches.Count != 0)
                 {
 
                     batch = this.batches.Peek();

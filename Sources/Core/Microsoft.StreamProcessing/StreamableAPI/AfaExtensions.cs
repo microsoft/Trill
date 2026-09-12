@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Microsoft.StreamProcessing
 {
@@ -32,7 +33,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Afa<TPayload, TRegister, TAccumulator> afa, long maxDuration = 0, bool allowOverlappingInstances = true, bool isDeterministic = false)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             if (maxDuration == 0)
             {
@@ -64,7 +65,7 @@ namespace Microsoft.StreamProcessing
             Func<IAbstractPatternRoot<TKey, TPayload, Empty, bool>, IPattern<TKey, TPayload, Empty, bool>> pattern,
             long maxDuration = 0, bool allowOverlappingInstances = true, bool isDeterministic = false)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             if (maxDuration == 0)
             {
@@ -100,7 +101,7 @@ namespace Microsoft.StreamProcessing
             Func<IAbstractPatternRoot<TKey, TPayload, TRegister, bool>, IPattern<TKey, TPayload, TRegister, bool>> pattern,
             long maxDuration = 0, bool allowOverlappingInstances = true, bool isDeterministic = false)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             if (maxDuration == 0)
             {
@@ -139,7 +140,7 @@ namespace Microsoft.StreamProcessing
             Func<IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator>, IPattern<TKey, TPayload, TRegister, TAccumulator>> pattern,
             long maxDuration = 0, bool allowOverlappingInstances = true, bool isDeterministic = false)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             if (maxDuration == 0)
             {
@@ -278,39 +279,37 @@ namespace Microsoft.StreamProcessing
 
         private static IPattern<TKey, TPayload, TRegister, TAccumulator> CreateMultiElementFunctions<TKey, TPayload, TRegister, TAccumulator>(IAbstractPatternRoot<TKey, TPayload, TRegister, TAccumulator> source, Expression<Func<TAccumulator>> accumulatorInitialization, Expression<Func<TAccumulator, bool>> accumulatorboolField, Expression<Func<long, TPayload, TRegister, bool>> fence, bool initialValueForBooleanField, Expression<Func<bool, bool>> shortCircuitCondition)
         {
-            if (!(accumulatorboolField.Body is MemberExpression memberExpression)) throw new InvalidOperationException("accumulatorboolField must be a lambda that picks out one field from its parameter");
-            if (!(memberExpression.Expression is ParameterExpression parameter)) throw new InvalidOperationException("accumulatorboolField must be a lambda that picks out one field from its parameter");
+            if (accumulatorboolField.Body is not MemberExpression memberExpression) throw new InvalidOperationException("accumulatorboolField must be a lambda that picks out one field from its parameter");
+            if (memberExpression.Expression is not ParameterExpression parameter) throw new InvalidOperationException("accumulatorboolField must be a lambda that picks out one field from its parameter");
             var memberInfo = memberExpression.Member;
-            if (memberInfo is System.Reflection.PropertyInfo propertyInfo && !propertyInfo.CanWrite) throw new InvalidOperationException("accumulatorboolField is specifying a property, " + propertyInfo.Name + "' that does not have a setter");
+            if (memberInfo is PropertyInfo propertyInfo && !propertyInfo.CanWrite) throw new InvalidOperationException("accumulatorboolField is specifying a property, " + propertyInfo.Name + "' that does not have a setter");
 
             // "f" is the field specified by the accumulatorboolField lambda.
             // Create the Initialize function as (ts, reg) => { var acc = accumulatorInitialization(); acc.f = initialValueForBooleanField; return acc; }
             Expression<Func<long, TRegister, TAccumulator>> initializeTemplate = (ts, reg) => CallInliner.Call(accumulatorInitialization);
             var userInitializeFunction = initializeTemplate.InlineCalls();
             var accumulatorLocalForInitialize = Expression.Parameter(typeof(TAccumulator), "acc");
-            var initializeBody = new List<Expression>()
-            {
-                Expression.Assign(accumulatorLocalForInitialize, userInitializeFunction.Body),
-                Expression.Assign(Expression.MakeMemberAccess(accumulatorLocalForInitialize, memberInfo), Expression.Constant(initialValueForBooleanField, typeof(bool))),
-                accumulatorLocalForInitialize
-            };
             var initializeFunction = (Expression<Func<long, TRegister, TAccumulator>>)Expression.Lambda(
-                Expression.Block(new[] { accumulatorLocalForInitialize }, initializeBody),
-                Expression.Parameter(typeof(long), "ts"), Expression.Parameter(typeof(TRegister), "reg"));
+                Expression.Block([accumulatorLocalForInitialize], [
+                    Expression.Assign(accumulatorLocalForInitialize, userInitializeFunction.Body),
+                    Expression.Assign(Expression.MakeMemberAccess(accumulatorLocalForInitialize, memberInfo), Expression.Constant(initialValueForBooleanField, typeof(bool))),
+                    accumulatorLocalForInitialize
+                ]),
+                Expression.Parameter(typeof(long), "ts"),
+                Expression.Parameter(typeof(TRegister), "reg")
+            );
 
             // Create the Accumulate function as (ts, ev, reg, acc) => { acc.f = fence(ts, ev, reg); return acc; }
             Expression<Func<long, TPayload, TRegister, TAccumulator, bool>> userAccumulatorFunctionTemplate = (ts, ev, reg, acc) => CallInliner.Call(fence, ts, ev, reg);
             var userAccumulatorFunction = userAccumulatorFunctionTemplate.InlineCalls();
             var accParmeter = userAccumulatorFunction.Parameters[3];
             var accumulateBody = new List<Expression>() { Expression.Assign(Expression.MakeMemberAccess(accParmeter, memberInfo), userAccumulatorFunction.Body), accParmeter, };
-            var parameters = new ParameterExpression[]
-            {
+            var accumulateFunction = (Expression<Func<long, TPayload, TRegister, TAccumulator, TAccumulator>>)Expression.Lambda(Expression.Block(accumulateBody), [
                 userAccumulatorFunction.Parameters[0],
                 userAccumulatorFunction.Parameters[1],
                 userAccumulatorFunction.Parameters[2],
-                accParmeter,
-            };
-            var accumulateFunction = (Expression<Func<long, TPayload, TRegister, TAccumulator, TAccumulator>>)Expression.Lambda(Expression.Block(accumulateBody), parameters);
+                accParmeter
+            ]);
 
             // Create the SkipToEnd function as (ts, ev, acc) => acc.f
             Expression<Func<long, TPayload, TAccumulator, bool>> skipToEndTemplate = (ts, ev, acc) => CallInliner.Call(shortCircuitCondition, CallInliner.Call(accumulatorboolField, acc));

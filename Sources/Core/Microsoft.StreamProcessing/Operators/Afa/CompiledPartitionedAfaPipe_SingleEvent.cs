@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing
         private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [DataMember]
-        private FastMap<GroupedActiveState<TKey, TRegister>> activeStates = new FastMap<GroupedActiveState<TKey, TRegister>>();
+        private FastMap<GroupedActiveState<TKey, TRegister>> activeStates = new();
         [DataMember]
         private FastDictionary2<TKey, byte> seenEvent;
 
@@ -24,7 +24,7 @@ namespace Microsoft.StreamProcessing
         [DataMember]
         private FastDictionary2<TPartitionKey, FastMap<OutputEvent<TKey, TRegister>>> tentativeOutput;
         [DataMember]
-        private FastDictionary2<TPartitionKey, long> lastSyncTime = new FastDictionary2<TPartitionKey, long>();
+        private FastDictionary2<TPartitionKey, long> lastSyncTime = new();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledPartitionedAfaPipe_SingleEvent() { }
@@ -69,7 +69,7 @@ namespace Microsoft.StreamProcessing
                         {
                             var key = srckey[i];
                             var partitionKey = this.getPartitionKey(key);
-                            int partitionIndex = EnsurePartition(partitionKey);
+                            int partitionIndex = this.EnsurePartition(partitionKey);
                             long synctime = src_vsync[i];
 
                             if (!this.IsSyncTimeSimultaneityFree)
@@ -98,7 +98,7 @@ namespace Microsoft.StreamProcessing
 
                                             if (this.iter == Config.DataBatchSize)
                                             {
-                                                FlushContents();
+                                                this.FlushContents();
                                                 dest_vsync = this.batch.vsync.col;
                                                 dest_vother = this.batch.vother.col;
                                                 destkey = this.batch.key.col;
@@ -210,7 +210,7 @@ namespace Microsoft.StreamProcessing
 
                                                                 if (this.iter == Config.DataBatchSize)
                                                                 {
-                                                                    FlushContents();
+                                                                    this.FlushContents();
                                                                     dest_vsync = this.batch.vsync.col;
                                                                     dest_vother = this.batch.vother.col;
                                                                     destkey = this.batch.key.col;
@@ -318,7 +318,7 @@ namespace Microsoft.StreamProcessing
 
                                                         if (this.iter == Config.DataBatchSize)
                                                         {
-                                                            FlushContents();
+                                                            this.FlushContents();
                                                             dest_vsync = this.batch.vsync.col;
                                                             dest_vother = this.batch.vother.col;
                                                             destkey = this.batch.key.col;
@@ -411,7 +411,7 @@ namespace Microsoft.StreamProcessing
 
                                             if (this.iter == Config.DataBatchSize)
                                             {
-                                                FlushContents();
+                                                this.FlushContents();
                                                 dest_vsync = this.batch.vsync.col;
                                                 dest_vother = this.batch.vother.col;
                                                 destkey = this.batch.key.col;
@@ -428,7 +428,7 @@ namespace Microsoft.StreamProcessing
                             }
 
                             // Update dest_* on low watermark in case this event will hit the batch boundary and allocate a new batch
-                            OnLowWatermark(synctime);
+                            this.OnLowWatermark(synctime);
 
                             dest_vsync = this.batch.vsync.col;
                             dest_vother = this.batch.vother.col;
@@ -443,7 +443,7 @@ namespace Microsoft.StreamProcessing
                             if (!this.IsSyncTimeSimultaneityFree)
                             {
                                 var partitionKey = this.getPartitionKey(key);
-                                int partitionIndex = EnsurePartition(partitionKey);
+                                int partitionIndex = this.EnsurePartition(partitionKey);
 
                                 if (synctime > this.lastSyncTime.entries[partitionIndex].value) // move time forward
                                 {
@@ -467,7 +467,7 @@ namespace Microsoft.StreamProcessing
 
                                             if (this.iter == Config.DataBatchSize)
                                             {
-                                                FlushContents();
+                                                this.FlushContents();
                                                 dest_vsync = this.batch.vsync.col;
                                                 dest_vother = this.batch.vother.col;
                                                 destkey = this.batch.key.col;
@@ -492,7 +492,7 @@ namespace Microsoft.StreamProcessing
 
                             if (this.iter == Config.DataBatchSize)
                             {
-                                FlushContents();
+                                this.FlushContents();
                                 dest_vsync = this.batch.vsync.col;
                                 dest_vother = this.batch.vother.col;
                                 destkey = this.batch.key.col;

@@ -102,10 +102,9 @@ namespace Microsoft.StreamProcessing
                 expandedCode = template.TransformText();
 
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<TKey, TPayload>());
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(generatedClassName);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(generatedClassName), out errorMessages);
                 t = t.InstantiateAsNecessary(typeof(TKey), typeof(TPayload));
                 return Tuple.Create(t, errorMessages);
             }

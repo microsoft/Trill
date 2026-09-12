@@ -1127,7 +1127,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         GetOutputBatch();
     }
 
-<# if (!this.leftType.GetTypeInfo().IsValueType) { #>
+<# if (!this.leftType.IsValueType) { #>
     [DataContract]
     private struct <#= ActiveEventTypeLeft #>
     {
@@ -1137,7 +1137,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         <# } #>
     }
 <# } #>
-<# if (!this.rightType.GetTypeInfo().IsValueType) { #>
+<# if (!this.rightType.IsValueType) { #>
     [DataContract]
     private struct <#= ActiveEventTypeRight #>
     {

@@ -62,8 +62,8 @@ namespace Microsoft.StreamProcessing
         internal static Tuple<Type, string> Generate<TKey, TInput, TState, TOutput, TResult>(
             GroupedWindowStreamable<TKey, TInput, TState, TOutput, TResult> stream)
         {
-            Contract.Requires(stream != null);
-            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(IStreamObserver<Empty, TInput>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            ArgumentNullException.ThrowIfNull(stream);
+            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(IStreamObserver<Empty, TInput>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             string errorMessages = null;
             try
@@ -282,20 +282,19 @@ namespace Microsoft.StreamProcessing
                 expandedCode = template.TransformText();
 
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(typeof(Empty), typeof(TKey), typeof(TInput), typeof(TState), typeof(TOutput), typeof(FastDictionaryGenerator3)));
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<Empty, TInput>());
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<Empty, TResult>());
                 assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<Empty, TResult>());
 
-                var assembly = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = assembly.GetType(template.className);
-                if (t.GetTypeInfo().IsGenericType)
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(template.className), out errorMessages);
+                if (t.IsGenericType)
                 {
                     var list = typeof(TKey).GetAnonymousTypes();
                     list.AddRange(typeof(TInput).GetAnonymousTypes());
                     list.AddRange(typeof(TState).GetAnonymousTypes());
                     list.AddRange(typeof(TOutput).GetAnonymousTypes());
-                    return Tuple.Create(t.MakeGenericType(list.ToArray()), errorMessages);
+                    return Tuple.Create(t.MakeGenericType([.. list]), errorMessages);
                 }
                 else
                 {

@@ -14,7 +14,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class StreamEventObservable<TPayload> : IObservable<StreamEvent<TPayload>>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private string errorMessages;
         internal readonly IStreamable<Empty, TPayload> source;
@@ -26,7 +26,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.source = source;
             this.container = container;
@@ -38,8 +38,8 @@ namespace Microsoft.StreamProcessing
         {
             EgressBoundary<Empty, TPayload, StreamEvent<TPayload>> pipe;
 
-            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
-                pipe = GetPipe(observer);
+            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && this.CanGenerateColumnar())
+                pipe = this.GetPipe(observer);
             else
             {
                 pipe = new StreamEventEgressPipe<TPayload>(
@@ -55,9 +55,9 @@ namespace Microsoft.StreamProcessing
         private bool CanGenerateColumnar()
         {
             if (typeof(TPayload).IsAnonymousTypeName()) return false;
-            if (!typeof(TPayload).GetTypeInfo().IsVisible) return false;
+            if (!typeof(TPayload).IsVisible) return false;
 
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             this.errorMessages = generatedPipeType.Item2;
@@ -66,7 +66,7 @@ namespace Microsoft.StreamProcessing
 
         private EgressBoundary<Empty, TPayload, StreamEvent<TPayload>> GetPipe(IObserver<StreamEvent<TPayload>> observer)
         {
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, observer, this.container);
@@ -86,7 +86,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class StartEdgeObservable<TPayload, TResult> : IObservable<TResult>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private string errorMessages;
         internal readonly IStreamable<Empty, TPayload> source;
@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.source = source;
             this.constructor = constructor;
@@ -113,8 +113,8 @@ namespace Microsoft.StreamProcessing
         {
             EgressBoundary<Empty, TPayload, TResult> pipe;
 
-            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
-                pipe = GetPipe(observer);
+            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && this.CanGenerateColumnar())
+                pipe = this.GetPipe(observer);
             else
             {
                 pipe = new StartEdgeEgressPipe<TPayload, TResult>(
@@ -131,9 +131,9 @@ namespace Microsoft.StreamProcessing
         private bool CanGenerateColumnar()
         {
             if (typeof(TPayload).IsAnonymousTypeName() || typeof(TResult).IsAnonymousTypeName()) return false;
-            if (!typeof(TPayload).GetTypeInfo().IsVisible || !typeof(TResult).GetTypeInfo().IsVisible) return false;
+            if (!typeof(TPayload).IsVisible || !typeof(TResult).IsVisible) return false;
 
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             this.errorMessages = generatedPipeType.Item2;
@@ -142,7 +142,7 @@ namespace Microsoft.StreamProcessing
 
         private EgressBoundary<Empty, TPayload, TResult> GetPipe(IObserver<TResult> observer)
         {
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, observer, this.container);
@@ -154,7 +154,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class IntervalObservable<TPayload, TResult> : IObservable<TResult>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private string errorMessages;
         internal readonly IStreamable<Empty, TPayload> source;
@@ -168,7 +168,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.source = source;
             this.constructor = constructor;
@@ -181,8 +181,8 @@ namespace Microsoft.StreamProcessing
         {
             EgressBoundary<Empty, TPayload, TResult> pipe;
 
-            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
-                pipe = GetPipe(observer);
+            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && this.CanGenerateColumnar())
+                pipe = this.GetPipe(observer);
             else
             {
                 pipe = new IntervalEgressPipe<TPayload, TResult>(
@@ -199,9 +199,9 @@ namespace Microsoft.StreamProcessing
         private bool CanGenerateColumnar()
         {
             if (typeof(TPayload).IsAnonymousTypeName() || typeof(TResult).IsAnonymousTypeName()) return false;
-            if (!typeof(TPayload).GetTypeInfo().IsVisible || !typeof(TResult).GetTypeInfo().IsVisible) return false;
+            if (!typeof(TPayload).IsVisible || !typeof(TResult).IsVisible) return false;
 
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             this.errorMessages = generatedPipeType.Item2;
@@ -210,7 +210,7 @@ namespace Microsoft.StreamProcessing
 
         private EgressBoundary<Empty, TPayload, TResult> GetPipe(IObserver<TResult> observer)
         {
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, observer, this.container);
@@ -222,7 +222,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class PartitionedStreamEventObservable<TKey, TPayload> : IObservable<PartitionedStreamEvent<TKey, TPayload>>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private string errorMessages;
         internal readonly IStreamable<PartitionKey<TKey>, TPayload> source;
@@ -234,7 +234,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.source = source;
             this.container = container;
@@ -246,8 +246,8 @@ namespace Microsoft.StreamProcessing
         {
             EgressBoundary<PartitionKey<TKey>, TPayload, PartitionedStreamEvent<TKey, TPayload>> pipe;
 
-            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
-                pipe = GetPipe(observer);
+            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && this.CanGenerateColumnar())
+                pipe = this.GetPipe(observer);
             else
             {
                 pipe = new PartitionedStreamEventEgressPipe<TKey, TPayload>(
@@ -263,9 +263,9 @@ namespace Microsoft.StreamProcessing
         private bool CanGenerateColumnar()
         {
             if (typeof(TKey).IsAnonymousTypeName() || typeof(TPayload).IsAnonymousTypeName()) return false;
-            if (!typeof(TKey).GetTypeInfo().IsVisible || !typeof(TPayload).GetTypeInfo().IsVisible) return false;
+            if (!typeof(TKey).IsVisible || !typeof(TPayload).IsVisible) return false;
 
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             this.errorMessages = generatedPipeType.Item2;
@@ -274,7 +274,7 @@ namespace Microsoft.StreamProcessing
 
         private EgressBoundary<PartitionKey<TKey>, TPayload, PartitionedStreamEvent<TKey, TPayload>> GetPipe(IObserver<PartitionedStreamEvent<TKey, TPayload>> observer)
         {
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, observer, this.container);
@@ -294,7 +294,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class PartitionedStartEdgeObservable<TKey, TPayload, TResult> : IObservable<TResult>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private string errorMessages;
         internal readonly IStreamable<PartitionKey<TKey>, TPayload> source;
@@ -308,7 +308,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.source = source;
             this.constructor = constructor;
@@ -321,8 +321,8 @@ namespace Microsoft.StreamProcessing
         {
             EgressBoundary<PartitionKey<TKey>, TPayload, TResult> pipe;
 
-            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
-                pipe = GetPipe(observer);
+            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && this.CanGenerateColumnar())
+                pipe = this.GetPipe(observer);
             else
             {
                 pipe = new PartitionedStartEdgeEgressPipe<TKey, TPayload, TResult>(
@@ -339,9 +339,9 @@ namespace Microsoft.StreamProcessing
         private bool CanGenerateColumnar()
         {
             if (typeof(TKey).IsAnonymousTypeName() || typeof(TPayload).IsAnonymousTypeName() || typeof(TResult).IsAnonymousTypeName()) return false;
-            if (!typeof(TKey).GetTypeInfo().IsVisible || !typeof(TPayload).GetTypeInfo().IsVisible || !typeof(TResult).GetTypeInfo().IsVisible) return false;
+            if (!typeof(TKey).IsVisible || !typeof(TPayload).IsVisible || !typeof(TResult).IsVisible) return false;
 
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             this.errorMessages = generatedPipeType.Item2;
@@ -350,7 +350,7 @@ namespace Microsoft.StreamProcessing
 
         private EgressBoundary<PartitionKey<TKey>, TPayload, TResult> GetPipe(IObserver<TResult> observer)
         {
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, observer, this.container);
@@ -362,7 +362,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class PartitionedIntervalObservable<TKey, TPayload, TResult> : IObservable<TResult>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private string errorMessages;
         internal readonly IStreamable<PartitionKey<TKey>, TPayload> source;
@@ -376,7 +376,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.source = source;
             this.constructor = constructor;
@@ -389,8 +389,8 @@ namespace Microsoft.StreamProcessing
         {
             EgressBoundary<PartitionKey<TKey>, TPayload, TResult> pipe;
 
-            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && CanGenerateColumnar())
-                pipe = GetPipe(observer);
+            if (!Config.ForceRowBasedExecution && this.source.Properties.IsColumnar && typeof(TPayload).CanRepresentAsColumnar() && this.CanGenerateColumnar())
+                pipe = this.GetPipe(observer);
             else
             {
                 pipe = new PartitionedIntervalEgressPipe<TKey, TPayload, TResult>(
@@ -407,9 +407,9 @@ namespace Microsoft.StreamProcessing
         private bool CanGenerateColumnar()
         {
             if (typeof(TKey).IsAnonymousTypeName() || typeof(TPayload).IsAnonymousTypeName() || typeof(TResult).IsAnonymousTypeName()) return false;
-            if (!typeof(TKey).GetTypeInfo().IsVisible || !typeof(TPayload).GetTypeInfo().IsVisible || !typeof(TResult).GetTypeInfo().IsVisible) return false;
+            if (!typeof(TKey).IsVisible || !typeof(TPayload).IsVisible || !typeof(TResult).IsVisible) return false;
 
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             this.errorMessages = generatedPipeType.Item2;
@@ -418,7 +418,7 @@ namespace Microsoft.StreamProcessing
 
         private EgressBoundary<PartitionKey<TKey>, TPayload, TResult> GetPipe(IObserver<TResult> observer)
         {
-            var lookupKey = CachedPipeLookupKey();
+            var lookupKey = this.CachedPipeLookupKey();
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => TemporalEgressTemplate.Generate(this));
 
             var instance = Activator.CreateInstance(generatedPipeType.Item1, observer, this.container);

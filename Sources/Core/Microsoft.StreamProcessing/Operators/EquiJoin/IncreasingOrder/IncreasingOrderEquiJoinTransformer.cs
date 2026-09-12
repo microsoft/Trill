@@ -52,8 +52,8 @@ namespace Microsoft.StreamProcessing
             BinaryStreamable<TKey, TLeft, TRight, TResult> stream,
             Expression<Func<TLeft, TRight, TResult>> selector)
         {
-            Contract.Requires(stream != null);
-            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(BinaryPipe<TKey, TLeft, TRight, TResult>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            ArgumentNullException.ThrowIfNull(stream);
+            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(BinaryPipe<TKey, TLeft, TRight, TResult>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             string errorMessages = null;
             try

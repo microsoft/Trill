@@ -21,7 +21,7 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<TKey, TPayload> output;
 
         [DataMember]
-        private FastDictionary<TPartitionKey, PartitionEntry> partitionData = new FastDictionary<TPartitionKey, PartitionEntry>();
+        private FastDictionary<TPartitionKey, PartitionEntry> partitionData = new();
 
         private readonly DataStructurePool<FastDictionary2<ActiveEvent, int>> dictPool;
 
@@ -39,7 +39,7 @@ namespace Microsoft.StreamProcessing
             var equals = compoundEqualityExpr.GetEqualsExpr().Compile();
             var getHashCode = compoundEqualityExpr.GetGetHashCodeExpr().Compile();
             var generator = compoundEqualityExpr.CreateFastDictionary2Generator<ActiveEvent, int>(1, equals, getHashCode, stream.Properties.QueryContainer);
-            this.dictPool = new DataStructurePool<FastDictionary2<ActiveEvent, int>>(() => generator.Invoke());
+            this.dictPool = new DataStructurePool<FastDictionary2<ActiveEvent, int>>(generator.Invoke);
             this.pool.Get(out this.output);
             this.output.Allocate();
         }
@@ -77,7 +77,7 @@ namespace Microsoft.StreamProcessing
                         this.output.hash.col[ind] = outevt.Hash;
                         partition.lastSyncTime = kvp.Key;
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                     kvp.Value.Remove(outevt);
                 }
@@ -108,7 +108,7 @@ namespace Microsoft.StreamProcessing
                         this.output[ind] = outevt.Payload;
                         this.output.hash.col[ind] = outevt.Hash;
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                 }
             }
@@ -132,15 +132,15 @@ namespace Microsoft.StreamProcessing
                             {
                                 var p = this.partitionData.entries[index].value;
                                 if (batch.vsync.col[i] == StreamEvent.InfinitySyncTime)
-                                    OutputAllEvents(p);
+                                    this.OutputAllEvents(p);
                                 else
-                                    OutputCompletedIntervals(p);
+                                    this.OutputCompletedIntervals(p);
 
                                 p.lastCti = Math.Max(batch.vsync.col[i], p.lastCti);
                                 p.lastSyncTime = Math.Max(batch.vsync.col[i], p.lastSyncTime);
                             }
 
-                            AddLowWatermarkToBatch(batch.vother.col[i]);
+                            this.AddLowWatermarkToBatch(batch.vother.col[i]);
                             continue;
                         }
 
@@ -216,7 +216,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 entry.entries[index].value++;
                             }
-                            OutputCompletedIntervals(partition); // Can make this more efficient by trying only if the first event in index got completed
+                            this.OutputCompletedIntervals(partition); // Can make this more efficient by trying only if the first event in index got completed
                         }
                     }
                 }
@@ -235,7 +235,7 @@ namespace Microsoft.StreamProcessing
             this.output.hash.col[index] = 0;
             this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
@@ -283,7 +283,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public int Hash;
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
@@ -291,7 +291,7 @@ namespace Microsoft.StreamProcessing
         private sealed class PartitionEntry
         {
             [DataMember]
-            public SortedDictionary<long, FastDictionary2<ActiveEvent, int>> eventMap = new SortedDictionary<long, FastDictionary2<ActiveEvent, int>>();
+            public SortedDictionary<long, FastDictionary2<ActiveEvent, int>> eventMap = [];
             [DataMember]
             public long lastSyncTime = StreamEvent.MinSyncTime;
             [DataMember]

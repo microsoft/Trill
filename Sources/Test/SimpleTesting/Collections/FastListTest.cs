@@ -39,9 +39,9 @@ namespace SimpleTesting
             int indexA2 = list.Insert("a");
             int indexB2 = list.Insert("b");
 
-            Assert.IsTrue(indexA != indexA2);
-            Assert.IsTrue(indexA != indexB);
-            Assert.IsTrue(indexA2 != indexB2);
+            Assert.AreNotEqual(indexA2, indexA);
+            Assert.AreNotEqual(indexB, indexA);
+            Assert.AreNotEqual(indexB2, indexA2);
 
             Assert.IsFalse(list.IsEmpty);
             Assert.AreEqual(4, list.Count);
@@ -131,7 +131,7 @@ namespace SimpleTesting
             {
                 check += list.Values[index];
             }
-            Assert.IsTrue(sum == check);
+            Assert.AreEqual(check, sum);
         }
     }
 }

@@ -17,11 +17,11 @@ namespace Microsoft.StreamProcessing.Aggregates
             Expression<Func<Func<SortedDictionary<T, long>>, SortedMultiSet<T>>> template
                 = (g) => new SortedMultiSet<T>(g);
             var replaced = template.ReplaceParametersInBody(generator);
-            initialState = Expression.Lambda<Func<SortedMultiSet<T>>>(replaced);
+            this.initialState = Expression.Lambda<Func<SortedMultiSet<T>>>(replaced);
         }
 
         private readonly Expression<Func<SortedMultiSet<T>>> initialState;
-        public Expression<Func<SortedMultiSet<T>>> InitialState() => initialState;
+        public Expression<Func<SortedMultiSet<T>>> InitialState() => this.initialState;
 
         private static readonly Expression<Func<SortedMultiSet<T>, long, T, SortedMultiSet<T>>> acc
             = (set, timestamp, input) => set.Add(input);

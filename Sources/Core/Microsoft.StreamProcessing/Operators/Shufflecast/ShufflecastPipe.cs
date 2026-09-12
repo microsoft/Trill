@@ -47,7 +47,7 @@ namespace Microsoft.StreamProcessing
             this.l1Pool = MemoryManager.GetMemoryPool<TInnerKey, TSource>(stream.Properties.IsColumnar);
             this.l1Pool.GetBV(out this.resetBV);
             for (int i = 0; i < this.resetBV.col.Length; i++) this.resetBV.col[i] = ~0;
-            this.Observers = new List<IStreamObserver<TInnerKey, TSource>>();
+            this.Observers = [];
         }
 
         public void AddObserver(IStreamObserver<TInnerKey, TSource> observer) => this.Observers.Add(observer);
@@ -93,7 +93,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 if (batch.vother.col[i] < 0)
                                 {
-                                    AddPunctuationOrLowWatermarkToAllBatches(
+                                    this.AddPunctuationOrLowWatermarkToAllBatches(
                                         batches,
                                         batch.vsync.col[i], batch.vother.col[i], batch.key.col[i], batch.hash.col[i]);
                                 }
@@ -114,7 +114,7 @@ namespace Microsoft.StreamProcessing
                             {
                                 if (batch.vother.col[i] < 0)
                                 {
-                                    AddPunctuationOrLowWatermarkToAllBatches(
+                                    this.AddPunctuationOrLowWatermarkToAllBatches(
                                         batches,
                                         batch.vsync.col[i], batch.vother.col[i], batch.key.col[i], batch.hash.col[i]);
                                 }
@@ -136,7 +136,7 @@ namespace Microsoft.StreamProcessing
                         {
                             if (batch.vother.col[i] < 0)
                             {
-                                AddPunctuationOrLowWatermarkToAllBatches(
+                                this.AddPunctuationOrLowWatermarkToAllBatches(
                                     batches,
                                     batch.vsync.col[i], batch.vother.col[i], batch.key.col[i], batch.hash.col[i]);
                             }

@@ -27,7 +27,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> Average(Expression<Func<TSource, sbyte>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableSByteAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -38,7 +38,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> Average(Expression<Func<TSource, short>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableShortAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -49,7 +49,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> Average(Expression<Func<TSource, int>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableIntAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -60,7 +60,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> Average(Expression<Func<TSource, long>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableLongAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -71,7 +71,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> Average(Expression<Func<TSource, byte>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableByteAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -82,7 +82,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> Average(Expression<Func<TSource, ushort>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableUShortAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -93,7 +93,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> Average(Expression<Func<TSource, uint>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableUIntAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -104,7 +104,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> Average(Expression<Func<TSource, ulong>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableULongAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -115,7 +115,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<float>, float?> Average(Expression<Func<TSource, float>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableFloatAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -126,7 +126,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<double>, double?> Average(Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableDoubleAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -137,7 +137,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<decimal>, decimal?> Average(Expression<Func<TSource, decimal>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableDecimalAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -148,7 +148,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<BigInteger>, double?> Average(Expression<Func<TSource, BigInteger>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableBigIntegerAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -159,7 +159,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<Complex>, Complex?> Average(Expression<Func<TSource, Complex>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterableComplexAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -170,7 +170,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> AverageSquares(Expression<Func<TSource, sbyte>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableSByteAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -181,7 +181,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> AverageSquares(Expression<Func<TSource, short>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableShortAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -192,7 +192,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> AverageSquares(Expression<Func<TSource, int>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableIntAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -203,7 +203,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<long>, double?> AverageSquares(Expression<Func<TSource, long>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableLongAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -214,7 +214,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> AverageSquares(Expression<Func<TSource, byte>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableByteAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -225,7 +225,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> AverageSquares(Expression<Func<TSource, ushort>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableUShortAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -236,7 +236,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> AverageSquares(Expression<Func<TSource, uint>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableUIntAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -247,7 +247,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<ulong>, double?> AverageSquares(Expression<Func<TSource, ulong>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableULongAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -258,7 +258,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<float>, float?> AverageSquares(Expression<Func<TSource, float>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableFloatAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -269,7 +269,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<double>, double?> AverageSquares(Expression<Func<TSource, double>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableDoubleAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -280,7 +280,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<decimal>, decimal?> AverageSquares(Expression<Func<TSource, decimal>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableDecimalAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -291,7 +291,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<BigInteger>, double?> AverageSquares(Expression<Func<TSource, BigInteger>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableBigIntegerAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -302,7 +302,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<Complex>, Complex?> AverageSquares(Expression<Func<TSource, Complex>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterableComplexAggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }

@@ -17,14 +17,14 @@ namespace Microsoft.StreamProcessing
     {
         public static string CleanUpIdentifierName(this string s)
         {
-            Contract.Requires(s != null);
+            ArgumentNullException.ThrowIfNull(s);
 
             return s.Replace('`', '_').Replace('.', '_').Replace('<', '_').Replace('>', '_').Replace(',', '_').Replace(' ', '_').Replace('`', '_').Replace('[', '_').Replace(']', '_').Replace('=', '_').Replace('+', '_');
         }
 
         public static string AddNumberOfNecessaryGenericArguments(this string s, params Type[] types)
         {
-            Contract.Requires(types != null);
+            ArgumentNullException.ThrowIfNull(types);
             var i = types.Count(t => t.IsAnonymousType());
             return i > 0
                 ? s + "`" + i.ToString(CultureInfo.InvariantCulture)
@@ -48,7 +48,7 @@ namespace Microsoft.StreamProcessing
 
             // If T is a struct, then even if the user defined equality function calls a method on the struct,
             // it can still be used because the active events will have a field of type T.
-            if (typeofT.GetTypeInfo().IsValueType) return true;
+            if (typeofT.IsValueType) return true;
 
             // If T is a type for which the columnar representation is just a pseudo-field, e.g., string,
             // then the payload is not really represented as a set of its fields, but is an instance of T

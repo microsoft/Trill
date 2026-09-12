@@ -37,7 +37,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                             encoder,
                             value.Type == otherRuntimeSchema.RuntimeType
                                 ? value
-                                : (otherRuntimeSchema.RuntimeType.GetTypeInfo().IsValueType
+                                : (otherRuntimeSchema.RuntimeType.IsValueType
                                     ? (Expression)Expression.Property(value, "Value")
                                     : Expression.TypeAs(value, otherRuntimeSchema.RuntimeType))));
             }
@@ -89,13 +89,13 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                     elseBranch);
                 elseBranch = conditions;
             }
-            return Expression.Block(new[] { resultParameter, unionTypeParameter }, new Expression[] { assignUnionType, conditions, resultParameter });
+            return Expression.Block(new[] { resultParameter, unionTypeParameter }, [assignUnionType, conditions, resultParameter]);
         }
 
         private static int MoreSpecializedTypesFirst(Tuple<ObjectSerializerBase, int> s1, Tuple<ObjectSerializerBase, int> s2)
         {
-            if (s1.Item1.RuntimeType.GetTypeInfo().IsAssignableFrom(s2.Item1.RuntimeType)) return 1;
-            if (s2.Item1.RuntimeType.GetTypeInfo().IsAssignableFrom(s1.Item1.RuntimeType)) return -1;
+            if (s1.Item1.RuntimeType.IsAssignableFrom(s2.Item1.RuntimeType)) return 1;
+            if (s2.Item1.RuntimeType.IsAssignableFrom(s1.Item1.RuntimeType)) return -1;
 
             return s1.Item2.CompareTo(s2.Item2);
         }

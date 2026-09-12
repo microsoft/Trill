@@ -74,14 +74,14 @@ namespace Microsoft.StreamProcessing
                 leftBatchDone = rightBatchDone = false;
                 if (lastLeftTime <= this.nextRightTime)
                 {
-                    OutputBatch(leftBatch);
+                    this.OutputBatch(leftBatch);
                     leftBatchDone = true;
                     leftBatchFree = false;
                 }
 
                 if (Config.DeterministicWithinTimestamp ? (lastRightTime < this.nextLeftTime) : (lastRightTime <= this.nextLeftTime))
                 {
-                    OutputBatch(rightBatch);
+                    this.OutputBatch(rightBatch);
                     rightBatchDone = true;
                     rightBatchFree = false;
                 }
@@ -93,7 +93,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.nextLeftTime <= this.nextRightTime)
                 {
-                    OutputCurrentTuple(leftBatch);
+                    this.OutputCurrentTuple(leftBatch);
 
                     leftBatch.iter++;
 
@@ -108,7 +108,7 @@ namespace Microsoft.StreamProcessing
                 }
                 else
                 {
-                    OutputCurrentTuple(rightBatch);
+                    this.OutputCurrentTuple(rightBatch);
 
                     rightBatch.iter++;
 
@@ -132,7 +132,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (batch.vsync.col[batch.Count - 1] <= this.nextRightTime)
                 {
-                    OutputBatch(batch);
+                    this.OutputBatch(batch);
                     isBatchDone = true;
                     isBatchFree = false;
                     return;
@@ -155,7 +155,7 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                OutputCurrentTuple(batch);
+                this.OutputCurrentTuple(batch);
 
                 batch.iter++;
             }
@@ -169,7 +169,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (Config.DeterministicWithinTimestamp ? (batch.vsync.col[batch.Count - 1] < this.nextLeftTime) : (batch.vsync.col[batch.Count - 1] <= this.nextLeftTime))
                 {
-                    OutputBatch(batch);
+                    this.OutputBatch(batch);
                     isBatchDone = true;
                     isBatchFree = false;
                     return;
@@ -192,7 +192,7 @@ namespace Microsoft.StreamProcessing
                     return;
                 }
 
-                OutputCurrentTuple(batch);
+                this.OutputCurrentTuple(batch);
 
                 batch.iter++;
             }
@@ -225,7 +225,7 @@ namespace Microsoft.StreamProcessing
             this.output.hash.col[index] = batch.hash.col[batch.iter];
             if ((batch.bitvector.col[batch.iter >> 6] & (1L << (batch.iter & 0x3f))) != 0) this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -259,7 +259,7 @@ namespace Microsoft.StreamProcessing
 
             this.lastCTI = updatedCTI;
 
-            FlushContents();
+            this.FlushContents();
             this.Observer.OnNext(batch);
         }
 

@@ -24,47 +24,31 @@ namespace Microsoft.StreamProcessing
         Flush
     }
 
-    internal struct QueuedMessage<T> where T : StreamMessage
+    internal readonly struct QueuedMessage<T> where T : StreamMessage
     {
-        public MessageKind Kind;
-        public T Message;
+        public MessageKind Kind { get; init; }
+        public T Message { get; init; }
     }
 
-    internal sealed class TaskEntry
+    internal sealed class TaskEntry(Guid classId, Action<StreamMessage> onNext, Action onCompleted, Action onFlush, Action<Exception> onError)
     {
-        public TaskEntry(Guid classId, Action<StreamMessage> onNext, Action onCompleted, Action onFlush, Action<Exception> onError)
-        {
-            this.ClassId = classId;
-            this.Priority = -1;
-            this.TaskCount = 0;
-            this.onNext = onNext;
-            this.onCompleted = onCompleted;
-            this.onFlush = onFlush;
-            this.onError = onError;
-            this.tasks = new ConcurrentQueue<QueuedMessage<StreamMessage>>();
-            this.Status = TaskEntryStatus.Inactive;
-            this.Disposed = false;
-            this.Completed = false;
-        }
-
-        public Guid ClassId;
-        public long Priority;
-        public int TaskCount;
-        public bool Disposed;
-        public bool Completed;
-        public TaskEntryStatus Status;
-        public Action<StreamMessage> onNext;
-        private Action onCompleted;
-        public Action onFlush;
-        public Action<Exception> onError;
-        public ConcurrentQueue<QueuedMessage<StreamMessage>> tasks;
+        public Guid ClassId = classId;
+        public long Priority = -1;
+        public int TaskCount = 0;
+        public bool Disposed = false;
+        public bool Completed = false;
+        public TaskEntryStatus Status = TaskEntryStatus.Inactive;
+        public Action<StreamMessage> onNext = onNext;
+        public Action onFlush = onFlush;
+        public Action<Exception> onError = onError;
+        public ConcurrentQueue<QueuedMessage<StreamMessage>> tasks = [];
 
         public void OnCompleted()
         {
             this.Completed = true;
-            this.onCompleted();
+            onCompleted();
             this.onNext = null;
-            this.onCompleted = null;
+            onCompleted = null;
             this.onFlush = null;
             this.onError = null;
         }
@@ -83,7 +67,7 @@ namespace Microsoft.StreamProcessing
         internal ConcurrentDictionary<int, ScheduledUnit> activeThreads;
         internal int pendingTaskCount;
         internal bool useCommonSprayPool = false;
-        internal object global = new object();
+        internal object global = new();
 
         internal bool affinitize;
 
@@ -92,10 +76,10 @@ namespace Microsoft.StreamProcessing
             this.pendingTaskCount = 0;
             this.affinitize = affinitize;
             this.pendingTasks = new SortedSet<TaskEntry>(new TaskEntryComparer());
-            this.activeThreads = new ConcurrentDictionary<int, ScheduledUnit>();
-            this.taskTable = new ConcurrentDictionary<Guid, TaskEntry>();
+            this.activeThreads = [];
+            this.taskTable = [];
 
-            for (int i = 0; i < numThreads; i++) this.activeThreads.TryAdd(i, new ScheduledUnit(this, i));
+            for (int i = 0; i < numThreads; i++) this.activeThreads.TryAdd(i, new(this, i));
 
             this.MapArity = numThreads;
         }
@@ -103,7 +87,7 @@ namespace Microsoft.StreamProcessing
         public IStreamObserver<TK, TP> RegisterStreamObserver<TK, TP>(IStreamObserver<TK, TP> o, Guid? classId = null)
         {
             // Check if already wrapped
-            if (o as WrapperStreamObserver<TK, TP> != null)
+            if (o is WrapperStreamObserver<TK, TP>)
                 return o;
 
             var cid = o.ClassId;
@@ -137,7 +121,7 @@ namespace Microsoft.StreamProcessing
         {
             this.scheduler = scheduler;
             this.stopped = false;
-            this.thread = new Thread(Run);
+            this.thread = new Thread(this.Run);
             this.thread.Start(id);
         }
 
@@ -244,57 +228,48 @@ namespace Microsoft.StreamProcessing
         }
     }
 
-    internal sealed class WrapperStreamObserver<TK, TP> : IStreamObserver<TK, TP>, IDisposable
+    internal sealed class WrapperStreamObserver<TK, TP>(IStreamObserver<TK, TP> observer, OwnedThreadsScheduler scheduler, TaskEntry entry)
+        : IStreamObserver<TK, TP>, IDisposable
     {
-        private readonly IStreamObserver<TK, TP> o;
-        private readonly OwnedThreadsScheduler scheduler;
-        private readonly TaskEntry te;
         private bool onCompletedSeen = false;
 
-        public WrapperStreamObserver(IStreamObserver<TK, TP> o, OwnedThreadsScheduler scheduler, TaskEntry t)
-        {
-            this.o = o;
-            this.scheduler = scheduler;
-            this.te = t;
-        }
+        public void OnError(Exception error) => observer.OnError(error);
 
-        public void OnError(Exception error) => this.o.OnError(error);
+        public void Checkpoint(System.IO.Stream stream) => observer.Checkpoint(stream);
 
-        public void Checkpoint(System.IO.Stream stream) => this.o.Checkpoint(stream);
+        public void Restore(System.IO.Stream stream) => observer.Restore(stream);
 
-        public void Restore(System.IO.Stream stream) => this.o.Restore(stream);
-
-        public void Reset() => this.o.Reset();
+        public void Reset() => observer.Reset();
 
         public void ProduceQueryPlan(PlanNode previous) => throw new NotImplementedException();
 
         public void OnNext(StreamMessage<TK, TP> message)
         {
-            if (this.te.Disposed)
+            if (entry.Disposed)
             {
                 message.Free();
                 return;
             }
 
-            EnqueueMessage(MessageKind.DataBatch, message);
+            this.EnqueueMessage(MessageKind.DataBatch, message);
         }
 
         private void EnqueueMessage(MessageKind kind, StreamMessage<TK, TP> message = null)
         {
-            this.te.tasks.Enqueue(new QueuedMessage<StreamMessage> { Kind = kind, Message = message });
-            var newCount = Interlocked.Increment(ref this.te.TaskCount);
+            entry.tasks.Enqueue(new QueuedMessage<StreamMessage> { Kind = kind, Message = message });
+            var newCount = Interlocked.Increment(ref entry.TaskCount);
             if (newCount == 1)
             {
-                lock (this.scheduler.global)
+                lock (scheduler.global)
                 {
-                    if (this.te.Status == TaskEntryStatus.Inactive)
+                    if (entry.Status == TaskEntryStatus.Inactive)
                     {
                         // It's possible that a scheduler thread dequeues this event before this happens,
                         // and hence does not see the correct priority for the TaskEvent. This is benign.
-                        this.te.Priority = message?.MinTimestamp ?? StreamEvent.MaxSyncTime;
-                        this.te.Status = TaskEntryStatus.HasWork;
-                        this.scheduler.pendingTasks.Add(this.te);
-                        if (this.scheduler.pendingTasks.Count == 1) Monitor.Pulse(this.scheduler.global);
+                        entry.Priority = message?.MinTimestamp ?? StreamEvent.MaxSyncTime;
+                        entry.Status = TaskEntryStatus.HasWork;
+                        scheduler.pendingTasks.Add(entry);
+                        if (scheduler.pendingTasks.Count == 1) Monitor.Pulse(scheduler.global);
                     }
                 }
             }
@@ -303,28 +278,28 @@ namespace Microsoft.StreamProcessing
         public void OnCompleted()
         {
             this.onCompletedSeen = true;
-            EnqueueMessage(MessageKind.Completed);
+            this.EnqueueMessage(MessageKind.Completed);
         }
 
-        public void OnFlush() => EnqueueMessage(MessageKind.Flush);
+        public void OnFlush() => this.EnqueueMessage(MessageKind.Flush);
 
         public Guid ClassId => throw new NotImplementedException();
 
-        public int CurrentlyBufferedOutputCount => this.o.CurrentlyBufferedOutputCount;
+        public int CurrentlyBufferedOutputCount => observer.CurrentlyBufferedOutputCount;
 
-        public int CurrentlyBufferedInputCount => this.o.CurrentlyBufferedInputCount;
+        public int CurrentlyBufferedInputCount => observer.CurrentlyBufferedInputCount;
 
         public void Dispose()
         {
-            lock (this.scheduler.global)
+            lock (scheduler.global)
             {
-                this.te.Disposed = true;
+                entry.Disposed = true;
             }
 
             if (!this.onCompletedSeen)
             {
                 this.onCompletedSeen = true;
-                OnCompleted();
+                this.OnCompleted();
             }
         }
     }

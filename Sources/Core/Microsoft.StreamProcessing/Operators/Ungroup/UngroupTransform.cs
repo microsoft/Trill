@@ -29,11 +29,11 @@ namespace Microsoft.StreamProcessing
             Type innerResultType,
             Type resultType) : base(className)
         {
-            Contract.Requires(className != null);
-            Contract.Requires(outerKeyType != null);
-            Contract.Requires(innerKeyType != null);
-            Contract.Requires(innerResultType != null);
-            Contract.Requires(resultType != null);
+            ArgumentNullException.ThrowIfNull(className);
+            ArgumentNullException.ThrowIfNull(outerKeyType);
+            ArgumentNullException.ThrowIfNull(innerKeyType);
+            ArgumentNullException.ThrowIfNull(innerResultType);
+            ArgumentNullException.ThrowIfNull(resultType);
 
             this.outerKeyType = outerKeyType;
             this.innerKeyType = innerKeyType;
@@ -96,7 +96,7 @@ namespace Microsoft.StreamProcessing
         private static Tuple<Type, string> GenerateInternal<TOuterKey, TInnerKey, TInnerResult, TResult>(Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelector, bool isFirstLevelGroup)
         {
             Contract.Ensures(Contract.Result<Tuple<Type, string>>() != null);
-            Contract.Ensures(typeof(Pipe<TOuterKey, TResult>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            Contract.Ensures(typeof(Pipe<TOuterKey, TResult>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             string errorMessages = null;
             try
@@ -152,7 +152,7 @@ namespace Microsoft.StreamProcessing
                 expandedCode = template.TransformText();
 
                 assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeOfTOuterKey, typeOfTInnerKey, typeofTInnerResult, typeofTResult);
-                assemblyReferences.Add(typeof(IStreamable<,>).GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(IStreamable<,>).Assembly);
 
                 // input messages
                 assemblyReferences.Add(Transformer.GeneratedStreamMessageAssembly<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult>());
@@ -166,11 +166,9 @@ namespace Microsoft.StreamProcessing
 
                 numberOfGenericParameters = template.numberOfGenericParameters;
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-
                 if (numberOfGenericParameters > 0)
                     generatedClassName = generatedClassName + "`" + numberOfGenericParameters.ToString(CultureInfo.InvariantCulture);
-                var t = a.GetType(generatedClassName);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(generatedClassName), out errorMessages);
                 t = t.InstantiateAsNecessary(typeOfTOuterKey, typeOfTInnerKey, typeofTInnerResult, typeofTResult);
 
                 return Tuple.Create(t, errorMessages);

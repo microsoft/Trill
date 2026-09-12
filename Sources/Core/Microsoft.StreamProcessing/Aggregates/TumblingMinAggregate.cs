@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public TumblingMinAggregate(IComparerExpression<T> comparer)
         {
-            Contract.Requires(comparer != null);
+            ArgumentNullException.ThrowIfNull(comparer);
 
             var stateExpression = Expression.Parameter(typeof(MinMaxState<T>), "state");
             var timestampExpression = Expression.Parameter(typeof(long), "timestamp");
@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             var comparerExpression = comparer.GetCompareExpr().ReplaceParametersInBody(
                 inputExpression, currentValue.ReplaceParametersInBody(stateExpression));
 
-            var typeInfo = typeof(MinMaxState<T>).GetTypeInfo();
+            var minMaxStateType = typeof(MinMaxState<T>);
             this.accumulate = Expression.Lambda<Func<MinMaxState<T>, long, T, MinMaxState<T>>>(
                 Expression.Condition(
                     Expression.OrElse(
@@ -40,8 +40,8 @@ namespace Microsoft.StreamProcessing.Aggregates
                         Expression.LessThan(comparerExpression, Expression.Constant(0))),
                     Expression.MemberInit(
                         (NewExpression)constructor.Body,
-                        Expression.Bind(typeInfo.GetField("currentTimestamp"), timestampExpression),
-                        Expression.Bind(typeInfo.GetField("currentValue"), inputExpression)),
+                        Expression.Bind(minMaxStateType.GetField("currentTimestamp"), timestampExpression),
+                        Expression.Bind(minMaxStateType.GetField("currentValue"), inputExpression)),
                     stateExpression),
                 stateExpression,
                 timestampExpression,

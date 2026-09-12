@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing
 
             public override void OnCompleted()
             {
-                OnFlush();
+            this.OnFlush();
                 base.OnCompleted();
             }
 
@@ -137,7 +137,7 @@ namespace Microsoft.StreamProcessing
 
             public override void OnCompleted()
             {
-                OnFlush();
+            this.OnFlush();
                 base.OnCompleted();
             }
 
@@ -210,7 +210,7 @@ namespace Microsoft.StreamProcessing
 
             public override void OnCompleted()
             {
-                OnFlush();
+            this.OnFlush();
                 base.OnCompleted();
             }
 
@@ -285,7 +285,7 @@ namespace Microsoft.StreamProcessing
 
             public override void OnCompleted()
             {
-                OnFlush();
+            this.OnFlush();
                 base.OnCompleted();
             }
 
@@ -361,7 +361,7 @@ namespace Microsoft.StreamProcessing
 
             public override void OnCompleted()
             {
-                OnFlush();
+            this.OnFlush();
                 base.OnCompleted();
             }
 
@@ -435,7 +435,7 @@ namespace Microsoft.StreamProcessing
 
             public override void OnCompleted()
             {
-                OnFlush();
+            this.OnFlush();
                 base.OnCompleted();
             }
 

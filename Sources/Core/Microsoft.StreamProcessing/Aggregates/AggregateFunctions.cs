@@ -48,8 +48,8 @@ namespace Microsoft.StreamProcessing.Aggregates
             this IAggregate<TAggregateInput, TState, TResult> aggregate,
             Expression<Func<TInput, TAggregateInput>> transform)
         {
-            Contract.Requires(aggregate != null);
-            Contract.Requires(transform != null);
+            ArgumentNullException.ThrowIfNull(aggregate);
+            ArgumentNullException.ThrowIfNull(transform);
             return aggregate.TransformInput(transform);
         }
 
@@ -62,8 +62,8 @@ namespace Microsoft.StreamProcessing.Aggregates
             this IAggregate<TAggregateInput, TState, TResult> aggregate,
             Expression<Func<TInput, TAggregateInput?>> transform) where TAggregateInput : struct
         {
-            Contract.Requires(aggregate != null);
-            Contract.Requires(transform != null);
+            ArgumentNullException.ThrowIfNull(aggregate);
+            ArgumentNullException.ThrowIfNull(transform);
             return aggregate.MakeInputNullableAndSkipNulls().TransformInput(transform);
         }
 
@@ -71,8 +71,8 @@ namespace Microsoft.StreamProcessing.Aggregates
             this IAggregate<TAggregateInput, TState, TResult> aggregate,
             Expression<Func<TInput, TAggregateInput>> transform)
         {
-            Contract.Requires(aggregate != null);
-            Contract.Requires(transform != null);
+            ArgumentNullException.ThrowIfNull(aggregate);
+            ArgumentNullException.ThrowIfNull(transform);
 
             return GeneratedAggregate.Create(
                 initialState: aggregate.InitialState(),
@@ -86,19 +86,19 @@ namespace Microsoft.StreamProcessing.Aggregates
             this Expression<Func<T1, T2, T3, TOutput>> func,
             Expression<Func<TInput, T3>> transform)
         {
-            Contract.Requires(func != null);
-            Contract.Requires(transform != null);
+            ArgumentNullException.ThrowIfNull(func);
+            ArgumentNullException.ThrowIfNull(transform);
             var result = func.ReplaceParametersInBody(func.Parameters[0], func.Parameters[1], transform.Body);
             var transformParam = transform.Parameters[0];
-            return Expression.Lambda<Func<T1, T2, TInput, TOutput>>(result, new[] { func.Parameters[0], func.Parameters[1], transformParam });
+            return Expression.Lambda<Func<T1, T2, TInput, TOutput>>(result, [func.Parameters[0], func.Parameters[1], transformParam]);
         }
 
         internal static IAggregate<TInput, TState, TResult> TransformOutput<TInput, TState, TAggregateResult, TResult>(
             this IAggregate<TInput, TState, TAggregateResult> aggregate,
             Expression<Func<TAggregateResult, TResult>> transform)
         {
-            Contract.Requires(aggregate != null);
-            Contract.Requires(transform != null);
+            ArgumentNullException.ThrowIfNull(aggregate);
+            ArgumentNullException.ThrowIfNull(transform);
 
             return GeneratedAggregate.Create(
                 initialState: aggregate.InitialState(),
@@ -112,8 +112,8 @@ namespace Microsoft.StreamProcessing.Aggregates
             this Expression<Func<T1, TFuncOutput>> func,
             Expression<Func<TFuncOutput, TOutput>> transform)
         {
-            Contract.Requires(func != null);
-            Contract.Requires(transform != null);
+            ArgumentNullException.ThrowIfNull(func);
+            ArgumentNullException.ThrowIfNull(transform);
             var result = transform.ReplaceParametersInBody(func.Body);
             return Expression.Lambda<Func<T1, TOutput>>(result, func.Parameters);
         }
@@ -127,7 +127,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             this IAggregate<TInput, TState, TResult> aggregate,
             Expression<Func<TInput, bool>> filter)
         {
-            Contract.Requires(aggregate != null);
+            ArgumentNullException.ThrowIfNull(aggregate);
             if (filter == null || filter.Body.ExpressionEquals(Expression.Constant(true))) return aggregate;
 
             Expression<Func<TState, long, TInput, TState>> newAccumulate = (oldState, timestamp, input) =>
@@ -151,7 +151,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public static IAggregate<TInput?, TState, TResult> MakeInputNullableAndSkipNulls<TInput, TState, TResult>(
             this IAggregate<TInput, TState, TResult> aggregate) where TInput : struct
         {
-            Contract.Requires(aggregate != null);
+            ArgumentNullException.ThrowIfNull(aggregate);
 
             Expression<Func<TState, long, TInput?, TState>> newAccumulate = (oldState, timestamp, input) =>
                 input.HasValue ? CallInliner.Call(aggregate.Accumulate(), oldState, timestamp, input.Value) : oldState;
@@ -175,9 +175,9 @@ namespace Microsoft.StreamProcessing.Aggregates
         public static IAggregate<TInput, TState, TResult> SkipNulls<TInput, TState, TResult>(
             this IAggregate<TInput, TState, TResult> aggregate)
         {
-            Contract.Requires(aggregate != null);
+            ArgumentNullException.ThrowIfNull(aggregate);
 
-            var inputType = typeof(TInput).GetTypeInfo();
+            var inputType = typeof(TInput);
             return inputType.IsClass
                 ? GeneratedAggregate.Create(
                     initialState: aggregate.InitialState(),
@@ -229,7 +229,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public static IAggregate<TInput, NullOutputWrapper<TState>, TResult?> MakeOutputNullableAndOutputNullWhenEmpty<TInput, TState, TResult>(
             this IAggregate<TInput, TState, TResult> aggregate) where TResult : struct
         {
-            Contract.Requires(aggregate != null);
+            ArgumentNullException.ThrowIfNull(aggregate);
 
             Expression<Func<NullOutputWrapper<TState>>> newInitialState =
                 () => new NullOutputWrapper<TState>
@@ -279,7 +279,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         public static IAggregate<TInput, NullOutputWrapper<TState>, TResult> OutputDefaultWhenEmpty<TInput, TState, TResult>(
             this IAggregate<TInput, TState, TResult> aggregate)
         {
-            Contract.Requires(aggregate != null);
+            ArgumentNullException.ThrowIfNull(aggregate);
 
             Expression<Func<NullOutputWrapper<TState>>> newInitialState =
                 () => new NullOutputWrapper<TState>

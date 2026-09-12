@@ -10,7 +10,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class QuantizeLifetimeStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private readonly long width;
         private readonly long skip;
@@ -29,7 +29,7 @@ namespace Microsoft.StreamProcessing
             this.progress = progress;
             this.offset = offset;
 
-            Initialize();
+            this.Initialize();
         }
 
         protected override bool CanGenerateColumnar() => typeof(TPayload).CanRepresentAsColumnar();
@@ -43,7 +43,7 @@ namespace Microsoft.StreamProcessing
             if (t == null)
             {
                 return this.Source.Properties.IsColumnar
-                    ? GetPipe(observer)
+                    ? this.GetPipe(observer)
                     : new QuantizeLifetimePipe<TKey, TPayload>(this, observer, this.width, this.skip, this.progress, this.offset);
             }
             var outputType = typeof(PartitionedQuantizeLifetimePipe<,,>).MakeGenericType(

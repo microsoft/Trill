@@ -169,7 +169,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
     }
 
 ");
- if (!noFields && !this.payloadType.GetTypeInfo().IsValueType) { 
+ if (!noFields && !this.payloadType.IsValueType) { 
             this.Write("    [DataContract]\r\n    private struct ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ActiveEventType));
             this.Write("\r\n    {\r\n        ");
@@ -414,21 +414,19 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "er.entries[it].key;\r\n                for (int i = 0; i < CurrentTimeOpenEventBuf" +
                     "fer.entries[it].value; i++)\r\n                    ActOnStartWithKHP(e, CurrentTim" +
                     "eOpenEventBufferTime, true);\r\n\r\n            }\r\n            CurrentTimeOpenEventB" +
-                    "uffer.Initialize();\r\n        }\r\n\r\n        foreach (var closed in ClosedEvents.Wh" +
-                    "ere(k => k.Key < time).ToArray())\r\n        {\r\n            var iterator = FastDic" +
-                    "tionary2<");
-            this.Write(this.ToStringHelper.ToStringWithCulture(TPayload));
-            this.Write(@", ActiveEvent>.IteratorStart;
-            while (closed.Value.Iterate(ref iterator))
-                foreach (var v in closed.Value.entries[iterator].value)
-                    Emit(v);
+                    "uffer.Initialize();\r\n        }\r\n\r\n        while (ClosedEvents.Count > 0)\r\n      " +
+                    "  {\r\n            long firstKey;\r\n            using (var en = ClosedEvents.GetEnume" +
+                    "rator())\r\n            {\r\n                if (!en.MoveNext())\r\n                    " +
+                    "break;\r\n                firstKey = en.Current.Key;\r\n            }\r\n\r\n            " +
+                    "if (firstKey >= time)\r\n                break;\r\n\r\n            var closedDict = Clo" +
+                    "sedEvents[firstKey];\r\n            var iterator = FastDictionary2<KHP, List<ActiveE" +
+                    "vent>>.IteratorStart;\r\n            while (closedDict.Iterate(ref iterator))\r\n    " +
+                    "        {\r\n                foreach (var v in closedDict.entries[iterator].value)" +
+                    "\r\n                    Emit(v);\r\n            }\r\n\r\n            closedDict.Initialize" +
+                    "();\r\n            ClosedEvents.Remove(firstKey);\r\n            dictPool.Return(close" +
+                    "dDict);\r\n        }\r\n    }\r\n");
 
-            closed.Value.Initialize();
-            ClosedEvents.Remove(closed.Key);
-
-            dictPool.Return(closed.Value);
-        }
-    }
+            this.Write(@"
 
     // Optimally, this would be inline
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

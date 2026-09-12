@@ -81,7 +81,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public int Push()
         {
             // If out of space in the stack, then grow.
-            if (this.count == this.capacity) Grow();
+            if (this.count == this.capacity) this.Grow();
             return this.count++;
         }
 

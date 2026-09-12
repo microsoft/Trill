@@ -15,7 +15,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         internal static IStreamable<Empty, TPayload> CreateStreamable<TPayload>(this IObservable<StreamMessage<Empty, TPayload>> source)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             var p = StreamProperties<Empty, TPayload>.Default;
             if (Config.ForceRowBasedExecution || !typeof(TPayload).CanRepresentAsColumnar())
@@ -29,7 +29,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         internal static IStreamable<Empty, TPayload> RegisterInput<TPayload>(this QueryContainer container, IObservable<StreamMessage<Empty, TPayload>> source, string identifier = null)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             var p = StreamProperties<Empty, TPayload>.Default;
             if (Config.ForceRowBasedExecution || !typeof(TPayload).CanRepresentAsColumnar())

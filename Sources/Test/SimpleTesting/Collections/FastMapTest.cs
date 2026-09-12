@@ -40,9 +40,9 @@ namespace SimpleTesting
             int indexA5Two = map.Insert(5, "a");
             int indexB5 = map.Insert(5, "b");
 
-            Assert.IsTrue(indexA5 != indexA5Two);
-            Assert.IsTrue(indexA5 != indexB5);
-            Assert.IsTrue(indexA5Two != indexB5);
+            Assert.AreNotEqual(indexA5Two, indexA5);
+            Assert.AreNotEqual(indexB5, indexA5);
+            Assert.AreNotEqual(indexB5, indexA5Two);
 
             Assert.IsFalse(map.IsEmpty);
             Assert.AreEqual(4, map.Count);

@@ -15,7 +15,7 @@ namespace Microsoft.StreamProcessing
         internal static IObservable<StreamMessage<TUnit, TPayload>> ToStreamMessageObservable<TUnit, TPayload>(
             this IStreamable<TUnit, TPayload> stream)
         {
-            Contract.Requires(stream != null);
+            ArgumentNullException.ThrowIfNull(stream);
 
             return RegisterOutputAsStreamMessages(null, stream, null);
         }
@@ -25,7 +25,7 @@ namespace Microsoft.StreamProcessing
             IStreamable<TUnit, TPayload> stream,
             string identifier = null)
         {
-            Contract.Requires(stream != null);
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new StreamMessageEgressObservable<TUnit, TPayload>(stream, container, identifier ?? Guid.NewGuid().ToString());
         }

@@ -205,7 +205,7 @@ namespace Microsoft.StreamProcessing.Internal
             if (this.batch.key != null) this.batch.key.col[this.iter] = default;
             this.batch.hash.col[this.iter] = 0;
             this.iter++;
-            if (this.iter == Config.DataBatchSize) FlushContents();
+            if (this.iter == Config.DataBatchSize) this.FlushContents();
         }
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace Microsoft.StreamProcessing.Internal
             if (this.batch.key != null) this.batch.key.col[this.iter] = default;
             this.batch.hash.col[this.iter] = 0;
             this.iter++;
-            if (this.iter == Config.DataBatchSize) FlushContents();
+            if (this.iter == Config.DataBatchSize) this.FlushContents();
         }
 
         /// <summary>

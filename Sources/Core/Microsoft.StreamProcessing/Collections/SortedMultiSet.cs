@@ -35,9 +35,9 @@ namespace Microsoft.StreamProcessing
             var type = typeof(SortedDictionary<T, long>);
             var parameter = Expression.Parameter(type);
 
-            var field = type.GetTypeInfo().GetField("_set", BindingFlags.NonPublic | BindingFlags.Instance);
+            var field = type.GetField("_set", BindingFlags.NonPublic | BindingFlags.Instance);
             var set = Expression.Field(parameter, field);
-            var member = set.Type.GetTypeInfo().GetMethod("Reverse");
+            var member = set.Type.GetMethod("Reverse");
             var reverse = Expression.Call(set, member);
 
             return Expression.Lambda<Func<SortedDictionary<T, long>, IEnumerable<KeyValuePair<T, long>>>>(reverse, parameter).Compile();
@@ -47,7 +47,7 @@ namespace Microsoft.StreamProcessing
         /// Creates a new instance of a Sorted Multiset.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public SortedMultiSet() : this(() => new SortedDictionary<T, long>()) { }
+        public SortedMultiSet() : this(() => []) { }
 
         /// <summary>
         /// Creates a new instance of a Sorted Multiset where the underlying dictionary is generated.
@@ -153,9 +153,9 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public SortedMultiSet<T> AddAll(SortedMultiSet<T> set)
         {
-            Contract.Requires(set != null);
+            ArgumentNullException.ThrowIfNull(set);
             foreach (var keyAndCount in set.Elements)
-                Add(keyAndCount.Key, keyAndCount.Value);
+                this.Add(keyAndCount.Key, keyAndCount.Value);
 
             return this;
         }
@@ -214,9 +214,9 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public SortedMultiSet<T> RemoveAll(SortedMultiSet<T> set)
         {
-            Contract.Requires(set != null);
+            ArgumentNullException.ThrowIfNull(set);
             foreach (var keyAndCount in set.Elements)
-                Remove(keyAndCount.Key, keyAndCount.Value);
+                this.Remove(keyAndCount.Key, keyAndCount.Value);
 
             return this;
         }

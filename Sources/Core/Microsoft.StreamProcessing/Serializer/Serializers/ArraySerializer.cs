@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         protected override Expression BuildSerializerSafe(Expression encoder, Expression value)
         {
-            var getLength = this.RuntimeType.GetTypeInfo().GetProperty("Length");
+            var getLength = this.RuntimeType.GetProperty("Length");
             if (getLength == null)
             {
                 throw new SerializationException($"Runtime type '{this.RuntimeType}' is being serialized as array, but does not have 'Length' property.");
@@ -51,7 +51,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         {
             var arrayType = this.RuntimeType;
 
-            var resize = typeof(Array).GetTypeInfo().GetMethod("Resize").MakeGenericMethod(arrayType.GetElementType());
+            var resize = typeof(Array).GetMethod("Resize").MakeGenericMethod(arrayType.GetElementType());
             var body = new List<Expression>();
 
             var result = Expression.Variable(arrayType, "result");

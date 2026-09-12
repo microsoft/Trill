@@ -53,13 +53,13 @@ using Microsoft.StreamProcessing.Internal.Collections;
  } 
             this.Write("\r\n");
 
-  var typeInfos = types.Select(t =>
+  var poolColumnTypeEntries = types.Select(t =>
      Tuple.Create(String.Format("_{0}_Pool", Transformer.GetValidIdentifier(t)), t.GetCSharpSourceSyntax()));
 
             this.Write("\r\npublic sealed class ");
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write("<_Key, _Payload> : MemoryPool<_Key, _Payload>\r\n{\r\n");
- foreach (var t in typeInfos) { 
+ foreach (var t in poolColumnTypeEntries) { 
             this.Write("\r\n    public ColumnPool<");
             this.Write(this.ToStringHelper.ToStringWithCulture(t.Item2));
             this.Write("> ");
@@ -74,7 +74,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write("\r\n    public ");
             this.Write(this.ToStringHelper.ToStringWithCulture(className));
             this.Write("() : base(true)\r\n    {\r\n");
- foreach (var t in typeInfos) { 
+ foreach (var t in poolColumnTypeEntries) { 
             this.Write("\r\n        ");
             this.Write(this.ToStringHelper.ToStringWithCulture(t.Item1));
             this.Write(" = MemoryManager.GetColumnPool<");

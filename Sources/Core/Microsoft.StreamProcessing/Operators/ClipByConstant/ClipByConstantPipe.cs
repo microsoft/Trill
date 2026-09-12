@@ -24,7 +24,7 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<TKey, TPayload> output;
 
         [DataMember]
-        private SortedDictionary<long, MultiSet<ActiveEvent>> syncTimeMap = new SortedDictionary<long, MultiSet<ActiveEvent>>();
+        private SortedDictionary<long, MultiSet<ActiveEvent>> syncTimeMap = [];
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public ClipByConstantPipe() { }
@@ -61,7 +61,7 @@ namespace Microsoft.StreamProcessing
                     this.output[ind] = ae.Payload;
                     this.output.hash.col[ind] = ae.Hash;
 
-                    if (this.output.Count == Config.DataBatchSize) FlushContents();
+                    if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                 }
 
                 toDelete.Add(kvp.Key);
@@ -80,7 +80,7 @@ namespace Microsoft.StreamProcessing
                 {
                     if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
                     {
-                        ReachTime(batch.vsync.col[i]);
+                        this.ReachTime(batch.vsync.col[i]);
 
                         if (batch.vother.col[i] == StreamEvent.InfinitySyncTime)
                         {
@@ -94,7 +94,7 @@ namespace Microsoft.StreamProcessing
                             this.output[ind] = batch[i];
                             this.output.hash.col[ind] = batch.hash.col[i];
 
-                            if (this.output.Count == Config.DataBatchSize) FlushContents();
+                            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
 
                             if (!this.syncTimeMap.TryGetValue(sync, out var multiSet))
                             {
@@ -113,7 +113,7 @@ namespace Microsoft.StreamProcessing
                             this.output[ind] = batch[i];
                             this.output.hash.col[ind] = batch.hash.col[i];
 
-                            if (this.output.Count == Config.DataBatchSize) FlushContents();
+                            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         else
                         {
@@ -132,7 +132,7 @@ namespace Microsoft.StreamProcessing
                             this.output[ind] = payload;
                             this.output.hash.col[ind] = batch.hash.col[i];
 
-                            if (this.output.Count == Config.DataBatchSize) FlushContents();
+                            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
 
                             // Remove the corresponding start edge from the waiting list
                             this.syncTimeMap[other].Remove(new ActiveEvent { Payload = payload, Key = batch.key.col[i], Hash = batch.hash.col[i] });
@@ -141,7 +141,7 @@ namespace Microsoft.StreamProcessing
                     }
                     else if (batch.vother.col[i] == StreamEvent.PunctuationOtherTime)
                     {
-                        ReachTime(batch.vsync.col[i]);
+                        this.ReachTime(batch.vsync.col[i]);
 
                         int ind = this.output.Count++;
                         this.output.vsync.col[ind] = batch.vsync.col[i];
@@ -151,7 +151,7 @@ namespace Microsoft.StreamProcessing
                         this.output.hash.col[ind] = batch.hash.col[i];
                         this.output.bitvector.col[ind >> 6] |= 1L << (ind & 0x3f);
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                 }
             }
@@ -183,7 +183,7 @@ namespace Microsoft.StreamProcessing
             [DataMember]
             public int Hash;
 
-            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
+            public override readonly string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
     }
 

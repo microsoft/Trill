@@ -8,14 +8,15 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace Microsoft.StreamProcessing.Internal
 {
     internal static class SortedDictionaryGenerator
     {
         private const string Prefix = "GeneratedSortedDictionary";
-        private static readonly object sentinel = new object();
-        private static readonly Dictionary<Tuple<string, Type, Type>, Type> DictionaryTypes = new Dictionary<Tuple<string, Type, Type>, Type>();
+        private static readonly Lock sentinel = new();
+        private static readonly Dictionary<Tuple<string, Type, Type>, Type> DictionaryTypes = [];
 
         public static Expression<Func<SortedDictionary<TKey, TValue>>> CreateSortedDictionaryGenerator<TKey, TValue>(this IComparerExpression<TKey> comparerExp, QueryContainer container)
         {
@@ -36,7 +37,7 @@ namespace Microsoft.StreamProcessing.Internal
             var key = Tuple.Create(expression + string.Concat(vars.Select(o => o.ToString(CultureInfo.InvariantCulture))), typeof(TKey), typeof(TValue));
 
             Type temp;
-            lock (sentinel)
+            using (sentinel.EnterScope())
             {
                 if (!DictionaryTypes.TryGetValue(key, out temp))
                 {
@@ -47,12 +48,11 @@ namespace Microsoft.StreamProcessing.Internal
                     typeName = typeName.Replace("-", "_");
                     var builderCode = new GeneratedSortedDictionary(typeName).TransformText();
                     var assemblyReferences = Transformer.AssemblyReferencesNeededFor(typeof(SortedDictionary<,>));
-                    var a = Transformer.CompileSourceCode(builderCode, assemblyReferences, out string errorMessages);
 
-                    temp = a.GetType(typeName + "`2");
+                    temp = Transformer.CompileSourceCode(builderCode, assemblyReferences, a => a.GetType(typeName + "`2"), out string errorMessages);
                     temp = temp.MakeGenericType(typeof(TKey), typeof(TValue));
-                    var init = temp.GetTypeInfo().GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
-                    init.Invoke(null, new object[] { Comparer<TKey>.Create(expr.Compile()) });
+                    var init = temp.GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+                    init.Invoke(null, [Comparer<TKey>.Create(expr.Compile())]);
                     DictionaryTypes.Add(key, temp);
                 }
                 if (!container.TryGetSortedDictionaryType(key, out var other))
@@ -62,10 +62,8 @@ namespace Microsoft.StreamProcessing.Internal
         }
     }
 
-    internal partial class GeneratedSortedDictionary
+    internal partial class GeneratedSortedDictionary(string name)
     {
-        private readonly string name;
-
-        public GeneratedSortedDictionary(string name) => this.name = name;
+        private readonly string name = name;
     }
 }

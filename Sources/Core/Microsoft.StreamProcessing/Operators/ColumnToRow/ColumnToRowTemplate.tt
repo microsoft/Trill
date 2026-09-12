@@ -118,7 +118,7 @@ internal sealed class <#= className #><#= genericParameters #> : UnaryPipe<<#= T
 
                     destpayload[i] = (<#= TPayload #>)Activator.CreateInstance(typeof(<#= TPayload #>) <#= fieldArgs #> );
                     <# } else { #>
-                    <# if (!payloadType.GetTypeInfo().IsValueType) { #>
+                    <# if (!payloadType.IsValueType) { #>
 
                     destpayload[i] = new <#= TPayload #>();
                     <# } #>

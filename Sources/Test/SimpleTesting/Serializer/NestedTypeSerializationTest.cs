@@ -106,6 +106,6 @@ namespace SimpleTesting.Serializer
             }
         }
 
-        private TestClass GetTestData() => new TestClass { TestMember = new TestInterfaceImpl { Number = 1 } };
+        private TestClass GetTestData() => new() { TestMember = new TestInterfaceImpl { Number = 1 } };
     }
 }

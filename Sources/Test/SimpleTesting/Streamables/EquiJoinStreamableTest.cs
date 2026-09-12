@@ -124,7 +124,7 @@ namespace SimpleTesting
                 (l, r) => $"{l},{r}");
 
             var output = new List<StreamEvent<string>>();
-            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // Should match and egress immediately
@@ -284,7 +284,7 @@ namespace SimpleTesting
                     r => (r != null ? r[0].ToString() : null),
                     (l, r) => $"{l},{r}")
                 .ToStreamEventObservable()
-                .ForEachAsync(e => output.Add(e))
+                .ForEachAsync(output.Add)
                 .Wait();
 
             var correct = new PartitionedStreamEvent<string, string>[]

@@ -86,7 +86,7 @@ namespace SimpleTesting
                 (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
 
             var result = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData);
-            var resultAsync = result.ForEachAsync(o => output.Add(o));
+            var resultAsync = result.ForEachAsync(output.Add);
             container.Restore(null); // start the query
 
             Assert.IsTrue(output.ToArray().SequenceEqual(expected));
@@ -148,7 +148,7 @@ namespace SimpleTesting
                 (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
 
             var result = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData);
-            var resultAsync = result.ForEachAsync(o => output.Add(o));
+            var resultAsync = result.ForEachAsync(output.Add);
             container.Restore(null); // start the query
 
             Assert.IsTrue(output.ToArray().SequenceEqual(expected));
@@ -209,7 +209,7 @@ namespace SimpleTesting
                 (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
 
             var result = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData);
-            var resultAsync = result.ForEachAsync(o => output.Add(o));
+            var resultAsync = result.ForEachAsync(output.Add);
             container.Restore(null); // start the query
 
             Assert.IsTrue(output.ToArray().SequenceEqual(expected));
@@ -271,7 +271,7 @@ namespace SimpleTesting
                 (l, r) => new MyData3 { field1 = l.field1, field2 = l.field2, field3 = r.field3, field4 = r.field4 });
 
             var result = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges).Where(e => e.IsData);
-            var resultAsync = result.ForEachAsync(o => output.Add(o));
+            var resultAsync = result.ForEachAsync(output.Add);
             container.Restore(null); // start the query
 
             Assert.IsTrue(output.ToArray().SequenceEqual(expected));

@@ -53,8 +53,8 @@ namespace Microsoft.StreamProcessing
         protected Pipe(IStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream.Properties.IsColumnar, stream.Properties.QueryContainer)
         {
-            Contract.Requires(stream != null);
-            Contract.Requires(observer != null);
+            ArgumentNullException.ThrowIfNull(stream);
+            ArgumentNullException.ThrowIfNull(observer);
 
             this.Observer = observer;
             this.id = Guid.NewGuid();
@@ -86,7 +86,7 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual void OnCompleted()
         {
-            Dispose();
+            this.Dispose();
             this.Observer.OnCompleted();
         }
 
@@ -96,7 +96,7 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual void OnError(Exception exception)
         {
-            Dispose();
+            this.Dispose();
             this.Observer.OnError(exception);
         }
 
@@ -108,7 +108,7 @@ namespace Microsoft.StreamProcessing
         {
             if (!this.disposed)
             {
-                DisposeState();
+                this.DisposeState();
                 this.disposed = true;
             }
         }
@@ -125,7 +125,7 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual void OnFlush()
         {
-            FlushContents();
+            this.FlushContents();
             this.Observer.OnFlush();
         }
 

@@ -17,9 +17,9 @@ namespace Microsoft.StreamProcessing
         public MultiUnionStreamable(IStreamable<TKey, TSource>[] sources, bool register = true, bool guaranteedDisjoint = false)
             : base(sources.Skip(1).Select(o => o.Properties).Aggregate(sources[0].Properties, (r, p) => r.Union(p)))
         {
-            Invariant.IsNotNull(sources, "sources");
-            Invariant.IsPositive(sources.Length, "sources.Length");
-            Invariant.IsNotNull(sources[0], "sources[0]");
+            ArgumentNullException.ThrowIfNull(sources);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sources.Length, "sources.Length");
+            ArgumentNullException.ThrowIfNull(sources[0], "sources[0]");
 
             this.Sources = sources;
             this.registerScheduler = register;

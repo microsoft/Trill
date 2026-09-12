@@ -23,7 +23,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<Empty, TPayload> stream,
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventArrayObservable(
                 () => new StreamEvent<TPayload>[Config.DataBatchSize],
@@ -45,7 +45,7 @@ namespace Microsoft.StreamProcessing
             Func<StreamEvent<TPayload>[]> generator,
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventArrayObservable(
                 generator,
@@ -69,7 +69,7 @@ namespace Microsoft.StreamProcessing
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventArrayObservable(
                 () => new StreamEvent<TPayload>[Config.DataBatchSize],
@@ -95,7 +95,7 @@ namespace Microsoft.StreamProcessing
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventArrayObservable(
                 generator,
@@ -111,7 +111,7 @@ namespace Microsoft.StreamProcessing
             string identifer,
             ReshapingPolicy reshapingPolicy)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return (reshapingPolicy == ReshapingPolicy.None)
                 ? new StreamEventArrayObservable<TPayload>(stream, generator, container, identifer)
@@ -131,7 +131,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<Empty, TPayload> stream,
             Expression<Func<long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 () => new TResult[Config.DataBatchSize],
@@ -154,7 +154,7 @@ namespace Microsoft.StreamProcessing
             Func<TResult[]> generator,
             Expression<Func<long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 generator,
@@ -179,7 +179,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 () => new TResult[Config.DataBatchSize],
@@ -206,7 +206,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 generator,
@@ -221,7 +221,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifer)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new StartEdgeArrayObservable<TPayload, TResult>(stream, generator, constructor, container, identifer);
         }
@@ -239,7 +239,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<Empty, TPayload> stream,
             Expression<Func<long, long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 () => new TResult[Config.DataBatchSize],
@@ -262,7 +262,7 @@ namespace Microsoft.StreamProcessing
             Func<TResult[]> generator,
             Expression<Func<long, long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 generator,
@@ -287,7 +287,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 () => new TResult[Config.DataBatchSize],
@@ -314,7 +314,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<long, long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 generator,
@@ -329,7 +329,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifer)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new IntervalArrayObservable<TPayload, TResult>(stream.ToEndEdgeFreeStream(), generator, constructor, container, identifer);
         }
@@ -346,7 +346,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<PartitionKey<TKey>, TPayload> stream,
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventArrayObservable(
                 () => new PartitionedStreamEvent<TKey, TPayload>[Config.DataBatchSize],
@@ -369,7 +369,7 @@ namespace Microsoft.StreamProcessing
             Func<PartitionedStreamEvent<TKey, TPayload>[]> generator,
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventArrayObservable(
                 generator,
@@ -394,7 +394,7 @@ namespace Microsoft.StreamProcessing
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventArrayObservable(
                 () => new PartitionedStreamEvent<TKey, TPayload>[Config.DataBatchSize],
@@ -421,7 +421,7 @@ namespace Microsoft.StreamProcessing
             ReshapingPolicy reshapingPolicy = ReshapingPolicy.None,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToStreamEventArrayObservable(
                 generator,
@@ -437,7 +437,7 @@ namespace Microsoft.StreamProcessing
             string identifer,
             ReshapingPolicy reshapingPolicy)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return (reshapingPolicy == ReshapingPolicy.None)
                 ? new PartitionedStreamEventArrayObservable<TKey, TPayload>(stream, generator, container, identifer)
@@ -458,7 +458,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<PartitionKey<TKey>, TPayload> stream,
             Expression<Func<TKey, long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 () => new TResult[Config.DataBatchSize],
@@ -482,7 +482,7 @@ namespace Microsoft.StreamProcessing
             Func<TResult[]> generator,
             Expression<Func<TKey, long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 generator,
@@ -508,7 +508,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TKey, long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 () => new TResult[Config.DataBatchSize],
@@ -536,7 +536,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TKey, long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 generator,
@@ -551,7 +551,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifer)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new PartitionedStartEdgeArrayObservable<TKey, TPayload, TResult>(stream, generator, constructor, container, identifer);
         }
@@ -570,7 +570,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<PartitionKey<TKey>, TPayload> stream,
             Expression<Func<TKey, long, long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 () => new TResult[Config.DataBatchSize],
@@ -594,7 +594,7 @@ namespace Microsoft.StreamProcessing
             Func<TResult[]> generator,
             Expression<Func<TKey, long, long, TPayload, TResult>> constructor)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 generator,
@@ -620,7 +620,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TKey, long, long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 () => new TResult[Config.DataBatchSize],
@@ -648,7 +648,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TKey, long, long, TPayload, TResult>> constructor,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToTemporalArrayObservable(
                 generator,
@@ -663,7 +663,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifer)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new PartitionedIntervalArrayObservable<TKey, TPayload, TResult>(stream.ToEndEdgeFreeStream(), generator, constructor, container, identifer);
         }

@@ -64,11 +64,11 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             }
 
             return string.Format(CultureInfo.InvariantCulture, "[{0}] Objects Created - {1,5} - Queue Size - {2,5}\t{3}",
-                !SomethingIsWrong() ? " " : "X", this.createdObjects, totalCount, "CharArray");
+                !this.SomethingIsWrong() ? " " : "X", this.createdObjects, totalCount, "CharArray");
         }
 
         public override ColumnPoolBase Leaked
-            => ((!Config.DisableMemoryPooling) && SomethingIsWrong()) ? this : null;
+            => ((!Config.DisableMemoryPooling) && this.SomethingIsWrong()) ? this : null;
 
         private bool SomethingIsWrong()
         {

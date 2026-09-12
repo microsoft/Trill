@@ -65,9 +65,9 @@ namespace Microsoft.StreamProcessing
                     resultSelector,
                     reduceOptions))
         {
-            Contract.Requires(sourceLeft1 != null);
-            Contract.Requires(sourceLeft2 != null);
-            Contract.Requires(reducer != null);
+            ArgumentNullException.ThrowIfNull(sourceLeft1);
+            ArgumentNullException.ThrowIfNull(sourceLeft2);
+            ArgumentNullException.ThrowIfNull(reducer);
 
             this.sourceLeft1 = sourceLeft1;
             this.sourceLeft2 = sourceLeft2;
@@ -298,9 +298,9 @@ namespace Microsoft.StreamProcessing
                     resultSelector,
                     reduceOptions))
         {
-            Contract.Requires(sourceLeft1 != null);
-            Contract.Requires(sourceLeft2 != null);
-            Contract.Requires(reducer != null);
+            ArgumentNullException.ThrowIfNull(sourceLeft1);
+            ArgumentNullException.ThrowIfNull(sourceLeft2);
+            ArgumentNullException.ThrowIfNull(reducer);
 
             this.sourceLeft1 = sourceLeft1;
             this.sourceLeft2 = sourceLeft2;

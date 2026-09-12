@@ -8,8 +8,6 @@ namespace Microsoft.StreamProcessing
 {
     internal sealed class NullScheduler : IInternalScheduler
     {
-        public NullScheduler() { }
-
         public IStreamObserver<TK, TP> RegisterStreamObserver<TK, TP>(IStreamObserver<TK, TP> o, Guid? classId = null) => o;
 
         public void Stop() { }

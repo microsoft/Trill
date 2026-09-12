@@ -43,21 +43,21 @@ namespace SimpleTesting
 
             // (a)
             message.Count = 0;
-            Assert.IsTrue(message.MinTimestamp == StreamEvent.MinSyncTime, "Empty message with Count=0 has MinTimestamp <> 0.");
-            Assert.IsTrue(message.MaxTimestamp == StreamEvent.MaxSyncTime, "Empty message with Count=0 has MaxTimestamp <> inf-1.");
+            Assert.AreEqual(StreamEvent.MinSyncTime, message.MinTimestamp, "Empty message with Count=0 has MinTimestamp <> 0.");
+            Assert.AreEqual(StreamEvent.MaxSyncTime, message.MaxTimestamp, "Empty message with Count=0 has MaxTimestamp <> inf-1.");
 
             // (b)
             message.Count = 1;
             message.vsync.col[0] = TESTVALUE;
-            Assert.IsTrue(message.MinTimestamp == StreamEvent.MinSyncTime, "Empty message with Count=1 has MinTimestamp <> 0.");
-            Assert.IsTrue(message.MaxTimestamp == StreamEvent.MaxSyncTime, "Empty message with Count=1 has MaxTimestamp <> inf-1.");
+            Assert.AreEqual(StreamEvent.MinSyncTime, message.MinTimestamp, "Empty message with Count=1 has MinTimestamp <> 0.");
+            Assert.AreEqual(StreamEvent.MaxSyncTime, message.MaxTimestamp, "Empty message with Count=1 has MaxTimestamp <> inf-1.");
 
             // (c)
             message.Count = 1;
             message.vsync.col[0] = TESTVALUE;
             OccupyAt(message, 0);
-            Assert.IsTrue(message.MinTimestamp == TESTVALUE, "Empty message with Count=1 has MinTimestamp <> TESTVALUE.");
-            Assert.IsTrue(message.MaxTimestamp == TESTVALUE, "Empty message with Count=1 has MaxTimestamp <> TESTVALUE");
+            Assert.AreEqual(TESTVALUE, message.MinTimestamp, "Empty message with Count=1 has MinTimestamp <> TESTVALUE.");
+            Assert.AreEqual(TESTVALUE, message.MaxTimestamp, "Empty message with Count=1 has MaxTimestamp <> TESTVALUE");
             VacateAt(message, 0);
             message.vsync.col[0] = 0;
 
@@ -65,14 +65,14 @@ namespace SimpleTesting
             message.Count = 100;
             message.vsync.col[5] = TESTVALUE - 1;
             message.vsync.col[42] = TESTVALUE;
-            Assert.IsTrue(message.MinTimestamp == StreamEvent.MinSyncTime, "Empty message with Count>1 has MinTimestamp <> 0.");
-            Assert.IsTrue(message.MaxTimestamp == StreamEvent.MaxSyncTime, "Empty message with Count>1 has MaxTimestamp <> inf-1");
+            Assert.AreEqual(StreamEvent.MinSyncTime, message.MinTimestamp, "Empty message with Count>1 has MinTimestamp <> 0.");
+            Assert.AreEqual(StreamEvent.MaxSyncTime, message.MaxTimestamp, "Empty message with Count>1 has MaxTimestamp <> inf-1");
 
             // (e)
             OccupyAt(message, 5);
             OccupyAt(message, 42);
-            Assert.IsTrue(message.MinTimestamp == TESTVALUE - 1, "Non-empty message with Count>1 has MinTimestamp <> TESTVALUE-1.");
-            Assert.IsTrue(message.MaxTimestamp == TESTVALUE, "Non-empty message with Count>1 has MaxTimestamp <> TESTVALUE");
+            Assert.AreEqual(TESTVALUE - 1, message.MinTimestamp, "Non-empty message with Count>1 has MinTimestamp <> TESTVALUE-1.");
+            Assert.AreEqual(TESTVALUE, message.MaxTimestamp, "Non-empty message with Count>1 has MaxTimestamp <> TESTVALUE");
             VacateAt(message, 5);
             VacateAt(message, 42);
             message.vsync.col[5] = 0;
@@ -161,21 +161,21 @@ namespace SimpleTesting
 
             // (a)
             message.Count = 0;
-            Assert.IsTrue(message.MinTimestamp == StreamEvent.MinSyncTime, "Empty message with Count=0 has MinTimestamp <> 0.");
-            Assert.IsTrue(message.MaxTimestamp == StreamEvent.MaxSyncTime, "Empty message with Count=0 has MaxTimestamp <> inf-1.");
+            Assert.AreEqual(StreamEvent.MinSyncTime, message.MinTimestamp, "Empty message with Count=0 has MinTimestamp <> 0.");
+            Assert.AreEqual(StreamEvent.MaxSyncTime, message.MaxTimestamp, "Empty message with Count=0 has MaxTimestamp <> inf-1.");
 
             // (b)
             message.Count = 1;
             message.vsync.col[0] = TESTVALUE;
-            Assert.IsTrue(message.MinTimestamp == StreamEvent.MinSyncTime, "Empty message with Count=1 has MinTimestamp <> 0.");
-            Assert.IsTrue(message.MaxTimestamp == StreamEvent.MaxSyncTime, "Empty message with Count=1 has MaxTimestamp <> inf-1.");
+            Assert.AreEqual(StreamEvent.MinSyncTime, message.MinTimestamp, "Empty message with Count=1 has MinTimestamp <> 0.");
+            Assert.AreEqual(StreamEvent.MaxSyncTime, message.MaxTimestamp, "Empty message with Count=1 has MaxTimestamp <> inf-1.");
 
             // (c)
             message.Count = 1;
             message.vsync.col[0] = TESTVALUE;
             OccupyAt(message, 0);
-            Assert.IsTrue(message.MinTimestamp == TESTVALUE, "Empty message with Count=1 has MinTimestamp <> TESTVALUE.");
-            Assert.IsTrue(message.MaxTimestamp == TESTVALUE, "Empty message with Count=1 has MaxTimestamp <> TESTVALUE");
+            Assert.AreEqual(TESTVALUE, message.MinTimestamp, "Empty message with Count=1 has MinTimestamp <> TESTVALUE.");
+            Assert.AreEqual(TESTVALUE, message.MaxTimestamp, "Empty message with Count=1 has MaxTimestamp <> TESTVALUE");
             VacateAt(message, 0);
             message.vsync.col[0] = 0;
 
@@ -183,14 +183,14 @@ namespace SimpleTesting
             message.Count = 100;
             message.vsync.col[5] = TESTVALUE - 1;
             message.vsync.col[42] = TESTVALUE;
-            Assert.IsTrue(message.MinTimestamp == StreamEvent.MinSyncTime, "Empty message with Count>1 has MinTimestamp <> 0.");
-            Assert.IsTrue(message.MaxTimestamp == StreamEvent.MaxSyncTime, "Empty message with Count>1 has MaxTimestamp <> inf-1");
+            Assert.AreEqual(StreamEvent.MinSyncTime, message.MinTimestamp, "Empty message with Count>1 has MinTimestamp <> 0.");
+            Assert.AreEqual(StreamEvent.MaxSyncTime, message.MaxTimestamp, "Empty message with Count>1 has MaxTimestamp <> inf-1");
 
             // (e)
             OccupyAt(message, 5);
             OccupyAt(message, 42);
-            Assert.IsTrue(message.MinTimestamp == TESTVALUE - 1, "Non-empty message with Count>1 has MinTimestamp <> TESTVALUE-1.");
-            Assert.IsTrue(message.MaxTimestamp == TESTVALUE, "Non-empty message with Count>1 has MaxTimestamp <> TESTVALUE");
+            Assert.AreEqual(TESTVALUE - 1, message.MinTimestamp, "Non-empty message with Count>1 has MinTimestamp <> TESTVALUE-1.");
+            Assert.AreEqual(TESTVALUE, message.MaxTimestamp, "Non-empty message with Count>1 has MaxTimestamp <> TESTVALUE");
             VacateAt(message, 5);
             VacateAt(message, 42);
             message.vsync.col[5] = 0;
@@ -218,14 +218,14 @@ namespace SimpleTesting
             message.Count = 100;
             message.vsync.col[5] = TESTVALUE;
             message.vsync.col[42] = TESTVALUE - 1;
-            Assert.IsTrue(message.MinTimestamp == StreamEvent.MinSyncTime, "Empty message with Count>1 has MinTimestamp <> 0.");
-            Assert.IsTrue(message.MaxTimestamp == StreamEvent.MaxSyncTime, "Empty message with Count>1 has MaxTimestamp <> inf-1");
+            Assert.AreEqual(StreamEvent.MinSyncTime, message.MinTimestamp, "Empty message with Count>1 has MinTimestamp <> 0.");
+            Assert.AreEqual(StreamEvent.MaxSyncTime, message.MaxTimestamp, "Empty message with Count>1 has MaxTimestamp <> inf-1");
 
             // (e)
             OccupyAt(message, 5);
             OccupyAt(message, 42);
-            Assert.IsTrue(message.MinTimestamp == TESTVALUE - 1, "Non-empty message with Count>1 has MinTimestamp <> TESTVALUE-1.");
-            Assert.IsTrue(message.MaxTimestamp == TESTVALUE, "Non-empty message with Count>1 has MaxTimestamp <> TESTVALUE");
+            Assert.AreEqual(TESTVALUE - 1, message.MinTimestamp, "Non-empty message with Count>1 has MinTimestamp <> TESTVALUE-1.");
+            Assert.AreEqual(TESTVALUE, message.MaxTimestamp, "Non-empty message with Count>1 has MaxTimestamp <> TESTVALUE");
             VacateAt(message, 5);
             VacateAt(message, 42);
             message.vsync.col[5] = 0;

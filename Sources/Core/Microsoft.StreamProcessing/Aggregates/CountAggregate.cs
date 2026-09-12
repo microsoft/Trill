@@ -21,7 +21,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         private static readonly Expression<Func<ulong, ulong, ulong>> diff = (leftCount, rightCount) => leftCount - rightCount;
         public Expression<Func<ulong, ulong, ulong>> Difference() => diff;
 
-        private static readonly Expression<Func<ulong, ulong, ulong>> sum = (leftCount, rightCount) => leftCount - rightCount;
+        private static readonly Expression<Func<ulong, ulong, ulong>> sum = (leftCount, rightCount) => leftCount + rightCount;
         public Expression<Func<ulong, ulong, ulong>> Sum() => sum;
 
         private static readonly Expression<Func<ulong, ulong>> res = count => count;

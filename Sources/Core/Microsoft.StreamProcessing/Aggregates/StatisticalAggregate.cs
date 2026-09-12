@@ -3,14 +3,19 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Buffers;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
+using System.Numerics.Tensors;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.StreamProcessing.Aggregates
 {
     internal abstract class StatisticalAggregate : ListAggregateBase<double, double?>
     {
+        /// <summary>At or below this size, a simple scalar loop avoids renting a scratch buffer for the second pass.</summary>
+        internal const int VarianceScratchThreshold = 64;
+
         protected static double? ComputeStdev(List<double> valueList, bool useAsPopulation)
         {
             var variance = ComputeVariance(valueList, useAsPopulation);
@@ -22,19 +27,43 @@ namespace Microsoft.StreamProcessing.Aggregates
             if (list == null || list.Count == 0) return null;
             if (list.Count == 1) return useAsPopulation ? 0.0 : (double?)null;
 
-            // compute mean
-            // instead of dividing the sum of elements we divide each element to avoid a potential overflow
-            double mean = list.Sum(element => element / list.Count);
+            int n = list.Count;
+            var divisor = useAsPopulation ? n : n - 1;
+            ReadOnlySpan<double> span = CollectionsMarshal.AsSpan(list);
 
-            // for the population variance the divisor is n, for the sample variance the divisor is n - 1
-            var divisor = useAsPopulation ? list.Count : list.Count - 1;
+            // TensorPrimitives.Sum is SIMD-accelerated on supported hardware.
+            // Mean is computed as Sum/n rather than Sum(x/n) per element; this is faster and
+            // typically as accurate; for pathological magnitudes, per-element scaling avoids
+            // intermediate overflow in the sum (trade-off: rare edge case vs. hot-path cost).
+            double mean = TensorPrimitives.Sum(span) / n;
 
-            // compute variance
-            // instead of dividing the sum of differences we divide each difference to try to avoid a potential overflow
-            double variance = list.Select(element => element - mean).Sum(difference => (difference * difference) / divisor);
+            double variance;
+            if (n <= VarianceScratchThreshold)
+            {
+                variance = 0.0;
+                for (int i = 0; i < n; i++)
+                {
+                    double d = span[i] - mean;
+                    variance += (d * d) / divisor;
+                }
+            }
+            else
+            {
+                double[] rented = ArrayPool<double>.Shared.Rent(n);
+                try
+                {
+                    Span<double> scratch = rented.AsSpan(0, n);
+                    TensorPrimitives.Subtract(span, mean, scratch);
+                    TensorPrimitives.Multiply(scratch, scratch, scratch);
+                    variance = TensorPrimitives.Sum(scratch) / divisor;
+                }
+                finally
+                {
+                    ArrayPool<double>.Shared.Return(rented);
+                }
+            }
 
-            // difference or variance can still overflow
-            return double.IsInfinity(variance) ? null : (double?)variance;
+            return double.IsInfinity(variance) ? null : variance;
         }
     }
 

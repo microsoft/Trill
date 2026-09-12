@@ -4,6 +4,7 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Linq.Expressions;
@@ -77,7 +78,7 @@ namespace Microsoft.StreamProcessing
 
         internal static IDisposable CreateDisposable(params IDisposable[] disposables) => new CompoundDisposable(disposables);
 
-        internal static Dictionary<TK, TV> Clone<TK, TV>(this Dictionary<TK, TV> source) => new Dictionary<TK, TV>(source);
+        internal static Dictionary<TK, TV> Clone<TK, TV>(this Dictionary<TK, TV> source) => new(source);
 
         /// <summary>
         /// With a dictionary of lists, add a single element to a particular list. Create a new list if none exists at that key location.
@@ -91,7 +92,7 @@ namespace Microsoft.StreamProcessing
         {
             if (!dict.TryGetValue(key, out var list))
             {
-                list = new List<TValue>();
+                list = [];
                 dict.Add(key, list);
             }
             list.Add(value);
@@ -133,28 +134,15 @@ namespace Microsoft.StreamProcessing
             return Expression.Lambda<Comparison<T2>>(result, newParam1, newParam2);
         }
 
-        private sealed class CompoundDisposable : IDisposable
+        private sealed class CompoundDisposable(IDisposable[] disposables) : IDisposable
         {
-            private readonly IDisposable[] disposables;
-
-            public CompoundDisposable(IDisposable[] disposables)
-            {
-                Contract.Requires(disposables != null);
-
-                this.disposables = disposables;
-            }
-
-            #region IDisposable Members
-
             public void Dispose()
             {
-                foreach (IDisposable disposable in this.disposables.Where(d => d != null))
+                foreach (IDisposable disposable in disposables)
                 {
-                    disposable.Dispose();
+                    disposable?.Dispose();
                 }
             }
-
-            #endregion
         }
 
         private sealed class NullDisposable : IDisposable
@@ -182,44 +170,6 @@ namespace Microsoft.StreamProcessing
             }
 
             throw new InvalidOperationException("Only primitive types supported, unknown structural type " + type.FullName);
-        }
-    }
-
-    internal static class Invariant
-    {
-        public static T IsNotNull<T>(this T arg, string argName) where T : class
-        {
-            if (arg == null) throw new ArgumentNullException(argName);
-            return arg;
-        }
-
-        public static int IsPositive(this int arg, string argName)
-        {
-            if (arg <= 0) throw new ArgumentException("Value must be positive.", argName);
-            return arg;
-        }
-
-        public static long IsPositive(this long arg, string argName)
-        {
-            if (arg <= 0L) throw new ArgumentException("Value must be positive.", argName);
-            return arg;
-        }
-
-        public static int IsNonNegative(this int arg, string argName)
-        {
-            if (arg < 0) throw new ArgumentException("Value must be positive or 0.", argName);
-            return arg;
-        }
-
-        public static long IsNonNegative(this long arg, string argName)
-        {
-            if (arg < 0L) throw new ArgumentException("Value must be positive or 0.", argName);
-            return arg;
-        }
-
-        public static void IsTrue(bool assertion, string message)
-        {
-            if (!assertion) throw new ArgumentException(message);
         }
     }
 }

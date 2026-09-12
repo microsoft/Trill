@@ -49,7 +49,7 @@ namespace Microsoft.StreamProcessing
             <# if (!hasContainer) { #>this <# } #>IStreamable<Empty, TPayload> stream<# if (hasContainer) { #>,
             string identifier = null<# } #>)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToAtemporalObservable(<#= hasContainer ? "container" : "null" #>, <# if (hasContainer) { #>identifier ?? <# } #>Guid.NewGuid().ToString());
         }
@@ -60,7 +60,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new MonotonicObservable<TPayload>(stream, container, identifier);
         }

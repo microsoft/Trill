@@ -47,7 +47,7 @@ namespace Microsoft.StreamProcessing
 
             this.l1_spray = 0;
 
-            this.Observers = new List<IStreamObserver<TKey, TSpray>>();
+            this.Observers = [];
             this.pool = MemoryManager.GetMemoryPool<TKey, TSpray>(stream.Properties.IsColumnar);
         }
 

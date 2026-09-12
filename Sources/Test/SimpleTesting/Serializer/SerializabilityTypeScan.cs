@@ -73,12 +73,12 @@ namespace SimpleTesting
         }
 
         #region RULES FOR IGNORING CERTAIN TYPES AS IRRELEVANT
-        private static readonly HashSet<string> Assemblies = new HashSet<string>
+        private static readonly HashSet<string> Assemblies = new()
         {
             "Microsoft.StreamProcessing",
         };
 
-        private static readonly List<string> TypePartsToSkip = new List<string>
+        private static readonly List<string> TypePartsToSkip = new()
         {
             "Transformer",     // transformers can be skipped
             "Attribute",       // attributes can be skipped
@@ -118,13 +118,13 @@ namespace SimpleTesting
             "Microsoft.StreamProcessing.IO.TextFileDataReader",
         };
 
-        private static readonly List<Type> TypeHierarchiesToSkip = new List<Type>
+        private static readonly List<Type> TypeHierarchiesToSkip = new()
         {
             typeof(Checkpointable), // Skip pipes
             typeof(Streamable<,>),  // Skip streamables
         };
 
-        private static readonly HashSet<Type> TypesToSkip = new HashSet<Type>
+        private static readonly HashSet<Type> TypesToSkip = new()
         {
             typeof(QueryContainer),
             typeof(Process),
@@ -174,7 +174,7 @@ namespace SimpleTesting
         {
             if (name.Contains('`'))
                 name = name.Substring(0, name.LastIndexOf('`'));
-            return name + "<" + string.Join(", ", args.Select(a => DescribeType(a))) + ">";
+            return name + "<" + string.Join(", ", args.Select(DescribeType)) + ">";
         }
 
         private static string DescribeType(Type type)

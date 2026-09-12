@@ -10,7 +10,7 @@ namespace Microsoft.StreamProcessing
 {
     internal sealed class DiagnosticObservable<TPayload> : IObservable<OutOfOrderStreamEvent<TPayload>>, IObserver<OutOfOrderStreamEvent<TPayload>>, IDisposable
     {
-        private List<IObserver<OutOfOrderStreamEvent<TPayload>>> observers = new List<IObserver<OutOfOrderStreamEvent<TPayload>>>();
+        private List<IObserver<OutOfOrderStreamEvent<TPayload>>> observers = [];
 
         public IDisposable Subscribe(IObserver<OutOfOrderStreamEvent<TPayload>> observer)
         {
@@ -78,12 +78,13 @@ namespace Microsoft.StreamProcessing
         /// <param name="delta">The amount of time that the event was out of order.</param>
         /// <returns></returns>
         public static OutOfOrderStreamEvent<TPayload> Create<TPayload>(StreamEvent<TPayload> e, long? delta)
-            => new OutOfOrderStreamEvent<TPayload> { Event = e, TimeAdjustment = delta };
+            => new()
+            { Event = e, TimeAdjustment = delta };
     }
 
     internal sealed class PartitionedDiagnosticObservable<TKey, TPayload> : IObservable<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>, IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>, IDisposable
     {
-        private List<IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>> observers = new List<IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>>();
+        private List<IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>>> observers = [];
 
         public IDisposable Subscribe(IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>> observer)
         {
@@ -153,7 +154,8 @@ namespace Microsoft.StreamProcessing
         /// <param name="delta">The amount of time that the event was out of order.</param>
         /// <returns></returns>
         public static OutOfOrderPartitionedStreamEvent<TKey, TPayload> Create<TKey, TPayload>(PartitionedStreamEvent<TKey, TPayload> e, long? delta)
-            => new OutOfOrderPartitionedStreamEvent<TKey, TPayload> { Event = e, TimeAdjustment = delta };
+            => new()
+            { Event = e, TimeAdjustment = delta };
     }
 
 }

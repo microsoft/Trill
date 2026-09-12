@@ -26,7 +26,7 @@ namespace Microsoft.StreamProcessing
         public AlterLifetimeConstantDurationStatelessPipe(AlterLifetimeStreamable<TKey, TPayload> stream, IStreamObserver<TKey, TPayload> observer)
             : base(stream, observer)
         {
-            Contract.Requires(stream != null);
+            ArgumentNullException.ThrowIfNull(stream);
 
             this.constantDurationSelector = (long)((ConstantExpression)stream.DurationSelector.Body).Value;
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(stream.Properties.IsColumnar);

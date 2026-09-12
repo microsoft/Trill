@@ -36,10 +36,10 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState1, TOutput1>> aggregate1,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(merger);
 
             if (typeof(TOuterKey) == typeof(Empty) && source.Properties.IsStartEdgeOnly && Config.MapArity == 1)
             {
@@ -74,10 +74,10 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState1, TOutput1> aggregate1,
             Expression<Func<GroupSelectorInput<TInnerKey>, TOutput1, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(merger);
 
             return source.Map(keySelector).Reduce(s => s.Aggregate(aggregate1), merger);
         }
@@ -107,10 +107,10 @@ namespace Microsoft.StreamProcessing
 <#= IterateLine("            Func<Window<CompoundGroupKey<TOuterKey, TInnerKey>, TInput>, IAggregate<TInput, TState$, TOutput$>> aggregate$,", count) #>
             Expression<Func<GroupSelectorInput<TInnerKey>, <#= IterateComma("TOutput$", count) #>, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-<#= IterateLine("            Invariant.IsNotNull(aggregate$, nameof(aggregate$));", count) #>
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+<#= IterateLine("            ArgumentNullException.ThrowIfNull(aggregate$);", count) #>
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<<#= IterateComma("TOutput$", count) #>, StructTuple<<#= IterateComma("TOutput$", count) #>>>> aggregateMerger =
                 (<#= IterateComma("output$", count) #>) => new StructTuple<<#= IterateComma("TOutput$", count) #>>
@@ -160,10 +160,10 @@ namespace Microsoft.StreamProcessing
 <#= IterateLine("            IAggregate<TInput, TState$, TOutput$> aggregate$,", count) #>
             Expression<Func<GroupSelectorInput<TInnerKey>, <#= IterateComma("TOutput$", count) #>, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-<#= IterateLine("            Invariant.IsNotNull(aggregate$, nameof(aggregate$));", count) #>
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
+<#= IterateLine("            ArgumentNullException.ThrowIfNull(aggregate$);", count) #>
+            ArgumentNullException.ThrowIfNull(merger);
 
             Expression<Func<<#= IterateComma("TOutput$", count) #>, StructTuple<<#= IterateComma("TOutput$", count) #>>>> aggregateMerger =
                 (<#= IterateComma("output$", count) #>) => new StructTuple<<#= IterateComma("TOutput$", count) #>>

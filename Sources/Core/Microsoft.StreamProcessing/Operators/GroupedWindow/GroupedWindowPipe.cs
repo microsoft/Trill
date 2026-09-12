@@ -121,7 +121,7 @@ namespace Microsoft.StreamProcessing
                         if (col_vother[i] == long.MinValue)
                         {
                             // We have found a row that corresponds to punctuation
-                            OnPunctuation(col_vsync[i]);
+                            this.OnPunctuation(col_vsync[i]);
 
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
@@ -130,7 +130,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.hash.col[c] = 0;
                             this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         continue;
                     }
@@ -159,7 +159,7 @@ namespace Microsoft.StreamProcessing
                                 this.batch.payload.col[c] = this.finalResultSelector(this.currentKey, this.computeResult(this.currentState.state));
                                 this.batch.hash.col[c] = 0;
                                 this.batch.Count++;
-                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                                if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                             }
                             else
                             {
@@ -181,7 +181,7 @@ namespace Microsoft.StreamProcessing
                                     this.batch.payload.col[c] = this.finalResultSelector(iter1entry.key, this.computeResult(iter1entry.value.state));
                                     this.batch.hash.col[c] = 0;
                                     this.batch.Count++;
-                                    if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                                    if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                                 }
                                 else
                                 {
@@ -237,7 +237,7 @@ namespace Microsoft.StreamProcessing
                                         this.batch.payload.col[c] = this.finalResultSelector(this.currentKey, this.computeResult(this.currentState.state));
                                         this.batch.hash.col[c] = 0;
                                         this.batch.Count++;
-                                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                                        if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                                     }
 
                                     this.currentState.timestamp = syncTime;
@@ -265,7 +265,7 @@ namespace Microsoft.StreamProcessing
                                 this.batch.payload.col[c] = this.finalResultSelector(this.currentKey, this.computeResult(this.currentState.state));
                                 this.batch.hash.col[c] = 0;
                                 this.batch.Count++;
-                                if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                                if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                             }
 
                             this.currentState.timestamp = syncTime;
@@ -307,7 +307,7 @@ namespace Microsoft.StreamProcessing
                         this.batch.payload.col[c] = this.finalResultSelector(this.currentKey, this.computeResult(this.currentState.state));
                         this.batch.hash.col[c] = 0;
                         this.batch.Count++;
-                        if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                        if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                     }
                     else
                     {
@@ -330,7 +330,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.payload.col[c] = this.finalResultSelector(iter1entry.key, this.computeResult(iter1entry.value.state));
                             this.batch.hash.col[c] = 0;
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         else
                         {
@@ -379,6 +379,10 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        protected override void DisposeState() => this.batch.Free();
+        protected override void DisposeState()
+        {
+            this.heldAggregates.Dispose();
+            this.batch.Free();
+        }
     }
 }

@@ -4,6 +4,9 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
+#if CODEGEN_TIMING
+using System.Diagnostics;
+#endif
 using System.Diagnostics.Contracts;
 using System.Reflection;
 
@@ -32,8 +35,8 @@ namespace Microsoft.StreamProcessing
         internal static Tuple<Type, string> GenerateUnionPipeClass<TKey, TPayload>(
             UnionStreamable<TKey, TPayload> stream)
         {
-            Contract.Requires(stream != null);
-            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(BinaryPipe<TKey, TPayload, TPayload, TPayload>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            ArgumentNullException.ThrowIfNull(stream);
+            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(BinaryPipe<TKey, TPayload, TPayload, TPayload>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
 #if CODEGEN_TIMING
           Stopwatch sw = new Stopwatch();

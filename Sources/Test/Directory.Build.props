@@ -7,7 +7,6 @@
   <PropertyGroup>
     <Optimize>false</Optimize>
     
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)Microsoft.StreamProcessing.Test.ruleset</CodeAnalysisRuleSet>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -27,8 +26,4 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\Core\Microsoft.StreamProcessing\Microsoft.StreamProcessing.csproj" />
   </ItemGroup>
   
-  <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2" />
-  </ItemGroup>
-
 </Project>

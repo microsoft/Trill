@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting.Flush
 {
-    public class FlushTestBase : TestWithConfigSettingsAndMemoryLeakDetection
+    public abstract class FlushTestBase : TestWithConfigSettingsAndMemoryLeakDetection
     {
         private const int IntervalLength = 5;
         private const int BatchSize = 10; // TODO: this will be identical for FlushPolicy.None and FlushOnBatchBoundary without some filter operator
@@ -45,7 +45,7 @@ namespace SimpleTesting.Flush
 
             query = query.Where(this.FilterExpression);
             query = query.ClipEventDuration(IntervalLength);
-            var filtered = qc.RegisterOutput(query).ForEachAsync(o => OnEgress(o));
+            var filtered = qc.RegisterOutput(query).ForEachAsync(OnEgress);
             var process = qc.Restore();
 
             for (int i = 0; i < IngressEventCount; i++)
@@ -55,7 +55,7 @@ namespace SimpleTesting.Flush
                     OnIngress(inputSubject, StreamEvent.CreatePunctuation<int>(i));
 
                 // Make sure we don't have any pending events we expected to be egressed at this point
-                Assert.IsTrue(this.expectedOutput.Count == 0);
+                Assert.IsEmpty(this.expectedOutput);
             }
 
             OnCompleted(inputSubject);
@@ -115,7 +115,7 @@ namespace SimpleTesting.Flush
 
         private void OnEgress(StreamEvent<int> egressEvent)
         {
-            Assert.IsTrue(this.expectedOutput.Count > 0);
+            Assert.IsNotEmpty(this.expectedOutput);
             var expectedEvent = this.expectedOutput.Dequeue();
 
             Assert.IsTrue(expectedEvent.Equals(egressEvent));
@@ -150,16 +150,16 @@ namespace SimpleTesting.Flush
         private readonly PeriodicPunctuationPolicy punctuationPolicy;
         private readonly OnCompletedPolicy completedPolicy;
 
-        private readonly Queue<StreamEvent<int>> expectedOutput = new Queue<StreamEvent<int>>();
+        private readonly Queue<StreamEvent<int>> expectedOutput = new();
 
         // Events expected to be batched at ingress but not egressed
-        private readonly Queue<StreamEvent<int>> expectedBatch = new Queue<StreamEvent<int>>();
+        private readonly Queue<StreamEvent<int>> expectedBatch = new();
 
         // Events expected to be batched at the filtered operator but not egressed (only used for FlushPolicy.None)
-        private readonly Queue<StreamEvent<int>> filteredBatch = new Queue<StreamEvent<int>>();
+        private readonly Queue<StreamEvent<int>> filteredBatch = new();
         private int ingressCount = 0;
 
         // Events that have already been validated (kept around for debugging purposes)
-        private readonly List<StreamEvent<int>> validatedOutput = new List<StreamEvent<int>>();
+        private readonly List<StreamEvent<int>> validatedOutput = new();
     }
 }

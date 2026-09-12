@@ -9,6 +9,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace Microsoft.StreamProcessing
 {
@@ -38,9 +39,9 @@ namespace Microsoft.StreamProcessing
 
     internal static class EqualityComparerExpressionCache
     {
-        private static readonly ConcurrentDictionary<Type, object> typeComparerCache = new ConcurrentDictionary<Type, object>();
-        private static readonly ConcurrentDictionary<Type, object> equalsCache = new ConcurrentDictionary<Type, object>();
-        private static readonly ConcurrentDictionary<Type, object> getHashCodeCache = new ConcurrentDictionary<Type, object>();
+        private static readonly ConcurrentDictionary<Type, object> typeComparerCache = new();
+        private static readonly ConcurrentDictionary<Type, object> equalsCache = new();
+        private static readonly ConcurrentDictionary<Type, object> getHashCodeCache = new();
 
         static EqualityComparerExpressionCache()
         {
@@ -109,29 +110,20 @@ namespace Microsoft.StreamProcessing
     /// into an <see cref="IEqualityComparerExpression&lt;T&gt;"/>.
     /// </summary>
     /// <typeparam name="T">The type for which the equality comparers are defined.</typeparam>
-    public class EqualityComparerExpression<T> : IEqualityComparerExpression<T>
+    /// <param name="equalsExpr">
+    /// A function used to test equality on type <typeparamref name="T"/>.
+    /// </param>
+    /// <param name="getHashCodeExpr">
+    /// A function used to compute hash values for values of type <typeparamref name="T"/>.
+    /// </param>
+    /// <remarks>
+    /// Creates an instance to be used as an argument for many of the query methods.
+    /// </remarks>
+    public class EqualityComparerExpression<T>(Expression<Func<T, T, bool>> equalsExpr, Expression<Func<T, int>> getHashCodeExpr) : IEqualityComparerExpression<T>
     {
-        private static readonly object sentinel = new object();
-        private static readonly object equalsSentinel = new object();
-        private static readonly object getHashCodeSentinel = new object();
-
-        private readonly Expression<Func<T, T, bool>> EqualsExpr;
-        private readonly Expression<Func<T, int>> GetHashCodeExpr;
-
-        /// <summary>
-        /// Creates an instance to be used as an argument for many of the query methods.
-        /// </summary>
-        /// <param name="equalsExpr">
-        /// A function used to test equality on type <typeparamref name="T"/>.
-        /// </param>
-        /// <param name="getHashCodeExpr">
-        /// A function used to compute hash values for values of type <typeparamref name="T"/>.
-        /// </param>
-        public EqualityComparerExpression(Expression<Func<T, T, bool>> equalsExpr, Expression<Func<T, int>> getHashCodeExpr)
-        {
-            this.EqualsExpr = equalsExpr;
-            this.GetHashCodeExpr = getHashCodeExpr;
-        }
+        private static readonly Lock sentinel = new();
+        private static readonly Lock equalsSentinel = new();
+        private static readonly Lock getHashCodeSentinel = new();
 
         /// <summary>
         /// A default equality comparer.
@@ -140,125 +132,122 @@ namespace Microsoft.StreamProcessing
         {
             get
             {
-                var type = typeof(T).GetTypeInfo();
+                var type = typeof(T);
 
-                lock (sentinel)
+                using Lock.Scope _ = sentinel.EnterScope();
+                if (EqualityComparerExpressionCache.TryGetCachedComparer(out IEqualityComparerExpression<T> comparer))
+                    return comparer;
+
+                if (type.ImplementsIEqualityComparerExpression())
                 {
-                    if (EqualityComparerExpressionCache.TryGetCachedComparer(out IEqualityComparerExpression<T> comparer))
+                    if (type.IsValueType)
+                    {
+                        comparer = (IEqualityComparerExpression<T>)default(T);
+                        EqualityComparerExpressionCache.Add(comparer);
                         return comparer;
-
-                    if (type.ImplementsIEqualityComparerExpression())
-                    {
-                        if (type.IsValueType)
-                        {
-                            comparer = (IEqualityComparerExpression<T>)default(T);
-                            EqualityComparerExpressionCache.Add(comparer);
-                            return comparer;
-                        }
-                        var ctor = type.GetConstructor(Type.EmptyTypes);
-                        if (ctor != null)
-                        {
-                            var result = ctor.Invoke(Array.Empty<object>());
-                            comparer = (IEqualityComparerExpression<T>)result;
-                            EqualityComparerExpressionCache.Add(comparer);
-                            return comparer;
-                        }
                     }
-
-                    if (type.ImplementsIEqualityComparer())
+                    if (type.GetConstructor(Type.EmptyTypes) is { } ctor)
                     {
-                        // then fall back to using lambdas of the form:
-                        // (x,y) => o.IEqualityComparer<T>.Equals(x,y)
-                        // (x) => o.IEqualityComparer<T>.GetHashCode(x)
-                        // for an arbitrary o that is created of type T by calling its nullary ctor (if such a ctor exists)
-                        var genericInstanceOfComparerExpressionForIEqualityComparer = typeof(ComparerExpressionForIEqualityComparer<>).MakeGenericType(type);
-                        var ctorForComparerExpressionForIEqualityComparer = genericInstanceOfComparerExpressionForIEqualityComparer.GetTypeInfo().GetConstructor(new Type[] { type });
-                        if (ctorForComparerExpressionForIEqualityComparer != null)
+                        var result = ctor.Invoke([]);
+                        comparer = (IEqualityComparerExpression<T>)result;
+                        EqualityComparerExpressionCache.Add(comparer);
+                        return comparer;
+                    }
+                }
+
+                if (type.ImplementsIEqualityComparer())
+                {
+                    // then fall back to using lambdas of the form:
+                    // (x,y) => o.IEqualityComparer<T>.Equals(x,y)
+                    // (x) => o.IEqualityComparer<T>.GetHashCode(x)
+                    // for an arbitrary o that is created of type T by calling its nullary ctor (if such a ctor exists)
+                    var genericInstanceOfComparerExpressionForIEqualityComparer = typeof(ComparerExpressionForIEqualityComparer<>).MakeGenericType(type);
+                    var ctorForComparerExpressionForIEqualityComparer = genericInstanceOfComparerExpressionForIEqualityComparer.GetConstructor([type]);
+                    if (ctorForComparerExpressionForIEqualityComparer != null)
+                    {
+                        var ctorForType = type.GetConstructor(Type.EmptyTypes);
+                        if (ctorForType != null)
                         {
-                            var ctorForType = type.GetConstructor(Type.EmptyTypes);
-                            if (ctorForType != null)
+                            var instanceOfType = ctorForType.Invoke([]);
+                            if (instanceOfType != null)
                             {
-                                var instanceOfType = ctorForType.Invoke(Array.Empty<object>());
-                                if (instanceOfType != null)
-                                {
-                                    var result = ctorForComparerExpressionForIEqualityComparer.Invoke(new object[] { instanceOfType, });
-                                    comparer = (IEqualityComparerExpression<T>)result;
-                                    EqualityComparerExpressionCache.Add(comparer);
-                                    return comparer;
-                                }
+                                var result = ctorForComparerExpressionForIEqualityComparer.Invoke([instanceOfType,]);
+                                comparer = (IEqualityComparerExpression<T>)result;
+                                EqualityComparerExpressionCache.Add(comparer);
+                                return comparer;
                             }
                         }
                     }
+                }
 
-                    if (type.ImplementsIEquatable())
-                    {
-                        // then fall back to using lambdas of the form:
-                        // (x,y) => x.IEquatable<T>.Equals(y)
-                        // (x) => x.GetHashCode()
-                        var genericInstanceOfComparerExpressionForIEquatable = typeof(ComparerExpressionForIEquatable<>).MakeGenericType(type);
-                        var ctorForComparerExpressionForIEquatable = genericInstanceOfComparerExpressionForIEquatable.GetTypeInfo().GetConstructor(Type.EmptyTypes);
-                        var comparerExpression = ctorForComparerExpressionForIEquatable.Invoke(Array.Empty<object>());
-                        comparer = (IEqualityComparerExpression<T>)comparerExpression;
-                        EqualityComparerExpressionCache.Add(comparer);
-                        return comparer;
-                    }
-
-                    if (type.IsCompoundGroupKey(out var t1, out var t2))
-                    {
-                        // equivalent to: return new CompoundGroupKeyEqualityComparer<T1, T2>(EqualityComparerExpression<T1>.Default, EqualityComparerExpression<T2>.Default);
-                        var equalityComparerExpressionOfT1 = typeof(EqualityComparerExpression<>).MakeGenericType(t1);
-                        var defaultPropertyForT1 = equalityComparerExpressionOfT1.GetTypeInfo().GetProperty("Default");
-                        var default1 = defaultPropertyForT1.GetValue(null);
-
-                        var equalityComparerExpressionOfT2 = typeof(EqualityComparerExpression<>).MakeGenericType(t2);
-                        var defaultPropertyForT2 = equalityComparerExpressionOfT2.GetTypeInfo().GetProperty("Default");
-                        var default2 = defaultPropertyForT2.GetValue(null);
-
-                        var cgkec = typeof(CompoundGroupKeyEqualityComparer<,>);
-                        var genericInstance = cgkec.MakeGenericType(t1, t2);
-                        var ctor = genericInstance.GetTypeInfo().GetConstructor(new Type[] { equalityComparerExpressionOfT1, equalityComparerExpressionOfT2, });
-                        var result = ctor.Invoke(new object[] { default1, default2, });
-                        comparer = (IEqualityComparerExpression<T>)result;
-                        EqualityComparerExpressionCache.Add(comparer);
-                        return comparer;
-                    }
-
-                    if (type.IsGenericType && type.GenericTypeArguments.Length == 1 && type.GetGenericTypeDefinition() == typeof(PartitionKey<>))
-                    {
-                        var t = type.GenericTypeArguments[0];
-                        var equalityComparerExpressionOfT = typeof(EqualityComparerExpression<>).MakeGenericType(t);
-                        var defaultPropertyForT = equalityComparerExpressionOfT.GetTypeInfo().GetProperty("Default");
-                        var default1 = defaultPropertyForT.GetValue(null);
-
-                        var pkec = typeof(ComparerExpressionForPartitionKey<>);
-                        var genericInstance = pkec.MakeGenericType(t);
-                        var ctor = genericInstance.GetTypeInfo().GetConstructor(new Type[] { equalityComparerExpressionOfT, });
-                        var result = ctor.Invoke(new object[] { default1, });
-                        comparer = (IEqualityComparerExpression<T>)result;
-                        EqualityComparerExpressionCache.Add(comparer);
-                        return comparer;
-                    }
-
-                    if (type.IsAnonymousTypeName())
-                    {
-                        var tup = ExpressionsForAnonymousType(type);
-                        comparer = new EqualityComparerExpression<T>(tup.Item1, tup.Item2);
-                        EqualityComparerExpressionCache.Add(comparer);
-                        return comparer;
-                    }
-
-                    if (IsSimpleStruct(type))
-                    {
-                        var tup = ExpressionsForTypeByFields(type);
-                        comparer = new EqualityComparerExpression<T>(tup.Item1, tup.Item2);
-                        EqualityComparerExpressionCache.Add(comparer);
-                        return comparer;
-                    }
-
-                    comparer = new GenericEqualityComparerExpression<T>();
+                if (type.ImplementsIEquatable())
+                {
+                    // then fall back to using lambdas of the form:
+                    // (x,y) => x.IEquatable<T>.Equals(y)
+                    // (x) => x.GetHashCode()
+                    var genericInstanceOfComparerExpressionForIEquatable = typeof(ComparerExpressionForIEquatable<>).MakeGenericType(type);
+                    var ctorForComparerExpressionForIEquatable = genericInstanceOfComparerExpressionForIEquatable.GetConstructor(Type.EmptyTypes);
+                    var comparerExpression = ctorForComparerExpressionForIEquatable.Invoke([]);
+                    comparer = (IEqualityComparerExpression<T>)comparerExpression;
                     EqualityComparerExpressionCache.Add(comparer);
                     return comparer;
                 }
+
+                if (type.IsCompoundGroupKey(out var t1, out var t2))
+                {
+                    // equivalent to: return new CompoundGroupKeyEqualityComparer<T1, T2>(EqualityComparerExpression<T1>.Default, EqualityComparerExpression<T2>.Default);
+                    var equalityComparerExpressionOfT1 = typeof(EqualityComparerExpression<>).MakeGenericType(t1);
+                    var defaultPropertyForT1 = equalityComparerExpressionOfT1.GetProperty("Default");
+                    var default1 = defaultPropertyForT1.GetValue(null);
+
+                    var equalityComparerExpressionOfT2 = typeof(EqualityComparerExpression<>).MakeGenericType(t2);
+                    var defaultPropertyForT2 = equalityComparerExpressionOfT2.GetProperty("Default");
+                    var default2 = defaultPropertyForT2.GetValue(null);
+
+                    var cgkec = typeof(CompoundGroupKeyEqualityComparer<,>);
+                    var genericInstance = cgkec.MakeGenericType(t1, t2);
+                    var ctor = genericInstance.GetConstructor([equalityComparerExpressionOfT1, equalityComparerExpressionOfT2,]);
+                    var result = ctor.Invoke([default1, default2,]);
+                    comparer = (IEqualityComparerExpression<T>)result;
+                    EqualityComparerExpressionCache.Add(comparer);
+                    return comparer;
+                }
+
+                if (type.IsGenericType && type.GenericTypeArguments.Length == 1 && type.GetGenericTypeDefinition() == typeof(PartitionKey<>))
+                {
+                    var t = type.GenericTypeArguments[0];
+                    var equalityComparerExpressionOfT = typeof(EqualityComparerExpression<>).MakeGenericType(t);
+                    var defaultPropertyForT = equalityComparerExpressionOfT.GetProperty("Default");
+                    var default1 = defaultPropertyForT.GetValue(null);
+
+                    var pkec = typeof(ComparerExpressionForPartitionKey<>);
+                    var genericInstance = pkec.MakeGenericType(t);
+                    var ctor = genericInstance.GetConstructor([equalityComparerExpressionOfT,]);
+                    var result = ctor.Invoke([default1,]);
+                    comparer = (IEqualityComparerExpression<T>)result;
+                    EqualityComparerExpressionCache.Add(comparer);
+                    return comparer;
+                }
+
+                if (type.IsAnonymousTypeName())
+                {
+                    var tup = ExpressionsForAnonymousType(type);
+                    comparer = new EqualityComparerExpression<T>(tup.Item1, tup.Item2);
+                    EqualityComparerExpressionCache.Add(comparer);
+                    return comparer;
+                }
+
+                if (IsSimpleStruct(type))
+                {
+                    var tup = ExpressionsForTypeByFields(type);
+                    comparer = new EqualityComparerExpression<T>(tup.Item1, tup.Item2);
+                    EqualityComparerExpressionCache.Add(comparer);
+                    return comparer;
+                }
+
+                comparer = new GenericEqualityComparerExpression<T>();
+                EqualityComparerExpressionCache.Add(comparer);
+                return comparer;
             }
         }
 
@@ -269,14 +258,11 @@ namespace Microsoft.StreamProcessing
         {
             get
             {
-                Func<T, T, bool> equals;
-                lock (equalsSentinel)
+                using Lock.Scope _ = equalsSentinel.EnterScope();
+                if (!EqualityComparerExpressionCache.TryGetCachedEqualsFunction(out Func<T, T, bool> equals))
                 {
-                    if (!EqualityComparerExpressionCache.TryGetCachedEqualsFunction(out equals))
-                    {
-                        equals = Default.GetEqualsExpr().Compile();
-                        EqualityComparerExpressionCache.Add(equals);
-                    }
+                    equals = Default.GetEqualsExpr().Compile();
+                    EqualityComparerExpressionCache.Add(equals);
                 }
                 return equals;
             }
@@ -289,14 +275,11 @@ namespace Microsoft.StreamProcessing
         {
             get
             {
-                Func<T, int> getHashCode;
-                lock (getHashCodeSentinel)
+                using Lock.Scope _ = getHashCodeSentinel.EnterScope();
+                if (!EqualityComparerExpressionCache.TryGetCachedGetHashCodeFunction(out Func<T, int> getHashCode))
                 {
-                    if (!EqualityComparerExpressionCache.TryGetCachedGetHashCodeFunction(out getHashCode))
-                    {
-                        getHashCode = Default.GetGetHashCodeExpr().Compile();
-                        EqualityComparerExpressionCache.Add(getHashCode);
-                    }
+                    getHashCode = Default.GetGetHashCodeExpr().Compile();
+                    EqualityComparerExpressionCache.Add(getHashCode);
                 }
                 return getHashCode;
             }
@@ -308,7 +291,7 @@ namespace Microsoft.StreamProcessing
         /// ToString, but not overrides for GetHashCode or Equals. It also may not have
         /// any properties at all.
         /// </summary>
-        private static bool IsSimpleStruct(TypeInfo type)
+        private static bool IsSimpleStruct(Type type)
             => type.IsValueType
             && !type.IsPrimitive
             && !Recursive(type)
@@ -317,18 +300,18 @@ namespace Microsoft.StreamProcessing
             && type.GetProperties().Length == 0
             && type.GetFields().All(f => f.IsPublic);
 
-        private static bool Recursive(TypeInfo type)
+        private static bool Recursive(Type type)
         {
-            var hashSet = new HashSet<TypeInfo> { type };
+            var hashSet = new HashSet<Type> { type };
             return RecursiveHelper(type, hashSet);
         }
 
-        private static bool RecursiveHelper(TypeInfo type, HashSet<TypeInfo> hashSet)
+        private static bool RecursiveHelper(Type type, HashSet<Type> hashSet)
         {
             var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
             foreach (var field in fields)
             {
-                var t = field.FieldType.GetTypeInfo();
+                var t = field.FieldType;
                 if (!t.IsValueType || t.IsPrimitive) continue;
                 if (hashSet.Contains(t)) return true;
                 hashSet.Add(t);
@@ -343,13 +326,13 @@ namespace Microsoft.StreamProcessing
         /// An accessor for the equals function.
         /// </summary>
         /// <returns>The function used for equality tests.</returns>
-        public Expression<Func<T, T, bool>> GetEqualsExpr() => this.EqualsExpr;
+        public Expression<Func<T, T, bool>> GetEqualsExpr() => equalsExpr;
 
         /// <summary>
         /// An accessor for the hash function.
         /// </summary>
         /// <returns>The function used for computing hashes.</returns>
-        public Expression<Func<T, int>> GetGetHashCodeExpr() => this.GetHashCodeExpr;
+        public Expression<Func<T, int>> GetGetHashCodeExpr() => getHashCodeExpr;
 
         /// <summary>
         /// Returns (unfortunately) weakly-typed expressions for the two functions
@@ -378,7 +361,7 @@ namespace Microsoft.StreamProcessing
         private static Tuple<Expression<Func<T, T, bool>>, Expression<Func<T, int>>> ExpressionsForAnonymousType(Type t)
         {
             if (t == null || !t.IsAnonymousTypeName()) return null;
-            var properties = t.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var properties = t.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             var left = Expression.Parameter(t, "left");
             var right = Expression.Parameter(t, "right");
             var a = Expression.Parameter(t, "a");
@@ -394,7 +377,7 @@ namespace Microsoft.StreamProcessing
 
         private static Tuple<Expression<Func<T, T, bool>>, Expression<Func<T, int>>> ExpressionsForTypeByFields(Type t)
         {
-            var fields = t.GetTypeInfo().GetFields(BindingFlags.Public | BindingFlags.Instance);
+            var fields = t.GetFields(BindingFlags.Public | BindingFlags.Instance);
             var left = Expression.Parameter(t, "left");
             var right = Expression.Parameter(t, "right");
             var a = Expression.Parameter(t, "a");
@@ -421,13 +404,13 @@ namespace Microsoft.StreamProcessing
         private static Tuple<Expression, Expression> MakeEqualityAndHashCodeExpressions(ParameterExpression left, ParameterExpression right, ParameterExpression a, Type pType, string pName)
         {
             var equalityComparerTypeForPropertyType = typeof(EqualityComparerExpression<>).MakeGenericType(pType);
-            var equalityComparerDefaultProperty = equalityComparerTypeForPropertyType.GetTypeInfo().GetProperty("Default");
+            var equalityComparerDefaultProperty = equalityComparerTypeForPropertyType.GetProperty("Default");
             var getter = equalityComparerDefaultProperty.GetMethod;
             var equalityComparerExpressionObject = getter.Invoke(null, null);
             var equalityComparerExpressionObjectType = equalityComparerExpressionObject.GetType();
-            var equalityComparerExpression = (LambdaExpression)equalityComparerExpressionObjectType.GetTypeInfo()
+            var equalityComparerExpression = (LambdaExpression)equalityComparerExpressionObjectType
                 .GetMethod("GetEqualsExpr").Invoke(equalityComparerExpressionObject, null);
-            var hashCodeExpression = (LambdaExpression)equalityComparerExpressionObjectType.GetTypeInfo()
+            var hashCodeExpression = (LambdaExpression)equalityComparerExpressionObjectType
                 .GetMethod("GetGetHashCodeExpr").Invoke(equalityComparerExpressionObject, null);
             var inlinedEqualityExpression = equalityComparerExpression.ReplaceParametersInBody(Expression.PropertyOrField(left, pName), Expression.PropertyOrField(right, pName));
             var inlinedHashCodeExpression = hashCodeExpression.ReplaceParametersInBody(Expression.PropertyOrField(a, pName));
@@ -449,12 +432,12 @@ namespace Microsoft.StreamProcessing
         private static Expression<Func<T, int>> ComputeGetHashCodeExpr()
         {
             var type = typeof(T);
-            if (type.GetTypeInfo().IsGenericType)
+            if (type.IsGenericType)
             {
                 var def = type.GetGenericTypeDefinition();
                 if (def.Equals(typeof(Nullable<>)))
                 {
-                    var args = type.GetTypeInfo().GetGenericArguments();
+                    var args = type.GetGenericArguments();
                     Contract.Assume(args.Length == 1);
                     if (ShouldUseCastToInt(args[0]))
                     {
@@ -478,12 +461,12 @@ namespace Microsoft.StreamProcessing
             if (t == typeof(short)) return true;
             if (t == typeof(int)) return true;
             if (t == typeof(long)) return true;
-            if (t.GetTypeInfo().IsGenericType)
+            if (t.IsGenericType)
             {
                 var def = t.GetGenericTypeDefinition();
                 if (def.Equals(typeof(Nullable<>)))
                 {
-                    var args = t.GetTypeInfo().GetGenericArguments();
+                    var args = t.GetGenericArguments();
                     Contract.Assume(args.Length == 1);
                     return ShouldUseCastToInt(args[0]);
                 }
@@ -492,10 +475,9 @@ namespace Microsoft.StreamProcessing
         }
     }
 
-    internal class PrimitiveEqualityComparerExpression<T> : EqualityComparerExpression<T>
+    internal class PrimitiveEqualityComparerExpression<T>(Expression<Func<T, T, bool>> equalsExpr, Expression<Func<T, int>> getHashCodeExpr) 
+        : EqualityComparerExpression<T>(equalsExpr, getHashCodeExpr)
     {
-        public PrimitiveEqualityComparerExpression(Expression<Func<T, T, bool>> equalsExpr, Expression<Func<T, int>> getHashCodeExpr)
-            : base(equalsExpr, getHashCodeExpr) { }
     }
 
     internal sealed class StringEqualityComparerExpression : PrimitiveEqualityComparerExpression<string>
@@ -507,13 +489,10 @@ namespace Microsoft.StreamProcessing
         { }
     }
 
-    internal sealed class ComparerExpressionForIEqualityComparer<T> : EqualityComparerExpression<T> where T : IEqualityComparer<T>
+    internal sealed class ComparerExpressionForIEqualityComparer<T>(T t) : EqualityComparerExpression<T>(
+            equalsExpr: (x, y) => t.Equals(x, y),
+            getHashCodeExpr: (obj) => t.GetHashCode(obj)) where T : IEqualityComparer<T>
     {
-        public ComparerExpressionForIEqualityComparer(T t)
-            : base(
-                equalsExpr: (x, y) => t.Equals(x, y),
-                getHashCodeExpr: (obj) => t.GetHashCode(obj))
-        { }
     }
 
     internal sealed class ComparerExpressionForIEquatable<T> : PrimitiveEqualityComparerExpression<T> where T : IEquatable<T>
@@ -525,12 +504,9 @@ namespace Microsoft.StreamProcessing
         { }
     }
 
-    internal sealed class ComparerExpressionForPartitionKey<T> : IEqualityComparerExpression<PartitionKey<T>>
+    internal sealed class ComparerExpressionForPartitionKey<T>(IEqualityComparerExpression<T> comparer) : IEqualityComparerExpression<PartitionKey<T>>
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Comparer is a function and thus immutable")]
-        public readonly IEqualityComparerExpression<T> baseComparer;
-
-        public ComparerExpressionForPartitionKey(IEqualityComparerExpression<T> comparer) => this.baseComparer = comparer;
+        public readonly IEqualityComparerExpression<T> baseComparer = comparer;
 
         public Expression<Func<PartitionKey<T>, PartitionKey<T>, bool>> GetEqualsExpr()
         {

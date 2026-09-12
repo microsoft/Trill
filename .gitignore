@@ -26,6 +26,7 @@ bld/
 ## See more on package restore for Nuget 2.7 here: http://docs.nuget.org/consume/package-restore
 # Ignore NuGet Packages
 *.nupkg
+nupkg/
 # Ignore the packages folder
 **/packages/*
 # except build/, which is used as an MSBuild target.
@@ -58,3 +59,5 @@ $tf/pendingchanges.tfb
 $tf/properties.tf1
 project.lock.json
 **/.vs/
+
+.claude/

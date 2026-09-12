@@ -84,10 +84,7 @@ namespace Microsoft.StreamProcessing
             {
                 value = string.Empty;
             }
-            else if (startIndex > (value.Length - length))
-            {
-                throw new ArgumentOutOfRangeException(nameof(length));
-            }
+            else ArgumentOutOfRangeException.ThrowIfGreaterThan(startIndex, value.Length - length);
 
             this.m_MaxCapacity = 0x7fffffff;
             if (capacity == 0)
@@ -166,7 +163,7 @@ namespace Microsoft.StreamProcessing
                 }
                 else
                 {
-                    AppendHelper(value);
+                    this.AppendHelper(value);
                 }
             }
             return this;
@@ -174,7 +171,7 @@ namespace Microsoft.StreamProcessing
 
         public MyStringBuilder Append(char value, int repeatCount)
         {
-            if (repeatCount < 0) throw new ArgumentOutOfRangeException(nameof(repeatCount));
+            ArgumentOutOfRangeException.ThrowIfNegative(repeatCount);
             if (repeatCount != 0)
             {
                 int chunkLength = this.m_ChunkLength;
@@ -188,7 +185,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         this.m_ChunkLength = chunkLength;
-                        ExpandByABlock(repeatCount);
+                        this.ExpandByABlock(repeatCount);
                         chunkLength = 0;
                     }
                 }
@@ -216,7 +213,7 @@ namespace Microsoft.StreamProcessing
                     this.m_ChunkLength = this.m_ChunkChars.Length;
                 }
                 int minBlockCharCount = valueCount - count;
-                ExpandByABlock(minBlockCharCount);
+                this.ExpandByABlock(minBlockCharCount);
                 ThreadSafeCopy(value + count, this.m_ChunkChars, 0, minBlockCharCount);
                 this.m_ChunkLength = minBlockCharCount;
             }
@@ -228,7 +225,7 @@ namespace Microsoft.StreamProcessing
             fixed (char* str = value)
             {
                 char* charPtr = str;
-                Append(charPtr, value.Length);
+                this.Append(charPtr, value.Length);
             }
         }
 
@@ -323,8 +320,8 @@ namespace Microsoft.StreamProcessing
             }
             else
             {
-                var result = ToCharArrayWrapper();
-                Dispose();
+                var result = this.ToCharArrayWrapper();
+                this.Dispose();
                 return result;
             }
         }
@@ -335,12 +332,9 @@ namespace Microsoft.StreamProcessing
 
             set
             {
-                if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(value));
-                if (value > this.MaxCapacity)
-                    throw new ArgumentOutOfRangeException(nameof(value));
-                if (value < this.Length)
-                    throw new ArgumentOutOfRangeException(nameof(value));
+                ArgumentOutOfRangeException.ThrowIfNegative(value);
+                ArgumentOutOfRangeException.ThrowIfGreaterThan(value, this.MaxCapacity);
+                ArgumentOutOfRangeException.ThrowIfLessThan(value, this.Length);
                 if (this.Capacity != value)
                 {
                     int num = value - this.m_ChunkOffset;
@@ -357,8 +351,8 @@ namespace Microsoft.StreamProcessing
 
             set
             {
-                if (value < 0 || value > this.MaxCapacity)
-                    throw new ArgumentOutOfRangeException(nameof(value));
+                ArgumentOutOfRangeException.ThrowIfNegative(value);
+                ArgumentOutOfRangeException.ThrowIfGreaterThan(value, this.MaxCapacity);
                 int capacity = this.Capacity;
                 if ((value == 0) && (this.m_ChunkPrevious == null))
                 {
@@ -370,16 +364,16 @@ namespace Microsoft.StreamProcessing
                     int repeatCount = value - this.Length;
                     if (repeatCount > 0)
                     {
-                        Append('\0', repeatCount);
+                        this.Append('\0', repeatCount);
                     }
                     else
                     {
-                        var builder = FindChunkForIndex(value);
+                        var builder = this.FindChunkForIndex(value);
                         if (builder != this)
                         {
                             int num3 = capacity - builder.m_ChunkOffset;
                             char[] destinationArray = new char[num3];
-                            Array.Copy(builder.m_ChunkChars, destinationArray, builder.m_ChunkLength);
+                            builder.m_ChunkChars.AsSpan(0, builder.m_ChunkLength).CopyTo(destinationArray);
                             this.m_ChunkChars = destinationArray;
                             this.m_ChunkPrevious = builder.m_ChunkPrevious;
                             this.m_ChunkOffset = builder.m_ChunkOffset;

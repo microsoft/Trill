@@ -473,7 +473,7 @@ internal sealed class <#= className #><#= genericParameters #> : BinaryPipe<<#= 
         this.Observer.OnNext(output);
         <# GetOutputBatch(); #>
     }
-<# if (!noFields && !this.leftType.GetTypeInfo().IsValueType) { #>
+<# if (!noFields && !this.leftType.IsValueType) { #>
     [DataContract]
     private struct <#= ActiveEventType #>
     {

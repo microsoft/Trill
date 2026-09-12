@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Microsoft.StreamProcessing.Serializer;
 
 namespace Microsoft.StreamProcessing
@@ -18,7 +19,7 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     public sealed class QueryContainer
     {
-        private readonly object sentinel = new object();
+        private readonly Lock sentinel = new();
 
         /// <summary>
         /// ISurrogate to be used in serialization in checkpoints and serialized StreamMessage
@@ -26,18 +27,18 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public ISurrogate Surrogate { get; }
 
-        private readonly HashSet<string> ingressSites = new HashSet<string>();
-        private readonly HashSet<string> egressSites = new HashSet<string>();
+        private readonly HashSet<string> ingressSites = [];
+        private readonly HashSet<string> egressSites = [];
 
-        private readonly Dictionary<string, IIngressStreamObserver> ingressPipes = new Dictionary<string, IIngressStreamObserver>();
-        private readonly Dictionary<string, IEgressStreamObserver> egressPipes = new Dictionary<string, IEgressStreamObserver>();
+        private readonly Dictionary<string, IIngressStreamObserver> ingressPipes = [];
+        private readonly Dictionary<string, IEgressStreamObserver> egressPipes = [];
 
-        private readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> sortedDictionaryTypes = new ConcurrentDictionary<Tuple<string, Type, Type>, Type>();
-        private readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> fastDictionaryTypes = new ConcurrentDictionary<Tuple<string, Type, Type>, Type>();
-        private readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> fastDictionary2Types = new ConcurrentDictionary<Tuple<string, Type, Type>, Type>();
-        private readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> fastDictionary3Types = new ConcurrentDictionary<Tuple<string, Type, Type>, Type>();
+        private readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> sortedDictionaryTypes = new();
+        private readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> fastDictionaryTypes = new();
+        private readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> fastDictionary2Types = new();
+        private readonly ConcurrentDictionary<Tuple<string, Type, Type>, Type> fastDictionary3Types = new();
 
-        private readonly ConcurrentDictionary<Type, object> serializers = new ConcurrentDictionary<Type, object>();
+        private readonly ConcurrentDictionary<Type, object> serializers = new();
 
         /// <summary>
         /// Creates a new instance of a query container for use in checkpointable queries.
@@ -102,13 +103,13 @@ namespace Microsoft.StreamProcessing
         {
             if (this.serializers.TryGetValue(type, out object serializer)) return serializer;
             var serializerStatic = typeof(StreamSerializer);
-            var method = serializerStatic.GetTypeInfo().GetMethod("Create", new Type[] { typeof(SerializerSettings) }).MakeGenericMethod(type);
+            var method = serializerStatic.GetMethod("Create", [typeof(SerializerSettings)]).MakeGenericMethod(type);
             var settings = new SerializerSettings()
             {
                 KnownTypes = this.CollectedGeneratedTypes,
                 Surrogate = this.Surrogate,
             };
-            serializer = method.Invoke(/* static */ null, new object[] { settings });
+            serializer = method.Invoke(/* static */ null, [settings]);
             this.serializers[type] = serializer;
             return serializer;
         }
@@ -124,21 +125,19 @@ namespace Microsoft.StreamProcessing
         /// <returns>A Process object that represents an active, running query that can be checkpointed.</returns>
         public Process Restore(Stream inputStream = null)
         {
-            lock (this.sentinel)
-            {
-                // Restoration should not happen until after all streams have been both registered and subscribed
-                if (this.ingressSites.Count != this.ingressPipes.Count) throw new StreamProcessingException("Not all input data sources have been subscribed to.");
-                if (this.egressSites.Count != this.egressPipes.Count) throw new StreamProcessingException("Not all output data sources have been subscribed to.");
+            using var _ = this.sentinel.EnterScope();
+            // Restoration should not happen until after all streams have been both registered and subscribed
+            if (this.ingressSites.Count != this.ingressPipes.Count) throw new StreamProcessingException("Not all input data sources have been subscribed to.");
+            if (this.egressSites.Count != this.egressPipes.Count) throw new StreamProcessingException("Not all output data sources have been subscribed to.");
 
-                var process = new Process(this.ingressPipes.Clone(), this.egressPipes.Clone());
+            var process = new Process(this.ingressPipes.Clone(), this.egressPipes.Clone());
 
-                process.Restore(inputStream);
+            process.Restore(inputStream);
 
-                this.ingressPipes.Clear();
-                this.egressPipes.Clear();
+            this.ingressPipes.Clear();
+            this.egressPipes.Clear();
 
-                return process;
-            }
+            return process;
         }
     }
 
@@ -151,7 +150,7 @@ namespace Microsoft.StreamProcessing
         private const int CheckpointVersionMinor = 0;
         private const int CheckpointVersionRevision = 0;
 
-        private readonly object sentinel = new object();
+        private readonly Lock sentinel = new();
         private readonly Dictionary<string, IIngressStreamObserver> IngressPipes;
         private Dictionary<string, PlanNode> queryPlans;
 
@@ -170,75 +169,79 @@ namespace Microsoft.StreamProcessing
         /// <param name="outputStream">The stream to which the checkpoint is recorded.</param>
         public void Checkpoint(Stream outputStream)
         {
-            Invariant.IsNotNull(outputStream, nameof(outputStream));
-            lock (this.sentinel)
-            {
-                outputStream.Write(BitConverter.GetBytes(CheckpointVersionMajor), 0, sizeof(int));
-                outputStream.Write(BitConverter.GetBytes(CheckpointVersionMinor), 0, sizeof(int));
-                outputStream.Write(BitConverter.GetBytes(CheckpointVersionRevision), 0, sizeof(int));
+            ArgumentNullException.ThrowIfNull(outputStream);
+            using var _ = this.sentinel.EnterScope();
+            Span<byte> buffer = stackalloc byte[sizeof(int) * 3];
+            BitConverter.TryWriteBytes(buffer, CheckpointVersionMajor);
+            BitConverter.TryWriteBytes(buffer[sizeof(int)..], CheckpointVersionMinor);
+            BitConverter.TryWriteBytes(buffer[(2 * sizeof(int))..], CheckpointVersionRevision);
+            outputStream.Write(buffer);
 
-                try
+            try
+            {
+                foreach (var pipe in this.IngressPipes.Values)
                 {
-                    foreach (var pipe in this.IngressPipes.Values)
-                    {
-                        pipe.Checkpoint(outputStream);
-                    }
+                    pipe.Checkpoint(outputStream);
                 }
-                catch (Exception)
+            }
+            catch (Exception)
+            {
+                foreach (var pipe in this.IngressPipes.Values)
                 {
-                    foreach (var pipe in this.IngressPipes.Values)
-                    {
-                        pipe.Reset();
-                    }
-                    throw;
+                    pipe.Reset();
                 }
+                throw;
             }
         }
 
         internal void Restore(Stream inputStream)
         {
-            lock (this.sentinel)
+            using var _ = this.sentinel.EnterScope();
+            if (inputStream != null)
             {
-                if (inputStream != null)
-                {
-                    byte[] buffer = new byte[sizeof(int)];
-                    inputStream.Read(buffer, 0, sizeof(int));
-                    int major = BitConverter.ToInt32(buffer, 0);
-                    inputStream.Read(buffer, 0, sizeof(int));
-                    int minor = BitConverter.ToInt32(buffer, 0);
-                    inputStream.Read(buffer, 0, sizeof(int));
-                    int revision = BitConverter.ToInt32(buffer, 0);
-
-                    if (major != CheckpointVersionMajor || minor != CheckpointVersionMinor || revision != CheckpointVersionRevision)
-                    {
-                        throw new StreamProcessingException(
-                            string.Format(
-                                CultureInfo.InvariantCulture,
-                                "Version mismatch between the stream state and the engine.  Expected: {0}.{1}.{2}, Found: {3}.{4}.{5}",
-                                CheckpointVersionMajor,
-                                CheckpointVersionMinor,
-                                CheckpointVersionRevision,
-                                major,
-                                minor,
-                                revision));
-                    }
-                }
-
+                Span<byte> buffer = stackalloc byte[sizeof(int) * 3];
                 try
                 {
-                    foreach (var pipe in this.IngressPipes.Values)
-                    {
-                        pipe.Restore(inputStream);
-                    }
+                    inputStream.ReadExactly(buffer);
                 }
-                catch (Exception)
+                catch (EndOfStreamException e)
                 {
-                    foreach (var pipe in this.IngressPipes.Values)
-                    {
-                        pipe.Reset();
-                    }
-                    throw;
+                    throw new StreamProcessingException("Failed to read checkpoint version information from the stream.", e);
                 }
+
+                int major = BitConverter.ToInt32(buffer);
+                int minor = BitConverter.ToInt32(buffer[sizeof(int)..]);
+                int revision = BitConverter.ToInt32(buffer[(2 * sizeof(int))..]);
+
+                if (major != CheckpointVersionMajor || minor != CheckpointVersionMinor || revision != CheckpointVersionRevision)
+                {
+                    throw new StreamProcessingException(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "Version mismatch between the stream state and the engine.  Expected: {0}.{1}.{2}, Found: {3}.{4}.{5}",
+                            CheckpointVersionMajor,
+                            CheckpointVersionMinor,
+                            CheckpointVersionRevision,
+                            major,
+                            minor,
+                            revision));
+                }
+            }
+
+            try
+            {
+                foreach (var pipe in this.IngressPipes.Values)
+                {
+                    pipe.Restore(inputStream);
+                }
+            }
+            catch (Exception)
+            {
+                foreach (var pipe in this.IngressPipes.Values)
+                {
+                    pipe.Reset();
+                }
+                throw;
             }
         }
 
@@ -247,23 +250,21 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public void Flush()
         {
-            lock (this.sentinel)
+            using var _ = this.sentinel.EnterScope();
+            try
             {
-                try
+                foreach (var pipe in this.IngressPipes.Values)
                 {
-                    foreach (var pipe in this.IngressPipes.Values)
-                    {
-                        pipe.OnFlush();
-                    }
+                    pipe.OnFlush();
                 }
-                catch (Exception)
+            }
+            catch (Exception)
+            {
+                foreach (var pipe in this.IngressPipes.Values)
                 {
-                    foreach (var pipe in this.IngressPipes.Values)
-                    {
-                        pipe.Reset();
-                    }
-                    throw;
+                    pipe.Reset();
                 }
+                throw;
             }
         }
 
@@ -298,7 +299,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (this.queryPlans == null)
                 {
-                    this.queryPlans = new Dictionary<string, PlanNode>();
+                    this.queryPlans = [];
                     foreach (var i in this.IngressPipes)
                     {
                         i.Value.ProduceQueryPlan(null);

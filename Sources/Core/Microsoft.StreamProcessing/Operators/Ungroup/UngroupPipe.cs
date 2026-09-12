@@ -44,10 +44,10 @@ namespace Microsoft.StreamProcessing
 
         public unsafe void OnNext(StreamMessage<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> batch)
         {
-            outPool.Get(out StreamMessage<TOuterKey, TResult> tmp);
+            this.outPool.Get(out StreamMessage<TOuterKey, TResult> tmp);
             tmp.AllocatePayload();
-            outPool.GetKey(out tmp.key);
-            tmp.hash = batch.hash.MakeWritable(outPool.intPool);
+            this.outPool.GetKey(out tmp.key);
+            tmp.hash = batch.hash.MakeWritable(this.outPool.intPool);
             var count = batch.Count;
 
             tmp.vsync = batch.vsync;
@@ -73,7 +73,7 @@ namespace Microsoft.StreamProcessing
                         continue;
                     }
                     destkey[i] = srckey[i].outerGroup;
-                    tmp[i] = resultSelector(srckey[i].innerGroup, batch[i]);
+                    tmp[i] = this.resultSelector(srckey[i].innerGroup, batch[i]);
                     desthash[i] = this.outerHashCode(destkey[i]);
                 }
             }
@@ -81,7 +81,7 @@ namespace Microsoft.StreamProcessing
             tmp.Count = count;
             tmp.Seal();
 
-            Observer.OnNext(tmp);
+            this.Observer.OnNext(tmp);
 
             batch.ReleasePayload();
             batch.key.Return();
@@ -89,16 +89,16 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-            => Observer.ProduceQueryPlan(new UngroupPlanNode(
+            => this.Observer.ProduceQueryPlan(new UngroupPlanNode(
                 previous,
                 this,
                 typeof(CompoundGroupKey<TOuterKey, TInnerKey>),
                 typeof(TOuterKey),
                 typeof(TInnerResult),
                 typeof(TResult),
-                resultSelectorExpr,
+                this.resultSelectorExpr,
                 false,
-                errorMessages));
+                this.errorMessages));
 
         public override int CurrentlyBufferedOutputCount => 0;
 
@@ -137,10 +137,10 @@ namespace Microsoft.StreamProcessing
 
         public unsafe void OnNext(StreamMessage<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> batch)
         {
-            outPool.Get(out StreamMessage<TOuterKey, TResult> tmp);
+            this.outPool.Get(out StreamMessage<TOuterKey, TResult> tmp);
             tmp.AllocatePayload();
-            outPool.GetKey(out tmp.key);
-            tmp.hash = batch.hash.MakeWritable(outPool.intPool);
+            this.outPool.GetKey(out tmp.key);
+            tmp.hash = batch.hash.MakeWritable(this.outPool.intPool);
             var count = batch.Count;
 
             tmp.vsync = batch.vsync;
@@ -157,7 +157,7 @@ namespace Microsoft.StreamProcessing
                 {
                     if ((srcbv[i >> 6] & (1L << (i & 0x3f))) != 0) continue;
                     destkey[i] = srckey[i].outerGroup;
-                    tmp[i] = resultSelector(srckey[i].innerGroup, batch[i]);
+                    tmp[i] = this.resultSelector(srckey[i].innerGroup, batch[i]);
                     desthash[i] = this.outerHashCode(destkey[i]);
                 }
             }
@@ -165,7 +165,7 @@ namespace Microsoft.StreamProcessing
             tmp.Count = count;
             tmp.Seal();
 
-            Observer.OnNext(tmp);
+            this.Observer.OnNext(tmp);
 
             batch.ReleasePayload();
             batch.key.Return();
@@ -173,16 +173,16 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-            => Observer.ProduceQueryPlan(new UngroupPlanNode(
+            => this.Observer.ProduceQueryPlan(new UngroupPlanNode(
                 previous,
                 this,
                 typeof(CompoundGroupKey<TOuterKey, TInnerKey>),
                 typeof(TOuterKey),
                 typeof(TInnerResult),
                 typeof(TResult),
-                resultSelectorExpr,
+                this.resultSelectorExpr,
                 false,
-                errorMessages));
+                this.errorMessages));
 
         public override int CurrentlyBufferedOutputCount => 0;
 
@@ -216,10 +216,10 @@ namespace Microsoft.StreamProcessing
 
         public unsafe void OnNext(StreamMessage<TInnerKey, TInnerResult> batch)
         {
-            outPool.Get(out StreamMessage<Empty, TResult> tmp);
+            this.outPool.Get(out StreamMessage<Empty, TResult> tmp);
             tmp.AllocatePayload();
-            outPool.GetKey(out tmp.key);
-            tmp.hash = batch.hash.MakeWritable(outPool.intPool);
+            this.outPool.GetKey(out tmp.key);
+            tmp.hash = batch.hash.MakeWritable(this.outPool.intPool);
             var count = batch.Count;
 
             tmp.vsync = batch.vsync;
@@ -240,14 +240,14 @@ namespace Microsoft.StreamProcessing
                 {
                     if ((srcbv[i >> 6] & (1L << (i & 0x3f))) != 0) continue;
                     destkey[i] = unit;
-                    tmp[i] = resultSelector(srckey[i], batch[i]);
+                    tmp[i] = this.resultSelector(srckey[i], batch[i]);
                 }
             }
 
             tmp.Count = count;
             tmp.Seal();
 
-            Observer.OnNext(tmp);
+            this.Observer.OnNext(tmp);
 
             batch.ReleasePayload();
             batch.key.Return();
@@ -255,16 +255,16 @@ namespace Microsoft.StreamProcessing
         }
 
         public override void ProduceQueryPlan(PlanNode previous)
-            => Observer.ProduceQueryPlan(new UngroupPlanNode(
+            => this.Observer.ProduceQueryPlan(new UngroupPlanNode(
                 previous,
                 this,
                 typeof(TInnerKey),
                 typeof(Empty),
                 typeof(TInnerResult),
                 typeof(TResult),
-                resultSelectorExpr,
+                this.resultSelectorExpr,
                 false,
-                errorMessages));
+                this.errorMessages));
 
         public override int CurrentlyBufferedOutputCount => 0;
 

@@ -41,7 +41,7 @@ namespace Microsoft.StreamProcessing
 <#  } #>
     /// <typeparam name="TPayload">Type of payload for the event</typeparam>
     [DataContract]
-    public struct <#= classNames[i] #><<#= genericParameters[i] #>>
+    public readonly struct <#= classNames[i] #><<#= genericParameters[i] #>>
     {
 <#  if (partitioned)
     { #>
@@ -49,7 +49,7 @@ namespace Microsoft.StreamProcessing
         /// Partition key for the event
         /// </summary>
         [DataMember]
-        public TKey PartitionKey;
+        public readonly TKey PartitionKey;
 <#  } #>
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Microsoft.StreamProcessing
         /// For a punctuation, sync-time is set to the timetamp of the punctuation, while other-time is set to a negative value
         /// </summary>
         [DataMember]
-        internal long SyncTime;
+        internal readonly long SyncTime;
 
         /// <summary>
         /// End-time for the event
@@ -70,13 +70,13 @@ namespace Microsoft.StreamProcessing
         /// For a punctuation, sync-time is set to the timetamp of the punctuation, while other-time is set to a negative value
         /// </summary>
         [DataMember]
-        internal long OtherTime;
+        internal readonly long OtherTime;
 
         /// <summary>
         /// Payload of the event
         /// </summary>
         [DataMember]
-        public TPayload Payload;
+        public readonly TPayload Payload;
 
         /// <summary>
         /// Kind of the event

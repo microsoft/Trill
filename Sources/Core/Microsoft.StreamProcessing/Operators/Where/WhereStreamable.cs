@@ -12,23 +12,23 @@ namespace Microsoft.StreamProcessing
     internal sealed class WhereStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         public readonly Expression<Func<TPayload, bool>> Predicate;
 
         public WhereStreamable(IStreamable<TKey, TPayload> source, Expression<Func<TPayload, bool>> predicate)
             : base(source, source.Properties.Where(predicate))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(predicate != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(predicate);
 
             this.Predicate = predicate;
-            Initialize();
+            this.Initialize();
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
             => this.Properties.IsColumnar
-            ? GetPipe(observer)
+            ? this.GetPipe(observer)
             : new WherePipe<TKey, TPayload>(this, observer);
 
         protected override bool CanGenerateColumnar()

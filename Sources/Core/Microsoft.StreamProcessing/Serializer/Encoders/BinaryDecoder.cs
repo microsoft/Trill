@@ -3,6 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
@@ -11,10 +12,9 @@ using Microsoft.StreamProcessing.Internal.Collections;
 
 namespace Microsoft.StreamProcessing.Serializer
 {
-    internal sealed partial class BinaryDecoder : BinaryBase
+    internal sealed partial class BinaryDecoder(Stream stream)
+        : BinaryBase(stream)
     {
-        public BinaryDecoder(Stream stream) : base(stream) { }
-
         public bool DecodeBool() => this.stream.ReadByte() != 0;
 
         public byte DecodeByte() => (byte)this.stream.ReadByte();
@@ -110,19 +110,19 @@ namespace Microsoft.StreamProcessing.Serializer
 
         public float DecodeFloat()
         {
-            var value = new byte[4];
-            ReadAllRequiredBytes(value);
+            Span<byte> value = stackalloc byte[4];
+            this.ReadAllRequiredBytes(value);
             if (!BitConverter.IsLittleEndian)
             {
-                Array.Reverse(value);
+                value.Reverse();
             }
-            return BitConverter.ToSingle(value, 0);
+            return BitConverter.ToSingle(value);
         }
 
         public double DecodeDouble()
         {
-            var value = new byte[8];
-            ReadAllRequiredBytes(value);
+            Span<byte> value = stackalloc byte[8];
+            this.ReadAllRequiredBytes(value);
             long longValue = value[0]
                 | (long)value[1] << 0x8
                 | (long)value[2] << 0x10
@@ -136,20 +136,38 @@ namespace Microsoft.StreamProcessing.Serializer
 
         public byte[] DecodeByteArray()
         {
-            int arraySize = DecodeInt();
+            int arraySize = this.DecodeInt();
+            if (arraySize == 0)
+            {
+                return [];
+            }
             var array = new byte[arraySize];
-            if (arraySize > 0) ReadAllRequiredBytes(array);
+            this.ReadAllRequiredBytes(array);
             return array;
         }
 
-        public string DecodeString() => Encoding.UTF8.GetString(DecodeByteArray());
+        public string DecodeString()
+        {
+            int byteCount = this.DecodeInt();
+            if (byteCount == 0) return string.Empty;
+            var rented = ArrayPool<byte>.Shared.Rent(byteCount);
+            try
+            {
+                this.ReadAllRequiredBytes(rented.AsSpan(0, byteCount));
+                return Encoding.UTF8.GetString(rented, 0, byteCount);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(rented);
+            }
+        }
 
         public int DecodeArrayChunk()
         {
-            int result = DecodeInt();
+            int result = this.DecodeInt();
             if (result < 0)
             {
-                DecodeLong();
+                this.DecodeLong();
                 result = -result;
             }
             return result;
@@ -157,40 +175,41 @@ namespace Microsoft.StreamProcessing.Serializer
 
         public Guid DecodeGuid()
         {
-            var array = new byte[16];
-            ReadAllRequiredBytes(array);
-            return new Guid(array);
+            Span<byte> value = stackalloc byte[16];
+            this.ReadAllRequiredBytes(value);
+            return new Guid(value);
         }
 
-        private void ReadAllRequiredBytes(byte[] array)
+        private void ReadAllRequiredBytes(Span<byte> span)
         {
-            int read = this.stream.ReadAllRequiredBytes(array, 0, array.Length);
-            if (read != array.Length)
+            int totalRead = 0;
+            while (totalRead < span.Length)
             {
-                throw new SerializationException(
-                    $"Unexpected end of stream: '{array.Length - read}' bytes missing.");
+                int read = this.stream.Read(span[totalRead..]);
+                if (read == 0)
+                    throw new SerializationException($"Unexpected end of stream: '{span.Length - totalRead}' bytes missing.");
+                totalRead += read;
             }
         }
 
         private int ReadIntFixed()
         {
-            var value = new byte[4];
-            this.stream.ReadAllRequiredBytes(value, 0, value.Length);
-            int intValue = value[0]
+            Span<byte> value = stackalloc byte[4];
+            this.ReadAllRequiredBytes(value);
+            return value[0]
                 | value[1] << 0x8
                 | value[2] << 0x10
                 | value[3] << 0x18;
-            return intValue;
         }
 
         public unsafe T[] DecodeArray<T>() where T : struct
         {
-            long sizeInBytes = DecodeLong();
+            long sizeInBytes = this.DecodeLong();
             int length = (int)(sizeInBytes / typeof(T).GetSizeOf());
 
             var buffer = AllocateColumnBatch<byte>((int)sizeInBytes);
             var result = AllocateArray<T>(length);
-            FromStream(result, length, buffer.col);
+            this.FromStream(result, length, buffer.col);
             buffer.Return();
 
             return result;
@@ -198,16 +217,16 @@ namespace Microsoft.StreamProcessing.Serializer
 
         public ColumnBatch<T> DecodeColumnBatch<T>() where T : struct
         {
-            long sizeInBytes = DecodeLong();
+            long sizeInBytes = this.DecodeLong();
             int usedlength = (int)((sizeInBytes - sizeof(int)) / typeof(T).GetSizeOf());
 
-            int length = ReadIntFixed();
+            int length = this.ReadIntFixed();
 
             var buffer = AllocateColumnBatch<byte>((int)(sizeInBytes - sizeof(int)));
             var result = AllocateColumnBatch<T>(length);
             result.UsedLength = usedlength;
 
-            FromStream(result.col, result.UsedLength, buffer.col);
+            this.FromStream(result.col, result.UsedLength, buffer.col);
             buffer.Return();
 
             return result;
@@ -224,14 +243,14 @@ namespace Microsoft.StreamProcessing.Serializer
             Buffer.BlockCopy(buffer, 0, blob, 0, buffer.Length);
         }
 
-        private static readonly Lazy<DoublingArrayPool<byte>> bytePool = new Lazy<DoublingArrayPool<byte>>(MemoryManager.GetDoublingArrayPool<byte>);
-        private static readonly Lazy<CharArrayPool> charArrayPool = new Lazy<CharArrayPool>(MemoryManager.GetCharArrayPool);
+        private static readonly Lazy<DoublingArrayPool<byte>> bytePool = new(MemoryManager.GetDoublingArrayPool<byte>);
+        private static readonly Lazy<CharArrayPool> charArrayPool = new(MemoryManager.GetCharArrayPool);
 
         public CharArrayWrapper Decode_CharArrayWrapper()
         {
-            int header = DecodeInt();
-            int usedLength = DecodeInt();
-            int length = DecodeInt();
+            int header = this.DecodeInt();
+            int usedLength = this.DecodeInt();
+            this.DecodeInt(); // unused length
 
             CharArrayWrapper result;
             if (usedLength == 0)
@@ -242,12 +261,12 @@ namespace Microsoft.StreamProcessing.Serializer
             if (header == 0)
             {
                 var buffer = AllocateColumnBatch<byte>(result.UsedLength * sizeof(char));
-                FromStream(result.charArray.content, result.UsedLength, buffer.col);
+                this.FromStream(result.charArray.content, result.UsedLength, buffer.col);
                 buffer.Return();
             }
             else
             {
-                var encodedSize = DecodeInt();
+                var encodedSize = this.DecodeInt();
                 byte[] buffer;
 
                 if (encodedSize > 0)
@@ -265,7 +284,7 @@ namespace Microsoft.StreamProcessing.Serializer
 
         public string[] DecodeStringArray()
         {
-            var cb = Decode_ColumnBatch_String();
+            var cb = this.Decode_ColumnBatch_String();
             string[] result = new string[cb.UsedLength];
             cb.col.CopyTo(result, 0);
             cb.ReturnClear();
@@ -274,7 +293,7 @@ namespace Microsoft.StreamProcessing.Serializer
 
         public ColumnBatch<string> Decode_ColumnBatch_String()
         {
-            var usedLength = ReadIntFixed();
+            var usedLength = this.ReadIntFixed();
             if (usedLength == 0)
             {
                 var result = AllocateColumnBatch<string>(Config.DataBatchSize);
@@ -282,12 +301,12 @@ namespace Microsoft.StreamProcessing.Serializer
                 return result;
             }
 
-            int maxLength = ReadIntFixed();
+            int maxLength = this.ReadIntFixed();
 
             if (maxLength <= short.MaxValue)
             {
-                var lengths = DecodeColumnBatch<short>();
-                var caw = Decode_CharArrayWrapper();
+                var lengths = this.DecodeColumnBatch<short>();
+                var caw = this.Decode_CharArrayWrapper();
 
                 var result = AllocateColumnBatch<string>(Config.DataBatchSize);
                 result.UsedLength = lengths.UsedLength;
@@ -313,10 +332,10 @@ namespace Microsoft.StreamProcessing.Serializer
             else
             {
                 var result = AllocateColumnBatch<string>(Config.DataBatchSize);
-                result.UsedLength = ReadIntFixed();
+                result.UsedLength = this.ReadIntFixed();
                 for (int i = 0; i < result.UsedLength; i++)
                 {
-                    result.col[i] = DecodeString();
+                    result.col[i] = this.DecodeString();
                 }
                 return result;
             }

@@ -21,7 +21,7 @@ namespace Microsoft.StreamProcessing
     /// </summary>
     /// <typeparam name="TPayload">Type of payload for the event</typeparam>
     [DataContract]
-    public struct StreamEvent<TPayload>
+    public readonly struct StreamEvent<TPayload>
     {
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing
         /// For a punctuation, sync-time is set to the timetamp of the punctuation, while other-time is set to a negative value
         /// </summary>
         [DataMember]
-        internal long SyncTime;
+        internal readonly long SyncTime;
 
         /// <summary>
         /// End-time for the event
@@ -42,13 +42,13 @@ namespace Microsoft.StreamProcessing
         /// For a punctuation, sync-time is set to the timetamp of the punctuation, while other-time is set to a negative value
         /// </summary>
         [DataMember]
-        internal long OtherTime;
+        internal readonly long OtherTime;
 
         /// <summary>
         /// Payload of the event
         /// </summary>
         [DataMember]
-        public TPayload Payload;
+        public readonly TPayload Payload;
 
         /// <summary>
         /// Kind of the event
@@ -139,20 +139,15 @@ namespace Microsoft.StreamProcessing
         /// <returns>A string representing the event for display</returns>
         public override string ToString()
         {
-            switch (this.Kind)
+            return this.Kind switch
             {
-                case StreamEventKind.Start:
-                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)},{this.Payload}]";
-                case StreamEventKind.End:
-                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)},{TimeAsString(this.OtherTime)},{this.Payload}]";
-                case StreamEventKind.Interval:
-                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)}-{TimeAsString(this.OtherTime)},{this.Payload}]";
-                case StreamEventKind.Punctuation:
-                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)}]";
-                case StreamEventKind.LowWatermark:
-                    return $"[{this.Kind}: {TimeAsString(this.SyncTime)}]";
-            }
-            return string.Empty;
+                StreamEventKind.Start => $"[{this.Kind}: {TimeAsString(this.SyncTime)},{this.Payload}]",
+                StreamEventKind.End => $"[{this.Kind}: {TimeAsString(this.SyncTime)},{TimeAsString(this.OtherTime)},{this.Payload}]",
+                StreamEventKind.Interval => $"[{this.Kind}: {TimeAsString(this.SyncTime)}-{TimeAsString(this.OtherTime)},{this.Payload}]",
+                StreamEventKind.Punctuation => $"[{this.Kind}: {TimeAsString(this.SyncTime)}]",
+                StreamEventKind.LowWatermark => $"[{this.Kind}: {TimeAsString(this.SyncTime)}]",
+                _ => string.Empty,
+            };
         }
 
         private static string TimeAsString(long t)
@@ -178,13 +173,13 @@ namespace Microsoft.StreamProcessing
     /// <typeparam name="TKey">Type of payload for the event</typeparam>
     /// <typeparam name="TPayload">Type of payload for the event</typeparam>
     [DataContract]
-    public struct PartitionedStreamEvent<TKey, TPayload>
+    public readonly struct PartitionedStreamEvent<TKey, TPayload>
     {
         /// <summary>
         /// Partition key for the event
         /// </summary>
         [DataMember]
-        public TKey PartitionKey;
+        public readonly TKey PartitionKey;
 
         /// <summary>
         /// Start-time for the event
@@ -194,7 +189,7 @@ namespace Microsoft.StreamProcessing
         /// For a punctuation, sync-time is set to the timetamp of the punctuation, while other-time is set to a negative value
         /// </summary>
         [DataMember]
-        internal long SyncTime;
+        internal readonly long SyncTime;
 
         /// <summary>
         /// End-time for the event
@@ -204,13 +199,13 @@ namespace Microsoft.StreamProcessing
         /// For a punctuation, sync-time is set to the timetamp of the punctuation, while other-time is set to a negative value
         /// </summary>
         [DataMember]
-        internal long OtherTime;
+        internal readonly long OtherTime;
 
         /// <summary>
         /// Payload of the event
         /// </summary>
         [DataMember]
-        public TPayload Payload;
+        public readonly TPayload Payload;
 
         /// <summary>
         /// Kind of the event

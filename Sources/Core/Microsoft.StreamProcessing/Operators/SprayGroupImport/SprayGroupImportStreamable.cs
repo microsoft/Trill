@@ -27,7 +27,7 @@ namespace Microsoft.StreamProcessing
             IComparerExpression<TSpray> sprayComparer = null)
             : base(source.Properties.ToMulticore(true))
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.totalBranches = totalBranches;
             this.Source = source;
@@ -49,7 +49,7 @@ namespace Microsoft.StreamProcessing
             this.numBranches++;
             if (this.pipe == null)
             {
-                this.pipe = CreatePipe(observer);
+                this.pipe = this.CreatePipe(observer);
 
             }
             var o = (!this.multicast) && (this.spraySortOrderComparer == null)

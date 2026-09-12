@@ -134,7 +134,7 @@ namespace Microsoft.StreamProcessing
     [EditorBrowsable(EditorBrowsableState.Never)]
     public sealed class ElasticCircularBuffer<T> : IEnumerable<T>
     {
-        private readonly LinkedList<CircularBuffer<T>> buffers = new LinkedList<CircularBuffer<T>>();
+        private readonly LinkedList<CircularBuffer<T>> buffers = new();
         private LinkedListNode<CircularBuffer<T>> head;
         private LinkedListNode<CircularBuffer<T>> tail;
 
@@ -144,7 +144,7 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public ElasticCircularBuffer()
         {
-            var node = new LinkedListNode<CircularBuffer<T>>(new CircularBuffer<T>());
+            var node = new LinkedListNode<CircularBuffer<T>>(new());
             this.buffers.AddFirst(node);
             this.tail = this.head = node;
             this.Count = 0;
@@ -164,7 +164,7 @@ namespace Microsoft.StreamProcessing
                 if (next == null) next = this.buffers.First;
                 if (!next.Value.IsEmpty())
                 {
-                    next = new LinkedListNode<CircularBuffer<T>>(new CircularBuffer<T>());
+                    next = new LinkedListNode<CircularBuffer<T>>(new());
                     this.buffers.AddAfter(this.tail, next);
                 }
 
@@ -180,7 +180,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="value"></param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Add(T value) => Enqueue(ref value);
+        public void Add(T value) => this.Enqueue(ref value);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -260,6 +260,6 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.GetEnumerator();
     }
 }

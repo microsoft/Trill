@@ -149,27 +149,19 @@ namespace Microsoft.StreamProcessing
         }
     }
 
-    internal sealed class QueuedMessageObservable<TKey, TPayload> : IObservable<QueuedMessage<StreamMessage<TKey, TPayload>>>
+    internal sealed class QueuedMessageObservable<TKey, TPayload>(
+        IStreamable<TKey, TPayload> stream
+    ) : IObservable<QueuedMessage<StreamMessage<TKey, TPayload>>>
     {
-        private readonly IStreamable<TKey, TPayload> streamable;
-
-        public QueuedMessageObservable(IStreamable<TKey, TPayload> stream) => this.streamable = stream;
-
         public IDisposable Subscribe(IObserver<QueuedMessage<StreamMessage<TKey, TPayload>>> observer)
-            => this.streamable.Subscribe(new QueuedMessageObserver<TKey, TPayload>(observer));
+            => stream.Subscribe(new QueuedMessageObserver<TKey, TPayload>(observer));
     }
 
-    internal sealed class QueuedMessageObserver<TKey, TPayload> : IStreamObserver<TKey, TPayload>, IDisposable
+    internal sealed class QueuedMessageObserver<TKey, TPayload>(
+        IObserver<QueuedMessage<StreamMessage<TKey, TPayload>>> observer
+    ) : IStreamObserver<TKey, TPayload>, IDisposable
     {
-        private readonly IObserver<QueuedMessage<StreamMessage<TKey, TPayload>>> observer;
-
-        public QueuedMessageObserver(IObserver<QueuedMessage<StreamMessage<TKey, TPayload>>> observer)
-        {
-            this.observer = observer;
-            this.ClassId = Guid.NewGuid();
-        }
-
-        public Guid ClassId { get; }
+        public Guid ClassId { get; } = Guid.NewGuid();
 
         public int CurrentlyBufferedOutputCount => 0;
 
@@ -177,10 +169,10 @@ namespace Microsoft.StreamProcessing
 
         public void Checkpoint(Stream stream) { }
         public void Dispose() => throw new NotImplementedException();
-        public void OnCompleted() => this.observer.OnCompleted();
+        public void OnCompleted() => observer.OnCompleted();
         public void OnError(Exception error) => throw error;
-        public void OnFlush() => this.observer.OnNext(new QueuedMessage<StreamMessage<TKey, TPayload>> { Kind = MessageKind.Flush });
-        public void OnNext(StreamMessage<TKey, TPayload> value) => this.observer.OnNext(new QueuedMessage<StreamMessage<TKey, TPayload>> { Kind = MessageKind.DataBatch, Message = value });
+        public void OnFlush() => observer.OnNext(new() { Kind = MessageKind.Flush });
+        public void OnNext(StreamMessage<TKey, TPayload> value) => observer.OnNext(new() { Kind = MessageKind.DataBatch, Message = value });
         public void ProduceQueryPlan(PlanNode previous) { }
         public void Reset() { }
         public void Restore(Stream stream) { }

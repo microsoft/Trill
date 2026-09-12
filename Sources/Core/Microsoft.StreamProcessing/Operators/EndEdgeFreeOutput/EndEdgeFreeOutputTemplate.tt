@@ -305,7 +305,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
         }
     }
 
-<# if (!noFields && !this.payloadType.GetTypeInfo().IsValueType) { #>
+<# if (!noFields && !this.payloadType.IsValueType) { #>
     [DataContract]
     public struct <#= ActiveEventType #>
     {

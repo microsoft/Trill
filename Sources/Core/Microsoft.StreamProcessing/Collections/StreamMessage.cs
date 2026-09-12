@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
@@ -73,38 +74,6 @@ namespace Microsoft.StreamProcessing
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class StreamMessage<TKey, TPayload> : StreamMessage
     {
-        private const int M1 = 0x5555;
-
-        private const int M2 = 0x3333;
-
-        private const int M4 = 0x0F0F;
-
-        // The four values below are used for ComputeCount
-        private static readonly byte[] SixteenBitHammingWeights = PreCalculateHammingWeights();
-
-        /// <summary>
-        /// A one time pre-computation of the hamming weights for 16 bit fields, since we aren't exactly short of
-        /// memory we can use this to vastly speed up our calculations of hamming weights on the 64
-        /// bit vector fields at a miniscule cost in memory.
-        /// </summary>
-        /// <returns></returns>
-        private static byte[] PreCalculateHammingWeights()
-        {
-            var sixteenBitHammingWeights = new byte[65536];
-            for (int i = 0; i < 65536; ++i)
-            {
-                // See http://en.wikipedia.org/wiki/Hamming_weight
-                var currentValue = i;
-                currentValue -= (currentValue >> 1) & M1;
-                currentValue = (currentValue & M2) + ((currentValue >> 2) & M2);
-                currentValue = (currentValue + (currentValue >> 4)) & M4;
-                currentValue += currentValue >> 8;
-                sixteenBitHammingWeights[i] = (byte)(currentValue & 0x7f);
-            }
-
-            return sixteenBitHammingWeights;
-        }
-
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
@@ -199,7 +168,7 @@ namespace Microsoft.StreamProcessing
             this.memPool.Get(out this.hash);
             this.memPool.GetBV(out this.bitvector);
             this.memPool.GetKey(out this.key);
-            AllocatePayload();
+            this.AllocatePayload();
         }
 
         /// <summary>
@@ -215,7 +184,7 @@ namespace Microsoft.StreamProcessing
             this.hash.pool = memPool.intPool;
             this.bitvector.pool = memPool.bitvectorPool;
 
-            AssignPayloadPool(memPool);
+            this.AssignPayloadPool(memPool);
         }
 
         /// <summary>
@@ -659,7 +628,7 @@ namespace Microsoft.StreamProcessing
             Contract.Ensures(this.IsSealed);
             this.isSealed = true;
 
-            EnsureConsistency();
+            this.EnsureConsistency();
         }
 
         /// <summary>
@@ -724,8 +693,8 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Free()
         {
-            Release();
-            Return();
+            this.Release();
+            this.Return();
         }
 
         /// <summary>
@@ -756,7 +725,7 @@ namespace Microsoft.StreamProcessing
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.AppendFormat(CultureInfo.InvariantCulture, "Batch has {0} rows:\n", ComputeCount());
+            sb.AppendFormat(CultureInfo.InvariantCulture, "Batch has {0} rows:\n", this.ComputeCount());
             sb.AppendFormat(CultureInfo.InvariantCulture, " ###:   vSync  vOther        Key    Payload\n");
             for (int row = 0; row < this.Count; row++)
             {
@@ -782,7 +751,7 @@ namespace Microsoft.StreamProcessing
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public void Print() => Console.WriteLine(ToString());
+        public void Print() => Console.WriteLine(this.ToString());
 
         /* TODO: Everything after this should be made internal - how to do that in the presence of generated subclasses? */
 
@@ -835,7 +804,7 @@ namespace Microsoft.StreamProcessing
                 value.payload.IncrementRefCount(1);
             }
 
-            CloneFromNoPayload(value, swing);
+            this.CloneFromNoPayload(value, swing);
         }
 
         /// <summary>
@@ -880,7 +849,7 @@ namespace Microsoft.StreamProcessing
         {
             Contract.Ensures(Contract.Result<int>() <= this.Count);
 
-            return this.Count == 0 ? 0 : ComputeCount(0, this.Count - 1);
+            return this.Count == 0 ? 0 : this.ComputeCount(0, this.Count - 1);
         }
 
         /// <summary>
@@ -901,62 +870,45 @@ namespace Microsoft.StreamProcessing
             fixed (long* bitVectorColumnLong = this.bitvector.col)
             {
                 ulong* bitVectorColumn = (ulong*)bitVectorColumnLong;
-                fixed (byte* sixteenBitHammingWeights = SixteenBitHammingWeights)
+                var startIndexBits = startIndex & 0x3f;
+                var startIndexBitVectorIndex = startIndex >> 6;
+
+                var endIndexBits = endIndex & 0x3f;
+                var endIndexBitVectorIndex = endIndex >> 6;
+
+                if (startIndexBitVectorIndex == endIndexBitVectorIndex)
                 {
-                    var startIndexBits = startIndex & 0x3f;
-                    var startIndexBitVectorIndex = startIndex >> 6;
-
-                    var endIndexBits = endIndex & 0x3f;
-                    var endIndexBitVectorIndex = endIndex >> 6;
-
-                    if (startIndexBitVectorIndex == endIndexBitVectorIndex)
-                    {
-                        var startMask = -1L << startIndexBits;
-                        var endMask = (long)(0xFFFFFFFFFFFFFFFFUL >> (0x3f - endIndexBits));
-                        var combinedMask = (ulong)(startMask & endMask);
-                        hammingWeight =
-                            CalculateHammingWeight(
-                                bitVectorColumn[startIndexBitVectorIndex] & combinedMask,
-                                sixteenBitHammingWeights);
-                    }
-                    else
-                    {
-                        int bitVectorIndex = startIndexBits == 0 ? startIndexBitVectorIndex : startIndexBitVectorIndex + 1;
-                        int exit = endIndexBits == 0x3f ? endIndexBitVectorIndex + 1 : endIndexBitVectorIndex;
-
-                        for (; bitVectorIndex < exit; ++bitVectorIndex)
-                        {
-                            hammingWeight += CalculateHammingWeight(bitVectorColumn[bitVectorIndex], sixteenBitHammingWeights);
-                        }
-
-                        if (startIndexBits > 0)
-                        {
-                            hammingWeight +=
-                                CalculateHammingWeight(
-                                    bitVectorColumn[startIndexBitVectorIndex] & (ulong)(-1L << startIndexBits), sixteenBitHammingWeights);
-                        }
-
-                        if (endIndexBits < 0x3f)
-                        {
-                            hammingWeight +=
-                                CalculateHammingWeight(bitVectorColumn[endIndexBitVectorIndex] & (0xFFFFFFFFFFFFFFFFUL >> (0x3f - endIndexBits)), sixteenBitHammingWeights);
-                        }
-                    }
-
-                    return endIndex - startIndex + 1 - hammingWeight;
+                    var startMask = -1L << startIndexBits;
+                    var endMask = (long)(0xFFFFFFFFFFFFFFFFUL >> (0x3f - endIndexBits));
+                    var combinedMask = (ulong)(startMask & endMask);
+                    hammingWeight = BitOperations.PopCount(bitVectorColumn[startIndexBitVectorIndex] & combinedMask);
                 }
+                else
+                {
+                    int bitVectorIndex = startIndexBits == 0 ? startIndexBitVectorIndex : startIndexBitVectorIndex + 1;
+                    int exit = endIndexBits == 0x3f ? endIndexBitVectorIndex + 1 : endIndexBitVectorIndex;
+
+                    for (; bitVectorIndex < exit; ++bitVectorIndex)
+                    {
+                        hammingWeight += BitOperations.PopCount(bitVectorColumn[bitVectorIndex]);
+                    }
+
+                    if (startIndexBits > 0)
+                    {
+                        hammingWeight += BitOperations.PopCount(
+                            bitVectorColumn[startIndexBitVectorIndex] & (ulong)(-1L << startIndexBits));
+                    }
+
+                    if (endIndexBits < 0x3f)
+                    {
+                        hammingWeight += BitOperations.PopCount(
+                            bitVectorColumn[endIndexBitVectorIndex] & (0xFFFFFFFFFFFFFFFFUL >> (0x3f - endIndexBits)));
+                    }
+                }
+
+                return endIndex - startIndex + 1 - hammingWeight;
             }
         }
-
-        // I check for 0 because I'm betting in most cases the vectors are 0
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe int CalculateHammingWeight(ulong bitVectorLong, byte* sixteenBitHammingWeights)
-            => bitVectorLong > 0
-                       ? sixteenBitHammingWeights[bitVectorLong & 0xFFFF]
-                         + sixteenBitHammingWeights[bitVectorLong >> 16 & 0xFFFF]
-                         + sixteenBitHammingWeights[bitVectorLong >> 32 & 0xFFFF]
-                         + sixteenBitHammingWeights[bitVectorLong >> 48]
-                       : 0;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -976,10 +928,10 @@ namespace Microsoft.StreamProcessing
         {
             this.vsync.Return();
             this.vother.Return();
-            ReleaseKey();
+            this.ReleaseKey();
             this.hash.Return();
             this.bitvector.ReturnClear();
-            ReleasePayload();
+            this.ReleasePayload();
         }
 
         /// <summary>

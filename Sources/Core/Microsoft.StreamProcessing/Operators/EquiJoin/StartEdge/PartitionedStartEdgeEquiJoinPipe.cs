@@ -28,20 +28,20 @@ namespace Microsoft.StreamProcessing
         private readonly Func<TKey, TKey, bool> keyComparer;
 
         [DataMember]
-        private FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<LEntry>> leftQueue = new FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<LEntry>>();
+        private FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<LEntry>> leftQueue = new();
         [DataMember]
-        private FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<REntry>> rightQueue = new FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<REntry>>();
+        private FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<REntry>> rightQueue = new();
         [DataMember]
-        private HashSet<TPartitionKey> processQueue = new HashSet<TPartitionKey>();
+        private HashSet<TPartitionKey> processQueue = [];
         [DataMember]
-        private HashSet<TPartitionKey> seenKeys = new HashSet<TPartitionKey>();
+        private HashSet<TPartitionKey> seenKeys = [];
         [DataMember]
-        private HashSet<TPartitionKey> cleanKeys = new HashSet<TPartitionKey>();
+        private HashSet<TPartitionKey> cleanKeys = [];
 
         [DataMember]
         private StreamMessage<TKey, TResult> output;
         [DataMember]
-        private FastDictionary<TPartitionKey, PartitionEntry> partitionData = new FastDictionary<TPartitionKey, PartitionEntry>();
+        private FastDictionary<TPartitionKey, PartitionEntry> partitionData = new();
         [DataMember]
         private long lastLeftCTI = long.MinValue;
         [DataMember]
@@ -99,8 +99,8 @@ namespace Microsoft.StreamProcessing
 
         private void NewPartition(TPartitionKey pKey)
         {
-            this.leftQueue.Insert(pKey, new PooledElasticCircularBuffer<LEntry>());
-            this.rightQueue.Insert(pKey, new PooledElasticCircularBuffer<REntry>());
+            this.leftQueue.Insert(pKey, []);
+            this.rightQueue.Insert(pKey, []);
 
             if (!this.partitionData.Lookup(pKey, out int index)) this.partitionData.Insert(ref index, pKey, new PartitionEntry { key = pKey });
         }
@@ -113,13 +113,14 @@ namespace Microsoft.StreamProcessing
             while (this.leftQueue.Iterate(ref iter)) this.leftQueue.entries[iter].value.Dispose();
             iter = FastDictionary<TPartitionKey, REntry>.IteratorStart;
             while (this.rightQueue.Iterate(ref iter)) this.rightQueue.entries[iter].value.Dispose();
+            this.partitionData.Dispose();
             this.output.Free();
         }
 
         protected override void ProcessBothBatches(StreamMessage<TKey, TLeft> leftBatch, StreamMessage<TKey, TRight> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
         {
-            ProcessLeftBatch(leftBatch, out leftBatchDone, out leftBatchFree);
-            ProcessRightBatch(rightBatch, out rightBatchDone, out rightBatchFree);
+            this.ProcessLeftBatch(leftBatch, out leftBatchDone, out leftBatchFree);
+            this.ProcessRightBatch(rightBatch, out rightBatchDone, out rightBatchFree);
         }
 
         protected override void ProcessLeftBatch(StreamMessage<TKey, TLeft> batch, out bool leftBatchDone, out bool leftBatchFree)
@@ -148,7 +149,7 @@ namespace Microsoft.StreamProcessing
                 var partitionKey = this.getPartitionKey(batch.key.col[i]);
                 if (first || !partitionKey.Equals(previous))
                 {
-                    if (this.seenKeys.Add(partitionKey)) NewPartition(partitionKey);
+                    if (this.seenKeys.Add(partitionKey)) this.NewPartition(partitionKey);
                     this.leftQueue.Lookup(partitionKey, out int index);
                     queue = this.leftQueue.entries[index].value;
                     this.processQueue.Add(partitionKey);
@@ -166,7 +167,7 @@ namespace Microsoft.StreamProcessing
                 previous = partitionKey;
             }
 
-            ProcessPendingEntries();
+            this.ProcessPendingEntries();
         }
 
         protected override void ProcessRightBatch(StreamMessage<TKey, TRight> batch, out bool rightBatchDone, out bool rightBatchFree)
@@ -195,7 +196,7 @@ namespace Microsoft.StreamProcessing
                 var partitionKey = this.getPartitionKey(batch.key.col[i]);
                 if (first || !partitionKey.Equals(previous))
                 {
-                    if (this.seenKeys.Add(partitionKey)) NewPartition(partitionKey);
+                    if (this.seenKeys.Add(partitionKey)) this.NewPartition(partitionKey);
                     this.rightQueue.Lookup(partitionKey, out int index);
                     queue = this.rightQueue.entries[index].value;
                     this.processQueue.Add(partitionKey);
@@ -213,7 +214,7 @@ namespace Microsoft.StreamProcessing
                 previous = partitionKey;
             }
 
-            ProcessPendingEntries();
+            this.ProcessPendingEntries();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -261,7 +262,7 @@ namespace Microsoft.StreamProcessing
                                     {
                                         if (this.keyComparer(key, rightEdgeMapForPartition.Values[rightIndex].Key))
                                         {
-                                            OutputStartEdge(partition.nextLeftTime, ref key, ref leftEntry.Payload, ref rightEdgeMapForPartition.Values[rightIndex].Payload, hash);
+                                            this.OutputStartEdge(partition.nextLeftTime, ref key, ref leftEntry.Payload, ref rightEdgeMapForPartition.Values[rightIndex].Payload, hash);
                                         }
                                     }
                                 }
@@ -275,7 +276,7 @@ namespace Microsoft.StreamProcessing
                             }
                             else
                             {
-                                OutputPunctuation(leftEntry.Sync, ref leftEntry.Key, leftEntry.Hash);
+                                this.OutputPunctuation(leftEntry.Sync, ref leftEntry.Key, leftEntry.Hash);
                             }
 
                             leftWorking.Dequeue();
@@ -293,7 +294,7 @@ namespace Microsoft.StreamProcessing
                                     {
                                         if (this.keyComparer(key, leftEdgeMapForPartition.Values[leftIndex].Key))
                                         {
-                                            OutputStartEdge(partition.nextRightTime, ref key, ref leftEdgeMapForPartition.Values[leftIndex].Payload, ref rightEntry.Payload, hash);
+                                            this.OutputStartEdge(partition.nextRightTime, ref key, ref leftEdgeMapForPartition.Values[leftIndex].Payload, ref rightEntry.Payload, hash);
                                         }
                                     }
                                 }
@@ -307,7 +308,7 @@ namespace Microsoft.StreamProcessing
                             }
                             else
                             {
-                                OutputPunctuation(rightEntry.Sync, ref rightEntry.Key, rightEntry.Hash);
+                                this.OutputPunctuation(rightEntry.Sync, ref rightEntry.Key, rightEntry.Hash);
                             }
 
                             rightWorking.Dequeue();
@@ -328,7 +329,7 @@ namespace Microsoft.StreamProcessing
                                 {
                                     if (this.keyComparer(key, rightEdgeMapForPartition.Values[rightIndex].Key))
                                     {
-                                        OutputStartEdge(partition.nextLeftTime, ref key, ref leftEntry.Payload, ref rightEdgeMapForPartition.Values[rightIndex].Payload, hash);
+                                        this.OutputStartEdge(partition.nextLeftTime, ref key, ref leftEntry.Payload, ref rightEdgeMapForPartition.Values[rightIndex].Payload, hash);
                                     }
                                 }
                             }
@@ -342,7 +343,7 @@ namespace Microsoft.StreamProcessing
                         }
                         else
                         {
-                            OutputPunctuation(leftEntry.Sync, ref leftEntry.Key, leftEntry.Hash);
+                            this.OutputPunctuation(leftEntry.Sync, ref leftEntry.Key, leftEntry.Hash);
                             return;
                         }
 
@@ -363,7 +364,7 @@ namespace Microsoft.StreamProcessing
                                 {
                                     if (this.keyComparer(key, leftEdgeMapForPartition.Values[leftIndex].Key))
                                     {
-                                        OutputStartEdge(partition.nextRightTime, ref key, ref leftEdgeMapForPartition.Values[leftIndex].Payload, ref rightEntry.Payload, hash);
+                                        this.OutputStartEdge(partition.nextRightTime, ref key, ref leftEdgeMapForPartition.Values[leftIndex].Payload, ref rightEntry.Payload, hash);
                                     }
                                 }
                             }
@@ -377,7 +378,7 @@ namespace Microsoft.StreamProcessing
                         }
                         else
                         {
-                            OutputPunctuation(rightEntry.Sync, ref rightEntry.Key, rightEntry.Hash);
+                            this.OutputPunctuation(rightEntry.Sync, ref rightEntry.Key, rightEntry.Hash);
                         }
 
                         rightWorking.Dequeue();
@@ -397,7 +398,7 @@ namespace Microsoft.StreamProcessing
             if (this.emitCTI)
             {
                 var earliest = Math.Min(this.lastLeftCTI, this.lastRightCTI);
-                AddLowWatermarkToBatch(earliest);
+                this.AddLowWatermarkToBatch(earliest);
                 this.emitCTI = false;
                 foreach (var p in this.cleanKeys)
                 {
@@ -431,7 +432,7 @@ namespace Microsoft.StreamProcessing
                 this.output.hash.col[index] = 0;
                 this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
 
-                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
             }
         }
 
@@ -450,7 +451,7 @@ namespace Microsoft.StreamProcessing
             this.output[index] = this.selector(leftPayload, rightPayload);
             this.output.hash.col[index] = hash;
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -469,7 +470,7 @@ namespace Microsoft.StreamProcessing
             this.output.hash.col[index] = hash;
             this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         protected override void FlushContents()
@@ -547,7 +548,7 @@ namespace Microsoft.StreamProcessing
                 this.Payload = payload;
             }
 
-            public override string ToString() => "[Key='" + this.Key + "', Payload='" + this.Payload + "']";
+            public override readonly string ToString() => "[Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
         public override bool LeftInputHasState
@@ -612,13 +613,13 @@ namespace Microsoft.StreamProcessing
             /// Currently active left start edges
             /// </summary>
             [DataMember]
-            public FastMap<ActiveEvent<TLeft>> leftEdgeMap = new FastMap<ActiveEvent<TLeft>>();
+            public FastMap<ActiveEvent<TLeft>> leftEdgeMap = new();
 
             /// <summary>
             /// Currently active right start edges
             /// </summary>
             [DataMember]
-            public FastMap<ActiveEvent<TRight>> rightEdgeMap = new FastMap<ActiveEvent<TRight>>();
+            public FastMap<ActiveEvent<TRight>> rightEdgeMap = new();
 
             [DataMember]
             public long nextLeftTime = long.MinValue;

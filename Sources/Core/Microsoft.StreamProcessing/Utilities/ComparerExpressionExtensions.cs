@@ -12,8 +12,8 @@ namespace Microsoft.StreamProcessing.Internal
     {
         public static IComparerExpression<TNewInput> TransformInput<TOldInput, TNewInput>(this IComparerExpression<TOldInput> comparer, Expression<Func<TNewInput, TOldInput>> transform)
         {
-            Contract.Requires(comparer != null);
-            Contract.Requires(transform != null);
+            ArgumentNullException.ThrowIfNull(comparer);
+            ArgumentNullException.ThrowIfNull(transform);
             var expression = comparer.GetCompareExpr();
             Expression<Comparison<TNewInput>> template =
                 (left, right) => CallInliner.Call(expression, CallInliner.Call(transform, left), CallInliner.Call(transform, right));

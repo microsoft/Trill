@@ -24,8 +24,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, sbyte> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -39,8 +39,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, byte> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -54,8 +54,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, short> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -69,8 +69,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ushort> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -84,8 +84,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, int> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -99,8 +99,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, uint> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -114,8 +114,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, long> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -129,8 +129,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ulong> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -144,8 +144,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -159,8 +159,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -174,8 +174,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -189,8 +189,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, BigInteger> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -204,8 +204,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -220,8 +220,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, sbyte> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -236,8 +236,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, byte> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -252,8 +252,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, short> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -268,8 +268,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ushort> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -284,8 +284,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, int> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -300,8 +300,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, uint> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -316,8 +316,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, long> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -332,8 +332,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ulong> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -348,8 +348,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -364,8 +364,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -380,8 +380,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -396,8 +396,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, BigInteger> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -412,8 +412,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex> Sum<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Sum(selector));
         }
 
@@ -427,8 +427,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, sbyte> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -442,8 +442,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, byte> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -457,8 +457,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, short> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -472,8 +472,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ushort> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -487,8 +487,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, int> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -502,8 +502,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, uint> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -517,8 +517,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, long> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -532,8 +532,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ulong> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -547,8 +547,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -562,8 +562,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -577,8 +577,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -592,8 +592,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, BigInteger> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -607,8 +607,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -623,8 +623,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, sbyte> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -639,8 +639,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, byte> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -655,8 +655,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, short> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -671,8 +671,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ushort> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -687,8 +687,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, int> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -703,8 +703,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, uint> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -719,8 +719,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, long> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -735,8 +735,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ulong> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -751,8 +751,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -767,8 +767,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -783,8 +783,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -799,8 +799,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, BigInteger> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -815,8 +815,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares summed acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex> SumSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.SumSquares(selector));
         }
 
@@ -830,8 +830,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, sbyte> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -845,8 +845,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, byte> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -860,8 +860,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, short> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -875,8 +875,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ushort> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -890,8 +890,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, int> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -905,8 +905,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, uint> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -920,8 +920,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, long> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -935,8 +935,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ulong> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -950,8 +950,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -965,8 +965,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -980,8 +980,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -995,8 +995,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, BigInteger> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1010,8 +1010,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1026,8 +1026,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, sbyte> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1042,8 +1042,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, byte> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1058,8 +1058,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, short> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1074,8 +1074,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ushort> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1090,8 +1090,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, int> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1106,8 +1106,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, uint> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1122,8 +1122,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, long> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1138,8 +1138,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, ulong> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1154,8 +1154,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1170,8 +1170,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1186,8 +1186,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1202,8 +1202,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, BigInteger> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1218,8 +1218,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been multiplied acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex> Product<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Product(selector));
         }
 
@@ -1234,8 +1234,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1250,8 +1250,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1266,8 +1266,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1282,8 +1282,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1298,8 +1298,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1314,8 +1314,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1330,8 +1330,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1346,8 +1346,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1362,8 +1362,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1378,8 +1378,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1394,8 +1394,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1410,8 +1410,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1426,8 +1426,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1442,8 +1442,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1458,8 +1458,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1474,8 +1474,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1490,8 +1490,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1506,8 +1506,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1522,8 +1522,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1538,8 +1538,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1554,8 +1554,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1570,8 +1570,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1586,8 +1586,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1602,8 +1602,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1618,8 +1618,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1634,8 +1634,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have been averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex?> Average<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Average(selector));
         }
 
@@ -1650,8 +1650,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1666,8 +1666,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1682,8 +1682,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1698,8 +1698,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1714,8 +1714,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1730,8 +1730,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1746,8 +1746,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1762,8 +1762,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1778,8 +1778,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1794,8 +1794,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1810,8 +1810,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1826,8 +1826,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1842,8 +1842,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1858,8 +1858,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, sbyte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1874,8 +1874,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, short?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1890,8 +1890,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, int?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1906,8 +1906,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, long?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1922,8 +1922,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, byte?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1938,8 +1938,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ushort?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1954,8 +1954,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, uint?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1970,8 +1970,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, ulong?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -1986,8 +1986,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, float?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, float?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -2002,8 +2002,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, double?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -2018,8 +2018,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, decimal?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, decimal?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -2034,8 +2034,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, double?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, BigInteger?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -2050,8 +2050,8 @@ namespace Microsoft.StreamProcessing
         /// <returns>A stream of data whose payloads have had its squares averaged acccording to snapshot semanics.</returns>
         public static IStreamable<TKey, Complex?> AverageSquares<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, Complex?>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.AverageSquares(selector));
         }
 
@@ -2076,10 +2076,10 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState2, TOutput2>> aggregate2,
             Expression<Func<TOutput1, TOutput2, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2097,10 +2097,10 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState2, TOutput2> aggregate2,
             Expression<Func<TOutput1, TOutput2, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2>, TOutput>(source, compound);
@@ -2131,11 +2131,11 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState3, TOutput3>> aggregate3,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2155,11 +2155,11 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState3, TOutput3> aggregate3,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3>, TOutput>(source, compound);
@@ -2194,12 +2194,12 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState4, TOutput4>> aggregate4,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2221,12 +2221,12 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState4, TOutput4> aggregate4,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4>, TOutput>(source, compound);
@@ -2265,13 +2265,13 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState5, TOutput5>> aggregate5,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2295,13 +2295,13 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState5, TOutput5> aggregate5,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5>, TOutput>(source, compound);
@@ -2344,14 +2344,14 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState6, TOutput6>> aggregate6,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2377,14 +2377,14 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState6, TOutput6> aggregate6,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6>, TOutput>(source, compound);
@@ -2431,15 +2431,15 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState7, TOutput7>> aggregate7,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2467,15 +2467,15 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState7, TOutput7> aggregate7,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, aggregate7, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7>, TOutput>(source, compound);
@@ -2526,16 +2526,16 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState8, TOutput8>> aggregate8,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2565,16 +2565,16 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState8, TOutput8> aggregate8,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, aggregate7, aggregate8, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8>, TOutput>(source, compound);
@@ -2629,17 +2629,17 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState9, TOutput9>> aggregate9,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2671,17 +2671,17 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState9, TOutput9> aggregate9,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, aggregate7, aggregate8, aggregate9, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9>, TOutput>(source, compound);
@@ -2740,18 +2740,18 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState10, TOutput10>> aggregate10,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2785,18 +2785,18 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState10, TOutput10> aggregate10,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, aggregate7, aggregate8, aggregate9, aggregate10, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10>, TOutput>(source, compound);
@@ -2859,19 +2859,19 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState11, TOutput11>> aggregate11,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -2907,19 +2907,19 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState11, TOutput11> aggregate11,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, aggregate7, aggregate8, aggregate9, aggregate10, aggregate11, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11>, TOutput>(source, compound);
@@ -2986,20 +2986,20 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState12, TOutput12>> aggregate12,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -3037,20 +3037,20 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState12, TOutput12> aggregate12,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, aggregate7, aggregate8, aggregate9, aggregate10, aggregate11, aggregate12, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12>, TOutput>(source, compound);
@@ -3121,21 +3121,21 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState13, TOutput13>> aggregate13,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -3175,21 +3175,21 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState13, TOutput13> aggregate13,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, aggregate7, aggregate8, aggregate9, aggregate10, aggregate11, aggregate12, aggregate13, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13>, TOutput>(source, compound);
@@ -3264,22 +3264,22 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState14, TOutput14>> aggregate14,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(aggregate14, nameof(aggregate14));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -3321,22 +3321,22 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState14, TOutput14> aggregate14,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(aggregate14, nameof(aggregate14));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, aggregate7, aggregate8, aggregate9, aggregate10, aggregate11, aggregate12, aggregate13, aggregate14, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14>, TOutput>(source, compound);
@@ -3415,23 +3415,23 @@ namespace Microsoft.StreamProcessing
             Func<Window<TKey, TInput>, IAggregate<TInput, TState15, TOutput15>> aggregate15,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(aggregate14, nameof(aggregate14));
-            Invariant.IsNotNull(aggregate15, nameof(aggregate15));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(aggregate15);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var window = new Window<TKey, TInput>(source.Properties);
             var agg1 = aggregate1(window);
@@ -3475,23 +3475,23 @@ namespace Microsoft.StreamProcessing
             IAggregate<TInput, TState15, TOutput15> aggregate15,
             Expression<Func<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5, TOutput6, TOutput7, TOutput8, TOutput9, TOutput10, TOutput11, TOutput12, TOutput13, TOutput14, TOutput15, TOutput>> merger)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate1, nameof(aggregate1));
-            Invariant.IsNotNull(aggregate2, nameof(aggregate2));
-            Invariant.IsNotNull(aggregate3, nameof(aggregate3));
-            Invariant.IsNotNull(aggregate4, nameof(aggregate4));
-            Invariant.IsNotNull(aggregate5, nameof(aggregate5));
-            Invariant.IsNotNull(aggregate6, nameof(aggregate6));
-            Invariant.IsNotNull(aggregate7, nameof(aggregate7));
-            Invariant.IsNotNull(aggregate8, nameof(aggregate8));
-            Invariant.IsNotNull(aggregate9, nameof(aggregate9));
-            Invariant.IsNotNull(aggregate10, nameof(aggregate10));
-            Invariant.IsNotNull(aggregate11, nameof(aggregate11));
-            Invariant.IsNotNull(aggregate12, nameof(aggregate12));
-            Invariant.IsNotNull(aggregate13, nameof(aggregate13));
-            Invariant.IsNotNull(aggregate14, nameof(aggregate14));
-            Invariant.IsNotNull(aggregate15, nameof(aggregate15));
-            Invariant.IsNotNull(merger, nameof(merger));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate1);
+            ArgumentNullException.ThrowIfNull(aggregate2);
+            ArgumentNullException.ThrowIfNull(aggregate3);
+            ArgumentNullException.ThrowIfNull(aggregate4);
+            ArgumentNullException.ThrowIfNull(aggregate5);
+            ArgumentNullException.ThrowIfNull(aggregate6);
+            ArgumentNullException.ThrowIfNull(aggregate7);
+            ArgumentNullException.ThrowIfNull(aggregate8);
+            ArgumentNullException.ThrowIfNull(aggregate9);
+            ArgumentNullException.ThrowIfNull(aggregate10);
+            ArgumentNullException.ThrowIfNull(aggregate11);
+            ArgumentNullException.ThrowIfNull(aggregate12);
+            ArgumentNullException.ThrowIfNull(aggregate13);
+            ArgumentNullException.ThrowIfNull(aggregate14);
+            ArgumentNullException.ThrowIfNull(aggregate15);
+            ArgumentNullException.ThrowIfNull(merger);
 
             var compound = AggregateFunctions.Combine(aggregate1, aggregate2, aggregate3, aggregate4, aggregate5, aggregate6, aggregate7, aggregate8, aggregate9, aggregate10, aggregate11, aggregate12, aggregate13, aggregate14, aggregate15, merger);
             return new SnapshotWindowStreamable<TKey, TInput, StructTuple<TState1, TState2, TState3, TState4, TState5, TState6, TState7, TState8, TState9, TState10, TState11, TState12, TState13, TState14, TState15>, TOutput>(source, compound);

@@ -5,16 +5,17 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-#if CODEGEN_TIMING
 using System.Diagnostics;
-#endif
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -26,22 +27,31 @@ namespace Microsoft.StreamProcessing
 {
     internal static class Transformer
     {
-        // For .Net Framework, the framework name is like ".NET Framework 4.x.x.x", and uses Net Framework Assembly
-        // For .Net Core and .Net, the framework name is like ".NET Core 3.x.x" or ".NET 5.x.x", and use Net Core Assembly
-        private static readonly bool IsNetCore = !RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework");
+        private static readonly Lazy<IEnumerable<MetadataReference>> baseAssemblyReferences = new(GetAssemblyReferences);
+        private static readonly Action<CSharpCompilationOptions> updateTopLevelBinderFlags = CreateUpdateTopLevelBinderFlags();
 
-        private static readonly Lazy<IEnumerable<MetadataReference>> baseAssemblyReferences
-            = new Lazy<IEnumerable<MetadataReference>>(() => IsNetCore ? GetNetCoreAssemblyReferences() : GetNetFrameworkAssemblyReferences());
-        private static readonly Func<MemoryStream, Assembly> AssemblyFromMemoryStream
-            = IsNetCore ? (Func<MemoryStream, Assembly>)AssemblyFromMemoryStreamNetCore : AssemblyFromMemoryStreamNetFramework;
-        private static readonly Func<string, Assembly> AssemblyFromFile
-            = IsNetCore ? (Func<string, Assembly>)AssemblyFromFileNetCore : AssemblyFromFileNetFramework;
+        private static Action<CSharpCompilationOptions> CreateUpdateTopLevelBinderFlags()
+        {
+            DynamicMethod method = new("UpdateTopLevelBinderFlags", typeof(void), [typeof(CSharpCompilationOptions)], owner: typeof(Transformer), skipVisibility: true);
+            ILGenerator generator = method.GetILGenerator();
+            generator.Emit(OpCodes.Ldarg_0);
+            // Get property and enum flags.
+            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
+            var binderFlagsType = topLevelBinderFlagsProperty.PropertyType;
+            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType.GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
+            var ignoreAccessibility = binderFlagsType.GetField("IgnoreAccessibility", BindingFlags.Static | BindingFlags.Public);
+            // Combine uints and cast as int for Ldc_I4.
+            generator.Emit(OpCodes.Ldc_I4, (int)((uint)ignoreCorLibraryDuplicatedTypesMember.GetValue(null) | (uint)ignoreAccessibility.GetValue(null)));
+            generator.Emit(OpCodes.Callvirt, topLevelBinderFlagsProperty.GetSetMethod(nonPublic: true));
+            generator.Emit(OpCodes.Ret);
+            return (Action<CSharpCompilationOptions>)method.CreateDelegate(typeof(Action<CSharpCompilationOptions>));
+        }
 
         // used so the compiler has access to the Microsoft.StramProcessing types it needs.
         // Fix this when there is a static location so we don't have to use Reflection to get it each time
-        public static Assembly SystemRuntimeSerializationDll = typeof(System.Runtime.Serialization.DataContractAttribute).GetTypeInfo().Assembly;
-        public static Assembly SystemDll = typeof(Uri).GetTypeInfo().Assembly;
-        public static Assembly SystemCoreDll = typeof(BinaryExpression).GetTypeInfo().Assembly;
+        public static Assembly SystemRuntimeSerializationDll = typeof(System.Runtime.Serialization.DataContractAttribute).Assembly;
+        public static Assembly SystemDll = typeof(Uri).Assembly;
+        public static Assembly SystemCoreDll = typeof(BinaryExpression).Assembly;
 
         /// <summary>
         /// This is used as part of constructing the name of a field in a StreamMessage that is a column representing a field of the payload type.
@@ -75,123 +85,146 @@ namespace Microsoft.StreamProcessing
             var payloadType = typeof(TPayload);
             SafeBatchTemplate.GetGeneratedCode(keyType, payloadType, out string generatedClassName, out string expandedCode, out List<Assembly> assemblyReferences);
 
-            assemblyReferences.Add(MemoryManager.GetMemoryPool<TKey, TPayload>().GetType().GetTypeInfo().Assembly);
+            assemblyReferences.Add(MemoryManager.GetMemoryPool<TKey, TPayload>().GetType().Assembly);
             assemblyReferences.Add(SystemRuntimeSerializationDll);
             if (keyType != typeof(Empty))
             {
-                assemblyReferences.Add(typeof(Empty).GetTypeInfo().Assembly);
-                assemblyReferences.Add(StreamMessageManager.GetStreamMessageType<Empty, TPayload>().GetTypeInfo().Assembly);
+                assemblyReferences.Add(typeof(Empty).Assembly);
+                assemblyReferences.Add(StreamMessageManager.GetStreamMessageType<Empty, TPayload>().Assembly);
             }
 
-            var a = CompileSourceCode(expandedCode, assemblyReferences, out string errorMessages);
-            var t = a.GetType(generatedClassName);
-            if (t.GetTypeInfo().IsGenericType)
-            {
-                var list = keyType.GetAnonymousTypes();
-                list.AddRange(payloadType.GetAnonymousTypes());
-                t = t.MakeGenericType(list.ToArray());
-            }
+            var t = CompileSourceCode(
+                expandedCode,
+                assemblyReferences,
+                a =>
+                {
+                    var ty = a.GetType(generatedClassName);
+                    if (ty is null)
+                    {
+                        return null;
+                    }
+
+                    if (ty.IsGenericType)
+                    {
+                        var list = keyType.GetAnonymousTypes();
+                        list.AddRange(payloadType.GetAnonymousTypes());
+                        ty = ty.MakeGenericType([.. list]);
+                    }
+
+                    return ty;
+                },
+                out string errorMessages);
 
 #if CODEGEN_TIMING
             sw.Stop();
             Console.WriteLine("Time to generate and instantiate a batch for {0},{1}: {2}ms",
-                keyType.GetCSharpSourceSyntax(), payload.GetCSharpSourceSyntax(), sw.ElapsedMilliseconds);
+                keyType.GetCSharpSourceSyntax(), payloadType.GetCSharpSourceSyntax(), sw.ElapsedMilliseconds);
 #endif
             return t;
         }
 
         /// <summary>
-        /// Given a string, <paramref name="sourceCode"/>, that represents a compilable assembly, compile it into an assembly which is located
-        /// in a sub-directory of the current working directory named "Generated", unless overriden by changing value of Config.GeneratedCodePath.
-        /// If it is successful, then the resulting assembly is loaded and returned. Otherwise, null is returned and the
-        /// parameter <paramref name="errorMessages"/> will contain the compiler errors.
-        /// The parameter <paramref name="references"/> allows the client to specify the location of assemblies that are needed to compile
-        /// the code.
-        /// The parameter <paramref name="includeIgnoreAccessChecksAssembly"/> allows the generated assembly to reference
-        /// the IgnoreAccessChecksTo attribute for access to Microsoft.StreamProcessing.
+        /// Compiles <paramref name="sourceCode"/> with Roslyn and loads the resulting assembly.
+        /// Runs <paramref name="resolveType"/> on that assembly immediately.
+        /// When debug codegen is enabled and paths are set, sources may be written under <see cref="Config.GeneratedCodePath"/>.
+        /// On failure, <c>null</c> is returned and <paramref name="errorMessages"/> contains compiler diagnostics and/or resolution details.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.GetTypeInfo().Assembly.LoadFrom", Justification = "There is no better way to load dynamically generated assembly.")]
-        public static Assembly CompileSourceCode(string sourceCode, IEnumerable<Assembly> references, out string errorMessages, bool includeIgnoreAccessChecksAssembly = true)
+        /// <param name="sourceCode">C# source text for the dynamic assembly.</param>
+        /// <param name="references">Additional assemblies to reference during compilation.</param>
+        /// <param name="resolveType">Obtains the required <see cref="Type"/> from the loaded assembly (for example via <see cref="Assembly.GetType(string)"/> and <see cref="Type.MakeGenericType(Type[])"/>).</param>
+        /// <param name="errorMessages">Roslyn diagnostics when compilation fails; resolution failures append explanatory text (including when a stale cache entry is discarded).</param>
+        /// <param name="includeIgnoreAccessChecksAssembly">If <see langword="true"/>, includes the synthesized <c>IgnoresAccessChecksTo</c> assembly so generated code can use Trill internals.</param>
+        /// <returns>The type produced by <paramref name="resolveType"/>, or <c>null</c> if compilation or loading failed or <paramref name="resolveType"/> returned <c>null</c> after retry.</returns>
+        public static Type CompileSourceCode(
+            string sourceCode,
+            IEnumerable<Assembly> references,
+            Func<Assembly, Type> resolveType,
+            out string errorMessages,
+            bool includeIgnoreAccessChecksAssembly = true)
         {
+            ArgumentNullException.ThrowIfNull(resolveType);
+
 #if CODEGEN_TIMING
             Stopwatch sw = new Stopwatch();
             sw.Start();
 #endif
 
             bool includeDebugInfo = Config.CodegenOptions.GenerateDebugInfo;
+
             var uniqueReferences = references.Distinct();
-
             if (includeIgnoreAccessChecksAssembly)
-                uniqueReferences = uniqueReferences.Concat(new Assembly[] { IgnoreAccessChecks.Assembly });
-
-            if (IsNetCore)
             {
-                uniqueReferences = uniqueReferences.Where(r => !r.FullName.Contains("System.Private.CoreLib"));
+                uniqueReferences = uniqueReferences.Concat([IgnoreAccessChecks.Assembly]);
             }
 
-            var assemblyName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
+            uniqueReferences = uniqueReferences.Where(r => !r.FullName.Contains("System.Private.CoreLib"));
 
-            SyntaxTree tree;
-
-            if (includeDebugInfo)
+            var refs = new List<MetadataReference>
             {
-                if (!Directory.Exists(Config.GeneratedCodePath))
-                {
-                    Directory.CreateDirectory(Config.GeneratedCodePath); // let any exceptions bleed through
-                }
-                var baseFile = Path.Combine(Config.GeneratedCodePath, assemblyName);
-                var sourceFile = Path.ChangeExtension(baseFile, ".cs");
-                tree = CSharpSyntaxTree.ParseText(
-                    sourceCode,
-                    path: Path.GetFullPath(sourceFile),
-                    encoding: Encoding.GetEncoding(0),
-                    options: new CSharpParseOptions(LanguageVersion.Latest));
-            }
-            else
-            {
-                tree = CSharpSyntaxTree.ParseText(
-                    sourceCode,
-                    encoding: Encoding.GetEncoding(0),
-                    options: new CSharpParseOptions(LanguageVersion.Latest));
-            }
-
-            MetadataReference trill = MetadataReference.CreateFromFile(typeof(StreamMessage).GetTypeInfo().Assembly.Location);
-            var baseReferences = new List<MetadataReference>() { trill };
-
-            var refs = baseReferences
-                .Concat(baseAssemblyReferences.Value)
-                .Concat(uniqueReferences.Where(r => Path.IsPathRooted(r.Location)).Select(r => MetadataReference.CreateFromFile(r.Location)))
-                .Concat(uniqueReferences.Where(reference => metadataReferenceCache.ContainsKey(reference)).Select(reference => metadataReferenceCache[reference]));
+                MetadataReference.CreateFromFile(typeof(StreamMessage).Assembly.Location)
+            };
+            refs.AddRange(baseAssemblyReferences.Value);
+            refs.AddRange(uniqueReferences.Where(r => Path.IsPathRooted(r.Location)).Select(r => MetadataReference.CreateFromFile(r.Location)));
+            refs.AddRange(uniqueReferences.Where(reference => metadataReferenceCache.ContainsKey(reference)).Select(reference => metadataReferenceCache[reference]));
 
             var options = new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
                 metadataImportOptions: MetadataImportOptions.All,
                 allowUnsafe: true,
-                optimizationLevel: (includeDebugInfo ? OptimizationLevel.Debug : OptimizationLevel.Release));
+                optimizationLevel: includeDebugInfo ? OptimizationLevel.Debug : OptimizationLevel.Release);
 
-            var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetTypeInfo().GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
-            var binderFlagsType = typeof(CSharpCompilationOptions).GetTypeInfo().Assembly.GetType("Microsoft.CodeAnalysis.CSharp.BinderFlags");
-            var ignoreCorLibraryDuplicatedTypesMember = binderFlagsType.GetTypeInfo().GetField("IgnoreCorLibraryDuplicatedTypes", BindingFlags.Static | BindingFlags.Public);
-            var ignoreAccessibility = binderFlagsType.GetTypeInfo().GetField("IgnoreAccessibility", BindingFlags.Static | BindingFlags.Public);
-            topLevelBinderFlagsProperty.SetValue(options, (uint)ignoreCorLibraryDuplicatedTypesMember.GetValue(null) | (uint)ignoreAccessibility.GetValue(null));
+            updateTopLevelBinderFlags.Invoke(options);
 
-            SyntaxTree[] trees = { tree };
-            var compilation = CSharpCompilation.Create(assemblyName, trees, refs, options);
-            var assembly = EmitCompilationAndLoadAssembly(compilation, includeDebugInfo, out errorMessages);
+            var assemblyName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
+            var tree = CSharpSyntaxTree.ParseText(
+                sourceCode,
+                encoding: Encoding.GetEncoding(0),
+                options: new CSharpParseOptions(LanguageVersion.Latest));
+
+            var compilation = CSharpCompilation.Create(assemblyName, [tree], refs, options);
+            var assembly = EmitCompilationAndLoadAssembly(
+                compilation,
+                includeDebugInfo,
+                out errorMessages);
+
+            if (assembly is null)
+            {
+#if CODEGEN_TIMING
+                sw.Stop();
+                Console.WriteLine("Time to compile: {0}ms", sw.ElapsedMilliseconds);
+#endif
+                return null;
+            }
+
+            Type resolved = resolveType(assembly);
+            if (resolved is null)
+            {
+                const string msg = "Type resolution returned null for the generated assembly.";
+                errorMessages = string.IsNullOrEmpty(errorMessages) ? msg : errorMessages + Environment.NewLine + msg;
+#if CODEGEN_TIMING
+                sw.Stop();
+                Console.WriteLine("Time to compile: {0}ms", sw.ElapsedMilliseconds);
+#endif
+                return null;
+            }
 
 #if CODEGEN_TIMING
             sw.Stop();
             Console.WriteLine("Time to compile: {0}ms", sw.ElapsedMilliseconds);
 #endif
-            return assembly;
+            return resolved;
         }
 
-        public static ConcurrentDictionary<Assembly, MetadataReference> metadataReferenceCache = new ConcurrentDictionary<Assembly, MetadataReference>();
-        private static readonly InteractiveAssemblyLoader loader = new InteractiveAssemblyLoader();
+        public static ConcurrentDictionary<Assembly, MetadataReference> metadataReferenceCache = new();
 
-        internal static Assembly EmitCompilationAndLoadAssembly(CSharpCompilation compilation, bool makeAssemblyDebuggable, out string errorMessages)
+        private static readonly InteractiveAssemblyLoader loader = new();
+
+        internal static Assembly EmitCompilationAndLoadAssembly(
+            CSharpCompilation compilation,
+            bool makeAssemblyDebuggable,
+            out string errorMessages)
         {
-            Contract.Requires(compilation.SyntaxTrees.Count() == 1);
+            Contract.Requires(compilation.SyntaxTrees.Length == 1);
 
             Assembly assembly = null;
             EmitResult emitResult;
@@ -199,49 +232,64 @@ namespace Microsoft.StreamProcessing
             if (makeAssemblyDebuggable)
             {
                 var tree = compilation.SyntaxTrees.Single();
-                var baseFile = tree.FilePath;
-                var sourceFile = Path.ChangeExtension(baseFile, ".cs");
-                File.WriteAllText(sourceFile, tree.GetRoot().ToFullString());
-                var assemblyFile = Path.ChangeExtension(baseFile, ".dll");
-                using (var assemblyStream = File.Open(assemblyFile, FileMode.Create, FileAccess.Write))
-                using (var pdbStream = File.Open(Path.ChangeExtension(baseFile, ".pdb"), FileMode.Create, FileAccess.Write))
+                string baseFile = tree.FilePath;
+                if (!string.IsNullOrEmpty(baseFile))
                 {
-                    emitResult = compilation.Emit(assemblyStream, pdbStream, options: new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb));
-                }
+                    var sourceFile = Path.ChangeExtension(baseFile, ".cs");
+                    File.WriteAllText(sourceFile, tree.GetRoot().ToFullString());
+                    var assemblyFile = Path.ChangeExtension(baseFile, ".dll");
+                    using (var assemblyStream = File.Open(assemblyFile, FileMode.Create, FileAccess.Write))
+                    using (var pdbStream = File.Open(Path.ChangeExtension(baseFile, ".pdb"), FileMode.Create, FileAccess.Write))
+                    {
+                        emitResult = compilation.Emit(assemblyStream, pdbStream, options: new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb));
+                    }
 
-                if (emitResult.Success)
+                    if (emitResult.Success)
+                    {
+                        assembly = AssemblyFromFile(assemblyFile);
+                    }
+                }
+                else
                 {
-                    assembly = AssemblyFromFile(assemblyFile);
+                    using var peStream = new MemoryStream();
+                    using var pdbStream = new MemoryStream();
+                    emitResult = compilation.Emit(peStream, pdbStream, options: new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb));
+                    if (emitResult.Success)
+                    {
+                        byte[] peImage = peStream.ToArray();
+
+                        assembly = AssemblyFromMemoryStream(new MemoryStream(peImage));
+                        loader.RegisterDependency(assembly);
+                        var aref = MetadataReference.CreateFromStream(new MemoryStream(peImage));
+                        metadataReferenceCache.TryAdd(assembly, aref);
+                    }
                 }
             }
             else
             {
-                using (var stream = new MemoryStream())
+                using var stream = new MemoryStream();
+                emitResult = compilation.Emit(stream);
+                if (emitResult.Success)
                 {
-                    emitResult = compilation.Emit(stream);
-                    if (emitResult.Success)
-                    {
-                        stream.Position = 0;
-                        assembly = AssemblyFromMemoryStream(stream);
+                    byte[] peImage = stream.ToArray();
 
-                        loader.RegisterDependency(assembly);
-                        var aref = MetadataReference.CreateFromStream(stream);
-                        metadataReferenceCache.TryAdd(assembly, aref);
-                    }
+                    assembly = AssemblyFromMemoryStream(new MemoryStream(peImage));
+
+                    loader.RegisterDependency(assembly);
+                    var aref = MetadataReference.CreateFromStream(new MemoryStream(peImage));
+                    metadataReferenceCache.TryAdd(assembly, aref);
                 }
             }
 
             errorMessages = string.Join("\n", emitResult.Diagnostics);
 
             if (makeAssemblyDebuggable && emitResult.Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
-                System.Diagnostics.Debug.WriteLine(errorMessages);
+                Debug.WriteLine(errorMessages);
 
             return assembly;
         }
 
-        #region netcore
-
-        internal static IEnumerable<PortableExecutableReference> GetNetCoreAssemblyReferences()
+        internal static IEnumerable<PortableExecutableReference> GetAssemblyReferences()
         {
             var allAvailableAssemblies = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))
                 .Split(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':');
@@ -277,50 +325,25 @@ namespace Microsoft.StreamProcessing
                 "System.Threading.Tasks.Parallel",
                 "System.Threading.Thread",
             };
-            var filteredPaths = allAvailableAssemblies.Where(p => files.Concat(new string[] { "mscorlib", "netstandard", "System.Private.CoreLib", "System.Runtime.Serialization.Primitives", }).Any(f => Path.GetFileNameWithoutExtension(p).Equals(f)));
-            return filteredPaths.Select(p => MetadataReference.CreateFromFile(p));
+            var filteredPaths = allAvailableAssemblies.Where(p => files.Concat(["mscorlib", "netstandard", "System.Private.CoreLib", "System.Runtime.Serialization.Primitives",]).Any(f => Path.GetFileNameWithoutExtension(p).Equals(f)));
+            return filteredPaths.Select(path => MetadataReference.CreateFromFile(path));
         }
 
-        // Important - System.Runtime.Loader should not be referenced by any function that can run in a net framework environment!
-        internal static Assembly AssemblyFromMemoryStreamNetCore(MemoryStream stream)
+        internal static Assembly AssemblyFromMemoryStream(MemoryStream stream)
         {
-            var assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromStream(stream);
+            var assembly = AssemblyLoadContext.Default.LoadFromStream(stream);
             stream.Position = 0; // Must reset it! Loading leaves its position at the end
             return assembly;
         }
 
-        internal static Assembly AssemblyFromFileNetCore(string file) => System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
-
-        #endregion netcore
-
-        #region netframework
-
-        internal static IEnumerable<MetadataReference> GetNetFrameworkAssemblyReferences()
-        {
-            MetadataReference mscorlib = MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location);
-            MetadataReference numerics = MetadataReference.CreateFromFile(typeof(System.Numerics.Complex).GetTypeInfo().Assembly.Location);
-            MetadataReference linq = MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location);
-            MetadataReference contracts = MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataContractAttribute).GetTypeInfo().Assembly.Location);
-
-            // If we are compiling a netstandard binary from net framework environment, we have to explicitly add a reference to netstandard
-            var netstandardPath = Path.Combine(Path.GetDirectoryName(typeof(object).GetTypeInfo().Assembly.Location), "netstandard.dll");
-            MetadataReference netstandard = MetadataReference.CreateFromFile(netstandardPath);
-
-            return new MetadataReference[] { mscorlib, numerics, linq, contracts, netstandard };
-        }
-
-        internal static Assembly AssemblyFromMemoryStreamNetFramework(MemoryStream stream) => Assembly.Load(stream.ToArray());
-
-        internal static Assembly AssemblyFromFileNetFramework(string file) => Assembly.LoadFrom(file);
-
-        #endregion netframework
+        internal static Assembly AssemblyFromFile(string file) => AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
 
         internal static IEnumerable<Assembly> AssemblyReferencesNeededForType(Type type)
         {
             var closure = new HashSet<Type>();
             CollectAssemblyReferences(type, closure);
             var result = closure
-                .Select(t => t.GetTypeInfo().Assembly)
+                .Select(t => t.Assembly)
                 .Where(t => !t.IsDynamic)
                 .Distinct();
             return result;
@@ -330,18 +353,18 @@ namespace Microsoft.StreamProcessing
         {
             if (partialClosure.Add(t))
             {
-                if (t.GetTypeInfo().BaseType != null)
-                    CollectAssemblyReferences(t.GetTypeInfo().BaseType, partialClosure);
+                if (t.BaseType != null)
+                    CollectAssemblyReferences(t.BaseType, partialClosure);
                 if (t.IsNested)
                     CollectAssemblyReferences(t.DeclaringType, partialClosure);
 
-                foreach (var j in t.GetTypeInfo().GetInterfaces())
+                foreach (var j in t.GetInterfaces())
                     CollectAssemblyReferences(j, partialClosure);
                 foreach (var genericArgument in t.GenericTypeArguments)
                     CollectAssemblyReferences(genericArgument, partialClosure);
-                foreach (var f in t.GetTypeInfo().GetFields(BindingFlags.Public | BindingFlags.Instance))
+                foreach (var f in t.GetFields(BindingFlags.Public | BindingFlags.Instance))
                     CollectAssemblyReferences(f.FieldType, partialClosure);
-                foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                foreach (var p in t.GetProperties(BindingFlags.Public | BindingFlags.Instance))
                     CollectAssemblyReferences(p.PropertyType, partialClosure);
             }
         }
@@ -350,22 +373,11 @@ namespace Microsoft.StreamProcessing
             => AssemblyLocationFinder.GetAssemblyLocationsFor(expression);
 
         public static IEnumerable<Assembly> AssemblyReferencesNeededFor(params Expression[] expressions)
-        {
-            var assemblies = new HashSet<Assembly>();
-            foreach (var expression in expressions)
-            {
-                foreach (var assembly in AssemblyLocationFinder.GetAssemblyLocationsFor(expression))
-                {
-                    assemblies.Add(assembly);
-                }
-            }
-
-            return assemblies;
-        }
+            => expressions.SelectMany(AssemblyLocationFinder.GetAssemblyLocationsFor).Distinct();
 
         private sealed class AssemblyLocationFinder : ExpressionVisitor
         {
-            private readonly HashSet<Assembly> assemblyLocations = new HashSet<Assembly>();
+            private readonly HashSet<Assembly> assemblyLocations = [];
 
             private AssemblyLocationFinder() { }
             public static IEnumerable<Assembly> GetAssemblyLocationsFor(Expression e)
@@ -376,7 +388,7 @@ namespace Microsoft.StreamProcessing
             }
             protected override Expression VisitMember(MemberExpression node)
             {
-                var a = node.Member.DeclaringType.GetTypeInfo().Assembly;
+                var a = node.Member.DeclaringType.Assembly;
                 this.assemblyLocations.Add(a);
                 return base.VisitMember(node);
             }
@@ -385,7 +397,7 @@ namespace Microsoft.StreamProcessing
                 var method = node.Method;
                 if (method.IsStatic)
                 {
-                    var a = method.DeclaringType.GetTypeInfo().Assembly;
+                    var a = method.DeclaringType.Assembly;
                     this.assemblyLocations.Add(a);
                 }
                 return base.VisitMethodCall(node);
@@ -413,21 +425,27 @@ namespace System.Runtime.CompilerServices
 
             internal static Assembly Assembly => lazySingleton.Value;
 
-            private static readonly Lazy<Assembly> lazySingleton = new Lazy<Assembly>(() => CreateIgnoreAccessChecksAssembly());
+            private static readonly Lazy<Assembly> lazySingleton = new(CreateIgnoreAccessChecksAssembly);
 
             private static Assembly CreateIgnoreAccessChecksAssembly()
             {
-                var assembly = CompileSourceCode(IgnoreAccessChecksSourceCode, Array.Empty<Assembly>(), out _, false);
-                if (assembly == null)
+                var ignorerType = CompileSourceCode(
+                    IgnoreAccessChecksSourceCode,
+                    [],
+                    static a => a.GetType("System.Runtime.CompilerServices.IgnoresAccessChecksToAttribute"),
+                    out _,
+                    false);
+                if (ignorerType is null)
                 {
                     throw new InvalidOperationException("Code Generation failed for IgnoresAccessChecksToAttribute!");
                 }
-                return assembly;
+
+                return ignorerType.Assembly;
             }
         }
 
         private static int BatchClassSequenceNumber = 0;
-        private static readonly SafeConcurrentDictionary<string> batchType2Name = new SafeConcurrentDictionary<string>();
+        private static readonly SafeConcurrentDictionary<string> batchType2Name = new();
 
         internal static string GetBatchClassName(Type keyType, Type payloadType)
         {
@@ -465,13 +483,13 @@ namespace System.Runtime.CompilerServices
         {
             var validStrings = ps.Where(x => !string.IsNullOrWhiteSpace(x));
             var commaSeparatedList = string.Join(",", validStrings);
-            return string.IsNullOrWhiteSpace(commaSeparatedList) ? string.Empty : "<" + commaSeparatedList + ">";
+            return string.IsNullOrWhiteSpace(commaSeparatedList) ? string.Empty : $"<{commaSeparatedList}>";
         }
 
         internal static Type GenerateMemoryPoolClass<TKey, TPayload>()
         {
             Contract.Ensures(Contract.Result<Type>() != null);
-            Contract.Ensures(typeof(MemoryPool<TKey, TPayload>).GetTypeInfo().IsAssignableFrom(Contract.Result<Type>()));
+            Contract.Ensures(typeof(MemoryPool<TKey, TPayload>).IsAssignableFrom(Contract.Result<Type>()));
 
 #if CODEGEN_TIMING
             Stopwatch sw = new Stopwatch();
@@ -489,14 +507,24 @@ namespace System.Runtime.CompilerServices
             assemblyReferences = mpt.assemblyReferences;
             generatedClassName = mpt.generatedClassName;
 
-            var a = CompileSourceCode(expandedCode, assemblyReferences, out string errorMessages);
+            var instantiatedType = CompileSourceCode(
+                expandedCode,
+                assemblyReferences,
+                a =>
+                {
+                    var ty = a.GetType(generatedClassName);
+                    if (ty is null)
+                    {
+                        return null;
+                    }
 
-            var t = a.GetType(generatedClassName);
-            var instantiatedType = t.MakeGenericType(new Type[] { keyType, payloadType });
+                    return ty.MakeGenericType([keyType, payloadType]);
+                },
+                out string errorMessages);
 #if CODEGEN_TIMING
             sw.Stop();
             Console.WriteLine("Time to generate and instantiate a memory pool for {0},{1}: {2}ms",
-                tKey.GetCSharpSourceSyntax(), tPayload.GetCSharpSourceSyntax(), sw.ElapsedMilliseconds);
+                keyType.GetCSharpSourceSyntax(), payloadType.GetCSharpSourceSyntax(), sw.ElapsedMilliseconds);
 #endif
             return instantiatedType;
         }
@@ -506,7 +534,7 @@ namespace System.Runtime.CompilerServices
         /// if it is any type T that is not a CompoundGroupKey or is a valid CGK.
         /// </summary>
         internal static bool IsValidKeyType(Type t)
-            => !t.GetTypeInfo().IsGenericType || t.GetGenericTypeDefinition() != typeof(CompoundGroupKey<,>) || IsValidCGK(t);
+            => !t.IsGenericType || t.GetGenericTypeDefinition() != typeof(CompoundGroupKey<,>) || IsValidCGK(t);
 
         /// <summary>
         /// A type is a valid CGK (i.e., it can be used as a Key type for a StreamMessage)
@@ -516,18 +544,18 @@ namespace System.Runtime.CompilerServices
         /// </summary>
         private static bool IsValidCGK(Type t)
         {
-            Contract.Requires(t.GetTypeInfo().IsGenericType && t.GetGenericTypeDefinition() == typeof(CompoundGroupKey<,>));
+            Contract.Requires(t.IsGenericType && t.GetGenericTypeDefinition() == typeof(CompoundGroupKey<,>));
 
-            var typeArgs = t.GetTypeInfo().GetGenericArguments();
+            var typeArgs = t.GetGenericArguments();
             var innerKeyType = typeArgs[1];
-            return (!innerKeyType.GetTypeInfo().IsGenericType || innerKeyType.GetGenericTypeDefinition() != typeof(CompoundGroupKey<,>)) && IsValidKeyType(typeArgs[0]);
+            return (!innerKeyType.IsGenericType || innerKeyType.GetGenericTypeDefinition() != typeof(CompoundGroupKey<,>)) && IsValidKeyType(typeArgs[0]);
         }
 
         public static Assembly GeneratedStreamMessageAssembly<TKey, TPayload>()
-            => StreamMessageManager.GetStreamMessageType<TKey, TPayload>().GetTypeInfo().Assembly;
+            => StreamMessageManager.GetStreamMessageType<TKey, TPayload>().Assembly;
 
         public static Assembly GeneratedMemoryPoolAssembly<TKey, TPayload>()
-            => MemoryManager.GetMemoryPool<TKey, TPayload>().GetType().GetTypeInfo().Assembly;
+            => MemoryManager.GetMemoryPool<TKey, TPayload>().GetType().Assembly;
     }
 
     internal sealed class TypeMapper
@@ -549,9 +577,9 @@ namespace System.Runtime.CompilerServices
                     continue;
                 }
 
-                if (!t.GetTypeInfo().Assembly.IsDynamic && t.GetTypeInfo().IsGenericType)
+                if (!t.Assembly.IsDynamic && t.IsGenericType)
                 {
-                    foreach (var gta in t.GenericTypeArguments) l.AddRange(GenericTypeVariables(gta));
+                    foreach (var gta in t.GenericTypeArguments) l.AddRange(this.GenericTypeVariables(gta));
                 }
             }
             return l.Distinct();
@@ -568,8 +596,8 @@ namespace System.Runtime.CompilerServices
 
         private static void TurnTypeIntoCSharpSourceHelper(Type t, Dictionary<Type, string> d, ref int anonymousTypeCount)
         {
-            Contract.Requires(t != null);
-            Contract.Requires(d != null);
+            ArgumentNullException.ThrowIfNull(t);
+            ArgumentNullException.ThrowIfNull(d);
             if (d.TryGetValue(t, out _)) return;
 
             var typeName = t.FullName.Replace('#', '_').Replace('+', '.');
@@ -580,13 +608,13 @@ namespace System.Runtime.CompilerServices
                 d.Add(t, newGenericTypeParameter);
                 return;
             }
-            if (!t.GetTypeInfo().IsGenericType) // need to test after anonymous because deserialized anonymous types are *not* generic (but unserialized anonymous types *are* generic)
+            if (!t.IsGenericType) // need to test after anonymous because deserialized anonymous types are *not* generic (but unserialized anonymous types *are* generic)
             { d.Add(t, typeName); return; }
             var sb = new StringBuilder();
-            typeName = typeName.Substring(0, t.FullName.IndexOf('`'));
+            typeName = typeName[..t.FullName.IndexOf('`')];
             sb.AppendFormat("{0}<", typeName);
             var first = true;
-            if (!t.GetTypeInfo().Assembly.IsDynamic)
+            if (!t.Assembly.IsDynamic)
             {
                 foreach (var genericArgument in t.GenericTypeArguments)
                 {
@@ -597,7 +625,7 @@ namespace System.Runtime.CompilerServices
                     first = false;
                 }
             }
-            sb.Append(">");
+            sb.Append('>');
             typeName = sb.ToString();
             d.Add(t, typeName);
             return;
@@ -612,7 +640,7 @@ namespace System.Runtime.CompilerServices
         public readonly MyFieldInfo PseudoField; // used only when noFields is true
 
         public IEnumerable<MyFieldInfo> AllFields => this.noFields
-                    ? new List<MyFieldInfo>() { this.PseudoField }
+                    ? [this.PseudoField]
                     : this.Fields.Values;
 
         public ColumnarRepresentation(Type t)
@@ -620,35 +648,35 @@ namespace System.Runtime.CompilerServices
             this.RepresentationFor = t;
             var d = new Dictionary<string, MyFieldInfo>();
             this.Fields = d;
-            foreach (var f in t.GetTypeInfo().GetFields(BindingFlags.Instance | BindingFlags.Public))
+            foreach (var f in t.GetFields(BindingFlags.Instance | BindingFlags.Public))
                 d.Add(f.Name, new MyFieldInfo(f/*, prefix*/));
 
             // Any autoprops should be treated just as if they were a field
-            foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            foreach (var p in t.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
                 var getMethod = p.GetMethod;
                 if (getMethod == null) continue;
-                if (!getMethod.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute))) continue;
+                if (!getMethod.IsDefined(typeof(CompilerGeneratedAttribute))) continue;
                 var setMethod = p.SetMethod;
                 if (setMethod == null) continue;
-                if (!setMethod.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute))) continue;
+                if (!setMethod.IsDefined(typeof(CompilerGeneratedAttribute))) continue;
 
-                d.Add(p.Name, new MyFieldInfo(p/*, prefix*/));
+                d.Add(p.Name, new(p/*, prefix*/));
             }
 
             if (!this.Fields.Any())
             {
                 if (t.HasSupportedParameterizedConstructor())
                 {
-                    foreach (var p in t.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    foreach (var p in t.GetProperties(BindingFlags.Public | BindingFlags.Instance))
                     {
-                        d.Add(p.Name, new MyFieldInfo(p/*, prefix*/));
+                        d.Add(p.Name, new(p/*, prefix*/));
                     }
                 }
                 else
                 {
                     this.noFields = true;
-                    this.PseudoField = new MyFieldInfo(t, "payload");
+                    this.PseudoField = new(t, "payload");
                 }
             }
         }
@@ -657,7 +685,7 @@ namespace System.Runtime.CompilerServices
         {
             this.RepresentationFor = t;
             this.noFields = true;
-            this.PseudoField = new MyFieldInfo(t, pseudoFieldName);
+            this.PseudoField = new(t, pseudoFieldName);
         }
     }
 
@@ -709,7 +737,7 @@ namespace System.Runtime.CompilerServices
             this.DeclaringType = t.DeclaringType;
         }
 
-        public override string ToString() => "|" + this.TypeName + ", " + this.Name + "|";
+        public override readonly string ToString() => "|" + this.TypeName + ", " + this.Name + "|";
     }
 
     internal partial class SafeBatchTemplate
@@ -734,20 +762,18 @@ namespace System.Runtime.CompilerServices
         {
             var template = new SafeBatchTemplate();
 
-            assemblyReferences = new List<Assembly>
-            {
-                Transformer.SystemRuntimeSerializationDll // needed for [DataContract] and [DataMember] in generated code
-            };
-
-            assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(keyType));
+            assemblyReferences =
+            [
+                Transformer.SystemRuntimeSerializationDll, .. Transformer.AssemblyReferencesNeededFor(keyType) // needed for [DataContract] and [DataMember] in generated code
+            ];
             template.keyType = keyType;
 
             assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(payloadType));
             template.payloadType = payloadType;
             template.needsPolymorphismCheck =
-                !payloadType.GetTypeInfo().IsValueType &&
+                !payloadType.IsValueType &&
                 !payloadType.IsAnonymousTypeName() &&
-                !payloadType.GetTypeInfo().IsSealed;
+                !payloadType.IsSealed;
             template.payloadMightBeNull = payloadType.CanContainNull();
 
             generatedClassName = Transformer.GetBatchClassName(keyType, payloadType);
@@ -780,30 +806,29 @@ namespace System.Runtime.CompilerServices
 
         internal MemoryPoolTemplate(ColumnarRepresentation keyRepresentation, ColumnarRepresentation payloadRepresentation)
         {
-            this.assemblyReferences = new List<Assembly>();
+            this.assemblyReferences = [];
 
-            var keyType = keyRepresentation == null ? typeof(Empty) : keyRepresentation.RepresentationFor;
+            var keyType = keyRepresentation?.RepresentationFor ?? typeof(Empty);
 
             Contract.Assume(Transformer.IsValidKeyType(keyType));
 
             this.assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(keyType));
             this.keyType = keyType;
 
-#region Decompose TPayload into columns
+            #region Decompose TPayload into columns
             var payloadType = payloadRepresentation.RepresentationFor;
             this.assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(payloadType));
             this.payloadType = payloadType;
-            var payloadTypes = payloadRepresentation.AllFields.Select(f => f.Type).Where(t => !t.MemoryPoolHasGetMethodFor());
 
-            this.types = new HashSet<Type>(payloadTypes.Distinct());
+            this.types = [.. payloadRepresentation.AllFields.Select(f => f.Type).Where(t => !t.MemoryPoolHasGetMethodFor())];
 
             this.assemblyReferences.AddRange(this.types.SelectMany(t => Transformer.AssemblyReferencesNeededFor(t)));
-#endregion
+            #endregion
 
             this.generatedClassName = Transformer.GetMemoryPoolClassName(keyType, payloadType);
             this.className = this.generatedClassName.CleanUpIdentifierName();
             this.generatedClassName += "`2";
-            this.expandedCode = TransformText();
+            this.expandedCode = this.TransformText();
         }
     }
 }

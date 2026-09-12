@@ -259,7 +259,7 @@ internal sealed class ");
                     "ree();\r\n\r\n    public override int CurrentlyBufferedOutputCount => output.Count;\r" +
                     "\n\r\n    public override int CurrentlyBufferedInputCount => syncTimeMap.Count + co" +
                     "ntractedToZero.Values.Select(o => o.Count).Sum();\r\n\r\n");
- if (!noFields && !this.payloadType.GetTypeInfo().IsValueType) { 
+ if (!noFields && !this.payloadType.IsValueType) { 
             this.Write("    [DataContract]\r\n    private struct ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ActiveEventType));
             this.Write("\r\n    {\r\n        ");

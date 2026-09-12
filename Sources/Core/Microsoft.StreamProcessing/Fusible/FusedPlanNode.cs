@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing
 
         internal override void PrintConciseSummary(StringBuilder builder, int indentLevel)
         {
-            PrintConciseGeneralState(builder, indentLevel);
+            this.PrintConciseGeneralState(builder, indentLevel);
         }
 
         /// <summary>

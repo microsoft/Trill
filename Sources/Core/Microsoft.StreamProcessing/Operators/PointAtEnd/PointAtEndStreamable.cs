@@ -11,14 +11,14 @@ namespace Microsoft.StreamProcessing
     internal sealed class PointAtEndStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         public PointAtEndStreamable(IStreamable<TKey, TPayload> source)
             : base(source, source.Properties.PointAtEnd())
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
-            Initialize();
+            this.Initialize();
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing
             if (t == null)
             {
                 return this.Source.Properties.IsColumnar
-                    ? GetPipe(observer)
+                    ? this.GetPipe(observer)
                     : new PointAtEndPipe<TKey, TPayload>(this, observer);
             }
             var outputType = typeof(PartitionedPointAtEndPipe<,,>).MakeGenericType(

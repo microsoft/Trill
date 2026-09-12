@@ -22,8 +22,8 @@ namespace Microsoft.StreamProcessing.Serializer
         internal StateSerializer(ObjectSerializerBase schema)
         {
             this.schema = schema ?? throw new ArgumentNullException(nameof(schema));
-            this.serialize = new Lazy<Action<BinaryEncoder, T>>(GenerateSerializer);
-            this.deserialize = new Lazy<Func<BinaryDecoder, T>>(GenerateDeserializer);
+            this.serialize = new Lazy<Action<BinaryEncoder, T>>(this.GenerateSerializer);
+            this.deserialize = new Lazy<Func<BinaryDecoder, T>>(this.GenerateDeserializer);
         }
 
         /// <summary>

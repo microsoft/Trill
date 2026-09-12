@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         public SlidingMinAggregate(IComparerExpression<T> comparer, QueryContainer container)
         {
-            Contract.Requires(comparer != null);
+            ArgumentNullException.ThrowIfNull(comparer);
             this.comparer = comparer.GetCompareExpr().Compile();
 
             var generator = comparer.CreateSortedDictionaryGenerator<T, long>(container);
@@ -30,10 +30,10 @@ namespace Microsoft.StreamProcessing.Aggregates
         }
 
         private readonly Expression<Func<MinMaxState<T>>> initialState;
-        public Expression<Func<MinMaxState<T>>> InitialState() => initialState;
+        public Expression<Func<MinMaxState<T>>> InitialState() => this.initialState;
 
         public Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> Accumulate()
-            => (state, timestamp, input) => Accumulate(state, timestamp, input);
+            => (state, timestamp, input) => this.Accumulate(state, timestamp, input);
 
         private MinMaxState<T> Accumulate(MinMaxState<T> state, long timestamp, T input)
         {
@@ -75,7 +75,7 @@ namespace Microsoft.StreamProcessing.Aggregates
             return leftSet;
         }
 
-        public Expression<Func<MinMaxState<T>, T>> ComputeResult() => state => ComputeResult(state);
+        public Expression<Func<MinMaxState<T>, T>> ComputeResult() => state => this.ComputeResult(state);
 
         private T ComputeResult(MinMaxState<T> state)
         {

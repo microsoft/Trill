@@ -20,7 +20,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Used to avoid creating redundant readonly property.")]
         [DataMember]
-        private Dictionary<T, long> Elements = new Dictionary<T, long>();
+        private Dictionary<T, long> Elements = [];
         [DataMember]
         private long count;
 

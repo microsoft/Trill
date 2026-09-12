@@ -4,7 +4,6 @@
 // *********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
 using Microsoft.StreamProcessing;
@@ -13,7 +12,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting
 {
-    [SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009", Justification = "Reviewed.")]
     [TestClass]
     public class AggregateByKey : TestWithConfigSettingsAndMemoryLeakDetection
     {
@@ -149,7 +147,7 @@ namespace SimpleTesting
             input
                 .GroupAggregate(s => true, w => w.Count(), (g, c) => ValueTuple.Create(g.Key, c))
                 .ToStreamEventObservable()
-                .ForEachAsync(e => output.Add(e))
+                .ForEachAsync(output.Add)
                 .Wait();
 
             var correct = new[]

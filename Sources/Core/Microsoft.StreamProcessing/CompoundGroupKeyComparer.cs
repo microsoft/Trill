@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing
                 Expression.AndAlso(
                     Expression.Invoke(equalityOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
                     Expression.Invoke(equalityOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
-                    new ParameterExpression[] { e1, e2 });
+                    [e1, e2]);
         }
 
         public Expression<Func<CompoundGroupKey<TOuterKey, TInnerKey>, int>> GetGetHashCodeExpr()
@@ -46,7 +46,7 @@ namespace Microsoft.StreamProcessing
                 Expression.ExclusiveOr(
                     Expression.Invoke(hashOnT1, Expression.Field(e1, "outerGroup")),
                     Expression.Invoke(hashOnT2, Expression.Field(e1, "innerGroup"))),
-                    new ParameterExpression[] { e1 });
+                    [e1]);
         }
     }
 
@@ -75,7 +75,7 @@ namespace Microsoft.StreamProcessing
                 // (e1,e2) => comparerOnT2(e1.innerGroup, e2.innerGroup)
                 return Expression.Lambda<Comparison<CompoundGroupKey<TOuterKey, TInnerKey>>>(
                         Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup")),
-                        new ParameterExpression[] { e1, e2 });
+                        [e1, e2]);
             }
             else
             {
@@ -87,7 +87,7 @@ namespace Microsoft.StreamProcessing
                     Expression.Constant(0, typeof(int))),
                     Expression.Invoke(comparerOnT1, Expression.Field(e1, "outerGroup"), Expression.Field(e2, "outerGroup")),
                     Expression.Invoke(comparerOnT2, Expression.Field(e1, "innerGroup"), Expression.Field(e2, "innerGroup"))),
-                    new ParameterExpression[] { e1, e2 });
+                    [e1, e2]);
             }
         }
     }

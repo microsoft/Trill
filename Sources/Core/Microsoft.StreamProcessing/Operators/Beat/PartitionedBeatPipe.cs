@@ -33,17 +33,17 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<TKey, TPayload> output;
 
         [DataMember]
-        private FastDictionary<TPartitionKey, FastMap<ActiveInterval>> intervals = new FastDictionary<TPartitionKey, FastMap<ActiveInterval>>();
+        private FastDictionary<TPartitionKey, FastMap<ActiveInterval>> intervals = new();
         [DataMember]
-        private FastDictionary<TPartitionKey, FastMap<ActiveEdge>> edges = new FastDictionary<TPartitionKey, FastMap<ActiveEdge>>();
+        private FastDictionary<TPartitionKey, FastMap<ActiveEdge>> edges = new();
         [DataMember]
         private int intervalIndex;
         [DataMember]
         private int edgeIndex;
         [DataMember]
-        private FastDictionary<TPartitionKey, long> currBeatTime = new FastDictionary<TPartitionKey, long>();
+        private FastDictionary<TPartitionKey, long> currBeatTime = new();
         [DataMember]
-        private FastDictionary<TPartitionKey, long> lastTime = new FastDictionary<TPartitionKey, long>();
+        private FastDictionary<TPartitionKey, long> lastTime = new();
         [DataMember]
         private int currBeatIndex;
         [DataMember]
@@ -105,17 +105,17 @@ namespace Microsoft.StreamProcessing
                         bool isStartEdge = isInsert && endTime == StreamEvent.InfinitySyncTime;
                         bool isEndEdge = !isInsert;
 
-                        if (isLowWatermark) AdvanceGlobalTime(startTime);
-                        else AdvanceTime(startTime);
+                        if (isLowWatermark) this.AdvanceGlobalTime(startTime);
+                        else this.AdvanceTime(startTime);
 
                         if (isPunctuation || isLowWatermark)
                         {
-                            AddToBatch(startTime, endTime, ref sourceKey[row], ref sourcePayload[row], hash);
+                            this.AddToBatch(startTime, endTime, ref sourceKey[row], ref sourcePayload[row], hash);
                         }
                         else if (isStartEdge)
                         {
                             // Add starting edge { vSync = startTime, vOther = StreamEvent.InfinitySyncTime }.
-                            AddToBatch(startTime, StreamEvent.InfinitySyncTime, ref sourceKey[row], ref sourcePayload[row], hash);
+                            this.AddToBatch(startTime, StreamEvent.InfinitySyncTime, ref sourceKey[row], ref sourcePayload[row], hash);
 
                             // Add to active edges list to handle repeat at beats (and waiting for closing edge).
                             int index = this.edges.entries[this.edgeIndex].value.Insert(hash);
@@ -138,12 +138,12 @@ namespace Microsoft.StreamProcessing
                                 if (edgeStartedBeforeLastBeat)
                                 {
                                     // Add closing edge { vSync = edgeEndTime, vOther = lastBeatTime }.
-                                    AddToBatch(edgeEndTime, lastBeatTime, ref sourceKey[row], ref sourcePayload[row], hash);
+                                    this.AddToBatch(edgeEndTime, lastBeatTime, ref sourceKey[row], ref sourcePayload[row], hash);
                                 }
                                 else
                                 {
                                     // Add closing edge { vSync = edgeEndTime, vOther = edgeStartTime }.
-                                    AddToBatch(edgeEndTime, edgeStartTime, ref sourceKey[row], ref sourcePayload[row], hash);
+                                    this.AddToBatch(edgeEndTime, edgeStartTime, ref sourceKey[row], ref sourcePayload[row], hash);
                                 }
                             }
 
@@ -151,7 +151,7 @@ namespace Microsoft.StreamProcessing
                             var edgesTraversal = this.edges.entries[this.edgeIndex].value.Find(hash);
                             while (edgesTraversal.Next(out int index))
                             {
-                                if (AreSame(edgeStartTime, ref sourceKey[row], ref sourcePayload[row], ref this.edges.entries[this.edgeIndex].value.Values[index]))
+                                if (this.AreSame(edgeStartTime, ref sourceKey[row], ref sourcePayload[row], ref this.edges.entries[this.edgeIndex].value.Values[index]))
                                 {
                                     edgesTraversal.Remove();
                                     break;
@@ -166,14 +166,14 @@ namespace Microsoft.StreamProcessing
                             if (isLastBeatForInterval)
                             {
                                 // Add interval { vSync = startTime, vOther = endTime }.
-                                AddToBatch(startTime, endTime, ref sourceKey[row], ref sourcePayload[row], hash);
+                                this.AddToBatch(startTime, endTime, ref sourceKey[row], ref sourcePayload[row], hash);
 
                                 // No need to add to active list as interval ends <= nextBeatTime.
                             }
                             else
                             {
                                 // Add interval { vSync = startTime, vOther = nextBeatTime }.
-                                AddToBatch(startTime, nextBeatTime, ref sourceKey[row], ref sourcePayload[row], hash);
+                                this.AddToBatch(startTime, nextBeatTime, ref sourceKey[row], ref sourcePayload[row], hash);
 
                                 // Add to active list to handle repeat at beats.
                                 int index = this.intervals.entries[this.intervalIndex].value.Insert(hash);
@@ -206,7 +206,7 @@ namespace Microsoft.StreamProcessing
                 this.edges.Lookup(partitionKey, out this.edgeIndex);
                 this.currBeatTime.Lookup(partitionKey, out this.currBeatIndex);
                 this.lastTime.Lookup(partitionKey, out this.lastIndex);
-                AdvanceTime(time);
+                this.AdvanceTime(time);
             }
         }
 
@@ -231,7 +231,7 @@ namespace Microsoft.StreamProcessing
             if (this.edges.entries[this.edgeIndex].value.IsEmpty && this.intervals.entries[this.intervalIndex].value.IsEmpty)
             {
                 // No elements to track, so just advance time to next beat.
-                this.currBeatTime.entries[this.currBeatIndex].value = FindNextBeatGreaterThanOrEqualTo(time);
+                this.currBeatTime.entries[this.currBeatIndex].value = this.FindNextBeatGreaterThanOrEqualTo(time);
                 this.lastTime.entries[this.lastIndex].value = time;
                 return;
             }
@@ -241,12 +241,12 @@ namespace Microsoft.StreamProcessing
             if (this.lastTime.entries[this.lastIndex].value < this.currBeatTime.entries[this.currBeatIndex].value)
             {
                 // This is the first time reaching the time currBeatTime, so handle reaching a beat.
-                ReachBeat(this.currBeatTime.entries[this.currBeatIndex].value);
+                this.ReachBeat(this.currBeatTime.entries[this.currBeatIndex].value);
 
                 if (this.edges.entries[this.edgeIndex].value.IsEmpty && this.intervals.entries[this.intervalIndex].value.IsEmpty)
                 {
                     // No elements to track, so just advance time to next beat.
-                    this.currBeatTime.entries[this.currBeatIndex].value = FindNextBeatGreaterThanOrEqualTo(time);
+                    this.currBeatTime.entries[this.currBeatIndex].value = this.FindNextBeatGreaterThanOrEqualTo(time);
                     this.lastTime.entries[this.currBeatIndex].value = time;
                     return;
                 }
@@ -260,14 +260,14 @@ namespace Microsoft.StreamProcessing
                 // been edges at currBeatTime or edges to still come at currBeatTime + period, however.
 
                 // Regardless, we can optimize edges to output as intervals for (currBeatTime, currBeatTime + period).
-                LeaveBeatContinuousToNext(this.currBeatTime.entries[this.currBeatIndex].value);
+                this.LeaveBeatContinuousToNext(this.currBeatTime.entries[this.currBeatIndex].value);
                 this.currBeatTime.entries[this.currBeatIndex].value += this.period;
-                ReachBeatContinuousFromLast(this.currBeatTime.entries[this.currBeatIndex].value);
+                this.ReachBeatContinuousFromLast(this.currBeatTime.entries[this.currBeatIndex].value);
 
                 if (this.edges.entries[this.edgeIndex].value.IsEmpty && this.intervals.entries[this.intervalIndex].value.IsEmpty)
                 {
                     // No elements to track, so just advance time to next beat.
-                    this.currBeatTime.entries[this.currBeatIndex].value = FindNextBeatGreaterThanOrEqualTo(time);
+                    this.currBeatTime.entries[this.currBeatIndex].value = this.FindNextBeatGreaterThanOrEqualTo(time);
                     this.lastTime.entries[this.lastIndex].value = time;
                     return;
                 }
@@ -277,7 +277,7 @@ namespace Microsoft.StreamProcessing
             if (time > this.currBeatTime.entries[this.currBeatIndex].value)
             {
                 // time has passed the beat at currBeatTime, so handle the beat.
-                LeaveBeat(this.currBeatTime.entries[this.currBeatIndex].value);
+                this.LeaveBeat(this.currBeatTime.entries[this.currBeatIndex].value);
                 this.currBeatTime.entries[this.currBeatIndex].value += this.period;
             }
 
@@ -303,12 +303,12 @@ namespace Microsoft.StreamProcessing
                 if (edgeStartedBeforeLastBeat)
                 {
                     // Add closing edge { vSync = beatTime, vOther = lastBeatTime }.
-                    AddToBatch(beatTime, lastBeatTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
+                    this.AddToBatch(beatTime, lastBeatTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
                 }
                 else
                 {
                     // Add closing edge { vSync = beatTime, vOther = edge.Start }.
-                    AddToBatch(beatTime, edgeStartTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
+                    this.AddToBatch(beatTime, edgeStartTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
                 }
             }
 
@@ -322,7 +322,7 @@ namespace Microsoft.StreamProcessing
                 if (isLastBeatForInterval)
                 {
                     // Add interval { vSync = beatTime, vOther = interval.End }.
-                    AddToBatch(beatTime, intervalEndTime, ref this.intervals.entries[this.intervalIndex].value.Values[index].Key, ref this.intervals.entries[this.intervalIndex].value.Values[index].Payload, hash);
+                    this.AddToBatch(beatTime, intervalEndTime, ref this.intervals.entries[this.intervalIndex].value.Values[index].Key, ref this.intervals.entries[this.intervalIndex].value.Values[index].Payload, hash);
 
                     // Remove from active list as no longer need to output.
                     intervalTraverser.Remove();
@@ -330,7 +330,7 @@ namespace Microsoft.StreamProcessing
                 else
                 {
                     // Add interval { vSync = beatTime, vOther = nextBeatTime }.
-                    AddToBatch(beatTime, nextBeatTime, ref this.intervals.entries[this.intervalIndex].value.Values[index].Key, ref this.intervals.entries[this.intervalIndex].value.Values[index].Payload, hash);
+                    this.AddToBatch(beatTime, nextBeatTime, ref this.intervals.entries[this.intervalIndex].value.Values[index].Key, ref this.intervals.entries[this.intervalIndex].value.Values[index].Payload, hash);
                 }
             }
         }
@@ -347,7 +347,7 @@ namespace Microsoft.StreamProcessing
                 if (edgeWasAddedPriorToBeat)
                 {
                     // Add starting edge { vSync = beatTime, vOther = StreamEvent.InfinitySyncTime }.
-                    AddToBatch(beatTime, StreamEvent.InfinitySyncTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
+                    this.AddToBatch(beatTime, StreamEvent.InfinitySyncTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
                 }
             }
         }
@@ -368,7 +368,7 @@ namespace Microsoft.StreamProcessing
                 if (edgeWasAddedPriorToBeat)
                 {
                     // Add interval for edge { vSync = beatTime, vOther = nextBeatTime }.
-                    AddToBatch(beatTime, nextBeatTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
+                    this.AddToBatch(beatTime, nextBeatTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
                 }
                 else
                 {
@@ -382,7 +382,7 @@ namespace Microsoft.StreamProcessing
             while (invisibleTraverser.Next(out index, out hash))
             {
                 // Add closing edge { vSync = nextBeatTime, vOther = beatTime }.
-                AddToBatch(nextBeatTime, beatTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
+                this.AddToBatch(nextBeatTime, beatTime, ref this.edges.entries[this.edgeIndex].value.Values[index].Key, ref this.edges.entries[this.edgeIndex].value.Values[index].Payload, hash);
                 invisibleTraverser.MakeVisible();
             }
         }
@@ -402,7 +402,7 @@ namespace Microsoft.StreamProcessing
                 if (isLastBeatForInterval)
                 {
                     // Add interval { vSync = beatTime, vOther = interval.End }.
-                    AddToBatch(beatTime, intervalEndTime, ref this.intervals.entries[this.intervalIndex].value.Values[index].Key, ref this.intervals.entries[this.intervalIndex].value.Values[index].Payload, hash);
+                    this.AddToBatch(beatTime, intervalEndTime, ref this.intervals.entries[this.intervalIndex].value.Values[index].Key, ref this.intervals.entries[this.intervalIndex].value.Values[index].Payload, hash);
 
                     // Remove from active list as no longer need to output.
                     intervalTraverser.Remove();
@@ -410,7 +410,7 @@ namespace Microsoft.StreamProcessing
                 else
                 {
                     // Add interval { vSync = beatTime, vOther = nextBeatTime }.
-                    AddToBatch(beatTime, nextBeatTime, ref this.intervals.entries[this.intervalIndex].value.Values[index].Key, ref this.intervals.entries[this.intervalIndex].value.Values[index].Payload, hash);
+                    this.AddToBatch(beatTime, nextBeatTime, ref this.intervals.entries[this.intervalIndex].value.Values[index].Key, ref this.intervals.entries[this.intervalIndex].value.Values[index].Payload, hash);
                 }
             }
         }
@@ -433,7 +433,7 @@ namespace Microsoft.StreamProcessing
             this.output.hash.col[index] = hash;
             if (end < 0) this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
 
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -449,7 +449,14 @@ namespace Microsoft.StreamProcessing
             this.output.Allocate();
         }
 
-        protected override void DisposeState() => this.output.Free();
+        protected override void DisposeState()
+        {
+            this.intervals.Dispose();
+            this.edges.Dispose();
+            this.currBeatTime.Dispose();
+            this.lastTime.Dispose();
+            this.output.Free();
+        }
 
         public override int CurrentlyBufferedOutputCount => this.output.Count;
 
@@ -484,7 +491,7 @@ namespace Microsoft.StreamProcessing
                 this.Payload = payload;
             }
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
@@ -506,7 +513,7 @@ namespace Microsoft.StreamProcessing
                 this.Payload = payload;
             }
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[Start=" + this.Start + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
     }

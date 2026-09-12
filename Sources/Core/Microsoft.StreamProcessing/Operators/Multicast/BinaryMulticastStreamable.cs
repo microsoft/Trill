@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
             Func<IStreamable<TKey, TSourceLeft>, IStreamable<TKey, TSourceRight>, IStreamable<TKey, TResult>> selector)
             : base(sourceLeft.Properties.Derive(sourceRight.Properties, selector))
         {
-            Contract.Requires(sourceLeft != null);
+            ArgumentNullException.ThrowIfNull(sourceLeft);
 
             this.sourceLeft = sourceLeft;
             this.sourceRight = sourceRight;

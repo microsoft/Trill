@@ -45,7 +45,7 @@ namespace Microsoft.StreamProcessing
         // The End event moves an item from the OpenEvent to the ClosedEvent set
         [DataMember]
         private SortedDictionary<long, FastDictionary2<KHP, List<ActiveEvent>>> ClosedEvents =
-            new SortedDictionary<long, FastDictionary2<KHP, List<ActiveEvent>>>();
+            [];
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public StitchPipe() { }
@@ -64,7 +64,7 @@ namespace Microsoft.StreamProcessing
             var equals = khpcomparer.GetEqualsExpr().Compile();
             var getHashCode = khpcomparer.GetGetHashCodeExpr().Compile();
             var generator = khpcomparer.CreateFastDictionary2Generator<KHP, List<ActiveEvent>>(1, equals, getHashCode, stream.Properties.QueryContainer);
-            this.dictPool = new DataStructurePool<FastDictionary2<KHP, List<ActiveEvent>>>(() => generator.Invoke());
+            this.dictPool = new DataStructurePool<FastDictionary2<KHP, List<ActiveEvent>>>(generator.Invoke);
             this.outputCount = 0;
             this.CurrentTimeOpenEventBuffer = khpcomparer.CreateFastDictionary2Generator<KHP, int>(1, equals, getHashCode, stream.Properties.QueryContainer).Invoke();
             this.OpenEvents = khpcomparer.CreateFastDictionary2Generator<KHP, List<ActiveEventExt>>(1, equals, getHashCode, stream.Properties.QueryContainer).Invoke();
@@ -81,7 +81,7 @@ namespace Microsoft.StreamProcessing
             }
             else
             {
-                lst = new List<V>();
+                lst = [];
                 events.Insert(key, lst);
                 lst.Add(value);
             }
@@ -148,7 +148,7 @@ namespace Microsoft.StreamProcessing
                 return rv;
             }
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
@@ -161,7 +161,7 @@ namespace Microsoft.StreamProcessing
             public TKey Key;
             public int Hash;
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[OriginalStart=" + this.OriginalStart + ", Start=" + this.Start + ", End=" + this.End + ", Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
@@ -171,7 +171,7 @@ namespace Microsoft.StreamProcessing
             public TKey Key;
             public int Hash;
 
-            public override string ToString()
+            public override readonly string ToString()
                 => "[Key='" + this.Key + "', Payload='" + this.Payload + "']";
         }
 
@@ -204,12 +204,12 @@ namespace Microsoft.StreamProcessing
                         if (this.now < sync)
                         {
                             this.now = sync;
-                            Purge(sync);
+                            this.Purge(sync);
                         }
 
                         if (*vother == StreamEvent.InfinitySyncTime)
                         {
-                            ActOnStart(input[i], input.key.col[i], *hash, *vsync);
+                            this.ActOnStart(input[i], input.key.col[i], *hash, *vsync);
                         }
                         else if (*vother == StreamEvent.PunctuationOtherTime)
                         {
@@ -221,16 +221,16 @@ namespace Microsoft.StreamProcessing
                             this.batch.bitvector.col[this.outputCount >> 6] |= 1L << (this.outputCount & 0x3f);
                             this.outputCount++;
 
-                            if (this.outputCount == Config.DataBatchSize) FlushContents();
+                            if (this.outputCount == Config.DataBatchSize) this.FlushContents();
                         }
                         else if (*vsync < *vother)
                         {
-                            ActOnStart(input[i], input.key.col[i], *hash, *vsync);
-                            ActOnEnd(input[i], input.key.col[i], *hash, *vsync, *vother);
+                            this.ActOnStart(input[i], input.key.col[i], *hash, *vsync);
+                            this.ActOnEnd(input[i], input.key.col[i], *hash, *vsync, *vother);
                         }
                         else
                         {
-                            ActOnEnd(input[i], input.key.col[i], *hash, *vother, *vsync);
+                            this.ActOnEnd(input[i], input.key.col[i], *hash, *vother, *vsync);
                         }
                     }
 
@@ -309,7 +309,7 @@ namespace Microsoft.StreamProcessing
                     };
 
                     // brand new event! Issue a public version
-                    Emit(ActiveEvent.FromExt(activeEventExt));
+                    this.Emit(ActiveEvent.FromExt(activeEventExt));
 
                     InsertOrAppend(this.OpenEvents, lookupStart, activeEventExt);
                 }
@@ -353,7 +353,7 @@ namespace Microsoft.StreamProcessing
                     var e = this.CurrentTimeOpenEventBuffer.entries[it];
 
                     for (int i = 0; i < e.value; i++)
-                        ActOnStart(e.key.Payload, e.key.Key, e.key.Hash, this.CurrentTimeOpenEventBufferTime, true);
+                        this.ActOnStart(e.key.Payload, e.key.Key, e.key.Hash, this.CurrentTimeOpenEventBufferTime, true);
 
                 }
 
@@ -365,7 +365,7 @@ namespace Microsoft.StreamProcessing
                 var iterator = FastDictionary2<TPayload, ActiveEvent>.IteratorStart;
                 while (closed.Value.Iterate(ref iterator))
                 {
-                    foreach (var v in closed.Value.entries[iterator].value) Emit(v);
+                    foreach (var v in closed.Value.entries[iterator].value) this.Emit(v);
                 }
                 closed.Value.Initialize();
                 this.ClosedEvents.Remove(closed.Key);
@@ -402,7 +402,7 @@ namespace Microsoft.StreamProcessing
             this.outputCount++;
             tempOutputCount = this.outputCount;
 
-            if (tempOutputCount == Config.DataBatchSize) FlushContents();
+            if (tempOutputCount == Config.DataBatchSize) this.FlushContents();
         }
 
         public override int CurrentlyBufferedOutputCount => this.outputCount;

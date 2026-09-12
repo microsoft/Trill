@@ -42,20 +42,20 @@ namespace Microsoft.StreamProcessing
             Func<Window<CompoundGroupKey<TKey, TGroupKey>, TValue>, IAggregate<TValue, TState, TAggValue>> aggregate) where TOutput : new()
         {
             bool sourceHasNullableValues = IsNullable(typeof(TValue));
-            if (initializer == null) throw new ArgumentNullException(nameof(initializer));
+            ArgumentNullException.ThrowIfNull(initializer);
 
             var window = new Window<CompoundGroupKey<TKey, TGroupKey>, TValue>(inputStreamable.Properties.GroupNested(keySelector).Select<TValue>(valueSelector, false, false));
             var agg = aggregate(window);
             var valueAgg = agg.TransformInput(valueSelector);
             var outputPublicFields =
-                typeof(TOutput).GetTypeInfo()
+                typeof(TOutput)
                 .GetFields(BindingFlags.Public | BindingFlags.Instance)
                 .Select(f => Tuple.Create(f.Name, f.FieldType, (MemberInfo)f, !sourceHasNullableValues && IsNullable(f.FieldType)))
                 .Concat(
-                typeof(TOutput).GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                typeof(TOutput).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.GetIndexParameters().Length == 0)
                 .Select(f => Tuple.Create(f.Name, f.PropertyType, (MemberInfo)f, !sourceHasNullableValues && IsNullable(f.PropertyType))))
-                .Where(m => m.Item2.GetTypeInfo().IsAssignableFrom(typeof(TAggValue))).ToArray();
+                .Where(m => m.Item2.IsAssignableFrom(typeof(TAggValue))).ToArray();
             var aggArray = outputPublicFields.Select(
                 m => valueAgg.ApplyFilter(
                     Expression.Lambda<Func<TInput, bool>>(
@@ -104,7 +104,7 @@ namespace Microsoft.StreamProcessing
                     if (selector.Expression.NodeType == ExpressionType.Parameter)
                     {
                         keyAssignments.Add(Expression.Bind(
-                            typeof(TOutput).GetTypeInfo().GetMember(selector.Member.Name).Single(),
+                            typeof(TOutput).GetMember(selector.Member.Name).Single(),
                             Expression.PropertyOrField(groupkey, "Key")));
                     }
                     else throw new NotImplementedException();
@@ -120,7 +120,7 @@ namespace Microsoft.StreamProcessing
                             if (assign.Expression is MemberExpression rightSide && rightSide.Expression.NodeType == ExpressionType.Parameter)
                             {
                                 keyAssignments.Add(Expression.Bind(
-                                    typeof(TOutput).GetTypeInfo().GetMember(assign.Member.Name).Single(),
+                                    typeof(TOutput).GetMember(assign.Member.Name).Single(),
                                     Expression.PropertyOrField(Expression.PropertyOrField(groupkey, "Key"), rightSide.Member.Name)));
                             }
                             else throw new NotImplementedException();
@@ -138,7 +138,7 @@ namespace Microsoft.StreamProcessing
                             if (newInit.Arguments[i] is MemberExpression rightSide)
                             {
                                 keyAssignments.Add(Expression.Bind(
-                                    typeof(TOutput).GetTypeInfo().GetMember(leftSide.Name).Single(),
+                                    typeof(TOutput).GetMember(leftSide.Name).Single(),
                                     Expression.PropertyOrField(Expression.PropertyOrField(groupkey, "Key"), rightSide.Member.Name)));
                             }
                             else throw new NotImplementedException();
@@ -158,7 +158,7 @@ namespace Microsoft.StreamProcessing
                         (a, i) => Expression.Bind(
                             a.Item3,
                             a.Item4
-                                ? (Expression)Expression.New(typeof(Nullable<>).MakeGenericType(typeof(TValue)).GetTypeInfo().GetConstructor(new[] { typeof(TValue) }), Expression.ArrayIndex(aggvalues, Expression.Constant(i)))
+                                ? (Expression)Expression.New(typeof(Nullable<>).MakeGenericType(typeof(TValue)).GetConstructor([typeof(TValue)]), Expression.ArrayIndex(aggvalues, Expression.Constant(i)))
                                 : Expression.ArrayIndex(aggvalues, Expression.Constant(i))))));
             var resultConstructor = Expression.Lambda<Func<GroupSelectorInput<TGroupKey>, TAggValue[], TOutput>>(
                 constructor, groupkey, aggvalues);
@@ -187,11 +187,11 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TResult, string>> attributeSelector,
             Expression<Func<TResult, TValue>> valueSelector) where TResult : new()
         {
-            Invariant.IsNotNull(inputStreamable, nameof(inputStreamable));
-            Invariant.IsNotNull(initializer, nameof(initializer));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
-            Invariant.IsNotNull(attributeSelector, nameof(attributeSelector));
-            Invariant.IsNotNull(valueSelector, nameof(valueSelector));
+            ArgumentNullException.ThrowIfNull(inputStreamable);
+            ArgumentNullException.ThrowIfNull(initializer);
+            ArgumentNullException.ThrowIfNull(keySelector);
+            ArgumentNullException.ThrowIfNull(attributeSelector);
+            ArgumentNullException.ThrowIfNull(valueSelector);
 
             if (!(initializer.Body is NewExpression newExpression)) throw new ArgumentException("Initializer must return a constructor expression.", nameof(initializer));
             if (!(attributeSelector.Body is MemberExpression attributeField)) throw new ArgumentException("Attribute selector expression must refer to a single field in the return type.");
@@ -204,8 +204,8 @@ namespace Microsoft.StreamProcessing
 
         private sealed class UnpivotEnumerable<TInput, TPivotKey, TValue, TResult>
         {
-            private readonly Dictionary<string, Func<TInput, string, TResult>> fields = new Dictionary<string, Func<TInput, string, TResult>>();
-            private readonly Dictionary<string, Func<TInput, bool>> isNull = new Dictionary<string, Func<TInput, bool>>();
+            private readonly Dictionary<string, Func<TInput, string, TResult>> fields = [];
+            private readonly Dictionary<string, Func<TInput, bool>> isNull = [];
 
             public UnpivotEnumerable(Expression<Func<TInput, TPivotKey>> keySelector, NewExpression newExpression, MemberExpression attributeField, MemberExpression valueField)
             {
@@ -222,7 +222,7 @@ namespace Microsoft.StreamProcessing
                         {
                             var selector = keySelector.Body as MemberExpression;
                             keyAssignments.Add(Expression.Bind(
-                                typeof(TResult).GetTypeInfo().GetMember(selector.Member.Name).Single(),
+                                typeof(TResult).GetMember(selector.Member.Name).Single(),
                                 Expression.PropertyOrField(input, selector.Member.Name)));
                             keyFields.Add(selector.Member.Name);
                             break;
@@ -238,14 +238,14 @@ namespace Microsoft.StreamProcessing
                                 if (singleInit.Expression is MemberExpression rightSide)
                                 {
                                     keyAssignments.Add(Expression.Bind(
-                                        typeof(TResult).GetTypeInfo().GetMember(singleInit.Member.Name).Single(),
+                                        typeof(TResult).GetMember(singleInit.Member.Name).Single(),
                                         Expression.PropertyOrField(input, rightSide.Member.Name)));
                                     keyFields.Add(rightSide.Member.Name);
                                 }
                                 else
                                 {
                                     keyAssignments.Add(Expression.Bind(
-                                        typeof(TResult).GetTypeInfo().GetMember(singleInit.Member.Name).Single(), ParameterSubstituter.Replace(keySelector.Parameters[0], input, singleInit.Expression)));
+                                        typeof(TResult).GetMember(singleInit.Member.Name).Single(), ParameterSubstituter.Replace(keySelector.Parameters[0], input, singleInit.Expression)));
                                 }
                             }
                             break;
@@ -261,14 +261,14 @@ namespace Microsoft.StreamProcessing
                                     if (newInit.Arguments[i] is MemberExpression rightSide)
                                     {
                                         keyAssignments.Add(Expression.Bind(
-                                            typeof(TResult).GetTypeInfo().GetMember(leftSide.Name).Single(),
+                                            typeof(TResult).GetMember(leftSide.Name).Single(),
                                             Expression.PropertyOrField(input, rightSide.Member.Name)));
                                         keyFields.Add(rightSide.Member.Name);
                                     }
                                     else
                                     {
                                         keyAssignments.Add(Expression.Bind(
-                                            typeof(TResult).GetTypeInfo().GetMember(leftSide.Name).Single(), ParameterSubstituter.Replace(keySelector.Parameters[0], input, newInit.Arguments[i])));
+                                            typeof(TResult).GetMember(leftSide.Name).Single(), ParameterSubstituter.Replace(keySelector.Parameters[0], input, newInit.Arguments[i])));
                                     }
                                 }
                             }
@@ -276,54 +276,54 @@ namespace Microsoft.StreamProcessing
                             {
                                 // Currently do the same thing as the default case, but we might be able to be smarter here.
                                 // If we have an arbitrary expression, assume we have only one remaining field that is not the attribute or value fields and assign to it.
-                                var outputFields = typeof(TResult).GetTypeInfo().GetFields(BindingFlags.Public | BindingFlags.Instance).OrderBy(o => o.Name).Select(o => o.Name)
+                                var outputFields = typeof(TResult).GetFields(BindingFlags.Public | BindingFlags.Instance).OrderBy(o => o.Name).Select(o => o.Name)
                                     .Concat(
-                                        typeof(TResult).GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).OrderBy(o => o.Name).Select(o => o.Name))
+                                        typeof(TResult).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).OrderBy(o => o.Name).Select(o => o.Name))
                                     .Where(o => o != attributeField.Member.Name && o != valueField.Member.Name).ToList();
                                 if (outputFields.Count != 1) throw new NotSupportedException("Unpivot operation could not determine a unique field to which to assign key values.");
 
                                 keyAssignments.Add(Expression.Bind(
-                                    typeof(TResult).GetTypeInfo().GetMember(outputFields.Single()).Single(), keySelector.ReplaceParametersInBody(input)));
+                                    typeof(TResult).GetMember(outputFields.Single()).Single(), keySelector.ReplaceParametersInBody(input)));
                             }
                             break;
                         }
                     default:
                         {
                             // If we have an arbitrary expression, assume we have only one remaining field that is not the attribute or value fields and assign to it.
-                            var outputFields = typeof(TResult).GetTypeInfo().GetFields(BindingFlags.Public | BindingFlags.Instance).OrderBy(o => o.Name).Select(o => o.Name)
+                            var outputFields = typeof(TResult).GetFields(BindingFlags.Public | BindingFlags.Instance).OrderBy(o => o.Name).Select(o => o.Name)
                                 .Concat(
-                                    typeof(TResult).GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).OrderBy(o => o.Name).Select(o => o.Name))
+                                    typeof(TResult).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).OrderBy(o => o.Name).Select(o => o.Name))
                                 .Where(o => o != attributeField.Member.Name && o != valueField.Member.Name).ToList();
                             if (outputFields.Count != 1) throw new NotSupportedException("Unpivot operation could not determine a unique field to which to assign key values.");
 
                             keyAssignments.Add(Expression.Bind(
-                                typeof(TResult).GetTypeInfo().GetMember(outputFields.Single()).Single(), keySelector.ReplaceParametersInBody(input)));
+                                typeof(TResult).GetMember(outputFields.Single()).Single(), keySelector.ReplaceParametersInBody(input)));
                             break;
                         }
                 }
 
                 keyAssignments.Add(Expression.Bind(attributeField.Member, attribute));
-                foreach (var field in typeof(TInput).GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).Where(o => !keyFields.Contains(o.Name)).OrderBy(o => o.Name))
+                foreach (var field in typeof(TInput).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetIndexParameters().Length == 0).Where(o => !keyFields.Contains(o.Name)).OrderBy(o => o.Name))
                 {
                     if (IsNullable(field.PropertyType))
                     {
-                        if (!typeof(TValue).GetTypeInfo().IsAssignableFrom(field.PropertyType.GetTypeInfo().GetGenericArguments()[0])) continue;
+                        if (!typeof(TValue).IsAssignableFrom(field.PropertyType.GetGenericArguments()[0])) continue;
                         this.isNull.Add(
                             field.Name, Expression.Lambda<Func<TInput, bool>>(
                                 Expression.IsTrue(Expression.PropertyOrField(Expression.PropertyOrField(input, field.Name), "HasValue")),
-                                new[] { input }).Compile());
+                                [input]).Compile());
                     }
-                    else if (valueField.Type.GetTypeInfo().IsClass)
+                    else if (valueField.Type.IsClass)
                     {
-                        if (!typeof(TValue).GetTypeInfo().IsAssignableFrom(field.PropertyType)) continue;
+                        if (!typeof(TValue).IsAssignableFrom(field.PropertyType)) continue;
                         this.isNull.Add(
                             field.Name, Expression.Lambda<Func<TInput, bool>>(
                                 Expression.Equal(Expression.PropertyOrField(input, field.Name), Expression.Constant(null)),
-                                new[] { input }).Compile());
+                                [input]).Compile());
                     }
                     else
                     {
-                        if (!typeof(TValue).GetTypeInfo().IsAssignableFrom(field.PropertyType)) continue;
+                        if (!typeof(TValue).IsAssignableFrom(field.PropertyType)) continue;
                         this.isNull.Add(field.Name, (TInput o) => true);
                     }
 
@@ -339,27 +339,27 @@ namespace Microsoft.StreamProcessing
                     var fieldResult = Expression.Lambda<Func<TInput, string, TResult>>(constructor, input, attribute);
                     this.fields.Add(field.Name, fieldResult.Compile());
                 }
-                foreach (var field in typeof(TInput).GetTypeInfo().GetFields(BindingFlags.Public | BindingFlags.Instance).Where(o => !keyFields.Contains(o.Name)).OrderBy(o => o.Name))
+                foreach (var field in typeof(TInput).GetFields(BindingFlags.Public | BindingFlags.Instance).Where(o => !keyFields.Contains(o.Name)).OrderBy(o => o.Name))
                 {
                     if (IsNullable(field.FieldType))
                     {
-                        if (!typeof(TValue).GetTypeInfo().IsAssignableFrom(field.FieldType.GetTypeInfo().GetGenericArguments()[0])) continue;
+                        if (!typeof(TValue).IsAssignableFrom(field.FieldType.GetGenericArguments()[0])) continue;
                         this.isNull.Add(
                             field.Name, Expression.Lambda<Func<TInput, bool>>(
                                 Expression.IsFalse(Expression.PropertyOrField(Expression.PropertyOrField(input, field.Name), "HasValue")),
-                                new[] { input }).Compile());
+                                [input]).Compile());
                     }
-                    else if (valueField.Type.GetTypeInfo().IsClass)
+                    else if (valueField.Type.IsClass)
                     {
-                        if (!typeof(TValue).GetTypeInfo().IsAssignableFrom(field.FieldType)) continue;
+                        if (!typeof(TValue).IsAssignableFrom(field.FieldType)) continue;
                         this.isNull.Add(
                             field.Name, Expression.Lambda<Func<TInput, bool>>(
                                 Expression.Equal(Expression.PropertyOrField(input, field.Name), Expression.Constant(null)),
-                                new[] { input }).Compile());
+                                [input]).Compile());
                     }
                     else
                     {
-                        if (!typeof(TValue).GetTypeInfo().IsAssignableFrom(field.FieldType)) continue;
+                        if (!typeof(TValue).IsAssignableFrom(field.FieldType)) continue;
                         this.isNull.Add(field.Name, (TInput o) => true);
                     }
 
@@ -383,6 +383,6 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        private static bool IsNullable(Type type) => type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        private static bool IsNullable(Type type) => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
     }
 }

@@ -17,7 +17,7 @@ namespace Microsoft.StreamProcessing
         public static EvolvingStateEnumerable<TPayload> ToEnumerable<TPayload>(
             this IStreamable<Empty, TPayload> stream)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToEnumerable(null, Guid.NewGuid().ToString());
         }
@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>An IObservable object of change list events for output data from the query.</returns>
         public static EvolvingStateEnumerable<TPayload> RegisterOutputAsEnumerable<TPayload>(this QueryContainer container, IStreamable<Empty, TPayload> stream, string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToEnumerable(container, identifier ?? Guid.NewGuid().ToString());
         }
@@ -42,7 +42,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new EvolvingStateEnumerable<TPayload>(stream, container, identifier);
         }

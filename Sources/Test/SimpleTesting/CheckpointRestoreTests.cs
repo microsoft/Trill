@@ -71,9 +71,9 @@ namespace SimpleTesting
 
                     var output1 = container1.RegisterOutput(query1);
 
-                    var outputAsync1 = output1.Where(e => e.IsData).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+                    var outputAsync1 = output1.Where(e => e.IsData).ForEachAsync(outputListWithCheckpoint.Add);
                     var pipe1 = container1.Restore(null);
-                    preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+                    preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
                     pipe1.Checkpoint(state);
 
                     state.Seek(0, SeekOrigin.Begin);
@@ -83,10 +83,10 @@ namespace SimpleTesting
                     var query2 = input2.HoppingWindowLifetime(window, period).Sum(e => (ulong)e);
                     var output2 = container2.RegisterOutput(query2);
 
-                    var outputAsync2 = output2.Where(e => e.IsData).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+                    var outputAsync2 = output2.Where(e => e.IsData).ForEachAsync(outputListWithCheckpoint.Add);
 
                     var pipe2 = container2.Restore(state);
-                    postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                    postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                     postCheckpointSubject.OnCompleted();
                     outputAsync2.Wait();
                     outputListWithCheckpoint.Sort((x, y) =>
@@ -104,7 +104,7 @@ namespace SimpleTesting
                     var query3 = input3.HoppingWindowLifetime(window, period).Sum(e => (ulong)e);
                     var output3 = container3.RegisterOutput(query3);
 
-                    var outputAsync3 = output3.Where(e => e.IsData).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+                    var outputAsync3 = output3.Where(e => e.IsData).ForEachAsync(outputListWithoutCheckpoint.Add);
                     container3.Restore(null);
                     outputAsync3.Wait();
                     outputListWithoutCheckpoint.Sort((x, y) =>
@@ -200,9 +200,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -212,9 +212,9 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -224,7 +224,7 @@ namespace SimpleTesting
             var query3 = CreateBasicQuery(input3);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -265,9 +265,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -277,9 +277,9 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -289,7 +289,7 @@ namespace SimpleTesting
             var query3 = CreateBasicQuery(input3);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -333,9 +333,9 @@ namespace SimpleTesting
             var query1 = query1_left.Union(query1right);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -348,9 +348,9 @@ namespace SimpleTesting
             var query2 = query2_left.Union(query2right);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -363,7 +363,7 @@ namespace SimpleTesting
             var query3 = query3_left.Union(query3right);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
             outputListWithoutCheckpoint.Sort();
@@ -408,7 +408,7 @@ namespace SimpleTesting
 
             var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o.p));
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -420,7 +420,7 @@ namespace SimpleTesting
 
             var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o.p));
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -472,9 +472,9 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -484,9 +484,9 @@ namespace SimpleTesting
             var query2 = input2.Count();
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -496,7 +496,7 @@ namespace SimpleTesting
             var query3 = input3.Count();
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -538,9 +538,9 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -550,9 +550,9 @@ namespace SimpleTesting
             var query2 = input2.GroupApply(e => e.Item1, str => str.Sum(e => (ulong)e.Item2), (g, c) => new StructTuple<int, ulong> { Item1 = g.Key, Item2 = c });
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort((a, b) => a.Item1.CompareTo(b.Item1) == 0 ? a.Item2.CompareTo(b.Item2) : a.Item1.CompareTo(b.Item1));
@@ -562,7 +562,7 @@ namespace SimpleTesting
             var query3 = input3.GroupApply(e => e.Item1, str => str.Sum(e => (ulong)e.Item2), (g, c) => new StructTuple<int, ulong> { Item1 = g.Key, Item2 = c });
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -620,11 +620,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -636,11 +636,11 @@ namespace SimpleTesting
             var query2 = input21.Join(input22, e => e.Item1, e => e.Item1, (l, r) => new StructTuple<int, int> { Item1 = l.Item1, Item2 = r.Item2 });
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -652,7 +652,7 @@ namespace SimpleTesting
             var query3 = input31.Join(input32, e => e.Item1, e => e.Item1, (l, r) => new StructTuple<int, int> { Item1 = l.Item1, Item2 = r.Item2 });
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -713,11 +713,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -729,11 +729,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -745,7 +745,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -806,11 +806,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -822,11 +822,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -838,7 +838,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -899,11 +899,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -915,11 +915,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -931,7 +931,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -977,10 +977,10 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -991,10 +991,10 @@ namespace SimpleTesting
             var query2 = input2.GroupApply(o => 1, s => s.Multicast(p => p.WhereNotExists(p.Where(i => false), e => e.Item1, e => e.Item1)));
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort((a, b) => a.Item1.CompareTo(b.Item1) == 0 ? a.Item2.CompareTo(b.Item2) : a.Item1.CompareTo(b.Item1));
@@ -1004,7 +1004,7 @@ namespace SimpleTesting
             var query3 = input3.GroupApply(o => 1, s => s.Multicast(p => p.WhereNotExists(p.Where(i => false), e => e.Item1, e => e.Item1)));
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -1064,11 +1064,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -1080,11 +1080,11 @@ namespace SimpleTesting
             var query2 = input21.ClipEventDuration(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -1096,7 +1096,7 @@ namespace SimpleTesting
             var query3 = input31.ClipEventDuration(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -1139,7 +1139,7 @@ namespace SimpleTesting
             var query1 = query1_left.Union(query1right);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             try
             {
@@ -1185,9 +1185,9 @@ namespace SimpleTesting
                 var query1 = CreateBasicQuery(input1);
                 var output1 = container1.RegisterOutput(query1);
 
-                var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe1 = container1.Restore(null);
-                preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+                preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
                 pipe1.Checkpoint(state);
 
                 state.Seek(0, SeekOrigin.Begin);
@@ -1197,9 +1197,9 @@ namespace SimpleTesting
                 var query2 = CreateBasicQuery(input2);
                 var output2 = container2.RegisterOutput(query2);
 
-                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe2 = container2.Restore(state);
-                postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                 outputAsync2.Wait();
             }
             catch (AggregateException e)
@@ -1243,9 +1243,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -1257,9 +1257,9 @@ namespace SimpleTesting
                 var query2 = CreateBasicQuery(input2);
                 var output2 = container2.RegisterOutput(query2);
 
-                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe2 = container2.Restore(state);
-                postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                 postCheckpointSubject.OnCompleted();
                 outputAsync2.Wait();
             }
@@ -1300,9 +1300,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -1312,13 +1312,13 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
 
-            Assert.IsTrue(outputList.Count == 10000);
+            Assert.HasCount(10000, outputList);
             preCheckpointSubject.OnCompleted();
         }
 
@@ -1542,9 +1542,9 @@ namespace SimpleTesting
 
                     var output1 = container1.RegisterOutput(query1);
 
-                    var outputAsync1 = output1.Where(e => e.IsData).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+                    var outputAsync1 = output1.Where(e => e.IsData).ForEachAsync(outputListWithCheckpoint.Add);
                     var pipe1 = container1.Restore(null);
-                    preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+                    preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
                     pipe1.Checkpoint(state);
 
                     state.Seek(0, SeekOrigin.Begin);
@@ -1554,10 +1554,10 @@ namespace SimpleTesting
                     var query2 = input2.HoppingWindowLifetime(window, period).Sum(e => (ulong)e);
                     var output2 = container2.RegisterOutput(query2);
 
-                    var outputAsync2 = output2.Where(e => e.IsData).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+                    var outputAsync2 = output2.Where(e => e.IsData).ForEachAsync(outputListWithCheckpoint.Add);
 
                     var pipe2 = container2.Restore(state);
-                    postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                    postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                     postCheckpointSubject.OnCompleted();
                     outputAsync2.Wait();
                     outputListWithCheckpoint.Sort((x, y) =>
@@ -1575,7 +1575,7 @@ namespace SimpleTesting
                     var query3 = input3.HoppingWindowLifetime(window, period).Sum(e => (ulong)e);
                     var output3 = container3.RegisterOutput(query3);
 
-                    var outputAsync3 = output3.Where(e => e.IsData).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+                    var outputAsync3 = output3.Where(e => e.IsData).ForEachAsync(outputListWithoutCheckpoint.Add);
                     container3.Restore(null);
                     outputAsync3.Wait();
                     outputListWithoutCheckpoint.Sort((x, y) =>
@@ -1672,9 +1672,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -1684,9 +1684,9 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -1696,7 +1696,7 @@ namespace SimpleTesting
             var query3 = CreateBasicQuery(input3);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -1737,9 +1737,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -1749,9 +1749,9 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -1761,7 +1761,7 @@ namespace SimpleTesting
             var query3 = CreateBasicQuery(input3);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -1805,9 +1805,9 @@ namespace SimpleTesting
             var query1 = query1_left.Union(query1right);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -1820,9 +1820,9 @@ namespace SimpleTesting
             var query2 = query2_left.Union(query2right);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -1835,7 +1835,7 @@ namespace SimpleTesting
             var query3 = query3_left.Union(query3right);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
             outputListWithoutCheckpoint.Sort();
@@ -1880,7 +1880,7 @@ namespace SimpleTesting
 
             var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o.p));
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -1892,7 +1892,7 @@ namespace SimpleTesting
 
             var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o.p));
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -1944,9 +1944,9 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -1956,9 +1956,9 @@ namespace SimpleTesting
             var query2 = input2.Count();
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -1968,7 +1968,7 @@ namespace SimpleTesting
             var query3 = input3.Count();
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -2010,9 +2010,9 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -2022,9 +2022,9 @@ namespace SimpleTesting
             var query2 = input2.GroupApply(e => e.Item1, str => str.Sum(e => (ulong)e.Item2), (g, c) => new StructTuple<int, ulong> { Item1 = g.Key, Item2 = c });
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort((a, b) => a.Item1.CompareTo(b.Item1) == 0 ? a.Item2.CompareTo(b.Item2) : a.Item1.CompareTo(b.Item1));
@@ -2034,7 +2034,7 @@ namespace SimpleTesting
             var query3 = input3.GroupApply(e => e.Item1, str => str.Sum(e => (ulong)e.Item2), (g, c) => new StructTuple<int, ulong> { Item1 = g.Key, Item2 = c });
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -2092,11 +2092,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -2108,11 +2108,11 @@ namespace SimpleTesting
             var query2 = input21.Join(input22, e => e.Item1, e => e.Item1, (l, r) => new StructTuple<int, int> { Item1 = l.Item1, Item2 = r.Item2 });
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -2124,7 +2124,7 @@ namespace SimpleTesting
             var query3 = input31.Join(input32, e => e.Item1, e => e.Item1, (l, r) => new StructTuple<int, int> { Item1 = l.Item1, Item2 = r.Item2 });
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -2185,11 +2185,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -2201,11 +2201,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -2217,7 +2217,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -2278,11 +2278,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -2294,11 +2294,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -2310,7 +2310,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -2371,11 +2371,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -2387,11 +2387,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -2403,7 +2403,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -2449,10 +2449,10 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -2463,10 +2463,10 @@ namespace SimpleTesting
             var query2 = input2.GroupApply(o => 1, s => s.Multicast(p => p.WhereNotExists(p.Where(i => false), e => e.Item1, e => e.Item1)));
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort((a, b) => a.Item1.CompareTo(b.Item1) == 0 ? a.Item2.CompareTo(b.Item2) : a.Item1.CompareTo(b.Item1));
@@ -2476,7 +2476,7 @@ namespace SimpleTesting
             var query3 = input3.GroupApply(o => 1, s => s.Multicast(p => p.WhereNotExists(p.Where(i => false), e => e.Item1, e => e.Item1)));
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -2536,11 +2536,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -2552,11 +2552,11 @@ namespace SimpleTesting
             var query2 = input21.ClipEventDuration(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -2568,7 +2568,7 @@ namespace SimpleTesting
             var query3 = input31.ClipEventDuration(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -2611,7 +2611,7 @@ namespace SimpleTesting
             var query1 = query1_left.Union(query1right);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             try
             {
@@ -2657,9 +2657,9 @@ namespace SimpleTesting
                 var query1 = CreateBasicQuery(input1);
                 var output1 = container1.RegisterOutput(query1);
 
-                var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe1 = container1.Restore(null);
-                preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+                preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
                 pipe1.Checkpoint(state);
 
                 state.Seek(0, SeekOrigin.Begin);
@@ -2669,9 +2669,9 @@ namespace SimpleTesting
                 var query2 = CreateBasicQuery(input2);
                 var output2 = container2.RegisterOutput(query2);
 
-                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe2 = container2.Restore(state);
-                postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                 outputAsync2.Wait();
             }
             catch (AggregateException e)
@@ -2715,9 +2715,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -2729,9 +2729,9 @@ namespace SimpleTesting
                 var query2 = CreateBasicQuery(input2);
                 var output2 = container2.RegisterOutput(query2);
 
-                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe2 = container2.Restore(state);
-                postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                 postCheckpointSubject.OnCompleted();
                 outputAsync2.Wait();
             }
@@ -2772,9 +2772,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -2784,13 +2784,13 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
 
-            Assert.IsTrue(outputList.Count == 10000);
+            Assert.HasCount(10000, outputList);
             preCheckpointSubject.OnCompleted();
         }
 
@@ -3013,9 +3013,9 @@ namespace SimpleTesting
 
                     var output1 = container1.RegisterOutput(query1);
 
-                    var outputAsync1 = output1.Where(e => e.IsData).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+                    var outputAsync1 = output1.Where(e => e.IsData).ForEachAsync(outputListWithCheckpoint.Add);
                     var pipe1 = container1.Restore(null);
-                    preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+                    preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
                     pipe1.Checkpoint(state);
 
                     state.Seek(0, SeekOrigin.Begin);
@@ -3025,10 +3025,10 @@ namespace SimpleTesting
                     var query2 = input2.HoppingWindowLifetime(window, period).Sum(e => (ulong)e);
                     var output2 = container2.RegisterOutput(query2);
 
-                    var outputAsync2 = output2.Where(e => e.IsData).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+                    var outputAsync2 = output2.Where(e => e.IsData).ForEachAsync(outputListWithCheckpoint.Add);
 
                     var pipe2 = container2.Restore(state);
-                    postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                    postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                     postCheckpointSubject.OnCompleted();
                     outputAsync2.Wait();
                     outputListWithCheckpoint.Sort((x, y) =>
@@ -3046,7 +3046,7 @@ namespace SimpleTesting
                     var query3 = input3.HoppingWindowLifetime(window, period).Sum(e => (ulong)e);
                     var output3 = container3.RegisterOutput(query3);
 
-                    var outputAsync3 = output3.Where(e => e.IsData).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+                    var outputAsync3 = output3.Where(e => e.IsData).ForEachAsync(outputListWithoutCheckpoint.Add);
                     container3.Restore(null);
                     outputAsync3.Wait();
                     outputListWithoutCheckpoint.Sort((x, y) =>
@@ -3142,9 +3142,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -3154,9 +3154,9 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -3166,7 +3166,7 @@ namespace SimpleTesting
             var query3 = CreateBasicQuery(input3);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -3207,9 +3207,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -3219,9 +3219,9 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -3231,7 +3231,7 @@ namespace SimpleTesting
             var query3 = CreateBasicQuery(input3);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -3275,9 +3275,9 @@ namespace SimpleTesting
             var query1 = query1_left.Union(query1right);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -3290,9 +3290,9 @@ namespace SimpleTesting
             var query2 = query2_left.Union(query2right);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -3305,7 +3305,7 @@ namespace SimpleTesting
             var query3 = query3_left.Union(query3right);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
             outputListWithoutCheckpoint.Sort();
@@ -3350,7 +3350,7 @@ namespace SimpleTesting
 
             var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o.p));
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -3362,7 +3362,7 @@ namespace SimpleTesting
 
             var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o.p));
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -3414,9 +3414,9 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -3426,9 +3426,9 @@ namespace SimpleTesting
             var query2 = input2.Count();
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -3438,7 +3438,7 @@ namespace SimpleTesting
             var query3 = input3.Count();
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -3480,9 +3480,9 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -3492,9 +3492,9 @@ namespace SimpleTesting
             var query2 = input2.GroupApply(e => e.Item1, str => str.Sum(e => (ulong)e.Item2), (g, c) => new StructTuple<int, ulong> { Item1 = g.Key, Item2 = c });
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort((a, b) => a.Item1.CompareTo(b.Item1) == 0 ? a.Item2.CompareTo(b.Item2) : a.Item1.CompareTo(b.Item1));
@@ -3504,7 +3504,7 @@ namespace SimpleTesting
             var query3 = input3.GroupApply(e => e.Item1, str => str.Sum(e => (ulong)e.Item2), (g, c) => new StructTuple<int, ulong> { Item1 = g.Key, Item2 = c });
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -3562,11 +3562,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -3578,11 +3578,11 @@ namespace SimpleTesting
             var query2 = input21.Join(input22, e => e.Item1, e => e.Item1, (l, r) => new StructTuple<int, int> { Item1 = l.Item1, Item2 = r.Item2 });
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -3594,7 +3594,7 @@ namespace SimpleTesting
             var query3 = input31.Join(input32, e => e.Item1, e => e.Item1, (l, r) => new StructTuple<int, int> { Item1 = l.Item1, Item2 = r.Item2 });
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -3655,11 +3655,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -3671,11 +3671,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -3687,7 +3687,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -3748,11 +3748,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -3764,11 +3764,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -3780,7 +3780,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -3841,11 +3841,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -3857,11 +3857,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -3873,7 +3873,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -3919,10 +3919,10 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -3933,10 +3933,10 @@ namespace SimpleTesting
             var query2 = input2.GroupApply(o => 1, s => s.Multicast(p => p.WhereNotExists(p.Where(i => false), e => e.Item1, e => e.Item1)));
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort((a, b) => a.Item1.CompareTo(b.Item1) == 0 ? a.Item2.CompareTo(b.Item2) : a.Item1.CompareTo(b.Item1));
@@ -3946,7 +3946,7 @@ namespace SimpleTesting
             var query3 = input3.GroupApply(o => 1, s => s.Multicast(p => p.WhereNotExists(p.Where(i => false), e => e.Item1, e => e.Item1)));
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -4006,11 +4006,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -4022,11 +4022,11 @@ namespace SimpleTesting
             var query2 = input21.ClipEventDuration(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -4038,7 +4038,7 @@ namespace SimpleTesting
             var query3 = input31.ClipEventDuration(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -4081,7 +4081,7 @@ namespace SimpleTesting
             var query1 = query1_left.Union(query1right);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             try
             {
@@ -4127,9 +4127,9 @@ namespace SimpleTesting
                 var query1 = CreateBasicQuery(input1);
                 var output1 = container1.RegisterOutput(query1);
 
-                var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe1 = container1.Restore(null);
-                preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+                preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
                 pipe1.Checkpoint(state);
 
                 state.Seek(0, SeekOrigin.Begin);
@@ -4139,9 +4139,9 @@ namespace SimpleTesting
                 var query2 = CreateBasicQuery(input2);
                 var output2 = container2.RegisterOutput(query2);
 
-                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe2 = container2.Restore(state);
-                postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                 outputAsync2.Wait();
             }
             catch (AggregateException e)
@@ -4185,9 +4185,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -4199,9 +4199,9 @@ namespace SimpleTesting
                 var query2 = CreateBasicQuery(input2);
                 var output2 = container2.RegisterOutput(query2);
 
-                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe2 = container2.Restore(state);
-                postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                 postCheckpointSubject.OnCompleted();
                 outputAsync2.Wait();
             }
@@ -4242,9 +4242,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -4254,13 +4254,13 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
 
-            Assert.IsTrue(outputList.Count == 10000);
+            Assert.HasCount(10000, outputList);
             preCheckpointSubject.OnCompleted();
         }
 
@@ -4484,9 +4484,9 @@ namespace SimpleTesting
 
                     var output1 = container1.RegisterOutput(query1);
 
-                    var outputAsync1 = output1.Where(e => e.IsData).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+                    var outputAsync1 = output1.Where(e => e.IsData).ForEachAsync(outputListWithCheckpoint.Add);
                     var pipe1 = container1.Restore(null);
-                    preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+                    preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
                     pipe1.Checkpoint(state);
 
                     state.Seek(0, SeekOrigin.Begin);
@@ -4496,10 +4496,10 @@ namespace SimpleTesting
                     var query2 = input2.HoppingWindowLifetime(window, period).Sum(e => (ulong)e);
                     var output2 = container2.RegisterOutput(query2);
 
-                    var outputAsync2 = output2.Where(e => e.IsData).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+                    var outputAsync2 = output2.Where(e => e.IsData).ForEachAsync(outputListWithCheckpoint.Add);
 
                     var pipe2 = container2.Restore(state);
-                    postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                    postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                     postCheckpointSubject.OnCompleted();
                     outputAsync2.Wait();
                     outputListWithCheckpoint.Sort((x, y) =>
@@ -4517,7 +4517,7 @@ namespace SimpleTesting
                     var query3 = input3.HoppingWindowLifetime(window, period).Sum(e => (ulong)e);
                     var output3 = container3.RegisterOutput(query3);
 
-                    var outputAsync3 = output3.Where(e => e.IsData).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+                    var outputAsync3 = output3.Where(e => e.IsData).ForEachAsync(outputListWithoutCheckpoint.Add);
                     container3.Restore(null);
                     outputAsync3.Wait();
                     outputListWithoutCheckpoint.Sort((x, y) =>
@@ -4614,9 +4614,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -4626,9 +4626,9 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -4638,7 +4638,7 @@ namespace SimpleTesting
             var query3 = CreateBasicQuery(input3);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -4679,9 +4679,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -4691,9 +4691,9 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -4703,7 +4703,7 @@ namespace SimpleTesting
             var query3 = CreateBasicQuery(input3);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -4747,9 +4747,9 @@ namespace SimpleTesting
             var query1 = query1_left.Union(query1right);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -4762,9 +4762,9 @@ namespace SimpleTesting
             var query2 = query2_left.Union(query2right);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -4777,7 +4777,7 @@ namespace SimpleTesting
             var query3 = query3_left.Union(query3right);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
             outputListWithoutCheckpoint.Sort();
@@ -4822,7 +4822,7 @@ namespace SimpleTesting
 
             var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o.p));
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -4834,7 +4834,7 @@ namespace SimpleTesting
 
             var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o.p));
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -4886,9 +4886,9 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -4898,9 +4898,9 @@ namespace SimpleTesting
             var query2 = input2.Count();
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort();
@@ -4910,7 +4910,7 @@ namespace SimpleTesting
             var query3 = input3.Count();
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -4952,9 +4952,9 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -4964,9 +4964,9 @@ namespace SimpleTesting
             var query2 = input2.GroupApply(e => e.Item1, str => str.Sum(e => (ulong)e.Item2), (g, c) => new StructTuple<int, ulong> { Item1 = g.Key, Item2 = c });
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort((a, b) => a.Item1.CompareTo(b.Item1) == 0 ? a.Item2.CompareTo(b.Item2) : a.Item1.CompareTo(b.Item1));
@@ -4976,7 +4976,7 @@ namespace SimpleTesting
             var query3 = input3.GroupApply(e => e.Item1, str => str.Sum(e => (ulong)e.Item2), (g, c) => new StructTuple<int, ulong> { Item1 = g.Key, Item2 = c });
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
             container3.Restore(null);
             outputAsync3.Wait();
 
@@ -5034,11 +5034,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -5050,11 +5050,11 @@ namespace SimpleTesting
             var query2 = input21.Join(input22, e => e.Item1, e => e.Item1, (l, r) => new StructTuple<int, int> { Item1 = l.Item1, Item2 = r.Item2 });
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -5066,7 +5066,7 @@ namespace SimpleTesting
             var query3 = input31.Join(input32, e => e.Item1, e => e.Item1, (l, r) => new StructTuple<int, int> { Item1 = l.Item1, Item2 = r.Item2 });
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -5127,11 +5127,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -5143,11 +5143,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -5159,7 +5159,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -5220,11 +5220,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -5236,11 +5236,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -5252,7 +5252,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -5313,11 +5313,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -5329,11 +5329,11 @@ namespace SimpleTesting
             var query2 = input21.WhereNotExists(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -5345,7 +5345,7 @@ namespace SimpleTesting
             var query3 = input31.WhereNotExists(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -5391,10 +5391,10 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -5405,10 +5405,10 @@ namespace SimpleTesting
             var query2 = input2.GroupApply(o => 1, s => s.Multicast(p => p.WhereNotExists(p.Where(i => false), e => e.Item1, e => e.Item1)));
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
             outputListWithCheckpoint.Sort((a, b) => a.Item1.CompareTo(b.Item1) == 0 ? a.Item2.CompareTo(b.Item2) : a.Item1.CompareTo(b.Item1));
@@ -5418,7 +5418,7 @@ namespace SimpleTesting
             var query3 = input3.GroupApply(o => 1, s => s.Multicast(p => p.WhereNotExists(p.Where(i => false), e => e.Item1, e => e.Item1)));
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -5478,11 +5478,11 @@ namespace SimpleTesting
 
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe1 = container1.Restore(null);
-            preCheckpointData1.ForEachAsync(e => preCheckpointSubject1.OnNext(e)).Wait();
-            preCheckpointData2.ForEachAsync(e => preCheckpointSubject2.OnNext(e)).Wait();
+            preCheckpointData1.ForEachAsync(preCheckpointSubject1.OnNext).Wait();
+            preCheckpointData2.ForEachAsync(preCheckpointSubject2.OnNext).Wait();
 
             pipe1.Checkpoint(state);
 
@@ -5494,11 +5494,11 @@ namespace SimpleTesting
             var query2 = input21.ClipEventDuration(input22, e => e.Item1, e => e.Item1);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             var pipe2 = container2.Restore(state);
-            postCheckpointData1.ForEachAsync(e => postCheckpointSubject1.OnNext(e)).Wait();
-            postCheckpointData2.ForEachAsync(e => postCheckpointSubject2.OnNext(e)).Wait();
+            postCheckpointData1.ForEachAsync(postCheckpointSubject1.OnNext).Wait();
+            postCheckpointData2.ForEachAsync(postCheckpointSubject2.OnNext).Wait();
             postCheckpointSubject1.OnCompleted();
             postCheckpointSubject2.OnCompleted();
             outputAsync2.Wait();
@@ -5510,7 +5510,7 @@ namespace SimpleTesting
             var query3 = input31.ClipEventDuration(input32, e => e.Item1, e => e.Item1);
             var output3 = container3.RegisterOutput(query3);
 
-            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithoutCheckpoint.Add(o));
+            var outputAsync3 = output3.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithoutCheckpoint.Add);
 
             container3.Restore(null);
             outputAsync3.Wait();
@@ -5553,7 +5553,7 @@ namespace SimpleTesting
             var query1 = query1_left.Union(query1right);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputListWithCheckpoint.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputListWithCheckpoint.Add);
 
             try
             {
@@ -5599,9 +5599,9 @@ namespace SimpleTesting
                 var query1 = CreateBasicQuery(input1);
                 var output1 = container1.RegisterOutput(query1);
 
-                var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe1 = container1.Restore(null);
-                preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+                preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
                 pipe1.Checkpoint(state);
 
                 state.Seek(0, SeekOrigin.Begin);
@@ -5611,9 +5611,9 @@ namespace SimpleTesting
                 var query2 = CreateBasicQuery(input2);
                 var output2 = container2.RegisterOutput(query2);
 
-                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe2 = container2.Restore(state);
-                postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                 outputAsync2.Wait();
             }
             catch (AggregateException e)
@@ -5657,9 +5657,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -5671,9 +5671,9 @@ namespace SimpleTesting
                 var query2 = CreateBasicQuery(input2);
                 var output2 = container2.RegisterOutput(query2);
 
-                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+                var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
                 var pipe2 = container2.Restore(state);
-                postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+                postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
                 postCheckpointSubject.OnCompleted();
                 outputAsync2.Wait();
             }
@@ -5714,9 +5714,9 @@ namespace SimpleTesting
             var query1 = CreateBasicQuery(input1);
             var output1 = container1.RegisterOutput(query1);
 
-            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync1 = output1.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe1 = container1.Restore(null);
-            preCheckpointData.ForEachAsync(e => preCheckpointSubject.OnNext(e)).Wait();
+            preCheckpointData.ForEachAsync(preCheckpointSubject.OnNext).Wait();
             pipe1.Checkpoint(state);
 
             state.Seek(0, SeekOrigin.Begin);
@@ -5726,13 +5726,13 @@ namespace SimpleTesting
             var query2 = CreateBasicQuery(input2);
             var output2 = container2.RegisterOutput(query2);
 
-            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync2 = output2.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             var pipe2 = container2.Restore(state);
-            postCheckpointData.ForEachAsync(e => postCheckpointSubject.OnNext(e)).Wait();
+            postCheckpointData.ForEachAsync(postCheckpointSubject.OnNext).Wait();
             postCheckpointSubject.OnCompleted();
             outputAsync2.Wait();
 
-            Assert.IsTrue(outputList.Count == 10000);
+            Assert.HasCount(10000, outputList);
             preCheckpointSubject.OnCompleted();
         }
 

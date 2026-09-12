@@ -452,7 +452,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -672,7 +672,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -1085,7 +1085,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1305,7 +1305,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -1718,7 +1718,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1938,7 +1938,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -2352,7 +2352,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -2572,7 +2572,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -2984,7 +2984,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3204,7 +3204,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -3617,7 +3617,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -3837,7 +3837,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -4250,7 +4250,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -4470,7 +4470,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -4884,7 +4884,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -5104,7 +5104,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -5531,7 +5531,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -5761,7 +5761,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -6224,7 +6224,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable();
 
             var c = (ulong)streamResult.Count();
-            Assert.IsTrue(c == limit);
+            Assert.AreEqual(limit, c);
             cachedStream.Dispose();
         }
 
@@ -6319,7 +6319,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingIComparable();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -6331,7 +6331,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -6343,7 +6343,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingNonGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -6356,7 +6356,7 @@ namespace SimpleTesting
             var g = f.GetCompareExpr();
             var h = g.Compile();
             var k = h(a, a);
-            Assert.IsTrue(k == 0);
+            Assert.AreEqual(0, k);
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -6453,7 +6453,7 @@ namespace SimpleTesting
             var outputObservable = container.RegisterOutput(union);
 
             // Test the output
-            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             container.Restore(state);
             outputAsync.Wait();
 
@@ -6520,7 +6520,7 @@ namespace SimpleTesting
             var str2 = str.Where(r => r != 'b');
             var sortedStream = str2.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            Assert.IsTrue(input.Count() == result.Count() + 1); // just make sure deleted element isn't counted anymore
+            Assert.AreEqual(result.Count() + 1, input.Count()); // just make sure deleted element isn't counted anymore
             sortedStream.Dispose();
         }
 
@@ -6727,7 +6727,7 @@ namespace SimpleTesting
                 .Last();
 
             var expected = input.Sum(query.Compile());
-            Assert.IsTrue(expected == streamResult);
+            Assert.AreEqual(expected, streamResult);
 
         }
 
@@ -6742,9 +6742,9 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
-            Assert.IsTrue(streamResult.First().field1 == 5050);
+            Assert.AreEqual(5050, streamResult.First().field1);
 
         }
 
@@ -6759,7 +6759,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
             var f = streamResult.First();
             Assert.IsTrue(f.field1 == 4950 && f.field2 == 100);
@@ -7063,7 +7063,7 @@ namespace SimpleTesting
                     .SetProperty().IsSnapshotSorted(true, e => e.field1);
             var result = tumblingWindowDataset.GroupApply(e => e.field2, str => str.Count(), (g, c) => new { Key = g, Count = c });
             var a = result.ToStreamEventObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(a.Length == 3); // just make sure it doesn't crash
+            Assert.HasCount(3, a); // just make sure it doesn't crash
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -7094,11 +7094,11 @@ namespace SimpleTesting
                 ms.Position = 0;
                 ColumnBatch<string> resultStr = s.Deserialize(ms);
 
-                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+                Assert.AreEqual(inputStr.UsedLength, resultStr.UsedLength);
 
                 for (int j = 0; j < inputStr.UsedLength; j++)
                 {
-                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                    Assert.AreEqual(resultStr.col[j], inputStr.col[j]);
                 }
                 resultStr.ReturnClear();
                 inputStr.ReturnClear();
@@ -7136,11 +7136,11 @@ namespace SimpleTesting
                     ms.Position = 0;
                     var resultStr = s.Deserialize(ms);
 
-                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+                    Assert.AreEqual(inputStr.Count, resultStr.Count);
 
                     for (int j = 0; j < inputStr.Count; j++)
                     {
-                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                        Assert.AreEqual(resultStr[j], inputStr[j]);
                     }
                     resultStr.Dispose();
                     inputStr.Dispose();
@@ -7521,7 +7521,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -7751,7 +7751,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -8091,7 +8091,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable();
 
             var c = (ulong)streamResult.Count();
-            Assert.IsTrue(c == limit);
+            Assert.AreEqual(limit, c);
             cachedStream.Dispose();
         }
 
@@ -8186,7 +8186,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingIComparable();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -8198,7 +8198,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -8210,7 +8210,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingNonGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -8223,7 +8223,7 @@ namespace SimpleTesting
             var g = f.GetCompareExpr();
             var h = g.Compile();
             var k = h(a, a);
-            Assert.IsTrue(k == 0);
+            Assert.AreEqual(0, k);
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -8320,7 +8320,7 @@ namespace SimpleTesting
             var outputObservable = container.RegisterOutput(union);
 
             // Test the output
-            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             container.Restore(state);
             outputAsync.Wait();
 
@@ -8387,7 +8387,7 @@ namespace SimpleTesting
             var str2 = str.Where(r => r != 'b');
             var sortedStream = str2.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            Assert.IsTrue(input.Count() == result.Count() + 1); // just make sure deleted element isn't counted anymore
+            Assert.AreEqual(result.Count() + 1, input.Count()); // just make sure deleted element isn't counted anymore
             sortedStream.Dispose();
         }
 
@@ -8594,7 +8594,7 @@ namespace SimpleTesting
                 .Last();
 
             var expected = input.Sum(query.Compile());
-            Assert.IsTrue(expected == streamResult);
+            Assert.AreEqual(expected, streamResult);
 
         }
 
@@ -8609,9 +8609,9 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
-            Assert.IsTrue(streamResult.First().field1 == 5050);
+            Assert.AreEqual(5050, streamResult.First().field1);
 
         }
 
@@ -8626,7 +8626,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
             var f = streamResult.First();
             Assert.IsTrue(f.field1 == 4950 && f.field2 == 100);
@@ -8930,7 +8930,7 @@ namespace SimpleTesting
                     .SetProperty().IsSnapshotSorted(true, e => e.field1);
             var result = tumblingWindowDataset.GroupApply(e => e.field2, str => str.Count(), (g, c) => new { Key = g, Count = c });
             var a = result.ToStreamEventObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(a.Length == 3); // just make sure it doesn't crash
+            Assert.HasCount(3, a); // just make sure it doesn't crash
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -8961,11 +8961,11 @@ namespace SimpleTesting
                 ms.Position = 0;
                 ColumnBatch<string> resultStr = s.Deserialize(ms);
 
-                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+                Assert.AreEqual(inputStr.UsedLength, resultStr.UsedLength);
 
                 for (int j = 0; j < inputStr.UsedLength; j++)
                 {
-                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                    Assert.AreEqual(resultStr.col[j], inputStr.col[j]);
                 }
                 resultStr.ReturnClear();
                 inputStr.ReturnClear();
@@ -9003,11 +9003,11 @@ namespace SimpleTesting
                     ms.Position = 0;
                     var resultStr = s.Deserialize(ms);
 
-                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+                    Assert.AreEqual(inputStr.Count, resultStr.Count);
 
                     for (int j = 0; j < inputStr.Count; j++)
                     {
-                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                        Assert.AreEqual(resultStr[j], inputStr[j]);
                     }
                     resultStr.Dispose();
                     inputStr.Dispose();
@@ -9388,7 +9388,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -9618,7 +9618,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -10081,7 +10081,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable();
 
             var c = (ulong)streamResult.Count();
-            Assert.IsTrue(c == limit);
+            Assert.AreEqual(limit, c);
             cachedStream.Dispose();
         }
 
@@ -10176,7 +10176,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingIComparable();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -10188,7 +10188,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -10200,7 +10200,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingNonGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -10213,7 +10213,7 @@ namespace SimpleTesting
             var g = f.GetCompareExpr();
             var h = g.Compile();
             var k = h(a, a);
-            Assert.IsTrue(k == 0);
+            Assert.AreEqual(0, k);
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -10310,7 +10310,7 @@ namespace SimpleTesting
             var outputObservable = container.RegisterOutput(union);
 
             // Test the output
-            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             container.Restore(state);
             outputAsync.Wait();
 
@@ -10377,7 +10377,7 @@ namespace SimpleTesting
             var str2 = str.Where(r => r != 'b');
             var sortedStream = str2.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            Assert.IsTrue(input.Count() == result.Count() + 1); // just make sure deleted element isn't counted anymore
+            Assert.AreEqual(result.Count() + 1, input.Count()); // just make sure deleted element isn't counted anymore
             sortedStream.Dispose();
         }
 
@@ -10584,7 +10584,7 @@ namespace SimpleTesting
                 .Last();
 
             var expected = input.Sum(query.Compile());
-            Assert.IsTrue(expected == streamResult);
+            Assert.AreEqual(expected, streamResult);
 
         }
 
@@ -10599,9 +10599,9 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
-            Assert.IsTrue(streamResult.First().field1 == 5050);
+            Assert.AreEqual(5050, streamResult.First().field1);
 
         }
 
@@ -10616,7 +10616,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
             var f = streamResult.First();
             Assert.IsTrue(f.field1 == 4950 && f.field2 == 100);
@@ -10920,7 +10920,7 @@ namespace SimpleTesting
                     .SetProperty().IsSnapshotSorted(true, e => e.field1);
             var result = tumblingWindowDataset.GroupApply(e => e.field2, str => str.Count(), (g, c) => new { Key = g, Count = c });
             var a = result.ToStreamEventObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(a.Length == 3); // just make sure it doesn't crash
+            Assert.HasCount(3, a); // just make sure it doesn't crash
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -10951,11 +10951,11 @@ namespace SimpleTesting
                 ms.Position = 0;
                 ColumnBatch<string> resultStr = s.Deserialize(ms);
 
-                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+                Assert.AreEqual(inputStr.UsedLength, resultStr.UsedLength);
 
                 for (int j = 0; j < inputStr.UsedLength; j++)
                 {
-                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                    Assert.AreEqual(resultStr.col[j], inputStr.col[j]);
                 }
                 resultStr.ReturnClear();
                 inputStr.ReturnClear();
@@ -10993,11 +10993,11 @@ namespace SimpleTesting
                     ms.Position = 0;
                     var resultStr = s.Deserialize(ms);
 
-                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+                    Assert.AreEqual(inputStr.Count, resultStr.Count);
 
                     for (int j = 0; j < inputStr.Count; j++)
                     {
-                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                        Assert.AreEqual(resultStr[j], inputStr[j]);
                     }
                     resultStr.Dispose();
                     inputStr.Dispose();
@@ -11379,7 +11379,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -11609,7 +11609,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -11949,7 +11949,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable();
 
             var c = (ulong)streamResult.Count();
-            Assert.IsTrue(c == limit);
+            Assert.AreEqual(limit, c);
             cachedStream.Dispose();
         }
 
@@ -12044,7 +12044,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingIComparable();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -12056,7 +12056,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -12068,7 +12068,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingNonGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -12081,7 +12081,7 @@ namespace SimpleTesting
             var g = f.GetCompareExpr();
             var h = g.Compile();
             var k = h(a, a);
-            Assert.IsTrue(k == 0);
+            Assert.AreEqual(0, k);
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -12178,7 +12178,7 @@ namespace SimpleTesting
             var outputObservable = container.RegisterOutput(union);
 
             // Test the output
-            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             container.Restore(state);
             outputAsync.Wait();
 
@@ -12245,7 +12245,7 @@ namespace SimpleTesting
             var str2 = str.Where(r => r != 'b');
             var sortedStream = str2.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            Assert.IsTrue(input.Count() == result.Count() + 1); // just make sure deleted element isn't counted anymore
+            Assert.AreEqual(result.Count() + 1, input.Count()); // just make sure deleted element isn't counted anymore
             sortedStream.Dispose();
         }
 
@@ -12452,7 +12452,7 @@ namespace SimpleTesting
                 .Last();
 
             var expected = input.Sum(query.Compile());
-            Assert.IsTrue(expected == streamResult);
+            Assert.AreEqual(expected, streamResult);
 
         }
 
@@ -12467,9 +12467,9 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
-            Assert.IsTrue(streamResult.First().field1 == 5050);
+            Assert.AreEqual(5050, streamResult.First().field1);
 
         }
 
@@ -12484,7 +12484,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
             var f = streamResult.First();
             Assert.IsTrue(f.field1 == 4950 && f.field2 == 100);
@@ -12788,7 +12788,7 @@ namespace SimpleTesting
                     .SetProperty().IsSnapshotSorted(true, e => e.field1);
             var result = tumblingWindowDataset.GroupApply(e => e.field2, str => str.Count(), (g, c) => new { Key = g, Count = c });
             var a = result.ToStreamEventObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(a.Length == 3); // just make sure it doesn't crash
+            Assert.HasCount(3, a); // just make sure it doesn't crash
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -12819,11 +12819,11 @@ namespace SimpleTesting
                 ms.Position = 0;
                 ColumnBatch<string> resultStr = s.Deserialize(ms);
 
-                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+                Assert.AreEqual(inputStr.UsedLength, resultStr.UsedLength);
 
                 for (int j = 0; j < inputStr.UsedLength; j++)
                 {
-                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                    Assert.AreEqual(resultStr.col[j], inputStr.col[j]);
                 }
                 resultStr.ReturnClear();
                 inputStr.ReturnClear();
@@ -12861,11 +12861,11 @@ namespace SimpleTesting
                     ms.Position = 0;
                     var resultStr = s.Deserialize(ms);
 
-                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+                    Assert.AreEqual(inputStr.Count, resultStr.Count);
 
                     for (int j = 0; j < inputStr.Count; j++)
                     {
-                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                        Assert.AreEqual(resultStr[j], inputStr[j]);
                     }
                     resultStr.Dispose();
                     inputStr.Dispose();
@@ -13245,7 +13245,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -13475,7 +13475,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -13938,7 +13938,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable();
 
             var c = (ulong)streamResult.Count();
-            Assert.IsTrue(c == limit);
+            Assert.AreEqual(limit, c);
             cachedStream.Dispose();
         }
 
@@ -14033,7 +14033,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingIComparable();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -14045,7 +14045,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -14057,7 +14057,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingNonGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -14070,7 +14070,7 @@ namespace SimpleTesting
             var g = f.GetCompareExpr();
             var h = g.Compile();
             var k = h(a, a);
-            Assert.IsTrue(k == 0);
+            Assert.AreEqual(0, k);
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -14167,7 +14167,7 @@ namespace SimpleTesting
             var outputObservable = container.RegisterOutput(union);
 
             // Test the output
-            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             container.Restore(state);
             outputAsync.Wait();
 
@@ -14234,7 +14234,7 @@ namespace SimpleTesting
             var str2 = str.Where(r => r != 'b');
             var sortedStream = str2.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            Assert.IsTrue(input.Count() == result.Count() + 1); // just make sure deleted element isn't counted anymore
+            Assert.AreEqual(result.Count() + 1, input.Count()); // just make sure deleted element isn't counted anymore
             sortedStream.Dispose();
         }
 
@@ -14441,7 +14441,7 @@ namespace SimpleTesting
                 .Last();
 
             var expected = input.Sum(query.Compile());
-            Assert.IsTrue(expected == streamResult);
+            Assert.AreEqual(expected, streamResult);
 
         }
 
@@ -14456,9 +14456,9 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
-            Assert.IsTrue(streamResult.First().field1 == 5050);
+            Assert.AreEqual(5050, streamResult.First().field1);
 
         }
 
@@ -14473,7 +14473,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
             var f = streamResult.First();
             Assert.IsTrue(f.field1 == 4950 && f.field2 == 100);
@@ -14777,7 +14777,7 @@ namespace SimpleTesting
                     .SetProperty().IsSnapshotSorted(true, e => e.field1);
             var result = tumblingWindowDataset.GroupApply(e => e.field2, str => str.Count(), (g, c) => new { Key = g, Count = c });
             var a = result.ToStreamEventObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(a.Length == 3); // just make sure it doesn't crash
+            Assert.HasCount(3, a); // just make sure it doesn't crash
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -14808,11 +14808,11 @@ namespace SimpleTesting
                 ms.Position = 0;
                 ColumnBatch<string> resultStr = s.Deserialize(ms);
 
-                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+                Assert.AreEqual(inputStr.UsedLength, resultStr.UsedLength);
 
                 for (int j = 0; j < inputStr.UsedLength; j++)
                 {
-                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                    Assert.AreEqual(resultStr.col[j], inputStr.col[j]);
                 }
                 resultStr.ReturnClear();
                 inputStr.ReturnClear();
@@ -14850,11 +14850,11 @@ namespace SimpleTesting
                     ms.Position = 0;
                     var resultStr = s.Deserialize(ms);
 
-                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+                    Assert.AreEqual(inputStr.Count, resultStr.Count);
 
                     for (int j = 0; j < inputStr.Count; j++)
                     {
-                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                        Assert.AreEqual(resultStr[j], inputStr[j]);
                     }
                     resultStr.Dispose();
                     inputStr.Dispose();
@@ -15235,7 +15235,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -15465,7 +15465,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -15805,7 +15805,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable();
 
             var c = (ulong)streamResult.Count();
-            Assert.IsTrue(c == limit);
+            Assert.AreEqual(limit, c);
             cachedStream.Dispose();
         }
 
@@ -15900,7 +15900,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingIComparable();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -15912,7 +15912,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -15924,7 +15924,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingNonGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -15937,7 +15937,7 @@ namespace SimpleTesting
             var g = f.GetCompareExpr();
             var h = g.Compile();
             var k = h(a, a);
-            Assert.IsTrue(k == 0);
+            Assert.AreEqual(0, k);
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -16034,7 +16034,7 @@ namespace SimpleTesting
             var outputObservable = container.RegisterOutput(union);
 
             // Test the output
-            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             container.Restore(state);
             outputAsync.Wait();
 
@@ -16101,7 +16101,7 @@ namespace SimpleTesting
             var str2 = str.Where(r => r != 'b');
             var sortedStream = str2.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            Assert.IsTrue(input.Count() == result.Count() + 1); // just make sure deleted element isn't counted anymore
+            Assert.AreEqual(result.Count() + 1, input.Count()); // just make sure deleted element isn't counted anymore
             sortedStream.Dispose();
         }
 
@@ -16308,7 +16308,7 @@ namespace SimpleTesting
                 .Last();
 
             var expected = input.Sum(query.Compile());
-            Assert.IsTrue(expected == streamResult);
+            Assert.AreEqual(expected, streamResult);
 
         }
 
@@ -16323,9 +16323,9 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
-            Assert.IsTrue(streamResult.First().field1 == 5050);
+            Assert.AreEqual(5050, streamResult.First().field1);
 
         }
 
@@ -16340,7 +16340,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
             var f = streamResult.First();
             Assert.IsTrue(f.field1 == 4950 && f.field2 == 100);
@@ -16644,7 +16644,7 @@ namespace SimpleTesting
                     .SetProperty().IsSnapshotSorted(true, e => e.field1);
             var result = tumblingWindowDataset.GroupApply(e => e.field2, str => str.Count(), (g, c) => new { Key = g, Count = c });
             var a = result.ToStreamEventObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(a.Length == 3); // just make sure it doesn't crash
+            Assert.HasCount(3, a); // just make sure it doesn't crash
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -16675,11 +16675,11 @@ namespace SimpleTesting
                 ms.Position = 0;
                 ColumnBatch<string> resultStr = s.Deserialize(ms);
 
-                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+                Assert.AreEqual(inputStr.UsedLength, resultStr.UsedLength);
 
                 for (int j = 0; j < inputStr.UsedLength; j++)
                 {
-                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                    Assert.AreEqual(resultStr.col[j], inputStr.col[j]);
                 }
                 resultStr.ReturnClear();
                 inputStr.ReturnClear();
@@ -16717,11 +16717,11 @@ namespace SimpleTesting
                     ms.Position = 0;
                     var resultStr = s.Deserialize(ms);
 
-                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+                    Assert.AreEqual(inputStr.Count, resultStr.Count);
 
                     for (int j = 0; j < inputStr.Count; j++)
                     {
-                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                        Assert.AreEqual(resultStr[j], inputStr[j]);
                     }
                     resultStr.Dispose();
                     inputStr.Dispose();
@@ -17102,7 +17102,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -17332,7 +17332,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -17795,7 +17795,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable();
 
             var c = (ulong)streamResult.Count();
-            Assert.IsTrue(c == limit);
+            Assert.AreEqual(limit, c);
             cachedStream.Dispose();
         }
 
@@ -17890,7 +17890,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingIComparable();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -17902,7 +17902,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -17914,7 +17914,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingNonGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -17927,7 +17927,7 @@ namespace SimpleTesting
             var g = f.GetCompareExpr();
             var h = g.Compile();
             var k = h(a, a);
-            Assert.IsTrue(k == 0);
+            Assert.AreEqual(0, k);
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -18024,7 +18024,7 @@ namespace SimpleTesting
             var outputObservable = container.RegisterOutput(union);
 
             // Test the output
-            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             container.Restore(state);
             outputAsync.Wait();
 
@@ -18091,7 +18091,7 @@ namespace SimpleTesting
             var str2 = str.Where(r => r != 'b');
             var sortedStream = str2.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            Assert.IsTrue(input.Count() == result.Count() + 1); // just make sure deleted element isn't counted anymore
+            Assert.AreEqual(result.Count() + 1, input.Count()); // just make sure deleted element isn't counted anymore
             sortedStream.Dispose();
         }
 
@@ -18298,7 +18298,7 @@ namespace SimpleTesting
                 .Last();
 
             var expected = input.Sum(query.Compile());
-            Assert.IsTrue(expected == streamResult);
+            Assert.AreEqual(expected, streamResult);
 
         }
 
@@ -18313,9 +18313,9 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
-            Assert.IsTrue(streamResult.First().field1 == 5050);
+            Assert.AreEqual(5050, streamResult.First().field1);
 
         }
 
@@ -18330,7 +18330,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
             var f = streamResult.First();
             Assert.IsTrue(f.field1 == 4950 && f.field2 == 100);
@@ -18634,7 +18634,7 @@ namespace SimpleTesting
                     .SetProperty().IsSnapshotSorted(true, e => e.field1);
             var result = tumblingWindowDataset.GroupApply(e => e.field2, str => str.Count(), (g, c) => new { Key = g, Count = c });
             var a = result.ToStreamEventObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(a.Length == 3); // just make sure it doesn't crash
+            Assert.HasCount(3, a); // just make sure it doesn't crash
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -18665,11 +18665,11 @@ namespace SimpleTesting
                 ms.Position = 0;
                 ColumnBatch<string> resultStr = s.Deserialize(ms);
 
-                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+                Assert.AreEqual(inputStr.UsedLength, resultStr.UsedLength);
 
                 for (int j = 0; j < inputStr.UsedLength; j++)
                 {
-                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                    Assert.AreEqual(resultStr.col[j], inputStr.col[j]);
                 }
                 resultStr.ReturnClear();
                 inputStr.ReturnClear();
@@ -18707,11 +18707,11 @@ namespace SimpleTesting
                     ms.Position = 0;
                     var resultStr = s.Deserialize(ms);
 
-                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+                    Assert.AreEqual(inputStr.Count, resultStr.Count);
 
                     for (int j = 0; j < inputStr.Count; j++)
                     {
-                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                        Assert.AreEqual(resultStr[j], inputStr[j]);
                     }
                     resultStr.Dispose();
                     inputStr.Dispose();
@@ -19093,7 +19093,7 @@ namespace SimpleTesting
                 .GroupApply(e => e.field1, str => str.Count(), (g, cnt) => new MyStruct { field1 = (int)cnt, })
                 .Where(e => e.field2 >= 0.0)
                 .ToPayloadEnumerable();
-            Assert.IsTrue(streamResult.Count() == this.enumerable.Count());
+            Assert.AreEqual(this.enumerable.Count(), streamResult.Count());
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -19323,7 +19323,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Length == output.Length);
+            Assert.HasCount(output.Length, expected);
             for (int i = 0; i < expected.Length; i++)
             {
                 var e = (int?)(expected[i][0]);
@@ -19663,7 +19663,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable();
 
             var c = (ulong)streamResult.Count();
-            Assert.IsTrue(c == limit);
+            Assert.AreEqual(limit, c);
             cachedStream.Dispose();
         }
 
@@ -19758,7 +19758,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingIComparable();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -19770,7 +19770,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -19782,7 +19782,7 @@ namespace SimpleTesting
             var compiledDefaultCompareExpression = defaultCompareExpression.Compile();
             var o = new ClassImplementingNonGenericIComparer();
             var result = compiledDefaultCompareExpression(o, o);
-            Assert.IsTrue(result == 3);
+            Assert.AreEqual(3, result);
 
         }
 
@@ -19795,7 +19795,7 @@ namespace SimpleTesting
             var g = f.GetCompareExpr();
             var h = g.Compile();
             var k = h(a, a);
-            Assert.IsTrue(k == 0);
+            Assert.AreEqual(0, k);
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -19892,7 +19892,7 @@ namespace SimpleTesting
             var outputObservable = container.RegisterOutput(union);
 
             // Test the output
-            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(o => outputList.Add(o));
+            var outputAsync = outputObservable.Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList.Add);
             container.Restore(state);
             outputAsync.Wait();
 
@@ -19959,7 +19959,7 @@ namespace SimpleTesting
             var str2 = str.Where(r => r != 'b');
             var sortedStream = str2.Sort(c => c);
             var result = sortedStream.ToStreamEventObservable().Where(se => se.IsData).Select(se => se.Payload).ToEnumerable();
-            Assert.IsTrue(input.Count() == result.Count() + 1); // just make sure deleted element isn't counted anymore
+            Assert.AreEqual(result.Count() + 1, input.Count()); // just make sure deleted element isn't counted anymore
             sortedStream.Dispose();
         }
 
@@ -20166,7 +20166,7 @@ namespace SimpleTesting
                 .Last();
 
             var expected = input.Sum(query.Compile());
-            Assert.IsTrue(expected == streamResult);
+            Assert.AreEqual(expected, streamResult);
 
         }
 
@@ -20181,9 +20181,9 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
-            Assert.IsTrue(streamResult.First().field1 == 5050);
+            Assert.AreEqual(5050, streamResult.First().field1);
 
         }
 
@@ -20198,7 +20198,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 ;
 
-            Assert.IsTrue(streamResult.Count() == 1);
+            Assert.AreEqual(1, streamResult.Count());
 
             var f = streamResult.First();
             Assert.IsTrue(f.field1 == 4950 && f.field2 == 100);
@@ -20502,7 +20502,7 @@ namespace SimpleTesting
                     .SetProperty().IsSnapshotSorted(true, e => e.field1);
             var result = tumblingWindowDataset.GroupApply(e => e.field2, str => str.Count(), (g, c) => new { Key = g, Count = c });
             var a = result.ToStreamEventObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(a.Length == 3); // just make sure it doesn't crash
+            Assert.HasCount(3, a); // just make sure it doesn't crash
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -20533,11 +20533,11 @@ namespace SimpleTesting
                 ms.Position = 0;
                 ColumnBatch<string> resultStr = s.Deserialize(ms);
 
-                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+                Assert.AreEqual(inputStr.UsedLength, resultStr.UsedLength);
 
                 for (int j = 0; j < inputStr.UsedLength; j++)
                 {
-                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                    Assert.AreEqual(resultStr.col[j], inputStr.col[j]);
                 }
                 resultStr.ReturnClear();
                 inputStr.ReturnClear();
@@ -20575,11 +20575,11 @@ namespace SimpleTesting
                     ms.Position = 0;
                     var resultStr = s.Deserialize(ms);
 
-                    Assert.IsTrue(resultStr.Count == inputStr.Count);
+                    Assert.AreEqual(inputStr.Count, resultStr.Count);
 
                     for (int j = 0; j < inputStr.Count; j++)
                     {
-                        Assert.IsTrue(inputStr[j] == resultStr[j]);
+                        Assert.AreEqual(resultStr[j], inputStr[j]);
                     }
                     resultStr.Dispose();
                     inputStr.Dispose();

@@ -18,23 +18,23 @@ namespace Microsoft.StreamProcessing
         private readonly Func<TKey, TPartitionKey> getPartitionKey = GetPartitionExtractor<TPartitionKey, TKey>();
 
         [DataMember]
-        private FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<Entry>> leftQueue = new FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<Entry>>();
+        private FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<Entry>> leftQueue = new();
         [DataMember]
-        private FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<Entry>> rightQueue = new FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<Entry>>();
+        private FastDictionary2<TPartitionKey, PooledElasticCircularBuffer<Entry>> rightQueue = new();
         [DataMember]
-        private HashSet<TPartitionKey> processQueue = new HashSet<TPartitionKey>();
+        private HashSet<TPartitionKey> processQueue = [];
         [DataMember]
-        private HashSet<TPartitionKey> seenKeys = new HashSet<TPartitionKey>();
+        private HashSet<TPartitionKey> seenKeys = [];
         [DataMember]
-        private HashSet<TPartitionKey> cleanKeys = new HashSet<TPartitionKey>();
+        private HashSet<TPartitionKey> cleanKeys = [];
 
         [DataMember]
         private StreamMessage<TKey, TPayload> output;
 
         [DataMember]
-        private FastDictionary<TPartitionKey, long> nextLeftTime = new FastDictionary<TPartitionKey, long>();
+        private FastDictionary<TPartitionKey, long> nextLeftTime = new();
         [DataMember]
-        private FastDictionary<TPartitionKey, long> nextRightTime = new FastDictionary<TPartitionKey, long>();
+        private FastDictionary<TPartitionKey, long> nextRightTime = new();
         [DataMember]
         private long lastLeftCTI = long.MinValue;
         [DataMember]
@@ -56,8 +56,8 @@ namespace Microsoft.StreamProcessing
 
         private void NewPartition(TPartitionKey pKey)
         {
-            this.leftQueue.Insert(pKey, new PooledElasticCircularBuffer<Entry>());
-            this.rightQueue.Insert(pKey, new PooledElasticCircularBuffer<Entry>());
+            this.leftQueue.Insert(pKey, []);
+            this.rightQueue.Insert(pKey, []);
 
             if (!this.nextLeftTime.Lookup(pKey, out int left)) this.nextLeftTime.Insert(ref left, pKey, StreamEvent.MinSyncTime);
             if (!this.nextRightTime.Lookup(pKey, out int right)) this.nextRightTime.Insert(ref right, pKey, StreamEvent.MinSyncTime);
@@ -65,8 +65,8 @@ namespace Microsoft.StreamProcessing
 
         protected override void ProcessBothBatches(StreamMessage<TKey, TPayload> leftBatch, StreamMessage<TKey, TPayload> rightBatch, out bool leftBatchDone, out bool rightBatchDone, out bool leftBatchFree, out bool rightBatchFree)
         {
-            ProcessLeftBatch(leftBatch, out leftBatchDone, out leftBatchFree);
-            ProcessRightBatch(rightBatch, out rightBatchDone, out rightBatchFree);
+            this.ProcessLeftBatch(leftBatch, out leftBatchDone, out leftBatchFree);
+            this.ProcessRightBatch(rightBatch, out rightBatchDone, out rightBatchFree);
         }
 
         protected override void ProcessLeftBatch(StreamMessage<TKey, TPayload> batch, out bool leftBatchDone, out bool leftBatchFree)
@@ -95,7 +95,7 @@ namespace Microsoft.StreamProcessing
                 var partitionKey = this.getPartitionKey(batch.key.col[i]);
                 if (first || !partitionKey.Equals(previous))
                 {
-                    if (this.seenKeys.Add(partitionKey)) NewPartition(partitionKey);
+                    if (this.seenKeys.Add(partitionKey)) this.NewPartition(partitionKey);
                     this.leftQueue.Lookup(partitionKey, out int index);
                     queue = this.leftQueue.entries[index].value;
                     this.processQueue.Add(partitionKey);
@@ -113,7 +113,7 @@ namespace Microsoft.StreamProcessing
                 previous = partitionKey;
             }
 
-            ProcessPendingEntries();
+            this.ProcessPendingEntries();
         }
 
         protected override void ProcessRightBatch(StreamMessage<TKey, TPayload> batch, out bool rightBatchDone, out bool rightBatchFree)
@@ -142,7 +142,7 @@ namespace Microsoft.StreamProcessing
                 var partitionKey = this.getPartitionKey(batch.key.col[i]);
                 if (first || !partitionKey.Equals(previous))
                 {
-                    if (this.seenKeys.Add(partitionKey)) NewPartition(partitionKey);
+                    if (this.seenKeys.Add(partitionKey)) this.NewPartition(partitionKey);
                     this.rightQueue.Lookup(partitionKey, out int index);
                     queue = this.rightQueue.entries[index].value;
                     this.processQueue.Add(partitionKey);
@@ -160,7 +160,7 @@ namespace Microsoft.StreamProcessing
                 previous = partitionKey;
             }
 
-            ProcessPendingEntries();
+            this.ProcessPendingEntries();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -170,7 +170,9 @@ namespace Microsoft.StreamProcessing
             iter = FastDictionary<TPartitionKey, Entry>.IteratorStart;
             while (this.leftQueue.Iterate(ref iter)) this.leftQueue.entries[iter].value.Dispose();
             iter = FastDictionary<TPartitionKey, Entry>.IteratorStart;
-            while (this.leftQueue.Iterate(ref iter)) this.rightQueue.entries[iter].value.Dispose();
+            while (this.rightQueue.Iterate(ref iter)) this.rightQueue.entries[iter].value.Dispose();
+            this.nextLeftTime.Dispose();
+            this.nextRightTime.Dispose();
             this.output.Free();
         }
 
@@ -206,21 +208,21 @@ namespace Microsoft.StreamProcessing
                         {
                             case -1:
                                 // Output the left tuple
-                                OutputCurrentTuple(leftEntry);
+                                this.OutputCurrentTuple(leftEntry);
                                 leftWorking.TryDequeue(out leftEntry);
                                 break;
 
                             case 0:
                                 // Output both tuples
-                                OutputCurrentTuple(leftEntry);
-                                OutputCurrentTuple(rightEntry);
+                                this.OutputCurrentTuple(leftEntry);
+                                this.OutputCurrentTuple(rightEntry);
                                 leftWorking.TryDequeue(out leftEntry);
                                 rightWorking.TryDequeue(out rightEntry);
                                 break;
 
                             case 1:
                                 // Output the right tuple
-                                OutputCurrentTuple(rightEntry);
+                                this.OutputCurrentTuple(rightEntry);
                                 rightWorking.TryDequeue(out rightEntry);
                                 break;
 
@@ -239,7 +241,7 @@ namespace Microsoft.StreamProcessing
                         if (leftEntry.Sync <= Math.Max(lastRightTime, this.lastRightCTI))
                         {
                             // Output the left tuple
-                            OutputCurrentTuple(leftEntry);
+                            this.OutputCurrentTuple(leftEntry);
                             leftWorking.TryDequeue(out leftEntry);
                         }
                         else
@@ -260,7 +262,7 @@ namespace Microsoft.StreamProcessing
                         if (rightEntry.Sync <= Math.Max(lastLeftTime, this.lastLeftCTI))
                         {
                             // Output the right tuple
-                            OutputCurrentTuple(rightEntry);
+                            this.OutputCurrentTuple(rightEntry);
                             rightWorking.TryDequeue(out _);
                         }
                         else
@@ -280,7 +282,7 @@ namespace Microsoft.StreamProcessing
             if (this.emitCTI)
             {
                 var earliest = Math.Min(this.lastLeftCTI, this.lastRightCTI);
-                AddLowWatermarkToBatch(earliest);
+                this.AddLowWatermarkToBatch(earliest);
                 this.emitCTI = false;
                 foreach (var p in this.cleanKeys)
                 {
@@ -313,7 +315,7 @@ namespace Microsoft.StreamProcessing
                 this.output.hash.col[index] = 0;
                 this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
 
-                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
             }
         }
 
@@ -333,7 +335,7 @@ namespace Microsoft.StreamProcessing
             this.output.hash.col[index] = current.Hash;
 
             if (current.Other == long.MinValue) this.output.bitvector.col[index >> 6] |= (1L << (index & 0x3f));
-            if (this.output.Count == Config.DataBatchSize) FlushContents();
+            if (this.output.Count == Config.DataBatchSize) this.FlushContents();
         }
 
         protected override void ProduceBinaryQueryPlan(PlanNode left, PlanNode right)

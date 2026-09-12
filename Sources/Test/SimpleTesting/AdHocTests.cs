@@ -37,14 +37,14 @@ namespace SimpleTesting
         {
             var inputs = new List<MyPropertiesContainer>
             {
-                new MyPropertiesContainer { A = 1, B = true, C = 3M, D = "4", E = new Nested() },
+                new() { A = 1, B = true, C = 3M, D = "4", E = new Nested() },
             };
 
             var q1 = inputs.Select(x => StreamEvent.CreatePoint(10, x))
                 .ToObservable()
                 .ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None(), OnCompletedPolicy.None);
 
-            var q2 = q1.Select(x => string.Join(",", x.A, x.B, x.C, x.D, x.E));
+            var q2 = q1.Select(x => string.Join(",", new object[] { x.A, x.B, x.C, x.D, x.E }));
 
             int count = 0;
             q2.ToStreamEventObservable().ForEachAsync(x => count++).Wait();
@@ -60,14 +60,14 @@ namespace SimpleTesting
         {
             var inputs = new List<MyFieldsContainer>
             {
-                new MyFieldsContainer { A = 1, B = true, C = 3M, D = "4", E = new Nested() },
+                new() { A = 1, B = true, C = 3M, D = "4", E = new Nested() },
             };
 
             var q1 = inputs.Select(x => StreamEvent.CreatePoint(10, x))
                 .ToObservable()
                 .ToStreamable(DisorderPolicy.Throw(), FlushPolicy.FlushOnPunctuation, PeriodicPunctuationPolicy.None(), OnCompletedPolicy.None);
 
-            var q2 = q1.Select(x => string.Join(",", x.A, x.B, x.C, x.D, x.E));
+            var q2 = q1.Select(x => string.Join(",", new object[] { x.A, x.B, x.C, x.D, x.E }));
 
             int count = 0;
             q2.ToStreamEventObservable().ForEachAsync(x => count++).Wait();
@@ -83,7 +83,7 @@ namespace SimpleTesting
         {
             var inputs = new List<MyFieldsContainer>
             {
-                new MyFieldsContainer { A = 1, B = true, C = 3M, D = "4", E = new Nested() { Value = "five" } },
+                new() { A = 1, B = true, C = 3M, D = "4", E = new Nested() { Value = "five" } },
             };
 
             var q1 = inputs.Select(x => StreamEvent.CreatePoint(10, x))
@@ -141,11 +141,11 @@ namespace SimpleTesting
                 ms.Position = 0;
                 ColumnBatch<string> resultStr = s.Deserialize(ms);
 
-                Assert.IsTrue(resultStr.UsedLength == inputStr.UsedLength);
+                Assert.AreEqual(inputStr.UsedLength, resultStr.UsedLength);
 
                 for (int j = 0; j < inputStr.UsedLength; j++)
                 {
-                    Assert.IsTrue(inputStr.col[j] == resultStr.col[j]);
+                    Assert.AreEqual(resultStr.col[j], inputStr.col[j]);
                 }
                 resultStr.ReturnClear();
                 inputStr.ReturnClear();
@@ -155,19 +155,21 @@ namespace SimpleTesting
         [TestMethod, TestCategory("Gated")]
         public void StreamEventArrayIngress1()
         {
-            // Test where full array can fit into one batch
+            // Test where full array can fit into one batch — pin DataBatchSize so the
+            // assertion on batch count is not sensitive to Config state set by other tests.
+            using var _ = new ConfigModifier().DataBatchSize(80000).Modify();
             var startTime = 0;
             var length = 100;
             var a = Enumerable.Range(0, length)
                 .Select(i => StreamEvent.CreateStart(startTime++ / 80000, i))
                 .ToArray();
-            var input = new ArraySegment<StreamEvent<int>>[] { new ArraySegment<StreamEvent<int>>(a), };
+            var input = new ArraySegment<StreamEvent<int>>[] { new(a), };
             var s = input.ToObservable();
             var str = s.ToStreamable();
             var output = str.ToStreamMessageObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(output.Length == 1); // first batch with all data and one punctuation
-            Assert.IsTrue(output[0].Count == length + 1);
-            Assert.IsTrue(output[0].vother.col[output[0].Count - 1] == StreamEvent.PunctuationOtherTime);
+            Assert.HasCount(1, output); // first batch with all data and one punctuation
+            Assert.AreEqual(length + 1, output[0].Count);
+            Assert.AreEqual(StreamEvent.PunctuationOtherTime, output[0].vother.col[output[0].Count - 1]);
             for (int i = 0; i < output.Length; i++)
                 output[i].Free();
         }
@@ -181,15 +183,15 @@ namespace SimpleTesting
             var a = Enumerable.Range(0, length)
                 .Select(i => StreamEvent.CreateStart(startTime++ / 80000, i))
                 .ToArray();
-            var input = new ArraySegment<StreamEvent<int>>[] { new ArraySegment<StreamEvent<int>>(a) };
+            var input = new ArraySegment<StreamEvent<int>>[] { new(a) };
             var s = input.ToObservable();
             var str = s.ToStreamable();
             var output = str.ToStreamMessageObservable().ToEnumerable().ToArray();
-            Assert.IsTrue(output.Length == 4); // four data batches
-            Assert.IsTrue(output[0].Count + output[1].Count + output[2].Count + output[3].Count == length + 1);
+            Assert.HasCount(4, output); // four data batches
+            Assert.AreEqual(length + 1, output[0].Count + output[1].Count + output[2].Count + output[3].Count);
 
             // fourth data batch should have a punctuation at the end
-            Assert.IsTrue(output[3].vother.col[output[3].Count - 1] == StreamEvent.PunctuationOtherTime);
+            Assert.AreEqual(StreamEvent.PunctuationOtherTime, output[3].vother.col[output[3].Count - 1]);
             for (int i = 0; i < output.Length; i++)
                 output[i].Free();
         }
@@ -204,22 +206,22 @@ namespace SimpleTesting
                     StreamEvent.CreatePunctuation<int>(i)
                     : StreamEvent.CreateStart(i, i))
                 .ToArray();
-            var input = new ArraySegment<StreamEvent<int>>[] { new ArraySegment<StreamEvent<int>>(a) };
+            var input = new ArraySegment<StreamEvent<int>>[] { new(a) };
             var s = input.ToObservable();
             var str = s.ToStreamable();
             var output = str.ToStreamMessageObservable().ToEnumerable().ToArray();
 
             // 10 pairs of data and punc, then one with just a punctuation at infinity
             int expectedDataBatches = 11;
-            Assert.IsTrue(output.Length == expectedDataBatches);
+            Assert.HasCount(expectedDataBatches, output);
             var dataEventCount = 0;
             for (int i = 0; i < output.Length; i++)
             {
                 // Data batch should end with a punctuation
-                Assert.IsTrue(output[i].vother.col[output[i].Count - 1] == StreamEvent.PunctuationOtherTime);
+                Assert.AreEqual(StreamEvent.PunctuationOtherTime, output[i].vother.col[output[i].Count - 1]);
                 dataEventCount += output[i].Count - 1; // exclude punctuation
             }
-            Assert.IsTrue(dataEventCount == length - 10); // because every 10th row was a punctuation, not a data row
+            Assert.AreEqual(length - 10, dataEventCount); // because every 10th row was a punctuation, not a data row
             for (int i = 0; i < output.Length; i++)
                 output[i].Free();
         }
@@ -255,7 +257,7 @@ namespace SimpleTesting
             egress.Wait();
 
             output = output.Where(o => o.IsData).ToList();
-            Assert.AreEqual(2, output.Count);
+            Assert.HasCount(2, output);
             Assert.AreEqual(70, output[0].SyncTime);
             Assert.AreEqual(22, output[1].SyncTime);
         }
@@ -405,7 +407,7 @@ namespace SimpleTesting
                 OnCompletedPolicy.None);
 
             var output = new List<PartitionedStreamEvent<int, int>>();
-            var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
+            var egress = qc.RegisterOutput(ingress).ForEachAsync(output.Add);
             var process = qc.Restore();
             process.Flush();
             egress.Wait();
@@ -507,7 +509,7 @@ namespace SimpleTesting
                 OnCompletedPolicy.EndOfStream);
 
             var output = new List<PartitionedStreamEvent<int, int>>();
-            var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
+            var egress = qc.RegisterOutput(ingress).ForEachAsync(output.Add);
             var process = qc.Restore();
             process.Flush();
             egress.Wait();
@@ -547,7 +549,7 @@ namespace SimpleTesting
             // Stream from file
             var fromFile = filePath.ToStreamableFromFile<long>(readPropertiesFromStream: serializeStreamProperties);
             var output = new List<StreamEvent<long>>();
-            fromFile.ToStreamEventObservable().Where(e => e.IsData).ForEachAsync(r => output.Add(r)).Wait();
+            fromFile.ToStreamEventObservable().Where(e => e.IsData).ForEachAsync(output.Add).Wait();
 
             Assert.IsTrue(inputData.SequenceEqual(output));
         }
@@ -579,7 +581,7 @@ namespace SimpleTesting
                 for (int i = 0; i < 2; i++)
                 {
                     var output = new List<StreamEvent<long>>();
-                    streamable.ToStreamEventObservable().Where(e => e.IsData).ForEachAsync(e => output.Add(e)).Wait();
+                    streamable.ToStreamEventObservable().Where(e => e.IsData).ForEachAsync(output.Add).Wait();
                     Assert.IsTrue(inputData.SequenceEqual(output));
                 }
             }
@@ -651,7 +653,7 @@ namespace SimpleTesting
 
             var output = new List<PartitionedStreamEvent<int, int>>();
             input.ToStreamEventObservable()
-                .ForEachAsync(x => output.Add(x))
+                .ForEachAsync(output.Add)
                 .Wait();
 
             var expected = new List<PartitionedStreamEvent<int, int>>
@@ -863,7 +865,7 @@ namespace SimpleTesting
                 e => e);
 
             var output = new List<PartitionedStreamEvent<int, int>>();
-            var egress = qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            var egress = qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
             process.Flush();
             egress.Wait();
@@ -898,7 +900,7 @@ namespace SimpleTesting
                 .Unshard()
                 .ToStreamEventObservable()
                 .Where(e => e.IsData)
-                .ForEachAsync(e => output.Add(e));
+                .ForEachAsync(output.Add);
 
             Assert.IsTrue(output.SequenceEqual(input));
         }
@@ -920,11 +922,11 @@ namespace SimpleTesting
                         batch =>
                         {
                             var min = batch.MinTimestamp;
-                            Assert.IsTrue(min >= currentMin);
+                            Assert.IsGreaterThanOrEqualTo(currentMin, min);
                             currentMin = min;
 
                             var max = batch.MaxTimestamp;
-                            Assert.IsTrue(max >= currentMax);
+                            Assert.IsGreaterThanOrEqualTo(currentMax, max);
                             currentMax = max;
 
                             batch.Free();
@@ -957,7 +959,7 @@ namespace SimpleTesting
                     e => e);
 
                 var output = new List<PartitionedStreamEvent<int, int>>();
-                qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+                qc.RegisterOutput(query).ForEachAsync(output.Add);
                 var process = qc.Restore();
 
                 // Set up state so that the left has an "invisible" (i.e. unmatched on the right) interval.
@@ -1045,7 +1047,7 @@ namespace SimpleTesting
                     (l, r) => l);
 
                 var output = new List<PartitionedStreamEvent<int, int>>();
-                qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+                qc.RegisterOutput(query).ForEachAsync(output.Add);
                 var process = qc.Restore();
 
                 // Set up state so that there is outstanding start edges/intervals
@@ -1129,7 +1131,7 @@ namespace SimpleTesting
                     e => e);
 
                 var output = new List<PartitionedStreamEvent<int, int>>();
-                qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+                qc.RegisterOutput(query).ForEachAsync(output.Add);
                 var process = qc.Restore();
 
                 // Set up state so that there is outstanding start edges/intervals
@@ -1190,7 +1192,7 @@ namespace SimpleTesting
             var input = new Subject<PartitionedStreamEvent<int, int>>();
             var ingress = qc.RegisterInput(input, DisorderPolicy.Drop(reorderLatency: 500));
             var output = new List<PartitionedStreamEvent<int, int>>();
-            var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
+            var egress = qc.RegisterOutput(ingress).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // These will be buffered due to reorderLatency
@@ -1247,7 +1249,7 @@ namespace SimpleTesting
                         (g, byNamePayload) => new Payload { GroupId = g.Key, Name = byNamePayload.Name, Reading = byNamePayload.Reading })
                     .ToStreamEventObservable());
             var output = new List<StreamEvent<Payload>>();
-            var egress = qc.RegisterOutput(ingress).Where(e => e.IsData).ForEachAsync(o => output.Add(o));
+            var egress = qc.RegisterOutput(ingress).Where(e => e.IsData).ForEachAsync(output.Add);
             var process = qc.Restore();
             process.Flush();
             egress.Wait();
@@ -1311,8 +1313,10 @@ namespace SimpleTesting
             await inputTask;
 
             // Make sure we really got an output data event.
-            Assert.IsTrue(lastSeenSubscription > 0);
+            Assert.IsGreaterThan(0, lastSeenSubscription);
         }
+
+        public TestContext TestContext { get; set; }
     }
 
     [TestClass]
@@ -1347,16 +1351,16 @@ namespace SimpleTesting
 
             var input = inputSubject.ToStreamable().SetProperty().IsConstantDuration(true, StreamEvent.InfinitySyncTime).Publish();
 
-            var output1 = input.ToStreamEventObservable().Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(x => outputList1.Add(x));
+            var output1 = input.ToStreamEventObservable().Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList1.Add);
 
             input.Connect();
 
-            preConnectData.ForEachAsync(x => inputSubject.OnNext(x)).Wait();
+            preConnectData.ForEachAsync(inputSubject.OnNext).Wait();
             inputSubject.OnNext(StreamEvent.CreatePunctuation<int>(1));
 
-            var output2 = input.ToStreamEventObservable().Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(x => outputList2.Add(x));
+            var output2 = input.ToStreamEventObservable().Where(e => e.IsData).Select(e => e.Payload).ForEachAsync(outputList2.Add);
 
-            postConnectData.ForEachAsync(x => inputSubject.OnNext(x)).Wait();
+            postConnectData.ForEachAsync(inputSubject.OnNext).Wait();
 
             inputSubject.OnCompleted();
 
@@ -1412,7 +1416,7 @@ namespace SimpleTesting
             countedNE = countedNE.AlterEventDuration(1);
 
             var output2 = countedNE.ToStreamEventObservable(ReshapingPolicy.CoalesceEndEdges).ToEnumerable().ToArray();
-            Assert.IsTrue(output2.Count() == 9);
+            Assert.AreEqual(9, output2.Count());
         }
     }
 
@@ -1737,8 +1741,8 @@ namespace SimpleTesting
         {
             private IObserver<StreamEvent<InputEvent>> observer;
             private readonly Process process = null;
-            private readonly Queue<StreamEvent<OutputEvent>> results = new Queue<StreamEvent<OutputEvent>>();
-            private readonly QueryContainer container = new QueryContainer();
+            private readonly Queue<StreamEvent<OutputEvent>> results = new();
+            private readonly QueryContainer container = new();
 
             private void CommonInitialize()
             {
@@ -1748,10 +1752,7 @@ namespace SimpleTesting
                 var result = Query(inputEvents);
                 var resultObs = this.container.RegisterOutput(result);
 
-                resultObs.Subscribe(x =>
-                {
-                    this.results.Enqueue(x);
-                });
+                resultObs.Subscribe(this.results.Enqueue);
             }
 
             internal QueryProcessor()
@@ -1842,7 +1843,7 @@ namespace SimpleTesting
                                     s => s,
                                     s => s,
                                     e1 => e1,
-                                    (e1, e2) => null)).ForEachAsync(o => output.Add(o));
+                                    (e1, e2) => null)).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // This test used to rely on lagAllowance=50 and (Global)PeriodicPunctuationPolicy=10 to generate global punctuations and flush contents.
@@ -1871,7 +1872,7 @@ namespace SimpleTesting
             process.Flush();
 
             var outputData = output.Where(o => o.IsData).ToList();
-            Assert.IsTrue(outputData.Count == 2);
+            Assert.HasCount(2, outputData);
         }
 
         [TestMethod, TestCategory("Gated")]
@@ -1949,7 +1950,7 @@ namespace SimpleTesting
                 .ToArray();
 
             var x = events.Length;
-            Assert.IsTrue(x == inputEnumerable.Count());
+            Assert.AreEqual(inputEnumerable.Count(), x);
         }
     }
 
@@ -2133,12 +2134,14 @@ namespace SimpleTesting
                              });
 
                 var result = successes.ToStreamEventObservable().ToEnumerable().ToArray();
-                Assert.IsTrue(false); // should never reach here.
+                Assert.Fail(); // should never reach here.
             }
-            catch (Exception e)
+            catch (InvalidOperationException)
             {
-                Assert.IsTrue(e is InvalidOperationException);
+                // expected, because the Join should not be able to match the clipped events with the finishing events, since the clipped events have had their lifetime shifted by 1 tick, and thus should not overlap with the finishing events.
+                return;
             }
+            Assert.Fail(); // should never reach here.
         }
 
         /// <summary>
@@ -2170,7 +2173,7 @@ namespace SimpleTesting
                 .ToStreamEventObservable()
                 .Where(e => e.IsData)
                 .Select(e => e.Payload)
-                .ForEachAsync(x => outputList.Add(x));
+                .ForEachAsync(outputList.Add);
 
             streamResult.Connect();
 
@@ -2208,7 +2211,7 @@ namespace SimpleTesting
                 .ToStreamEventObservable()
                 .Where(e => e.IsData)
                 .Select(e => e.Payload)
-                .ForEachAsync(x => outputList.Add(x));
+                .ForEachAsync(outputList.Add);
 
             streamResult.Connect();
 
@@ -2249,7 +2252,7 @@ namespace SimpleTesting
                 .ToEnumerable()
                 .ToArray()
                 ;
-            Assert.IsTrue(expected.Count() == output.Length);
+            Assert.AreEqual(output.Length, expected.Count());
             for (int i = 0; i < output.Length; i++)
                 Assert.IsTrue(expected.ElementAt(i).Equals(output[i]));
         }
@@ -2316,10 +2319,32 @@ namespace SimpleTesting
     }
 
     [TestClass]
+    [DoNotParallelize]
     public class LeftComparerPayload_WithCodegen : TestWithConfigSettingsAndMemoryLeakDetection
     {
         public LeftComparerPayload_WithCodegen()
-            : base(new ConfigModifier().DontFallBackToRowBasedExecution(true)) { }
+            : base(new ConfigModifier()
+                .ForceRowBasedExecution(false)
+                .DontFallBackToRowBasedExecution(true)) { }
+
+        // Named result type so the full closed generic EquiJoinStreamable<,,,,> can be
+        // referenced at compile time (anonymous types cannot be named in typeof/generic arguments).
+        public struct JoinResult { public int LeftX; public int RightX; }
+
+        /// <summary>
+        /// Apply gated config first, then clear the join generated-pipe cache. Ordering is important:
+        /// multiple test initializer methods do not have a guaranteed run order, so a separate
+        /// initializer could clear the cache before base setup applied
+        /// <c>DontFallBackToRowBasedExecution</c>, letting another test repopulate the cache.
+        /// </summary>
+        [TestInitialize]
+        public override void Setup()
+        {
+            base.Setup();
+            // The join is built via Map+Reduce, so the inner EquiJoinStreamable uses TKey=CompoundGroupKey<Empty,int>.
+            EquiJoinStreamable<CompoundGroupKey<Empty, int>, ClassOverridingEquals, int, JoinResult>
+                .cachedPipes.Clear();
+        }
 
         public class ClassOverridingEquals
         {
@@ -2330,9 +2355,10 @@ namespace SimpleTesting
         }
 
         /// <summary>
-        /// This test has a left comparer which has a reference to the left
-        /// payload instead of just to its fields. This causes the streamable
-        /// to thrown an exception.
+        /// This test has a left comparer which has a reference to the left payload instead of
+        /// just to its fields. Codegen should always throw StreamProcessingException when
+        /// compiling this join fresh. The [TestInitialize] method clears the generated-pipe cache
+        /// before this test runs to ensure deterministic behavior in the full test suite.
         /// </summary>
         [TestMethod]
         public void JoinTestWithException()
@@ -2349,20 +2375,17 @@ namespace SimpleTesting
                 .ToStreamable()
                 ;
 
-            bool exceptionHappened = false;
+            bool threw = false;
             try
             {
-                var result = stream1
-                       .Join(stream2, e => e.x, e => e, (left, right) => new { LeftX = left.x, RightX = right, })
-                       .ToStreamEventObservable()
-                       .ToEnumerable()
-                       .ToArray();
+                stream1
+                    .Join(stream2, e => e.x, e => e, (left, right) => new JoinResult { LeftX = left.x, RightX = right })
+                    .ToStreamEventObservable()
+                    .ToEnumerable()
+                    .ToArray();
             }
-            catch (StreamProcessingException)
-            {
-                exceptionHappened = true;
-            }
-            Assert.IsTrue(exceptionHappened);
+            catch (StreamProcessingException) { threw = true; }
+            Assert.IsTrue(threw, "Expected StreamProcessingException from codegen failure on ClassOverridingEquals");
         }
 
     }
@@ -2404,18 +2427,15 @@ namespace SimpleTesting
                 .ToStreamable()
                 ;
 
-            try
-            {
-                var result = stream1
+
+            var result = stream1
                        .Join(stream2, e => e.x, e => e, (left, right) => new { LeftX = left.x, RightX = right, })
                        .ToStreamEventObservable()
                        .ToEnumerable()
                        .ToArray();
-                Assert.IsTrue(true); // just test that no exception happened
-            }
-            catch (Exception)
+            if (object.ReferenceEquals(result, null))
             {
-                Assert.IsTrue(false); // should never reach here.
+                // just to use the result and avoid "unused variable" warning
             }
         }
 
@@ -2505,9 +2525,9 @@ namespace SimpleTesting
 
             var expectedOutput = new StreamEvent<List<RankedEvent<char>>>[]
             {
-                StreamEvent.CreateInterval(1, 2, new List<RankedEvent<char>> { new RankedEvent<char>(1, 'a') }),
-                StreamEvent.CreateInterval(2, 3, new List<RankedEvent<char>> { new RankedEvent<char>(1, 'a') }),
-                StreamEvent.CreateInterval(3, 4, new List<RankedEvent<char>> { new RankedEvent<char>(1, 'b') }),
+                StreamEvent.CreateInterval(1, 2, new List<RankedEvent<char>> { new(1, 'a') }),
+                StreamEvent.CreateInterval(2, 3, new List<RankedEvent<char>> { new(1, 'a') }),
+                StreamEvent.CreateInterval(3, 4, new List<RankedEvent<char>> { new(1, 'b') }),
                 StreamEvent.CreatePunctuation<List<RankedEvent<char>>>(StreamEvent.InfinitySyncTime),
             };
             var str = input.ToObservable().ToStreamable(null, FlushPolicy.FlushOnPunctuation, null, OnCompletedPolicy.None).Cache();
@@ -2554,7 +2574,7 @@ namespace SimpleTesting
                 // BUG? Should codegen be able to handle this?
                 var s = "string";
                 var t = "another string";
-                TestWhere(e => e.field2.mystring.Contains(s + t));
+                this.TestWhere(e => e.field2.mystring.Contains(s + t));
             }
         }
 

@@ -79,7 +79,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             // Grow the array if needed.
             if (newWriteIndex == this.readIndex)
             {
-                Grow();
+                this.Grow();
 
                 // After growing, it is guaranteed that writeIndex + 1 does not need to wrap.
                 insertIndex = this.writeIndex;

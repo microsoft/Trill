@@ -14,13 +14,13 @@ namespace Microsoft.StreamProcessing
         protected UnaryStreamable(IStreamable<TKey, TSource> source, StreamProperties<TKey, TResult> properties)
             : base(properties)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
             this.Source = source;
         }
 
         public override IDisposable Subscribe(IStreamObserver<TKey, TResult> observer)
         {
-            var pipe = CreatePipe(observer);
+            var pipe = this.CreatePipe(observer);
             return this.Source.Subscribe(pipe);
         }
 
@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing
 
         protected void Initialize()
         {
-            if (this.Source.Properties.IsColumnar && !CanGenerateColumnar())
+            if (this.Source.Properties.IsColumnar && !this.CanGenerateColumnar())
             {
                 this.properties = this.properties.ToRowBased();
                 this.Source = this.Source.ColumnToRow();

@@ -20,7 +20,7 @@ namespace Microsoft.StreamProcessing
         public static IObservable<ArraySegment<TPayload>> ToAtemporalArrayObservable<TPayload>(
             this IStreamable<Empty, TPayload> stream)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToAtemporalArrayObservable(
                 () => new TPayload[Config.DataBatchSize],
@@ -38,7 +38,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<Empty, TPayload> stream,
             Func<TPayload[]> generator)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToAtemporalArrayObservable(
                 generator,
@@ -58,7 +58,7 @@ namespace Microsoft.StreamProcessing
             IStreamable<Empty, TPayload> stream,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToAtemporalArrayObservable(
                 () => new TPayload[Config.DataBatchSize],
@@ -80,7 +80,7 @@ namespace Microsoft.StreamProcessing
             Func<TPayload[]> generator,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToAtemporalArrayObservable(
                 generator,
@@ -93,7 +93,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new MonotonicArrayObservable<TPayload>(stream, generator, container, identifier);
         }

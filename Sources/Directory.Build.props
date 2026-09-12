@@ -15,10 +15,7 @@
   <!-- Global defines for all Trill projects -->
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);BINARYMERGE;COLUMNAR;BITVECTOR;MULTICORE_GA</DefineConstants>
-    <!-- This incantation calculates build number in format YMMDD, where Y is last digit of the year -->
-    <VersionBuild>$([System.String]::Format('{0}{1,2}{2,2}', '$([System.DateTime]::Now.Year.ToString().Substring(3))', '$([System.DateTime]::Now.Month)', '$([System.DateTime]::Now.Day)'))</VersionBuild>
-    <VersionBuild>$(_VersionTemp_Build.Replace(' ','0'))</VersionBuild>
-    <VersionFull>fullfullfull</VersionFull>
+    <Version>10.2.2</Version>
   </PropertyGroup>
   
   <PropertyGroup>

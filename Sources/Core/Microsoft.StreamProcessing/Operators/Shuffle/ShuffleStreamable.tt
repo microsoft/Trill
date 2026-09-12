@@ -55,9 +55,9 @@ else { #>
             : base(source.Properties)
 <# } #>
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 <# if (i < 2) { #>
-            Contract.Requires(keySelector != null);
+            ArgumentNullException.ThrowIfNull(keySelector);
 <# } #>
             Contract.Requires(totalBranchesL2 > 0);
 

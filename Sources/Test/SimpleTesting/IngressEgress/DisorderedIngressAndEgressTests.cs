@@ -145,7 +145,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -206,7 +206,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -361,7 +361,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -416,7 +416,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -643,7 +643,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -737,7 +737,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -991,7 +991,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -1079,7 +1079,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -1186,7 +1186,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -1229,7 +1229,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -1273,7 +1273,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -1285,7 +1285,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -1320,7 +1320,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -1332,7 +1332,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -1475,7 +1475,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -1537,7 +1537,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -1616,7 +1616,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -1659,7 +1659,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -1703,7 +1703,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -1715,7 +1715,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -1750,7 +1750,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -1762,7 +1762,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -1971,7 +1971,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -2066,7 +2066,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -2270,7 +2270,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -2332,7 +2332,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -2491,7 +2491,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -2546,7 +2546,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -2778,7 +2778,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -2873,7 +2873,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -3131,7 +3131,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -3219,7 +3219,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -3415,7 +3415,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -3476,7 +3476,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -3633,7 +3633,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -3688,7 +3688,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -3917,7 +3917,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4011,7 +4011,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4267,7 +4267,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4355,7 +4355,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4463,7 +4463,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -4506,7 +4506,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -4551,7 +4551,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4563,7 +4563,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -4598,7 +4598,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4610,7 +4610,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -4755,7 +4755,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4817,7 +4817,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4897,7 +4897,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -4940,7 +4940,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -4985,7 +4985,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -4997,7 +4997,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -5032,7 +5032,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -5044,7 +5044,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -5255,7 +5255,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -5350,7 +5350,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -5556,7 +5556,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -5618,7 +5618,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -5779,7 +5779,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -5834,7 +5834,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -6068,7 +6068,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -6163,7 +6163,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -6423,7 +6423,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -6511,7 +6511,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -6705,7 +6705,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -6766,7 +6766,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -6921,7 +6921,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -6976,7 +6976,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -7203,7 +7203,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -7297,7 +7297,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -7551,7 +7551,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -7639,7 +7639,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -7746,7 +7746,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -7789,7 +7789,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -7833,7 +7833,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -7845,7 +7845,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -7880,7 +7880,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -7892,7 +7892,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -8035,7 +8035,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -8097,7 +8097,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -8176,7 +8176,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -8219,7 +8219,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -8263,7 +8263,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -8275,7 +8275,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -8310,7 +8310,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -8322,7 +8322,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -8531,7 +8531,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -8626,7 +8626,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -8830,7 +8830,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -8892,7 +8892,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -9051,7 +9051,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -9106,7 +9106,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -9338,7 +9338,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -9433,7 +9433,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -9691,7 +9691,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -9779,7 +9779,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -9975,7 +9975,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -10036,7 +10036,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -10193,7 +10193,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -10248,7 +10248,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -10477,7 +10477,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -10571,7 +10571,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -10827,7 +10827,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -10915,7 +10915,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -11023,7 +11023,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -11066,7 +11066,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -11111,7 +11111,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -11123,7 +11123,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -11158,7 +11158,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -11170,7 +11170,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -11315,7 +11315,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -11377,7 +11377,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -11457,7 +11457,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -11500,7 +11500,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -11545,7 +11545,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -11557,7 +11557,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
 
@@ -11592,7 +11592,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -11604,7 +11604,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
             }
             catch(Exception)
             {
-                Assert.IsTrue(true); // Todo. Verify if the ingress/egress before the exception was correct.
+                // Todo. Verify if the ingress/egress before the exception was correct.
             }
         }
     }
@@ -11815,7 +11815,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -11910,7 +11910,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
     
                 var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
                 var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-                diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+                diagnosticStream.Subscribe(outOfOrderEvents.Add);
     
                 var outevents = prog.ToEnumerable().ToList();
                 Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -12116,7 +12116,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -12178,7 +12178,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -12339,7 +12339,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -12394,7 +12394,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -12628,7 +12628,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -12723,7 +12723,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -12983,7 +12983,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<int>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));
@@ -13071,7 +13071,7 @@ namespace SimpleTesting.DisorderedIngressAndEgress
 
             var diagnosticStream = ingress.GetDroppedAdjustedEventsDiagnostic();
             var outOfOrderEvents = new List<OutOfOrderStreamEvent<TestStruct>>();
-            diagnosticStream.Subscribe(o => outOfOrderEvents.Add(o));
+            diagnosticStream.Subscribe(outOfOrderEvents.Add);
 
             var outevents = prog.ToEnumerable().ToList();
             Assert.IsTrue(outevents.IsOrdered(t => t.SyncTime));

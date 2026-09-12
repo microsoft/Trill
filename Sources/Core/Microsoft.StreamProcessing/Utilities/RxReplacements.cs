@@ -3,8 +3,7 @@
 // Licensed under the MIT License
 // *********************************************************************
 using System;
-using System.Diagnostics.Contracts;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.StreamProcessing
 {
@@ -15,58 +14,37 @@ namespace Microsoft.StreamProcessing
             SynchronousForEachWorker<T>.DoIt(source, action);
         }
 
-        private sealed class SynchronousForEachWorker<T> : IObserver<T>, IDisposable
+        private sealed class SynchronousForEachWorker<T>(Action<T> action) : IObserver<T>
         {
-            private Action<T> action;
-            private AutoResetEvent mutex;
-            private Exception exception = null;
-
-            private SynchronousForEachWorker() { }
+            private readonly TaskCompletionSource tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
             public static void DoIt(IObservable<T> observable, Action<T> action)
             {
-                Contract.Requires(observable != null);
-                Contract.Requires(action != null);
+                ArgumentNullException.ThrowIfNull(observable);
+                ArgumentNullException.ThrowIfNull(action);
 
-                var me = new SynchronousForEachWorker<T>
+                SynchronousForEachWorker<T> worker = new(action);
+                using (observable.Subscribe(worker))
                 {
-                    action = action,
-                    mutex = new AutoResetEvent(false)
-                };
-
-                IDisposable disp = observable.Subscribe(me);
-                me.mutex.WaitOne();
-                if (disp != null) disp.Dispose();
-                if (me.exception != null) throw me.exception;
-                return;
+                    worker.tcs.Task.GetAwaiter().GetResult();
+                }
             }
 
-            public void OnCompleted() => this.mutex.Set();
-
-            public void OnError(Exception error)
-            {
-                this.exception = error;
-                this.mutex.Set();
-            }
+            public void OnCompleted() => this.tcs.TrySetResult();
+            public void OnError(Exception error) => this.tcs.TrySetException(error);
 
             public void OnNext(T value)
             {
-                if (this.exception != null)
-                {
-                    OnCompleted();
-                    return;
-                }
+                if (this.tcs.Task.IsCompleted) return;
                 try
                 {
-                    this.action(value);
+                    action(value);
                 }
                 catch (Exception e)
                 {
-                    OnError(e);
+                    this.OnError(e);
                 }
             }
-
-            public void Dispose() => this.mutex?.Dispose();
         }
 
     }

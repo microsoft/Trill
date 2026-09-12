@@ -34,10 +34,10 @@ namespace Microsoft.StreamProcessing
             Func<IStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TReduceInput>, IStreamable<CompoundGroupKey<TMapKey, TReduceKey>, TBind>> reducer,
             Expression<Func<GroupSelectorInput<TReduceKey>, TBind, TOutput>> resultSelector)
         {
-            Contract.Assume(sourceLeft != null);
+            Contract.Assume(this.sourceLeft != null);
 
-            var sourceL = sourceLeft;
-            var sourceR = sourceRight;
+            var sourceL = this.sourceLeft;
+            var sourceR = this.sourceRight;
 
             Expression<Func<TReduceKey, TBind, TOutput>> resultSelector2 = (k, b) =>
             CallInliner.Call(resultSelector, new GroupSelectorInput<TReduceKey>(k), b);
@@ -47,26 +47,26 @@ namespace Microsoft.StreamProcessing
             return new MapReduceStreamable<TMapKey, TMapInputLeft, TMapInputRight, TReduceKey, TReduceInput, TBind, TOutput>(
                 sourceL,
                 sourceR,
-                mapper,
-                keySelector,
+                this.mapper,
+                this.keySelector,
                 reducer,
                 inlinedResultSelector,
-                leftAsymmetric);
+                this.leftAsymmetric);
         }
 
         public IStreamable<TMapKey, TOutput> CreateStreamable<TBind, TOutput>()
         {
-            Contract.Assume(sourceLeft != null);
+            Contract.Assume(this.sourceLeft != null);
 
-            var sourceL = sourceLeft;
-            var sourceR = sourceRight;
+            var sourceL = this.sourceLeft;
+            var sourceR = this.sourceRight;
 
             return new MapReduceStreamable<TMapKey, TMapInputLeft, TMapInputRight, TReduceKey, TReduceInput, TBind, TOutput>(
                 sourceL,
                 sourceR,
-                mapper,
-                keySelector,
-                leftAsymmetric);
+                this.mapper,
+                this.keySelector,
+                this.leftAsymmetric);
         }
 
         /* Create a streamable for a 2-input reducer, with two 2-input mappers */
@@ -78,11 +78,11 @@ namespace Microsoft.StreamProcessing
             Expression<Func<GroupSelectorInput<TReduceKey>, TBind, TOutput>> resultSelector,
             OperationalHint reduceOptions)
         {
-            Contract.Assume(sourceLeft != null);
+            Contract.Assume(this.sourceLeft != null);
 
             var mapDefinitionRight = (MapDefinition<TMapKey, TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput2>)imapDefinitionRight;
-            var sourceL1 = sourceLeft;
-            var sourceR1 = sourceRight;
+            var sourceL1 = this.sourceLeft;
+            var sourceR1 = this.sourceRight;
 
             var sourceL2 = mapDefinitionRight.sourceLeft;
             var sourceR2 = mapDefinitionRight.sourceRight;
@@ -94,15 +94,15 @@ namespace Microsoft.StreamProcessing
             return new Map2ReduceStreamable<TMapKey, TMapInputLeft, TMapInputRight, TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput, TReduceInput2, TBind, TOutput>(
                 sourceL1,
                 sourceR1,
-                mapper,
-                keySelector,
+                this.mapper,
+                this.keySelector,
                 sourceL2,
                 sourceR2,
                 mapDefinitionRight.mapper,
                 mapDefinitionRight.keySelector,
                 reducer,
                 inlinedResultSelector,
-                leftAsymmetric,
+                this.leftAsymmetric,
                 mapDefinitionRight.leftAsymmetric, reduceOptions);
         }
     }
@@ -133,10 +133,10 @@ namespace Microsoft.StreamProcessing
             Func<IStreamable<TReduceKey, TReduceInput>, IStreamable<TReduceKey, TBind>> reducer,
             Expression<Func<GroupSelectorInput<TReduceKey>, TBind, TOutput>> resultSelector)
         {
-            Contract.Assume(sourceLeft != null);
+            Contract.Assume(this.sourceLeft != null);
 
-            var sourceL = sourceLeft;
-            var sourceR = sourceRight;
+            var sourceL = this.sourceLeft;
+            var sourceR = this.sourceRight;
 
             Expression<Func<TReduceKey, TBind, TOutput>> resultSelector2 = (k, b) =>
             CallInliner.Call(resultSelector, new GroupSelectorInput<TReduceKey>(k), b);
@@ -145,26 +145,26 @@ namespace Microsoft.StreamProcessing
             return new MapReduceStreamable<TMapInputLeft, TMapInputRight, TReduceKey, TReduceInput, TBind, TOutput>(
                 sourceL,
                 sourceR,
-                mapper,
-                keySelector,
+                this.mapper,
+                this.keySelector,
                 reducer,
                 inlinedResultSelector,
-                leftAsymmetric);
+                this.leftAsymmetric);
         }
 
         public IStreamable<Empty, TOutput> CreateStreamable<TBind, TOutput>()
         {
-            Contract.Assume(sourceLeft != null);
+            Contract.Assume(this.sourceLeft != null);
 
-            var sourceL = sourceLeft;
-            var sourceR = sourceRight;
+            var sourceL = this.sourceLeft;
+            var sourceR = this.sourceRight;
 
             return new MapReduceStreamable<TMapInputLeft, TMapInputRight, TReduceKey, TReduceInput, TBind, TOutput>(
                 sourceL,
                 sourceR,
-                mapper,
-                keySelector,
-                leftAsymmetric);
+                this.mapper,
+                this.keySelector,
+                this.leftAsymmetric);
         }
 
         /* Create a streamable for a 2-input reducer, with two 2-input mappers */
@@ -176,11 +176,11 @@ namespace Microsoft.StreamProcessing
             Expression<Func<GroupSelectorInput<TReduceKey>, TBind, TOutput>> resultSelector,
             OperationalHint reduceOptions)
         {
-            Contract.Assume(sourceLeft != null);
+            Contract.Assume(this.sourceLeft != null);
 
             var mapDefinitionRight = (MapDefinition<TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput2>)imapDefinitionRight;
-            var sourceL1 = sourceLeft;
-            var sourceR1 = sourceRight;
+            var sourceL1 = this.sourceLeft;
+            var sourceR1 = this.sourceRight;
 
             var sourceL2 = mapDefinitionRight.sourceLeft;
             var sourceR2 = mapDefinitionRight.sourceRight;
@@ -192,15 +192,15 @@ namespace Microsoft.StreamProcessing
             return new Map2ReduceStreamable<TMapInputLeft, TMapInputRight, TMapInputLeft2, TMapInputRight2, TReduceKey, TReduceInput, TReduceInput2, TBind, TOutput>(
                 sourceL1,
                 sourceR1,
-                mapper,
-                keySelector,
+                this.mapper,
+                this.keySelector,
                 sourceL2,
                 sourceR2,
                 mapDefinitionRight.mapper,
                 mapDefinitionRight.keySelector,
                 reducer,
                 inlinedResultSelector,
-                leftAsymmetric,
+                this.leftAsymmetric,
                 mapDefinitionRight.leftAsymmetric, reduceOptions);
         }
     }

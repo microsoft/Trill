@@ -12,7 +12,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class GroupNestedStreamable<TOuterKey, TSource, TInnerKey> : Streamable<CompoundGroupKey<TOuterKey, TInnerKey>, TSource>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification="Used to avoid creating redundant readonly property.")]
         public readonly Expression<Func<TSource, TInnerKey>> KeySelector;
@@ -23,25 +23,25 @@ namespace Microsoft.StreamProcessing
             IStreamable<TOuterKey, TSource> source, Expression<Func<TSource, TInnerKey>> keySelector)
             : base(source.Properties.GroupNested(keySelector))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(keySelector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
 
-            Source = source;
-            KeySelector = keySelector;
+            this.Source = source;
+            this.KeySelector = keySelector;
 
-            if (Source.Properties.IsColumnar && !CanGenerateColumnar())
+            if (this.Source.Properties.IsColumnar && !this.CanGenerateColumnar())
             {
-                properties = properties.ToRowBased();
-                Source = Source.ColumnToRow();
+                this.properties = this.properties.ToRowBased();
+                this.Source = this.Source.ColumnToRow();
             }
         }
 
         public override IDisposable Subscribe(IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TSource> observer)
         {
-            var pipe = Properties.IsColumnar
-                ? GetPipe(observer)
-                : CreatePipe(observer);
-            return Source.Subscribe(pipe);
+            var pipe = this.Properties.IsColumnar
+                ? this.GetPipe(observer)
+                : this.CreatePipe(observer);
+            return this.Source.Subscribe(pipe);
         }
 
         private IStreamObserver<TOuterKey, TSource> CreatePipe(IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TSource> observer)
@@ -60,35 +60,35 @@ namespace Microsoft.StreamProcessing
             if (typeOfTOuterKey.GetPartitionType() != null) return false;
             if (typeOfTInnerKey.GetPartitionType() != null) return false;
 
-            var lookupKey = CacheKey.Create(KeySelector.ToString());
+            var lookupKey = CacheKey.Create(this.KeySelector.ToString());
 
-            var comparer = (Properties.KeyEqualityComparer as CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey>).innerComparer.GetGetHashCodeExpr();
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => GroupTemplate.Generate<TOuterKey, TSource, TInnerKey>(comparer, KeySelector, true));
+            var comparer = (this.Properties.KeyEqualityComparer as CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey>).innerComparer.GetGetHashCodeExpr();
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => GroupTemplate.Generate<TOuterKey, TSource, TInnerKey>(comparer, this.KeySelector, true));
 
-            errorMessages = generatedPipeType.Item2;
+            this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
 
         private IStreamObserver<TOuterKey, TSource> GetPipe(IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TSource> observer)
         {
-            var lookupKey = CacheKey.Create(KeySelector.ToString());
+            var lookupKey = CacheKey.Create(this.KeySelector.ToString());
 
-             var comparer = (Properties.KeyEqualityComparer as CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey>).innerComparer.GetGetHashCodeExpr();
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => GroupTemplate.Generate<TOuterKey, TSource, TInnerKey>(comparer, KeySelector, true));
+             var comparer = (this.Properties.KeyEqualityComparer as CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey>).innerComparer.GetGetHashCodeExpr();
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => GroupTemplate.Generate<TOuterKey, TSource, TInnerKey>(comparer, this.KeySelector, true));
             Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new GroupPlanNode(
                     p,
                     o,
                     typeof(TOuterKey),
                     typeof(CompoundGroupKey<TOuterKey, TInnerKey>),
                     typeof(TSource),
-                    KeySelector,
+                    this.KeySelector,
                     int.MinValue,
                     1,
                     false,
                     true,
                     generatedPipeType.Item2));
 
-            var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, comparer, KeySelector, planNode);
+            var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, comparer, this.KeySelector, planNode);
             var returnValue = (IStreamObserver<TOuterKey, TSource>)instance;
             return returnValue;
         }
@@ -97,7 +97,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class GroupStreamable<TOuterKey, TSource, TInnerKey> : Streamable<TInnerKey, TSource>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification="Used to avoid creating redundant readonly property.")]
         public readonly Expression<Func<TSource, TInnerKey>> KeySelector;
@@ -108,25 +108,25 @@ namespace Microsoft.StreamProcessing
             IStreamable<TOuterKey, TSource> source, Expression<Func<TSource, TInnerKey>> keySelector)
             : base(source.Properties.Group(keySelector))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(keySelector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
 
-            Source = source;
-            KeySelector = keySelector;
+            this.Source = source;
+            this.KeySelector = keySelector;
 
-            if (Source.Properties.IsColumnar && !CanGenerateColumnar())
+            if (this.Source.Properties.IsColumnar && !this.CanGenerateColumnar())
             {
-                properties = properties.ToRowBased();
-                Source = Source.ColumnToRow();
+                this.properties = this.properties.ToRowBased();
+                this.Source = this.Source.ColumnToRow();
             }
         }
 
         public override IDisposable Subscribe(IStreamObserver<TInnerKey, TSource> observer)
         {
-            var pipe = Properties.IsColumnar
-                ? GetPipe(observer)
-                : CreatePipe(observer);
-            return Source.Subscribe(pipe);
+            var pipe = this.Properties.IsColumnar
+                ? this.GetPipe(observer)
+                : this.CreatePipe(observer);
+            return this.Source.Subscribe(pipe);
         }
 
         private IStreamObserver<TOuterKey, TSource> CreatePipe(IStreamObserver<TInnerKey, TSource> observer)
@@ -147,35 +147,35 @@ namespace Microsoft.StreamProcessing
             // For now, restrict the inner key to be anything other than an anonymous type since those can't be ungrouped without using reflection.
             if (typeOfTInnerKey.IsAnonymousType()) return false;
 
-            var lookupKey = CacheKey.Create(KeySelector.ToString());
+            var lookupKey = CacheKey.Create(this.KeySelector.ToString());
 
-            var comparer = Properties.KeyEqualityComparer.GetGetHashCodeExpr();
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => GroupTemplate.Generate<TOuterKey, TSource, TInnerKey>(comparer, KeySelector, false));
+            var comparer = this.Properties.KeyEqualityComparer.GetGetHashCodeExpr();
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => GroupTemplate.Generate<TOuterKey, TSource, TInnerKey>(comparer, this.KeySelector, false));
 
-            errorMessages = generatedPipeType.Item2;
+            this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
 
         private IStreamObserver<TOuterKey, TSource> GetPipe(IStreamObserver<TInnerKey, TSource> observer)
         {
-            var lookupKey = CacheKey.Create(KeySelector.ToString());
+            var lookupKey = CacheKey.Create(this.KeySelector.ToString());
 
-             var comparer = Properties.KeyEqualityComparer.GetGetHashCodeExpr();
-            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => GroupTemplate.Generate<TOuterKey, TSource, TInnerKey>(comparer, KeySelector, false));
+             var comparer = this.Properties.KeyEqualityComparer.GetGetHashCodeExpr();
+            var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => GroupTemplate.Generate<TOuterKey, TSource, TInnerKey>(comparer, this.KeySelector, false));
             Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new GroupPlanNode(
                     p,
                     o,
                     typeof(TOuterKey),
                     typeof(TInnerKey),
                     typeof(TSource),
-                    KeySelector,
+                    this.KeySelector,
                     int.MinValue,
                     1,
                     false,
                     true,
                     generatedPipeType.Item2));
 
-            var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, comparer, KeySelector, planNode);
+            var instance = Activator.CreateInstance(generatedPipeType.Item1, this, observer, comparer, this.KeySelector, planNode);
             var returnValue = (IStreamObserver<TOuterKey, TSource>)instance;
             return returnValue;
         }

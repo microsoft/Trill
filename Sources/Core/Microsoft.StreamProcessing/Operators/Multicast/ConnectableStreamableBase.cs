@@ -33,7 +33,7 @@ namespace Microsoft.StreamProcessing
         protected ConnectableStreamableBase(StreamProperties<TKey, TPayload> properties)
             : base(properties)
         {
-            Contract.Requires(properties != null);
+            ArgumentNullException.ThrowIfNull(properties);
 
             this.pool = MemoryManager.GetMemoryPool<TKey, TPayload>(properties.IsColumnar);
             this.ClassId = Guid.NewGuid();

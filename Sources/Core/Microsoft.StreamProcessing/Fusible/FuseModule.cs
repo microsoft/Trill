@@ -19,20 +19,20 @@ namespace Microsoft.StreamProcessing
 
     internal sealed class FuseModule
     {
-        private readonly List<ExpressionProfile> expressions = new List<ExpressionProfile>();
+        private readonly List<ExpressionProfile> expressions = [];
         private Expression durationAdjustment = null;
 
         public FuseModule() { }
 
         private FuseModule(FuseModule that)
         {
-            this.expressions = new List<ExpressionProfile>(that.expressions.Select(o => o.Clone()));
+            this.expressions = [.. that.expressions.Select(o => o.Clone())];
             this.durationAdjustment = that.durationAdjustment;
         }
 
         public bool Any => this.expressions.Count > 0;
 
-        public FuseModule Clone() => new FuseModule(this);
+        public FuseModule Clone() => new(this);
 
         public Expression[] GetCodeGenExpressions() => this.expressions.Select(profile => (Expression)profile.expression).ToArray();
 
@@ -50,7 +50,7 @@ namespace Microsoft.StreamProcessing
                     });
                 return this;
             }
-            var prev = this.expressions[this.expressions.Count - 1];
+            var prev = this.expressions[^1];
             switch (prev.category)
             {
                 case ExpressionCategory.Select:
@@ -92,7 +92,7 @@ namespace Microsoft.StreamProcessing
                     });
                 return this;
             }
-            var prev = this.expressions[this.expressions.Count - 1];
+            var prev = this.expressions[^1];
             switch (prev.category)
             {
                 case ExpressionCategory.Select:
@@ -140,7 +140,7 @@ namespace Microsoft.StreamProcessing
                     });
                 return this;
             }
-            var prev = this.expressions[this.expressions.Count - 1];
+            var prev = this.expressions[^1];
             switch (prev.category)
             {
                 case ExpressionCategory.Select:
@@ -150,12 +150,12 @@ namespace Microsoft.StreamProcessing
 
                     var startEdgeParameter = prev.hasStartEdge
                         ? prev.expression.Parameters[0].Yield()
-                        : Enumerable.Empty<ParameterExpression>();
+                        : [];
 
                     IEnumerable<ParameterExpression> keyParameter;
                     if (prev.hasKey)
                     {
-                        var key = prev.expression.Parameters[prev.expression.Parameters.Count - 2];
+                        var key = prev.expression.Parameters[^2];
                         body = ParameterSubstituter.Replace(selector.Parameters[0], key, body);
                         keyParameter = key.Yield();
                     }
@@ -201,7 +201,7 @@ namespace Microsoft.StreamProcessing
                 });
                 return this;
             }
-            var prev = this.expressions[this.expressions.Count - 1];
+            var prev = this.expressions[^1];
             switch (prev.category)
             {
                 case ExpressionCategory.Select:
@@ -221,7 +221,7 @@ namespace Microsoft.StreamProcessing
                     IEnumerable<ParameterExpression> keyParameter;
                     if (prev.hasKey)
                     {
-                        var key = prev.expression.Parameters[prev.expression.Parameters.Count - 2];
+                        var key = prev.expression.Parameters[^2];
                         body = ParameterSubstituter.Replace(selector.Parameters[1], key, body);
                         keyParameter = key.Yield();
                     }
@@ -265,7 +265,7 @@ namespace Microsoft.StreamProcessing
                 });
                 return this;
             }
-            var prev = this.expressions[this.expressions.Count - 1];
+            var prev = this.expressions[^1];
             switch (prev.category)
             {
                 case ExpressionCategory.Select:
@@ -307,7 +307,7 @@ namespace Microsoft.StreamProcessing
                 });
                 return this;
             }
-            var prev = this.expressions[this.expressions.Count - 1];
+            var prev = this.expressions[^1];
             switch (prev.category)
             {
                 case ExpressionCategory.Select:
@@ -355,7 +355,7 @@ namespace Microsoft.StreamProcessing
                 });
                 return this;
             }
-            var prev = this.expressions[this.expressions.Count - 1];
+            var prev = this.expressions[^1];
             switch (prev.category)
             {
                 case ExpressionCategory.Select:
@@ -365,12 +365,12 @@ namespace Microsoft.StreamProcessing
 
                     var startEdgeParameter = prev.hasStartEdge
                         ? prev.expression.Parameters[0].Yield()
-                        : Enumerable.Empty<ParameterExpression>();
+                        : [];
 
                     IEnumerable<ParameterExpression> keyParameter;
                     if (prev.hasKey)
                     {
-                        var key = prev.expression.Parameters[prev.expression.Parameters.Count - 2];
+                        var key = prev.expression.Parameters[^2];
                         body = ParameterSubstituter.Replace(selector.Parameters[0], key, body);
                         keyParameter = key.Yield();
                     }
@@ -417,7 +417,7 @@ namespace Microsoft.StreamProcessing
                 });
                 return this;
             }
-            var prev = this.expressions[this.expressions.Count - 1];
+            var prev = this.expressions[^1];
             switch (prev.category)
             {
                 case ExpressionCategory.Select:
@@ -437,7 +437,7 @@ namespace Microsoft.StreamProcessing
                     IEnumerable<ParameterExpression> keyParameter;
                     if (prev.hasKey)
                     {
-                        var key = prev.expression.Parameters[prev.expression.Parameters.Count - 2];
+                        var key = prev.expression.Parameters[^2];
                         body = ParameterSubstituter.Replace(selector.Parameters[1], key, body);
                         keyParameter = key.Yield();
                     }
@@ -471,7 +471,7 @@ namespace Microsoft.StreamProcessing
 
         public FuseModule FuseWhere<TPayload>(Expression<Func<TPayload, bool>> expression)
         {
-            if (this.expressions.Count == 0 || this.expressions[this.expressions.Count - 1].category != ExpressionCategory.Where)
+            if (this.expressions.Count == 0 || this.expressions[^1].category != ExpressionCategory.Where)
             {
                 this.expressions.Add(new ExpressionProfile
                 {
@@ -483,7 +483,7 @@ namespace Microsoft.StreamProcessing
                 return this;
             }
 
-            var prev = this.expressions[this.expressions.Count - 1];
+            var prev = this.expressions[^1];
             var parameter = prev.expression.Parameters[0];
             var replaced = expression.ReplaceParametersInBody(parameter);
             prev.expression = Expression.Lambda<Func<TPayload, bool>>(Expression.AndAlso(prev.expression.Body, replaced), parameter);
@@ -501,6 +501,8 @@ namespace Microsoft.StreamProcessing
         internal Type OutputType => this.expressions.Count == 0 ? null : this.expressions.Last().outputType;
 
         public bool IsEmpty => this.expressions.Count == 0 && this.durationAdjustment == null;
+
+        public bool HasDurationAdjustment => this.durationAdjustment != null;
 
         public override string ToString()
         {
@@ -544,11 +546,11 @@ namespace Microsoft.StreamProcessing
 
                             var selectBody = profile.expression.Body;
                             if (profile.hasStartEdge) selectBody = ParameterSubstituter.Replace(profile.expression.Parameters[0], syncParam, selectBody);
-                            if (profile.hasKey) selectBody = ParameterSubstituter.Replace(profile.expression.Parameters[profile.expression.Parameters.Count - 2], keyParam, selectBody);
+                            if (profile.hasKey) selectBody = ParameterSubstituter.Replace(profile.expression.Parameters[^2], keyParam, selectBody);
                             selectBody = ParameterSubstituter.Replace(profile.expression.Parameters.Last(), parameter, selectBody);
 
                             currentStatement = Expression.Block(
-                                new[] { oldParameter },
+                                [oldParameter],
                                 Expression.Assign(oldParameter, selectBody),
                                 currentStatement);
                             break;
@@ -563,19 +565,19 @@ namespace Microsoft.StreamProcessing
 
                             var selectManyBody = profile.expression.Body;
                             if (profile.hasStartEdge) selectManyBody = ParameterSubstituter.Replace(profile.expression.Parameters[0], syncParam, selectManyBody);
-                            if (profile.hasKey) selectManyBody = ParameterSubstituter.Replace(profile.expression.Parameters[profile.expression.Parameters.Count - 2], keyParam, selectManyBody);
+                            if (profile.hasKey) selectManyBody = ParameterSubstituter.Replace(profile.expression.Parameters[^2], keyParam, selectManyBody);
                             selectManyBody = ParameterSubstituter.Replace(profile.expression.Parameters.Last(), parameter, selectManyBody);
 
                             var label = Expression.Label();
                             if (enumerableParameter.Type.IsArray)
                             {
                                 currentStatement = Expression.Block(
-                                    new[] { indexParameter, enumerableParameter },
+                                    [indexParameter, enumerableParameter],
                                     Expression.Assign(indexParameter, Expression.Constant(0)),
                                     Expression.Assign(enumerableParameter, selectManyBody),
                                     Expression.Loop(
                                         Expression.Block(
-                                            new[] { oldParameter },
+                                            [oldParameter],
                                             Expression.IfThen(
                                                 Expression.GreaterThanOrEqual(indexParameter, Expression.PropertyOrField(enumerableParameter, "Length")),
                                                 Expression.Break(label)),
@@ -586,20 +588,20 @@ namespace Microsoft.StreamProcessing
                             }
                             else
                             {
-                                var enumerableType = typeof(IEnumerable<>).GetTypeInfo().MakeGenericType(profile.outputType);
-                                var enumeratorType = typeof(IEnumerator<>).GetTypeInfo().MakeGenericType(profile.outputType);
-                                var enumeratorMethod = enumerableType.GetTypeInfo().GetMethod("GetEnumerator");
+                                var enumerableType = typeof(IEnumerable<>).MakeGenericType(profile.outputType);
+                                var enumeratorType = typeof(IEnumerator<>).MakeGenericType(profile.outputType);
+                                var enumeratorMethod = enumerableType.GetMethod("GetEnumerator");
                                 var enumeratorParameter = Expression.Variable(enumeratorType, enumerableParameter.Name + "Enumerator");
-                                var moveNextMethod = typeof(IEnumerator).GetTypeInfo().GetMethod("MoveNext");
-                                var disposeMethod = typeof(IDisposable).GetTypeInfo().GetMethod("Dispose");
+                                var moveNextMethod = typeof(IEnumerator).GetMethod("MoveNext");
+                                var disposeMethod = typeof(IDisposable).GetMethod("Dispose");
 
                                 currentStatement = Expression.Block(
-                                    new[] { enumerableParameter, enumeratorParameter },
+                                    [enumerableParameter, enumeratorParameter],
                                     Expression.Assign(enumerableParameter, selectManyBody),
                                     Expression.Assign(enumeratorParameter, Expression.Call(enumerableParameter, enumeratorMethod)),
                                     Expression.Loop(
                                         Expression.Block(
-                                            new[] { oldParameter },
+                                            [oldParameter],
                                             Expression.IfThen(
                                                 Expression.Not(Expression.Call(enumeratorParameter, moveNextMethod)),
                                                 Expression.Break(label)),
@@ -648,15 +650,15 @@ namespace Microsoft.StreamProcessing
         public string Coalesce<TPayload, TResult, TKey>(string startText, string endText, string payloadText, string keyText, out string leadingText, out string trailingText)
         {
             Expression<Action<long, long, TResult, TKey>> placeholder = (generatedStartTimeVariable, generatedEndTimeVariable, transformedValue, generatedKeyVariable) => PlaceholderMethod.Foo();
-            var c = Coalesce<TPayload, TResult, TKey>(placeholder, false);
-            var strings = c.Body.ExpressionToCSharp().Split(new string[] { PlaceholderMethod.Text }, StringSplitOptions.None);
+            var c = this.Coalesce<TPayload, TResult, TKey>(placeholder, false);
+            var strings = c.Body.ExpressionToCSharp().Split([PlaceholderMethod.Text], StringSplitOptions.None);
             var start = "var " + c.Parameters[0].Name + " = " + startText + ";";
             var end = "var " + c.Parameters[1].Name + " = " + endText + ";";
             var payload = "var " + c.Parameters[2].Name + " = " + payloadText + ";";
             var key = "var " + c.Parameters[3].Name + " = " + keyText + ";";
             leadingText = string.Join(Environment.NewLine, start, end, payload, key, strings[0]);
             trailingText = strings[1];
-            if (trailingText[0] == ';') trailingText = trailingText.Substring(1).Trim();
+            if (trailingText[0] == ';') trailingText = trailingText[1..].Trim();
             return placeholder.Parameters[2].Name;
         }
     }

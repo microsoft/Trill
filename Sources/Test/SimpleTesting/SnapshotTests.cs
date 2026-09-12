@@ -551,7 +551,7 @@ namespace SimpleTesting
                     applyFunc: o => o.SessionTimeoutWindow(5, 10).Sum(x => x.field1),
                     resultSelector: (k, sum) => sum);
             var output = new List<StreamEvent<int>>();
-            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // Punctuations preceding data events should flow through the system
@@ -638,7 +638,7 @@ namespace SimpleTesting
                 .SessionTimeoutWindow(5, 10)
                 .Sum(x => x.field1);
             var output = new List<StreamEvent<int>>();
-            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // Punctuations preceding data events should flow through the system
@@ -1520,7 +1520,7 @@ namespace SimpleTesting
                     applyFunc: o => o.SessionTimeoutWindow(5, 10).Sum(x => x.field1),
                     resultSelector: (k, sum) => sum);
             var output = new List<StreamEvent<int>>();
-            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // Punctuations preceding data events should flow through the system
@@ -1607,7 +1607,7 @@ namespace SimpleTesting
                 .SessionTimeoutWindow(5, 10)
                 .Sum(x => x.field1);
             var output = new List<StreamEvent<int>>();
-            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // Punctuations preceding data events should flow through the system
@@ -2488,7 +2488,7 @@ namespace SimpleTesting
                     applyFunc: o => o.SessionTimeoutWindow(5, 10).Sum(x => x.field1),
                     resultSelector: (k, sum) => sum);
             var output = new List<StreamEvent<int>>();
-            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // Punctuations preceding data events should flow through the system
@@ -2575,7 +2575,7 @@ namespace SimpleTesting
                 .SessionTimeoutWindow(5, 10)
                 .Sum(x => x.field1);
             var output = new List<StreamEvent<int>>();
-            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // Punctuations preceding data events should flow through the system
@@ -3457,7 +3457,7 @@ namespace SimpleTesting
                     applyFunc: o => o.SessionTimeoutWindow(5, 10).Sum(x => x.field1),
                     resultSelector: (k, sum) => sum);
             var output = new List<StreamEvent<int>>();
-            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // Punctuations preceding data events should flow through the system
@@ -3544,7 +3544,7 @@ namespace SimpleTesting
                 .SessionTimeoutWindow(5, 10)
                 .Sum(x => x.field1);
             var output = new List<StreamEvent<int>>();
-            qc.RegisterOutput(query).ForEachAsync(o => output.Add(o));
+            qc.RegisterOutput(query).ForEachAsync(output.Add);
             var process = qc.Restore();
 
             // Punctuations preceding data events should flow through the system

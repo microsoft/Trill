@@ -180,7 +180,7 @@ namespace Microsoft.StreamProcessing
                 expressions = fuseModule.GetCodeGenExpressions();
             }
 
-            return template.Generate<TKey, TSource, TResult>(new Type[] { typeof(IStreamable<,>) }, expressions);
+            return template.Generate<TKey, TSource, TResult>([typeof(IStreamable<,>)], expressions);
         }
     }
 }

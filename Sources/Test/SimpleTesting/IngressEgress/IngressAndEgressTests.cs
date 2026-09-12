@@ -28,7 +28,7 @@ namespace SimpleTesting
             var input = Enumerable.Range(0, 1000).ToList();
             var subject = new Subject<int>();
             var prog = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToEnumerable();
-            input.ForEach(o => subject.OnNext(o));
+            input.ForEach(subject.OnNext);
             subject.OnCompleted();
             while (!prog.Completed) { }
             var output = prog.OrderBy(o => o);
@@ -43,8 +43,8 @@ namespace SimpleTesting
             var subject = new Subject<int>();
             var output = new List<StreamEvent<int>>();
 
-            var outputAwait = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToStreamEventObservable().Where(o => o.IsData).ForEachAsync(o => output.Add(o));
-            input.ForEach(o => subject.OnNext(o));
+            var outputAwait = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToStreamEventObservable().Where(o => o.IsData).ForEachAsync(output.Add);
+            input.ForEach(subject.OnNext);
             subject.OnCompleted();
             outputAwait.Wait();
 
@@ -999,7 +999,7 @@ namespace SimpleTesting
             var input = Enumerable.Range(0, 1000).ToList();
             var subject = new Subject<int>();
             var prog = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToEnumerable();
-            input.ForEach(o => subject.OnNext(o));
+            input.ForEach(subject.OnNext);
             subject.OnCompleted();
             while (!prog.Completed) { }
             var output = prog.OrderBy(o => o);
@@ -1014,8 +1014,8 @@ namespace SimpleTesting
             var subject = new Subject<int>();
             var output = new List<StreamEvent<int>>();
 
-            var outputAwait = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToStreamEventObservable().Where(o => o.IsData).ForEachAsync(o => output.Add(o));
-            input.ForEach(o => subject.OnNext(o));
+            var outputAwait = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToStreamEventObservable().Where(o => o.IsData).ForEachAsync(output.Add);
+            input.ForEach(subject.OnNext);
             subject.OnCompleted();
             outputAwait.Wait();
 
@@ -1988,7 +1988,7 @@ namespace SimpleTesting
             var input = Enumerable.Range(0, 1000).ToList();
             var subject = new Subject<int>();
             var prog = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToEnumerable();
-            input.ForEach(o => subject.OnNext(o));
+            input.ForEach(subject.OnNext);
             subject.OnCompleted();
             while (!prog.Completed) { }
             var output = prog.OrderBy(o => o);
@@ -2003,8 +2003,8 @@ namespace SimpleTesting
             var subject = new Subject<int>();
             var output = new List<StreamEvent<int>>();
 
-            var outputAwait = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToStreamEventObservable().Where(o => o.IsData).ForEachAsync(o => output.Add(o));
-            input.ForEach(o => subject.OnNext(o));
+            var outputAwait = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToStreamEventObservable().Where(o => o.IsData).ForEachAsync(output.Add);
+            input.ForEach(subject.OnNext);
             subject.OnCompleted();
             outputAwait.Wait();
 
@@ -2959,7 +2959,7 @@ namespace SimpleTesting
             var input = Enumerable.Range(0, 1000).ToList();
             var subject = new Subject<int>();
             var prog = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToEnumerable();
-            input.ForEach(o => subject.OnNext(o));
+            input.ForEach(subject.OnNext);
             subject.OnCompleted();
             while (!prog.Completed) { }
             var output = prog.OrderBy(o => o);
@@ -2974,8 +2974,8 @@ namespace SimpleTesting
             var subject = new Subject<int>();
             var output = new List<StreamEvent<int>>();
 
-            var outputAwait = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToStreamEventObservable().Where(o => o.IsData).ForEachAsync(o => output.Add(o));
-            input.ForEach(o => subject.OnNext(o));
+            var outputAwait = subject.ToAtemporalStreamable(TimelinePolicy.Sequence(100)).ToStreamEventObservable().Where(o => o.IsData).ForEachAsync(output.Add);
+            input.ForEach(subject.OnNext);
             subject.OnCompleted();
             outputAwait.Wait();
 

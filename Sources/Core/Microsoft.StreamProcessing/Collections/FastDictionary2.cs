@@ -80,7 +80,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             this.comparerEquals = equals;
             this.comparerGetHashCode = getHashCode;
 
-            Initialize();
+            this.Initialize();
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             {
                 if (this.count == this.Size)
                 {
-                    Resize();
+                    this.Resize();
                     index = num % this.Size;
                 }
                 freeList = this.count;
@@ -151,7 +151,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             this.entries[freeList].key = key;
             this.entries[freeList].value = value;
             this.buckets[index] = freeList;
-            if (this.Count > (this.Size >> 1)) Resize();
+            if (this.Count > (this.Size >> 1)) this.Resize();
             return freeList;
         }
 
@@ -178,7 +178,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             {
                 if (this.count == this.Size)
                 {
-                    Resize();
+                    this.Resize();
                     index = num % this.Size;
                 }
                 freeList = this.count;
@@ -190,7 +190,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             this.entries[freeList].key = key;
             this.entries[freeList].value = value;
             this.buckets[index] = freeList;
-            if (this.Count > (this.Size >> 1)) Resize();
+            if (this.Count > (this.Size >> 1)) this.Resize();
             return freeList;
         }
 

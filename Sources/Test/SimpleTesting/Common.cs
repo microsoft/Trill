@@ -27,8 +27,8 @@ namespace SimpleTesting
 
         public static bool IsEquivalentTo<TPayload>(this IStreamable<Empty, TPayload> input, StreamEvent<TPayload>[] comparison)
         {
-            Invariant.IsNotNull(input, "input");
-            Invariant.IsNotNull(comparison, "comparison");
+            ArgumentNullException.ThrowIfNull(input);
+            ArgumentNullException.ThrowIfNull(comparison);
             var events = input.ToStreamEventArray();
             var orderedEvents = events.OrderBy(e => e.SyncTime).ThenBy(e => e.OtherTime).ThenBy(e => e.Payload).ToArray();
             var orderedComparison = comparison.OrderBy(e => e.SyncTime).ThenBy(e => e.OtherTime).ThenBy(e => e.Payload).ToArray();
@@ -38,19 +38,19 @@ namespace SimpleTesting
 
         public static StreamEvent<TPayload>[] ToStreamEventArray<TPayload>(this IStreamable<Empty, TPayload> input)
         {
-            Invariant.IsNotNull(input, "input");
+            ArgumentNullException.ThrowIfNull(input);
             return input.ToStreamEventObservable().ToEnumerable().ToArray();
         }
 
         public static IStreamable<Empty, TPayload> ToCleanStreamable<TPayload>(this StreamEvent<TPayload>[] input)
         {
-            Invariant.IsNotNull(input, "input");
+            ArgumentNullException.ThrowIfNull(input);
             return input.OrderBy(v => v.SyncTime).ToArray().ToStreamable();
         }
 
         public static IStreamable<Empty, TPayload> ToStreamable<TPayload>(this StreamEvent<TPayload>[] input)
         {
-            Invariant.IsNotNull(input, "input");
+            ArgumentNullException.ThrowIfNull(input);
 
             return input.ToObservable()
                 .ToStreamable(null, FlushPolicy.FlushOnPunctuation);
@@ -183,32 +183,27 @@ namespace SimpleTesting
                 yield return StreamEvent.CreateInterval(vsSelector(e), veSelector(e), e);
             }
         }
-
-#if NET472
-        // string.Split has different signatures across .NET Framework/Core, so use an extension so we can use a single signature
-        public static string[] Split(this string original, char separator, StringSplitOptions options) => original.Split(separator);
-#endif
     }
 
     public static class Helpers
     {
+        /// <summary>
+        /// Runs the action in row mode then columnar mode. Uses <see cref="ConfigModifier"/>
+        /// so toggles participate in the same gated swap/restore and global semaphore as tests,
+        /// instead of assigning static <see cref="Config"/> fields directly (which would bypass
+        /// that coordination and could race with parallel test workers).
+        /// </summary>
         public static void RunTwiceForRowAndColumnar(Action action)
         {
-            var savedForceRowBasedExecution = Config.ForceRowBasedExecution;
-            var savedRowFallback = Config.CodegenOptions.DontFallBackToRowBasedExecution;
-            try
+            foreach (var rowBased in new bool[] { true, false })
             {
-                foreach (var rowBased in new bool[] { true, false })
+                using (new ConfigModifier()
+                    .ForceRowBasedExecution(rowBased)
+                    .DontFallBackToRowBasedExecution(!rowBased)
+                    .Modify())
                 {
-                    Config.ForceRowBasedExecution = rowBased;
-                    Config.CodegenOptions.DontFallBackToRowBasedExecution = !rowBased;
                     action();
                 }
-            }
-            finally
-            {
-                Config.ForceRowBasedExecution = savedForceRowBasedExecution;
-                Config.CodegenOptions.DontFallBackToRowBasedExecution = savedRowFallback;
             }
         }
     }
@@ -329,7 +324,7 @@ namespace SimpleTesting
         public double doubleField;
         public char[] charArrayField;
         public override string ToString() => string.Format("MyStruct({0}, {1}, {2}, {3})", this.field1, this.field2.mystring, this.field3.nestedField, this.doubleField);
-        public StructWithCtor ReturnStructWithCtor(int x) => new StructWithCtor(x);
+        public StructWithCtor ReturnStructWithCtor(int x) => new(x);
     }
 
     public struct StructWithCtor

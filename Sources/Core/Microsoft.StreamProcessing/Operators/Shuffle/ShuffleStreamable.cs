@@ -12,7 +12,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class ShuffleNestedStreamable<TOuterKey, TSource, TInnerKey> : Streamable<CompoundGroupKey<TOuterKey, TInnerKey>, TSource>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Used to avoid creating redundant readonly property.")]
         public readonly Expression<Func<TSource, TInnerKey>> KeySelector;
@@ -30,20 +30,20 @@ namespace Microsoft.StreamProcessing
             int shuffleId)
             : base(source.Properties.GroupNested(keySelector))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(keySelector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
             Contract.Requires(totalBranchesL2 > 0);
 
-            Source = source;
-            KeySelector = keySelector;
+            this.Source = source;
+            this.KeySelector = keySelector;
             this.totalBranchesL2 = totalBranchesL2;
             this.shuffleId = shuffleId;
-            powerOf2 = ((totalBranchesL2 & (totalBranchesL2 - 1)) == 0);
+            this.powerOf2 = ((totalBranchesL2 & (totalBranchesL2 - 1)) == 0);
 
             if (totalBranchesL2 <= 1)
             {
-                singleThreadedShuffler = new GroupNestedStreamable<TOuterKey, TSource, TInnerKey>(source, keySelector);
-                this.properties = singleThreadedShuffler.Properties;
+                this.singleThreadedShuffler = new GroupNestedStreamable<TOuterKey, TSource, TInnerKey>(source, keySelector);
+                this.properties = this.singleThreadedShuffler.Properties;
             }
         }
 
@@ -52,35 +52,35 @@ namespace Microsoft.StreamProcessing
 
         public override IDisposable Subscribe(IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TSource> observer)
         {
-            if (totalBranchesL2 <= 1)
+            if (this.totalBranchesL2 <= 1)
             {
-                return singleThreadedShuffler.Subscribe(observer);
+                return this.singleThreadedShuffler.Subscribe(observer);
             }
 
-            numBranches++;
-            if (pipe == null)
+            this.numBranches++;
+            if (this.pipe == null)
             {
-                if (this.Properties.IsColumnar && CanGenerateColumnar()) pipe = GetPipe(observer, totalBranchesL2, shuffleId);
-                else pipe = CreatePipe(observer);
+                if (this.Properties.IsColumnar && this.CanGenerateColumnar()) this.pipe = this.GetPipe(observer, this.totalBranchesL2, this.shuffleId);
+                else this.pipe = this.CreatePipe(observer);
             }
             var o = observer;
-            pipe.AddObserver(o);
+            this.pipe.AddObserver(o);
 
             var d = o as IDisposable;
-            if (numBranches < totalBranchesL2)
+            if (this.numBranches < this.totalBranchesL2)
             {
                 return d ?? Utility.EmptyDisposable;
             }
             else
             {
                 // Reset status for next set of subscribe calls
-                var oldpipe = pipe;
-                pipe = null;
-                numBranches = 0;
+                var oldpipe = this.pipe;
+                this.pipe = null;
+                this.numBranches = 0;
 
                 return d == null
-                    ? Source.Subscribe(oldpipe)
-                    : Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
+                    ? this.Source.Subscribe(oldpipe)
+                    : Utility.CreateDisposable(this.Source.Subscribe(oldpipe), d);
             }
         }
 
@@ -88,8 +88,8 @@ namespace Microsoft.StreamProcessing
             IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TSource> observer)
         {
             if (typeof(TOuterKey).GetPartitionType() == null)
-                return new ShuffleNestedPipe<TOuterKey, TSource, TInnerKey>(this, observer, totalBranchesL2, shuffleId);
-            return new PartitionedShuffleNestedPipe<TOuterKey, TSource, TInnerKey>(this, observer, totalBranchesL2, shuffleId);
+                return new ShuffleNestedPipe<TOuterKey, TSource, TInnerKey>(this, observer, this.totalBranchesL2, this.shuffleId);
+            return new PartitionedShuffleNestedPipe<TOuterKey, TSource, TInnerKey>(this, observer, this.totalBranchesL2, this.shuffleId);
         }
 
         private bool CanGenerateColumnar()
@@ -102,7 +102,7 @@ namespace Microsoft.StreamProcessing
             if (typeOfTOuterKey.GetPartitionType() != null) return false;
             if (typeOfTInnerKey.GetPartitionType() != null) return false;
 
-            var keyEqComparer = Properties.KeyEqualityComparer;
+            var keyEqComparer = this.Properties.KeyEqualityComparer;
             string inlinedHashCodeComputation;
             if (keyEqComparer is CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey> comparer)
             {
@@ -114,16 +114,16 @@ namespace Microsoft.StreamProcessing
                 inlinedHashCodeComputation = keyEqComparer.GetGetHashCodeExpr().Inline("key");
             }
 
-            var lookupKey = CacheKey.Create(KeySelector.ToString(), inlinedHashCodeComputation, powerOf2);
+            var lookupKey = CacheKey.Create(this.KeySelector.ToString(), inlinedHashCodeComputation, this.powerOf2);
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ShuffleTemplate.Generate<TOuterKey, TSource, TInnerKey>(this.KeySelector, inlinedHashCodeComputation, true, this.powerOf2));
 
-            errorMessages = generatedPipeType.Item2;
+            this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
 
         private IStreamObserverAndNestedGroupedStreamObservable<TOuterKey, TSource, TInnerKey> GetPipe(IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TSource> observer, int totalBranchesL2, int shuffleId)
         {
-            var keyEqComparer = Properties.KeyEqualityComparer;
+            var keyEqComparer = this.Properties.KeyEqualityComparer;
             string inlinedHashCodeComputation;
             if (keyEqComparer is CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey> comparer)
             {
@@ -135,7 +135,7 @@ namespace Microsoft.StreamProcessing
                 inlinedHashCodeComputation = keyEqComparer.GetGetHashCodeExpr().Inline("key");
             }
 
-            var lookupKey = CacheKey.Create(KeySelector.ToString(), inlinedHashCodeComputation, powerOf2);
+            var lookupKey = CacheKey.Create(this.KeySelector.ToString(), inlinedHashCodeComputation, this.powerOf2);
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ShuffleTemplate.Generate<TOuterKey, TSource, TInnerKey>(this.KeySelector, inlinedHashCodeComputation, true, this.powerOf2));
 
             Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new GroupPlanNode(
@@ -160,7 +160,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class ShuffleStreamable<TOuterKey, TSource, TInnerKey> : Streamable<TInnerKey, TSource>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Used to avoid creating redundant readonly property.")]
         public readonly Expression<Func<TSource, TInnerKey>> KeySelector;
@@ -178,20 +178,20 @@ namespace Microsoft.StreamProcessing
             int shuffleId)
             : base(source.Properties.Group(keySelector))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(keySelector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
             Contract.Requires(totalBranchesL2 > 0);
 
-            Source = source;
-            KeySelector = keySelector;
+            this.Source = source;
+            this.KeySelector = keySelector;
             this.totalBranchesL2 = totalBranchesL2;
             this.shuffleId = shuffleId;
-            powerOf2 = ((totalBranchesL2 & (totalBranchesL2 - 1)) == 0);
+            this.powerOf2 = ((totalBranchesL2 & (totalBranchesL2 - 1)) == 0);
 
             if (totalBranchesL2 <= 1)
             {
-                singleThreadedShuffler = new GroupStreamable<TOuterKey, TSource, TInnerKey>(source, keySelector);
-                this.properties = singleThreadedShuffler.Properties;
+                this.singleThreadedShuffler = new GroupStreamable<TOuterKey, TSource, TInnerKey>(source, keySelector);
+                this.properties = this.singleThreadedShuffler.Properties;
             }
         }
 
@@ -200,42 +200,42 @@ namespace Microsoft.StreamProcessing
 
         public override IDisposable Subscribe(IStreamObserver<TInnerKey, TSource> observer)
         {
-            if (totalBranchesL2 <= 1)
+            if (this.totalBranchesL2 <= 1)
             {
-                return singleThreadedShuffler.Subscribe(observer);
+                return this.singleThreadedShuffler.Subscribe(observer);
             }
 
-            numBranches++;
-            if (pipe == null)
+            this.numBranches++;
+            if (this.pipe == null)
             {
-                if (this.Properties.IsColumnar && CanGenerateColumnar()) pipe = GetPipe(observer, totalBranchesL2, shuffleId);
-                else pipe = CreatePipe(observer);
+                if (this.Properties.IsColumnar && this.CanGenerateColumnar()) this.pipe = this.GetPipe(observer, this.totalBranchesL2, this.shuffleId);
+                else this.pipe = this.CreatePipe(observer);
             }
             var o = observer;
-            pipe.AddObserver(o);
+            this.pipe.AddObserver(o);
 
             var d = o as IDisposable;
-            if (numBranches < totalBranchesL2)
+            if (this.numBranches < this.totalBranchesL2)
             {
                 return d ?? Utility.EmptyDisposable;
             }
             else
             {
                 // Reset status for next set of subscribe calls
-                var oldpipe = pipe;
-                pipe = null;
-                numBranches = 0;
+                var oldpipe = this.pipe;
+                this.pipe = null;
+                this.numBranches = 0;
 
                 return d == null
-                    ? Source.Subscribe(oldpipe)
-                    : Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
+                    ? this.Source.Subscribe(oldpipe)
+                    : Utility.CreateDisposable(this.Source.Subscribe(oldpipe), d);
             }
         }
 
         private IStreamObserverAndGroupedStreamObservable<TOuterKey, TSource, TInnerKey> CreatePipe(
             IStreamObserver<TInnerKey, TSource> observer)
         {
-            return new ShufflePipe<TOuterKey, TSource, TInnerKey>(this, observer, totalBranchesL2, shuffleId);
+            return new ShufflePipe<TOuterKey, TSource, TInnerKey>(this, observer, this.totalBranchesL2, this.shuffleId);
         }
 
         private bool CanGenerateColumnar()
@@ -248,7 +248,7 @@ namespace Microsoft.StreamProcessing
             if (typeOfTOuterKey.GetPartitionType() != null) return false;
             if (typeOfTInnerKey.GetPartitionType() != null) return false;
 
-            var keyEqComparer = Properties.KeyEqualityComparer;
+            var keyEqComparer = this.Properties.KeyEqualityComparer;
             string inlinedHashCodeComputation;
             if (keyEqComparer is CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey> comparer)
             {
@@ -260,16 +260,16 @@ namespace Microsoft.StreamProcessing
                 inlinedHashCodeComputation = keyEqComparer.GetGetHashCodeExpr().Inline("key");
             }
 
-            var lookupKey = CacheKey.Create(KeySelector.ToString(), inlinedHashCodeComputation, powerOf2);
+            var lookupKey = CacheKey.Create(this.KeySelector.ToString(), inlinedHashCodeComputation, this.powerOf2);
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ShuffleTemplate.Generate<TOuterKey, TSource, TInnerKey>(this.KeySelector, inlinedHashCodeComputation, false, this.powerOf2));
 
-            errorMessages = generatedPipeType.Item2;
+            this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
 
         private IStreamObserverAndGroupedStreamObservable<TOuterKey, TSource, TInnerKey> GetPipe(IStreamObserver<TInnerKey, TSource> observer, int totalBranchesL2, int shuffleId)
         {
-            var keyEqComparer = Properties.KeyEqualityComparer;
+            var keyEqComparer = this.Properties.KeyEqualityComparer;
             string inlinedHashCodeComputation;
             if (keyEqComparer is CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey> comparer)
             {
@@ -281,7 +281,7 @@ namespace Microsoft.StreamProcessing
                 inlinedHashCodeComputation = keyEqComparer.GetGetHashCodeExpr().Inline("key");
             }
 
-            var lookupKey = CacheKey.Create(KeySelector.ToString(), inlinedHashCodeComputation, powerOf2);
+            var lookupKey = CacheKey.Create(this.KeySelector.ToString(), inlinedHashCodeComputation, this.powerOf2);
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ShuffleTemplate.Generate<TOuterKey, TSource, TInnerKey>(this.KeySelector, inlinedHashCodeComputation, false, this.powerOf2));
 
             Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new GroupPlanNode(
@@ -306,7 +306,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class ShuffleSameKeyStreamable<TOuterKey, TSource, TInnerKey> : Streamable<TOuterKey, TSource>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Used to avoid creating redundant readonly property.")]
         public readonly IStreamable<TOuterKey, TSource> Source;
@@ -321,13 +321,13 @@ namespace Microsoft.StreamProcessing
             int shuffleId)
             : base(source.Properties)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
             Contract.Requires(totalBranchesL2 > 0);
 
-            Source = source;
+            this.Source = source;
             this.totalBranchesL2 = totalBranchesL2;
             this.shuffleId = shuffleId;
-            powerOf2 = ((totalBranchesL2 & (totalBranchesL2 - 1)) == 0);
+            this.powerOf2 = ((totalBranchesL2 & (totalBranchesL2 - 1)) == 0);
 
         }
 
@@ -336,42 +336,42 @@ namespace Microsoft.StreamProcessing
 
         public override IDisposable Subscribe(IStreamObserver<TOuterKey, TSource> observer)
         {
-            if (totalBranchesL2 <= 1)
+            if (this.totalBranchesL2 <= 1)
             {
-                return Source.Subscribe(observer);
+                return this.Source.Subscribe(observer);
             }
 
-            numBranches++;
-            if (pipe == null)
+            this.numBranches++;
+            if (this.pipe == null)
             {
-                if (this.Properties.IsColumnar && CanGenerateColumnar()) pipe = GetPipe(observer, totalBranchesL2, shuffleId);
-                else pipe = CreatePipe(observer);
+                if (this.Properties.IsColumnar && this.CanGenerateColumnar()) this.pipe = this.GetPipe(observer, this.totalBranchesL2, this.shuffleId);
+                else this.pipe = this.CreatePipe(observer);
             }
             var o = observer;
-            pipe.AddObserver(o);
+            this.pipe.AddObserver(o);
 
             var d = o as IDisposable;
-            if (numBranches < totalBranchesL2)
+            if (this.numBranches < this.totalBranchesL2)
             {
                 return d ?? Utility.EmptyDisposable;
             }
             else
             {
                 // Reset status for next set of subscribe calls
-                var oldpipe = pipe;
-                pipe = null;
-                numBranches = 0;
+                var oldpipe = this.pipe;
+                this.pipe = null;
+                this.numBranches = 0;
 
                 return d == null
-                    ? Source.Subscribe(oldpipe)
-                    : Utility.CreateDisposable(Source.Subscribe(oldpipe), d);
+                    ? this.Source.Subscribe(oldpipe)
+                    : Utility.CreateDisposable(this.Source.Subscribe(oldpipe), d);
             }
         }
 
         private IStreamObserverAndSameKeyGroupedStreamObservable<TOuterKey, TSource, TOuterKey> CreatePipe(
             IStreamObserver<TOuterKey, TSource> observer)
         {
-            return new ShuffleSameKeyPipe<TOuterKey, TSource, TInnerKey>(this, observer, totalBranchesL2, shuffleId);
+            return new ShuffleSameKeyPipe<TOuterKey, TSource, TInnerKey>(this, observer, this.totalBranchesL2, this.shuffleId);
         }
 
         private bool CanGenerateColumnar()
@@ -384,7 +384,7 @@ namespace Microsoft.StreamProcessing
             if (typeOfTOuterKey.GetPartitionType() != null) return false;
             if (typeOfTInnerKey.GetPartitionType() != null) return false;
 
-            var keyEqComparer = Properties.KeyEqualityComparer;
+            var keyEqComparer = this.Properties.KeyEqualityComparer;
             string inlinedHashCodeComputation;
             if (keyEqComparer is CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey> comparer)
             {
@@ -396,16 +396,16 @@ namespace Microsoft.StreamProcessing
                 inlinedHashCodeComputation = keyEqComparer.GetGetHashCodeExpr().Inline("key");
             }
 
-            var lookupKey = CacheKey.Create(inlinedHashCodeComputation, powerOf2);
+            var lookupKey = CacheKey.Create(inlinedHashCodeComputation, this.powerOf2);
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ShuffleTemplate.Generate<TOuterKey, TSource, TInnerKey>(null, inlinedHashCodeComputation, false, this.powerOf2));
 
-            errorMessages = generatedPipeType.Item2;
+            this.errorMessages = generatedPipeType.Item2;
             return generatedPipeType.Item1 != null;
         }
 
         private IStreamObserverAndSameKeyGroupedStreamObservable<TOuterKey, TSource, TOuterKey> GetPipe(IStreamObserver<TOuterKey, TSource> observer, int totalBranchesL2, int shuffleId)
         {
-            var keyEqComparer = Properties.KeyEqualityComparer;
+            var keyEqComparer = this.Properties.KeyEqualityComparer;
             string inlinedHashCodeComputation;
             if (keyEqComparer is CompoundGroupKeyEqualityComparer<TOuterKey, TInnerKey> comparer)
             {
@@ -417,7 +417,7 @@ namespace Microsoft.StreamProcessing
                 inlinedHashCodeComputation = keyEqComparer.GetGetHashCodeExpr().Inline("key");
             }
 
-            var lookupKey = CacheKey.Create(inlinedHashCodeComputation, powerOf2);
+            var lookupKey = CacheKey.Create(inlinedHashCodeComputation, this.powerOf2);
             var generatedPipeType = cachedPipes.GetOrAdd(lookupKey, key => ShuffleTemplate.Generate<TOuterKey, TSource, TInnerKey>(null, inlinedHashCodeComputation, false, this.powerOf2));
 
             Func<PlanNode, IQueryObject, PlanNode> planNode = ((PlanNode p, IQueryObject o) => new GroupPlanNode(

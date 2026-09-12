@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
             LambdaExpression durationSelector)
             : base(source, source.Properties.AlterLifetime(durationSelector))
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.StartTimeSelector = startTimeSelector;
             this.DurationSelector = durationSelector;

@@ -92,8 +92,8 @@ foreach (var m in new [] { "StreamEvent", "Interval" })
             : base(StreamProperties<<#= keyType #>, <#= outputType #>>.Default<#= (m == "Interval") ? "Ingress(startEdgeExtractor, endEdgeExtractor)" : string.Empty #>.SetQueryContainer(container))
 <#  } #>
         {
-            Contract.Requires(observable != null);
-            Contract.Requires(identifier != null);
+            ArgumentNullException.ThrowIfNull(observable);
+            ArgumentNullException.ThrowIfNull(identifier);
 
             this.IngressSiteIdentifier = identifier;
             this.observable = observable;

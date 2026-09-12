@@ -48,18 +48,20 @@ namespace Microsoft.StreamProcessing
         // TODO_PERFORMANCE:: special case when input events are already serialized because they are emitted from a common multicast
         // source.
         private readonly object binarySync;
-        private readonly object sync = new object();
+        private readonly Lock sync = new();
 
         private SerializationState serializationState = SerializationState.Open;
-        private readonly Queue<PlanNode> leftPlans = new Queue<PlanNode>();
-        private readonly Queue<PlanNode> rightPlans = new Queue<PlanNode>();
+        private readonly Queue<PlanNode> leftPlans = [];
+        private readonly Lock leftPlansLock = new();
+        private readonly Queue<PlanNode> rightPlans = [];
+        private readonly Lock rightPlansLock = new();
 
         [DataMember]
         private int completedCount;
         [DataMember]
-        private ConcurrentQueue<StreamMessage<TKey, TLeft>> leftQueue = new ConcurrentQueue<StreamMessage<TKey, TLeft>>();
+        private ConcurrentQueue<StreamMessage<TKey, TLeft>> leftQueue = new();
         [DataMember]
-        private ConcurrentQueue<StreamMessage<TKey, TRight>> rightQueue = new ConcurrentQueue<StreamMessage<TKey, TRight>>();
+        private ConcurrentQueue<StreamMessage<TKey, TRight>> rightQueue = new();
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -128,7 +130,7 @@ namespace Microsoft.StreamProcessing
             }
 
             this.leftQueue.Enqueue(batch);
-            ProcessPendingBatches();
+            this.ProcessPendingBatches();
         }
 
         private void OnRight(StreamMessage<TKey, TRight> batch)
@@ -142,7 +144,7 @@ namespace Microsoft.StreamProcessing
             }
 
             this.rightQueue.Enqueue(batch);
-            ProcessPendingBatches();
+            this.ProcessPendingBatches();
         }
 
         /// <summary>
@@ -152,16 +154,9 @@ namespace Microsoft.StreamProcessing
         {
             // This will not deadlock, since it we can only be waiting another thread further along in the
             // query, and there cannot be cycles in the query.
-            Monitor.Enter(this.sync);
-            try
-            {
-                FlushContents();
-                this.Observer.OnFlush();
-            }
-            finally
-            {
-                Monitor.Exit(this.sync);
-            }
+            using Lock.Scope _ = this.sync.EnterScope();
+            this.FlushContents();
+            this.Observer.OnFlush();
         }
 
         /// <summary>
@@ -175,28 +170,24 @@ namespace Microsoft.StreamProcessing
                 // Ensure we have no pending batches in case we cut off another thread that was about to do so.
                 // TODO: add parameter to so implementers can finish processing data knowing there will be no
                 // future batches, then the cleanup below should only catch bugs in implementers.
-                ProcessPendingBatches();
+                this.ProcessPendingBatches();
 
                 // Not all binary pipes will have processed all batches, so make sure we don't leak.
                 // This will not deadlock, since it we can only be waiting another thread further along in the
                 // query, and there cannot be cycles in the query.
-                Monitor.Enter(this.sync);
-                try
-                {
-                    base.OnCompleted();
+                using Lock.Scope _ = this.sync.EnterScope();
+                // Process any batches that were enqueued while another thread held the lock above.
+                // Call the lock-free core directly — we already hold the lock here.
+                this.ProcessPendingBatchesCore();
+                base.OnCompleted();
 
-                    while (this.leftQueue.TryDequeue(out var leftBatch))
-                    {
-                        leftBatch.Free();
-                    }
-                    while (this.rightQueue.TryDequeue(out var rightBatch))
-                    {
-                        rightBatch.Free();
-                    }
-                }
-                finally
+                while (this.leftQueue.TryDequeue(out var leftBatch))
                 {
-                    Monitor.Exit(this.sync);
+                    leftBatch.Free();
+                }
+                while (this.rightQueue.TryDequeue(out var rightBatch))
+                {
+                    rightBatch.Free();
                 }
             }
         }
@@ -205,7 +196,7 @@ namespace Microsoft.StreamProcessing
         private void ProcessPendingBatches()
         {
             // Exit if another thread is already processing the pending batches
-            if (!Monitor.TryEnter(this.sync))
+            if (!this.sync.TryEnter())
             {
                 return;
             }
@@ -214,78 +205,75 @@ namespace Microsoft.StreamProcessing
             // there is still processing to be done, we shouldn't release the lock.
             try
             {
-                while (true)
-                {
-                    bool process;
-                    switch (this.state)
-                    {
-                        case ProcessState.WaitingForLeft:
-                            process = !this.leftQueue.IsEmpty;
-                            break;
-                        case ProcessState.WaitingForRight:
-                            process = !this.rightQueue.IsEmpty;
-                            break;
-                        case ProcessState.WaitingForAny:
-                            process = !this.leftQueue.IsEmpty || !this.rightQueue.IsEmpty;
-                            break;
-                        default:
-                            throw new InvalidOperationException();
-                    }
-
-                    if (!process) break;
-
-                    this.state = ProcessState.Processing;
-
-                    while (true)
-                    {
-                        bool hasLeftBatch = this.leftQueue.TryPeek(out var leftBatch);
-                        bool hasRightBatch = this.rightQueue.TryPeek(out var rightBatch);
-                        bool leftBatchDone = false;
-                        bool rightBatchDone = false;
-                        bool leftBatchFree = true;
-                        bool rightBatchFree = true;
-
-                        if (hasLeftBatch && hasRightBatch)
-                        {
-                            ProcessBothBatches(leftBatch, rightBatch, out leftBatchDone, out rightBatchDone, out leftBatchFree, out rightBatchFree);
-                        }
-                        else if (hasLeftBatch)
-                        {
-                            ProcessLeftBatch(leftBatch, out leftBatchDone, out leftBatchFree);
-                        }
-                        else if (hasRightBatch)
-                        {
-                            ProcessRightBatch(rightBatch, out rightBatchDone, out rightBatchFree);
-                        }
-                        else
-                        {
-                            this.state = ProcessState.WaitingForAny;
-                            break;
-                        }
-
-                        if (leftBatchDone)
-                        {
-                            this.leftQueue.TryDequeue(out leftBatch);
-                            if (leftBatchFree) leftBatch.Free();
-                        }
-
-                        if (rightBatchDone)
-                        {
-                            this.rightQueue.TryDequeue(out rightBatch);
-                            if (rightBatchFree) rightBatch.Free();
-                        }
-
-                        if (!leftBatchDone && !rightBatchDone)
-                        {
-                            this.state = hasLeftBatch ? ProcessState.WaitingForRight : ProcessState.WaitingForLeft;
-                            break;
-                        }
-                    }
-                }
+                this.ProcessPendingBatchesCore();
             }
             finally
             {
-                Monitor.Exit(this.sync);
+                this.sync.Exit();
+            }
+        }
+
+        // Lock-free batch processing loop — caller must hold this.sync.
+        private void ProcessPendingBatchesCore()
+        {
+            while (true)
+            {
+                var process = this.state switch
+                {
+                    ProcessState.WaitingForLeft => !this.leftQueue.IsEmpty,
+                    ProcessState.WaitingForRight => !this.rightQueue.IsEmpty,
+                    ProcessState.WaitingForAny => !this.leftQueue.IsEmpty || !this.rightQueue.IsEmpty,
+                    _ => throw new InvalidOperationException(),
+                };
+                if (!process) break;
+
+                this.state = ProcessState.Processing;
+
+                while (true)
+                {
+                    bool hasLeftBatch = this.leftQueue.TryPeek(out var leftBatch);
+                    bool hasRightBatch = this.rightQueue.TryPeek(out var rightBatch);
+                    bool leftBatchDone = false;
+                    bool rightBatchDone = false;
+                    bool leftBatchFree = true;
+                    bool rightBatchFree = true;
+
+                    if (hasLeftBatch && hasRightBatch)
+                    {
+                        this.ProcessBothBatches(leftBatch, rightBatch, out leftBatchDone, out rightBatchDone, out leftBatchFree, out rightBatchFree);
+                    }
+                    else if (hasLeftBatch)
+                    {
+                        this.ProcessLeftBatch(leftBatch, out leftBatchDone, out leftBatchFree);
+                    }
+                    else if (hasRightBatch)
+                    {
+                        this.ProcessRightBatch(rightBatch, out rightBatchDone, out rightBatchFree);
+                    }
+                    else
+                    {
+                        this.state = ProcessState.WaitingForAny;
+                        break;
+                    }
+
+                    if (leftBatchDone)
+                    {
+                        this.leftQueue.TryDequeue(out leftBatch);
+                        if (leftBatchFree) leftBatch.Free();
+                    }
+
+                    if (rightBatchDone)
+                    {
+                        this.rightQueue.TryDequeue(out rightBatch);
+                        if (rightBatchFree) rightBatch.Free();
+                    }
+
+                    if (!leftBatchDone && !rightBatchDone)
+                    {
+                        this.state = hasLeftBatch ? ProcessState.WaitingForRight : ProcessState.WaitingForLeft;
+                        break;
+                    }
+                }
             }
         }
 
@@ -369,7 +357,7 @@ namespace Microsoft.StreamProcessing
                 {
                     case SerializationState.Open:
                         this.serializationState = SerializationState.CheckpointLeft;
-                        Checkpoint(stream);
+                        this.Checkpoint(stream);
                         break;
 
                     case SerializationState.CheckpointRight:
@@ -395,7 +383,7 @@ namespace Microsoft.StreamProcessing
                 {
                     case SerializationState.Open:
                         this.serializationState = SerializationState.CheckpointRight;
-                        Checkpoint(stream);
+                        this.Checkpoint(stream);
                         break;
 
                     case SerializationState.CheckpointLeft:
@@ -421,7 +409,7 @@ namespace Microsoft.StreamProcessing
                 {
                     case SerializationState.Open:
                         this.serializationState = SerializationState.RestoreLeft;
-                        Restore(stream);
+                        this.Restore(stream);
                         break;
 
                     case SerializationState.RestoreRight:
@@ -447,7 +435,7 @@ namespace Microsoft.StreamProcessing
                 {
                     case SerializationState.Open:
                         this.serializationState = SerializationState.RestoreRight;
-                        Restore(stream);
+                        this.Restore(stream);
                         break;
 
                     case SerializationState.RestoreLeft:
@@ -478,24 +466,20 @@ namespace Microsoft.StreamProcessing
         private void ReceiveLeftQueryPlan(PlanNode left)
         {
             this.leftPlans.Enqueue(left);
-            lock (this.rightPlans)
+            using Lock.Scope _ = this.rightPlansLock.EnterScope();
+            if (this.rightPlans.Count > 0)
             {
-                if (this.rightPlans.Count > 0)
-                {
-                    ProduceBinaryQueryPlan(this.leftPlans.Dequeue(), this.rightPlans.Dequeue());
-                }
+                this.ProduceBinaryQueryPlan(this.leftPlans.Dequeue(), this.rightPlans.Dequeue());
             }
         }
 
         private void ReceiveRightQueryPlan(PlanNode right)
         {
             this.rightPlans.Enqueue(right);
-            lock (this.leftPlans)
+            using Lock.Scope _ = this.leftPlansLock.EnterScope();
+            if (this.leftPlans.Count > 0)
             {
-                if (this.leftPlans.Count > 0)
-                {
-                    ProduceBinaryQueryPlan(this.leftPlans.Dequeue(), this.rightPlans.Dequeue());
-                }
+                this.ProduceBinaryQueryPlan(this.leftPlans.Dequeue(), this.rightPlans.Dequeue());
             }
         }
 
@@ -594,12 +578,9 @@ namespace Microsoft.StreamProcessing
 
             public override void ProduceQueryPlan(PlanNode previous) => this.Parent.ReceiveLeftQueryPlan(previous);
 
-            private sealed class RightObserver : ObserverBase<TRight, TLeft>
+            private sealed class RightObserver(BinaryPipe<TKey, TLeft, TRight, TResult> parent, BinaryPipe<TKey, TLeft, TRight, TResult>.ObserverBase<TLeft, TRight> left)
+                : ObserverBase<TRight, TLeft>(parent, left)
             {
-                public RightObserver(BinaryPipe<TKey, TLeft, TRight, TResult> parent, ObserverBase<TLeft, TRight> left)
-                    : base(parent, left)
-                { }
-
                 public override void OnNext(StreamMessage<TKey, TRight> batch) => this.Parent.OnRight(batch);
 
                 public override void Checkpoint(Stream stream) => this.Parent.CheckpointRight(stream);

@@ -18,7 +18,7 @@ namespace Microsoft.StreamProcessing
     public class PriorityQueue<T> : IEnumerable<T>
     {
         [DataMember]
-        private List<T> data = new List<T>();
+        private List<T> data = [];
 
         private readonly IComparer<T> comp;
 
@@ -48,9 +48,7 @@ namespace Microsoft.StreamProcessing
             {
                 int pi = (ci - 1) / 2; // parent index
                 if (this.comp.Compare(this.data[ci], this.data[pi]) >= 0) break; // child item is larger than (or equal) parent so we're done
-                T tmp = this.data[ci];
-                this.data[ci] = this.data[pi];
-                this.data[pi] = tmp;
+                (this.data[pi], this.data[ci]) = (this.data[ci], this.data[pi]);
                 ci = pi;
             }
         }
@@ -85,9 +83,7 @@ namespace Microsoft.StreamProcessing
                 if (rc <= li && this.comp.Compare(this.data[rc], this.data[ci]) < 0) // if there is a rc (ci + 1), and it is smaller than left child, use the rc instead
                     ci = rc;
                 if (this.comp.Compare(this.data[pi], this.data[ci]) <= 0) break; // parent is smaller than (or equal to) smallest child so done
-                var tmp = this.data[pi];
-                this.data[pi] = this.data[ci];
-                this.data[ci] = tmp; // swap parent and child
+                (this.data[ci], this.data[pi]) = (this.data[pi], this.data[ci]);
                 pi = ci;
             }
 
@@ -118,9 +114,9 @@ namespace Microsoft.StreamProcessing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override string ToString()
         {
-            string s = string.Empty;
-            for (int i = 0; i < this.data.Count; ++i)
-                s += this.data[i].ToString() + " ";
+            string s = this.data.Count is 0 
+                ? string.Empty
+                : string.Join(' ', this.data) + " ";
             s += "count = " + this.data.Count;
             return s;
         }

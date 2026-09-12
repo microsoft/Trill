@@ -67,7 +67,7 @@ namespace Microsoft.StreamProcessing
 
         public static Tuple<Type, string> Generate<TKey, TPayload, TResult>(SelectStreamable<TKey, TPayload, TResult> stream)
         {
-            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TResult>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TResult>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             string generatedClassName;
             string errorMessages = null;
@@ -156,8 +156,7 @@ namespace Microsoft.StreamProcessing
                 assemblyReferences.Add(Transformer.GeneratedMemoryPoolAssembly<TKey, TResult>());
                 assemblyReferences.AddRange(Transformer.AssemblyReferencesNeededFor(stream.Selector));
 
-                var a = Transformer.CompileSourceCode(expandedCode, assemblyReferences, out errorMessages);
-                var t = a.GetType(generatedClassName);
+                var t = Transformer.CompileSourceCode(expandedCode, assemblyReferences, a => a.GetType(generatedClassName), out errorMessages);
                 t = t.InstantiateAsNecessary(typeof(TKey), typeof(TPayload), typeof(TResult));
                 return Tuple.Create(t, errorMessages);
             }

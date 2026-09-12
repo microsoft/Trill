@@ -67,7 +67,7 @@ namespace Microsoft.StreamProcessing
 
         internal override void PrintConciseSummary(System.Text.StringBuilder builder, int indentLevel)
         {
-            PrintConciseGeneralState(builder, indentLevel);
+            this.PrintConciseGeneralState(builder, indentLevel);
             builder.AppendLine(new string('\t', indentLevel + 1) + "Previous: ");
             this.Previous.PrintConciseSummary(builder, indentLevel + 2);
         }

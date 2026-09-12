@@ -123,7 +123,7 @@ foreach (string egressType in new string[] { "StreamEvent", "StartEdge", "Interv
         { #>,
             string identifier = null<# } #>)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.To<#= infixName #>ArrayObservable(
                 <#= hasGenerator ? "generator" : "() => new " + defaultGenerator #>,
@@ -147,7 +147,7 @@ foreach (string egressType in new string[] { "StreamEvent", "StartEdge", "Interv
             ReshapingPolicy reshapingPolicy<#
     } #>)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
 <#  // Non-StreamEvent methods do not use reshaping policy at all
     switch (egressType)

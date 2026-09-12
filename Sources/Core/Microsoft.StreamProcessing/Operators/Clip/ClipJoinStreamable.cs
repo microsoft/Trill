@@ -11,7 +11,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class ClipJoinStreamable<TKey, TLeft, TRight> : BinaryStreamable<TKey, TLeft, TRight, TLeft>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Expressions are immutable")]
         public readonly IEqualityComparerExpression<TLeft> LeftComparer;
@@ -19,8 +19,8 @@ namespace Microsoft.StreamProcessing
         public ClipJoinStreamable(IStreamable<TKey, TLeft> left, IStreamable<TKey, TRight> right)
             : base(left.Properties.Clip(right.Properties), left, right)
         {
-            Contract.Requires(left != null);
-            Contract.Requires(right != null);
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             this.LeftComparer = left.Properties.PayloadEqualityComparer;
 
@@ -30,12 +30,12 @@ namespace Microsoft.StreamProcessing
                 throw new InvalidOperationException($"Type of payload, '{typeof(TLeft).FullName}', to Clip does not have a valid equality operator for columnar mode.");
             }
 
-            Initialize();
+            this.Initialize();
         }
 
         protected override IBinaryObserver<TKey, TLeft, TRight, TLeft> CreatePipe(IStreamObserver<TKey, TLeft> observer)
         {
-            if (this.properties.IsColumnar) return GetPipe(observer);
+            if (this.properties.IsColumnar) return this.GetPipe(observer);
             else
             {
                 var part = typeof(TKey).GetPartitionType();

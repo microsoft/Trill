@@ -267,7 +267,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
                     "\n                while (tuple.Value.Iterate(ref iter)) count += tuple.Value.entr" +
                     "ies[iter].value;\r\n            }\r\n            return count;\r\n        }\r\n    }\r\n\r\n" +
                     "");
- if (!noFields && !this.payloadType.GetTypeInfo().IsValueType) { 
+ if (!noFields && !this.payloadType.IsValueType) { 
             this.Write("    [DataContract]\r\n    public struct ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ActiveEventType));
             this.Write("\r\n    {\r\n");

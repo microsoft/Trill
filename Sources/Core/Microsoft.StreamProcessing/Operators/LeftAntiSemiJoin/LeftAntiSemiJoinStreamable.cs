@@ -11,7 +11,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class LeftAntiSemiJoinStreamable<TKey, TLeft, TRight> : BinaryStreamable<TKey, TLeft, TRight, TLeft>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Expressions are immutable")]
         public readonly IEqualityComparerExpression<TLeft> LeftComparer;
@@ -19,12 +19,12 @@ namespace Microsoft.StreamProcessing
         public LeftAntiSemiJoinStreamable(IStreamable<TKey, TLeft> left, IStreamable<TKey, TRight> right)
             : base(left.Properties.LASJ(right.Properties), left, right)
         {
-            Contract.Requires(left != null);
-            Contract.Requires(right != null);
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             this.LeftComparer = left.Properties.PayloadEqualityComparer;
 
-            Initialize();
+            this.Initialize();
         }
 
         protected override IBinaryObserver<TKey, TLeft, TRight, TLeft> CreatePipe(IStreamObserver<TKey, TLeft> observer)
@@ -33,7 +33,7 @@ namespace Microsoft.StreamProcessing
             if (part == null)
             {
                 return this.properties.IsColumnar
-                    ? GetPipe(observer, this.Left.Properties.IsConstantDuration, this.Right.Properties.IsConstantDuration)
+                    ? this.GetPipe(observer, this.Left.Properties.IsConstantDuration, this.Right.Properties.IsConstantDuration)
                     : new LeftAntiSemiJoinPipe<TKey, TLeft, TRight>(this, observer);
             }
 

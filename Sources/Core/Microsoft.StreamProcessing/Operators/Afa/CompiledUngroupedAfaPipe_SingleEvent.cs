@@ -88,7 +88,7 @@ namespace Microsoft.StreamProcessing
 
                                             if (this.iter == Config.DataBatchSize)
                                             {
-                                                FlushContents();
+                                                this.FlushContents();
                                                 dest_vsync = this.batch.vsync.col;
                                                 dest_vother = this.batch.vother.col;
                                                 destkey = this.batch.key.col;
@@ -176,7 +176,7 @@ namespace Microsoft.StreamProcessing
 
                                                                 if (this.iter == Config.DataBatchSize)
                                                                 {
-                                                                    FlushContents();
+                                                                    this.FlushContents();
                                                                     dest_vsync = this.batch.vsync.col;
                                                                     dest_vother = this.batch.vother.col;
                                                                     destkey = this.batch.key.col;
@@ -257,7 +257,7 @@ namespace Microsoft.StreamProcessing
 
                                                         if (this.iter == Config.DataBatchSize)
                                                         {
-                                                            FlushContents();
+                                                            this.FlushContents();
                                                             dest_vsync = this.batch.vsync.col;
                                                             dest_vother = this.batch.vother.col;
                                                             destkey = this.batch.key.col;
@@ -316,7 +316,7 @@ namespace Microsoft.StreamProcessing
 
                                             if (this.iter == Config.DataBatchSize)
                                             {
-                                                FlushContents();
+                                                this.FlushContents();
                                                 dest_vsync = this.batch.vsync.col;
                                                 dest_vother = this.batch.vother.col;
                                                 destkey = this.batch.key.col;
@@ -332,7 +332,7 @@ namespace Microsoft.StreamProcessing
                             }
 
                             // Update dest_* on punctuation in case this event will hit the batch boundary and allocate a new batch
-                            OnPunctuation(synctime);
+                            this.OnPunctuation(synctime);
 
                             dest_vsync = this.batch.vsync.col;
                             dest_vother = this.batch.vother.col;

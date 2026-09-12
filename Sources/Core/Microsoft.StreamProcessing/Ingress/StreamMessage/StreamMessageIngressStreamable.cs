@@ -18,7 +18,7 @@ namespace Microsoft.StreamProcessing
         public StreamMessageIngressStreamable(IObservable<StreamMessage<Empty, TPayload>> source, StreamProperties<Empty, TPayload> properties, QueryContainer container, string identifier)
             : base(properties.SetQueryContainer(container))
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.source = source;
             this.container = container;

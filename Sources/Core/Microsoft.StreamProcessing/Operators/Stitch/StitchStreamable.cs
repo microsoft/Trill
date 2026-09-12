@@ -10,7 +10,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class StitchStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         public StitchStreamable(IStreamable<TKey, TPayload> source)
             : base(source, source.Properties)
@@ -21,7 +21,7 @@ namespace Microsoft.StreamProcessing
                 throw new InvalidOperationException($"Type of payload, '{typeof(TPayload).FullName}', to Stitch does not have a valid equality operator for columnar mode.");
             }
 
-            Initialize();
+            this.Initialize();
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
@@ -30,7 +30,7 @@ namespace Microsoft.StreamProcessing
             if (part == null)
             {
                 return this.Source.Properties.IsColumnar
-                    ? GetPipe(observer)
+                    ? this.GetPipe(observer)
                     : new StitchPipe<TKey, TPayload>(this, observer);
             }
 

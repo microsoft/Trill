@@ -30,8 +30,8 @@ namespace Microsoft.StreamProcessing
         internal static Tuple<Type, string> GenerateAFA<TKey, TPayload, TRegister, TAccumulator>(
             AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream)
         {
-            Contract.Requires(stream != null);
-            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TRegister>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            ArgumentNullException.ThrowIfNull(stream);
+            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TRegister>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             var className = $"GeneratedUngroupedDAfa_{AFASequenceNumber++}";
             var template = new UngroupedDAfaTemplate(className, typeof(TPayload), typeof(TRegister), typeof(TAccumulator))

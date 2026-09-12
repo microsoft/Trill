@@ -38,7 +38,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>?> Average(Expression<Func<TSource, <#= typeName #>>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageFilterable<#= typeFriendlyName #>Aggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }
@@ -60,7 +60,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public new IAggregate<TSource, AverageState<<#= sumTypeName #>>, <#= returnTypeName#>?> AverageSquares(Expression<Func<TSource, <#= typeName #>>> selector)
         {
-            Invariant.IsNotNull(selector, "selector");
+            ArgumentNullException.ThrowIfNull(selector);
             var aggregate = new AverageSquareFilterable<#= typeFriendlyName #>Aggregate();
             return aggregate.Wrap(selector).ApplyFilter(this.Filter);
         }

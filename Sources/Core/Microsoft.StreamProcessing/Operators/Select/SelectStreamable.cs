@@ -12,7 +12,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class SelectStreamable<TKey, TPayload, TResult> : UnaryStreamable<TKey, TPayload, TResult>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         public Type KeyType { get; } = typeof(TKey);
         public Type PayloadType { get; } = typeof(TPayload);
@@ -24,19 +24,19 @@ namespace Microsoft.StreamProcessing
         public SelectStreamable(IStreamable<TKey, TPayload> source, LambdaExpression selector, bool hasStartEdge = false, bool hasKey = false)
             : base(source, source.Properties.Select<TResult>(selector, hasStartEdge, hasKey))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(selector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             this.Selector = selector;
             this.HasStartEdge = hasStartEdge;
             this.HasKey = hasKey;
 
-            Initialize();
+            this.Initialize();
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TResult> observer)
         {
-            if (this.Source.Properties.IsColumnar) return GetPipe(observer);
+            if (this.Source.Properties.IsColumnar) return this.GetPipe(observer);
 
             if (!this.HasStartEdge && !this.HasKey)
                 return new SelectPipe<TKey, TPayload, TResult>(this, observer);

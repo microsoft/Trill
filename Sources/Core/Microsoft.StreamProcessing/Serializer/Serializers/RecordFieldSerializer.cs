@@ -22,11 +22,11 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
         public Expression BuildSerializer(Expression encoder, Expression @object)
         {
-            if (encoder == null) throw new ArgumentNullException(nameof(encoder));
-            if (@object == null) throw new ArgumentNullException(nameof(@object));
+            ArgumentNullException.ThrowIfNull(encoder);
+            ArgumentNullException.ThrowIfNull(@object);
 
-            var member = GetMember(@object);
-            if (this.Schema.RuntimeType.GetTypeInfo().IsValueType || this.MemberInfo.isField)
+            var member = this.GetMember(@object);
+            if (this.Schema.RuntimeType.IsValueType || this.MemberInfo.isField)
             {
                 return this.Schema.BuildSerializer(encoder, member);
             }
@@ -34,17 +34,17 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             var tmp = Expression.Variable(this.Schema.RuntimeType, Guid.NewGuid().ToString());
             var assignment = Expression.Assign(tmp, member);
             var serialized = this.Schema.BuildSerializer(encoder, tmp);
-            return Expression.Block(new[] { tmp }, new[] { assignment, serialized });
+            return Expression.Block(new[] { tmp }, [assignment, serialized]);
         }
 
         public Expression BuildDeserializer(Expression decoder, Expression @object)
         {
-            if (decoder == null) throw new ArgumentNullException(nameof(decoder));
-            if (@object == null) throw new ArgumentNullException(nameof(@object));
+            ArgumentNullException.ThrowIfNull(decoder);
+            ArgumentNullException.ThrowIfNull(@object);
 
             var value = this.Schema.BuildDeserializer(decoder);
-            var member = GetMember(@object);
-            if (@object.Type.GetTypeInfo().IsValueType)
+            var member = this.GetMember(@object);
+            if (@object.Type.IsValueType)
             {
                 var tmp = Expression.Variable(value.Type);
                 return Expression.Block(

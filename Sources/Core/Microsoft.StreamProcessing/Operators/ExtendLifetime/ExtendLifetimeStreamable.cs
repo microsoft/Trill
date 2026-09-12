@@ -10,7 +10,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class ExtendLifetimeStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
         private readonly long duration;
 
         public ExtendLifetimeStreamable(IStreamable<TKey, TPayload> source, long duration)
@@ -24,7 +24,7 @@ namespace Microsoft.StreamProcessing
                 throw new InvalidOperationException($"Type of payload, '{typeof(TPayload).FullName}', to ExtendLifetime does not have a valid equality operator for columnar mode.");
             }
 
-            Initialize();
+            this.Initialize();
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
@@ -36,7 +36,7 @@ namespace Microsoft.StreamProcessing
                 if (t == null)
                 {
                     return this.Source.Properties.IsColumnar
-                        ? GetPipe(this, observer)
+                        ? this.GetPipe(this, observer)
                         : new ExtendLifetimeNegativePipe<TKey, TPayload>(this, observer, -this.duration);
                 }
                 var outputType = typeof(PartitionedExtendLifetimeNegativePipe<,,>).MakeGenericType(
@@ -51,7 +51,7 @@ namespace Microsoft.StreamProcessing
                 if (t == null)
                 {
                     return this.Source.Properties.IsColumnar
-                        ? GetPipe(this, observer)
+                        ? this.GetPipe(this, observer)
                         : new ExtendLifetimePipe<TKey, TPayload>(this, observer, this.duration);
                 }
                 var outputType = typeof(PartitionedExtendLifetimePipe<,,>).MakeGenericType(

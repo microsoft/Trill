@@ -26,8 +26,8 @@ namespace Microsoft.StreamProcessing
                 ? StreamProperties<Empty, TPayload>.Default.ToRowBased()
                 : StreamProperties<Empty, TPayload>.Default).SetQueryContainer(container))
         {
-            Contract.Requires(observable != null);
-            Contract.Requires(identifier != null);
+            ArgumentNullException.ThrowIfNull(observable);
+            ArgumentNullException.ThrowIfNull(identifier);
 
             this.IngressSiteIdentifier = identifier;
             this.observable = observable;
@@ -35,12 +35,12 @@ namespace Microsoft.StreamProcessing
             this.container = container;
             this.delayed = container != null;
 
-            if (delayed) container.RegisterIngressSite(identifier);
+            if (this.delayed) container.RegisterIngressSite(identifier);
         }
 
         public void Dispose()
         {
-            if (diagnosticOutput != null) diagnosticOutput.Dispose();
+            if (this.diagnosticOutput != null) this.diagnosticOutput.Dispose();
         }
 
         [ContractInvariantMethod]
@@ -52,8 +52,8 @@ namespace Microsoft.StreamProcessing
 
         public IObservable<OutOfOrderStreamEvent<TPayload>> GetDroppedAdjustedEventsDiagnostic()
         {
-            if (diagnosticOutput == null) diagnosticOutput = new DiagnosticObservable<TPayload>();
-            return diagnosticOutput;
+            if (this.diagnosticOutput == null) this.diagnosticOutput = new DiagnosticObservable<TPayload>();
+            return this.diagnosticOutput;
         }
 
         public override IDisposable Subscribe(IStreamObserver<Empty, TPayload> observer)
@@ -64,12 +64,12 @@ namespace Microsoft.StreamProcessing
                 this.IngressSiteIdentifier,
                 this,
                 observer,
-                onCompletedPolicy,
-                diagnosticOutput);
+                this.onCompletedPolicy,
+                this.diagnosticOutput);
 
-            if (delayed)
+            if (this.delayed)
             {
-                container.RegisterIngressPipe(this.IngressSiteIdentifier, subscription);
+                this.container.RegisterIngressPipe(this.IngressSiteIdentifier, subscription);
                 return subscription.DelayedDisposable;
             }
             else
@@ -104,8 +104,8 @@ namespace Microsoft.StreamProcessing
                 ? StreamProperties<Empty, TPayload>.DefaultIngress(startEdgeExtractor, endEdgeExtractor).ToRowBased()
                 : StreamProperties<Empty, TPayload>.DefaultIngress(startEdgeExtractor, endEdgeExtractor)).SetQueryContainer(container))
         {
-            Contract.Requires(observable != null);
-            Contract.Requires(identifier != null);
+            ArgumentNullException.ThrowIfNull(observable);
+            ArgumentNullException.ThrowIfNull(identifier);
 
             this.IngressSiteIdentifier = identifier;
             this.observable = observable;
@@ -115,12 +115,12 @@ namespace Microsoft.StreamProcessing
             this.container = container;
             this.delayed = container != null;
 
-            if (delayed) container.RegisterIngressSite(identifier);
+            if (this.delayed) container.RegisterIngressSite(identifier);
         }
 
         public void Dispose()
         {
-            if (diagnosticOutput != null) diagnosticOutput.Dispose();
+            if (this.diagnosticOutput != null) this.diagnosticOutput.Dispose();
         }
 
         [ContractInvariantMethod]
@@ -132,8 +132,8 @@ namespace Microsoft.StreamProcessing
 
         public IObservable<OutOfOrderStreamEvent<TPayload>> GetDroppedAdjustedEventsDiagnostic()
         {
-            if (diagnosticOutput == null) diagnosticOutput = new DiagnosticObservable<TPayload>();
-            return diagnosticOutput;
+            if (this.diagnosticOutput == null) this.diagnosticOutput = new DiagnosticObservable<TPayload>();
+            return this.diagnosticOutput;
         }
 
         public override IDisposable Subscribe(IStreamObserver<Empty, TPayload> observer)
@@ -146,12 +146,12 @@ namespace Microsoft.StreamProcessing
                 this.IngressSiteIdentifier,
                 this,
                 observer,
-                onCompletedPolicy,
-                diagnosticOutput);
+                this.onCompletedPolicy,
+                this.diagnosticOutput);
 
-            if (delayed)
+            if (this.delayed)
             {
-                container.RegisterIngressPipe(this.IngressSiteIdentifier, subscription);
+                this.container.RegisterIngressPipe(this.IngressSiteIdentifier, subscription);
                 return subscription.DelayedDisposable;
             }
             else
@@ -182,8 +182,8 @@ namespace Microsoft.StreamProcessing
                 ? StreamProperties<PartitionKey<TPartitionKey>, TPayload>.Default.ToRowBased()
                 : StreamProperties<PartitionKey<TPartitionKey>, TPayload>.Default).SetQueryContainer(container))
         {
-            Contract.Requires(observable != null);
-            Contract.Requires(identifier != null);
+            ArgumentNullException.ThrowIfNull(observable);
+            ArgumentNullException.ThrowIfNull(identifier);
 
             this.IngressSiteIdentifier = identifier;
             this.observable = observable;
@@ -191,12 +191,12 @@ namespace Microsoft.StreamProcessing
             this.container = container;
             this.delayed = container != null;
 
-            if (delayed) container.RegisterIngressSite(identifier);
+            if (this.delayed) container.RegisterIngressSite(identifier);
         }
 
         public void Dispose()
         {
-            if (diagnosticOutput != null) diagnosticOutput.Dispose();
+            if (this.diagnosticOutput != null) this.diagnosticOutput.Dispose();
         }
 
         [ContractInvariantMethod]
@@ -208,8 +208,8 @@ namespace Microsoft.StreamProcessing
 
         public IObservable<OutOfOrderPartitionedStreamEvent<TPartitionKey, TPayload>> GetDroppedAdjustedEventsDiagnostic()
         {
-            if (diagnosticOutput == null) diagnosticOutput = new PartitionedDiagnosticObservable<TPartitionKey, TPayload>();
-            return diagnosticOutput;
+            if (this.diagnosticOutput == null) this.diagnosticOutput = new PartitionedDiagnosticObservable<TPartitionKey, TPayload>();
+            return this.diagnosticOutput;
         }
 
         public override IDisposable Subscribe(IStreamObserver<PartitionKey<TPartitionKey>, TPayload> observer)
@@ -220,12 +220,12 @@ namespace Microsoft.StreamProcessing
                 this.IngressSiteIdentifier,
                 this,
                 observer,
-                onCompletedPolicy,
-                diagnosticOutput);
+                this.onCompletedPolicy,
+                this.diagnosticOutput);
 
-            if (delayed)
+            if (this.delayed)
             {
-                container.RegisterIngressPipe(this.IngressSiteIdentifier, subscription);
+                this.container.RegisterIngressPipe(this.IngressSiteIdentifier, subscription);
                 return subscription.DelayedDisposable;
             }
             else
@@ -262,8 +262,8 @@ namespace Microsoft.StreamProcessing
                 ? StreamProperties<PartitionKey<TPartitionKey>, TPayload>.DefaultIngress(startEdgeExtractor, endEdgeExtractor).ToRowBased()
                 : StreamProperties<PartitionKey<TPartitionKey>, TPayload>.DefaultIngress(startEdgeExtractor, endEdgeExtractor)).SetQueryContainer(container))
         {
-            Contract.Requires(observable != null);
-            Contract.Requires(identifier != null);
+            ArgumentNullException.ThrowIfNull(observable);
+            ArgumentNullException.ThrowIfNull(identifier);
 
             this.IngressSiteIdentifier = identifier;
             this.observable = observable;
@@ -274,12 +274,12 @@ namespace Microsoft.StreamProcessing
             this.container = container;
             this.delayed = container != null;
 
-            if (delayed) container.RegisterIngressSite(identifier);
+            if (this.delayed) container.RegisterIngressSite(identifier);
         }
 
         public void Dispose()
         {
-            if (diagnosticOutput != null) diagnosticOutput.Dispose();
+            if (this.diagnosticOutput != null) this.diagnosticOutput.Dispose();
         }
 
         [ContractInvariantMethod]
@@ -291,8 +291,8 @@ namespace Microsoft.StreamProcessing
 
         public IObservable<OutOfOrderPartitionedStreamEvent<TPartitionKey, TPayload>> GetDroppedAdjustedEventsDiagnostic()
         {
-            if (diagnosticOutput == null) diagnosticOutput = new PartitionedDiagnosticObservable<TPartitionKey, TPayload>();
-            return diagnosticOutput;
+            if (this.diagnosticOutput == null) this.diagnosticOutput = new PartitionedDiagnosticObservable<TPartitionKey, TPayload>();
+            return this.diagnosticOutput;
         }
 
         public override IDisposable Subscribe(IStreamObserver<PartitionKey<TPartitionKey>, TPayload> observer)
@@ -306,12 +306,12 @@ namespace Microsoft.StreamProcessing
                 this.IngressSiteIdentifier,
                 this,
                 observer,
-                onCompletedPolicy,
-                diagnosticOutput);
+                this.onCompletedPolicy,
+                this.diagnosticOutput);
 
-            if (delayed)
+            if (this.delayed)
             {
-                container.RegisterIngressPipe(this.IngressSiteIdentifier, subscription);
+                this.container.RegisterIngressPipe(this.IngressSiteIdentifier, subscription);
                 return subscription.DelayedDisposable;
             }
             else

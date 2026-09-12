@@ -100,7 +100,7 @@ foreach (bool disordered in new[] { true, false })
                 onCompletedPolicy,
                 diagnosticOutput)
         {
-            Contract.Requires(observable != null);
+            ArgumentNullException.ThrowIfNull(observable);
 
             this.primaryAction = () => observable.Subscribe(this);
         }
@@ -135,10 +135,6 @@ foreach (bool disordered in new[] { true, false })
     /// <typeparam name="TPayload"></typeparam>
     /// <typeparam name="TResult"></typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
-<#  if (partitioned) { #>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1008:OpeningParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
-<#  } #>
     public abstract class <#= disordered ? "Disordered" : string.Empty #><#= partitionString #>SubscriptionBase<<#= genericArgument #>TIngressStructure, TPayload, TResult> : Pipe<<#= baseType #>, TResult>, IIngressStreamObserver
     {
         private readonly string errorMessages;
@@ -368,10 +364,10 @@ foreach (bool disordered in new[] { true, false })
             IObserver<OutOfOrder<#= partitionString #>StreamEvent<<#= genericArgument #>TPayload>> diagnosticOutput)
             : base(streamable, observer)
         {
-            Contract.Requires(observer != null);
-            Contract.Requires(punctuationPolicy != null);
+            ArgumentNullException.ThrowIfNull(observer);
+            ArgumentNullException.ThrowIfNull(punctuationPolicy);
 <#  if (partitioned) { #>
-            Contract.Requires(lowWatermarkPolicy != null);
+            ArgumentNullException.ThrowIfNull(lowWatermarkPolicy);
 <#  } #>
 
             this.IngressSiteIdentifier = identifier;

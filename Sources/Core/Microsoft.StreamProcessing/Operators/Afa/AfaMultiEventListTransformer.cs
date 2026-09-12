@@ -13,8 +13,8 @@ namespace Microsoft.StreamProcessing
     internal partial class AfaMultiEventListTemplate : AfaTemplate
     {
         private Func<string, string, string> keyEqualityComparer;
-        protected readonly List<Tuple<int, List<EdgeInfo>>> edgeInfos = new List<Tuple<int, List<EdgeInfo>>>();
-        protected readonly List<Tuple<int, List<EdgeInfo>>> startEdgeInfos = new List<Tuple<int, List<EdgeInfo>>>();
+        protected readonly List<Tuple<int, List<EdgeInfo>>> edgeInfos = [];
+        protected readonly List<Tuple<int, List<EdgeInfo>>> startEdgeInfos = [];
         private bool payloadIsAnon;
         private bool payloadHasNoFields;
 
@@ -38,8 +38,8 @@ namespace Microsoft.StreamProcessing
         internal static Tuple<Type, string> GenerateAFA<TKey, TPayload, TRegister, TAccumulator>(
             AfaStreamable<TKey, TPayload, TRegister, TAccumulator> stream)
         {
-            Contract.Requires(stream != null);
-            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TRegister>).GetTypeInfo().IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
+            ArgumentNullException.ThrowIfNull(stream);
+            Contract.Ensures(Contract.Result<Tuple<Type, string>>() == null || typeof(UnaryPipe<TKey, TPayload, TRegister>).IsAssignableFrom(Contract.Result<Tuple<Type, string>>().Item1));
 
             var className = string.Format("Generated{1}AfaMultiEventList_{0}", AFASequenceNumber++, typeof(TKey).Equals(typeof(Empty)) ? string.Empty : "Grouped");
             var template = new AfaMultiEventListTemplate(className, typeof(TKey), typeof(TPayload), typeof(TRegister), typeof(TAccumulator))

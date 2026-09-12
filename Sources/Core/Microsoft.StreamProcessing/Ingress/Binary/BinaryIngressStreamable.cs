@@ -71,7 +71,7 @@ namespace Microsoft.StreamProcessing
 
             this.subscriptionActive = true;
             var subscription = new BinaryIngressReader<TKey, TPayload>(
-                this.IngressSiteIdentifier, this, observer, this.numMessages, this.stream, this.scheduler, this.delayed, OnSubscriptionCompleted);
+                this.IngressSiteIdentifier, this, observer, this.numMessages, this.stream, this.scheduler, this.delayed, this.OnSubscriptionCompleted);
 
             if (this.delayed)
             {

@@ -20,7 +20,7 @@ namespace Microsoft.StreamProcessing
         public static IObservable<TPayload> ToAtemporalObservable<TPayload>(
             this IStreamable<Empty, TPayload> stream)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToAtemporalObservable(null, Guid.NewGuid().ToString());
         }
@@ -38,7 +38,7 @@ namespace Microsoft.StreamProcessing
             IStreamable<Empty, TPayload> stream,
             string identifier = null)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return stream.ToAtemporalObservable(container, identifier ?? Guid.NewGuid().ToString());
         }
@@ -48,7 +48,7 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new MonotonicObservable<TPayload>(stream, container, identifier);
         }

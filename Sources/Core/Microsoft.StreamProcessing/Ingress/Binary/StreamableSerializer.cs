@@ -13,7 +13,7 @@ namespace Microsoft.StreamProcessing.Serializer
         public SerializedProperties() { }
 
         public static SerializedProperties FromStreamProperties<TKey, TPayload>(StreamProperties<TKey, TPayload> props)
-            => new SerializedProperties
+            => new()
             {
                 IsColumnar = props.IsColumnar,
                 IsConstantDuration = props.IsConstantDuration,
@@ -27,13 +27,13 @@ namespace Microsoft.StreamProcessing.Serializer
             };
 
         public StreamProperties<TKey, TPayload> ToStreamProperties<TKey, TPayload>()
-            => new StreamProperties<TKey, TPayload>(this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree,
+            => new(this.IsColumnar, this.IsConstantDuration, this.ConstantDurationLength, this.IsConstantHop, this.ConstantHopLength, this.ConstantHopOffset, this.IsIntervalFree, this.IsSyncTimeSimultaneityFree,
                 false, this.IsEventOverlappingFree,
                 EqualityComparerExpression<TKey>.Default,
                 EqualityComparerExpression<TPayload>.Default,
                 null, null,
-                new Dictionary<Expression, object>(),
-                new Dictionary<Expression, Guid?>(),
+                [],
+                [],
                 null);
 
         public bool IsColumnar;

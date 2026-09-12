@@ -82,7 +82,7 @@ namespace Microsoft.StreamProcessing
                                     this.iter++;
 
                                     if (this.iter == Config.DataBatchSize)
-                                        FlushContents();
+                                        this.FlushContents();
                                 }
 
                                 if (this.hasOutgoingArcs[state2.toState])
@@ -120,13 +120,13 @@ namespace Microsoft.StreamProcessing
 
                             if (synctime > this.lastSyncTime) // move time forward
                             {
-                                ProcessCurrentTimestamp();
+                                this.ProcessCurrentTimestamp();
                                 this.lastSyncTime = synctime;
                             }
 
                             if (batch.vother.col[i] < 0)
                             {
-                                OnPunctuation(synctime);
+                                this.OnPunctuation(synctime);
                                 continue;
                             }
 

@@ -187,7 +187,7 @@ namespace Microsoft.StreamProcessing
         internal static IStreamable<TUnit, TPayload> ToEndEdgeFreeStream<TUnit, TPayload>(
             this IStreamable<TUnit, TPayload> stream)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new EndEdgeFreeOutputStreamable<TUnit, TPayload>(stream);
         }
@@ -198,7 +198,7 @@ namespace Microsoft.StreamProcessing
         public static IStreamable<TKey, TPayload> PointAtEnd<TKey, TPayload>(
             this IStreamable<TKey, TPayload> stream)
         {
-            Invariant.IsNotNull(stream, nameof(stream));
+            ArgumentNullException.ThrowIfNull(stream);
 
             return new PointAtEndStreamable<TKey, TPayload>(stream);
         }
@@ -210,7 +210,7 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> stream,
             long duration)
         {
-            Contract.Requires(stream != null);
+            ArgumentNullException.ThrowIfNull(stream);
             if (stream.Properties.IsConstantDuration)
             {
                 var newDuration = duration + stream.Properties.ConstantDurationLength.Value;
@@ -233,7 +233,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public static IConnectableStreamable<TKey, TPayload> Publish<TKey, TPayload>(this IStreamable<TKey, TPayload> source)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             return new ConnectableStreamable<TKey, TPayload>(source);
         }
@@ -243,8 +243,8 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public static IStreamable<TKey, TResult> Multicast<TKey, TPayload, TResult>(this IStreamable<TKey, TPayload> source, Func<IStreamable<TKey, TPayload>, IStreamable<TKey, TResult>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return new MulticastStreamable<TKey, TPayload, TResult>(source, selector);
         }
@@ -254,8 +254,8 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public static IStreamable<TKey, TPayload>[] Multicast<TKey, TPayload>(this IStreamable<TKey, TPayload> source, int outputCount)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsPositive(outputCount, nameof(outputCount));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(outputCount);
 
             return NWayMulticast<TKey, TPayload>.GenerateStreamableArray(source, outputCount);
         }
@@ -265,9 +265,9 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public static IStreamable<TKey, TResult> Multicast<TKey, TPayloadLeft, TPayloadRight, TResult>(this IStreamable<TKey, TPayloadLeft> sourceLeft, IStreamable<TKey, TPayloadRight> sourceRight, Func<IStreamable<TKey, TPayloadLeft>, IStreamable<TKey, TPayloadRight>, IStreamable<TKey, TResult>> selector)
         {
-            Invariant.IsNotNull(sourceLeft, nameof(sourceLeft));
-            Invariant.IsNotNull(sourceRight, nameof(sourceRight));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(sourceLeft);
+            ArgumentNullException.ThrowIfNull(sourceRight);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return new BinaryMulticastStreamable<TKey, TPayloadLeft, TPayloadRight, TResult>(sourceLeft, sourceRight, selector);
         }
@@ -277,7 +277,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         internal static IStreamable<TKey, TPayload> ColumnToRow<TKey, TPayload>(this IStreamable<TKey, TPayload> source)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             return !source.Properties.IsColumnar
                 ? source
@@ -289,7 +289,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         internal static IStreamable<TKey, TPayload> RowToColumn<TKey, TPayload>(this IStreamable<TKey, TPayload> source)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             return source.Properties.IsColumnar
                 ? source
@@ -303,8 +303,8 @@ namespace Microsoft.StreamProcessing
         /// <param name="predicate">The predicate to apply to all data in the stream</param>
         public static IStreamable<TKey, TPayload> Where<TKey, TPayload>(this IStreamable<TKey, TPayload> source, Expression<Func<TPayload, bool>> predicate)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(predicate, nameof(predicate));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(predicate);
 
             return source is IFusibleStreamable<TKey, TPayload> s
                 ? s.FuseWhere(predicate)
@@ -319,7 +319,7 @@ namespace Microsoft.StreamProcessing
             long offset,
             long period)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             return new BeatStreamable<TKey, TPayload>(source, offset, period);
         }
@@ -331,8 +331,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<TPayload, IEnumerable<TResult>>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, false, false)
                 ? s.FuseSelectMany(selector)
@@ -346,8 +346,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<long, TPayload, IEnumerable<TResult>>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, true, false)
                 ? s.FuseSelectMany(selector)
@@ -361,8 +361,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<TKey, TPayload, IEnumerable<TResult>>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, false, true)
                 ? s.FuseSelectManyWithKey(selector)
@@ -376,8 +376,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<long, TKey, TPayload, IEnumerable<TResult>>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             return source is IFusibleStreamable<TKey, TPayload> s && s.CanFuseSelectMany(selector, true, true)
                 ? s.FuseSelectManyWithKey(selector)
@@ -392,9 +392,9 @@ namespace Microsoft.StreamProcessing
             Func<Empty, IStreamable<TKey, TRight>> right,
             Expression<Func<TLeft, TRight, TResult>> resultSelector)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
-            Invariant.IsNotNull(resultSelector, nameof(resultSelector));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
+            ArgumentNullException.ThrowIfNull(resultSelector);
 
             return new EquiJoinStreamable<TKey, TLeft, TRight, TResult>(left, right(Empty.Default), resultSelector);
         }
@@ -410,7 +410,7 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public static IStreamable<TKey, TPayload> Stitch<TKey, TPayload>(this IStreamable<TKey, TPayload> source)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
 
             return new StitchStreamable<TKey, TPayload>(source);
         }
@@ -424,8 +424,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> left,
             IStreamable<TKey, TPayload> right)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             return new UnionStreamable<TKey, TPayload>(left, right);
         }
@@ -477,11 +477,11 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TLeft, TRight, TResult>> resultSelector,
             OperationalHint joinOptions = OperationalHint.None)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
-            Invariant.IsNotNull(leftKeySelector, nameof(leftKeySelector));
-            Invariant.IsNotNull(rightKeySelector, nameof(rightKeySelector));
-            Invariant.IsNotNull(resultSelector, nameof(resultSelector));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
+            ArgumentNullException.ThrowIfNull(leftKeySelector);
+            ArgumentNullException.ThrowIfNull(rightKeySelector);
+            ArgumentNullException.ThrowIfNull(resultSelector);
 
             var map1 = left.Map(leftKeySelector);
             var map2 = right.Map(rightKeySelector);
@@ -497,8 +497,8 @@ namespace Microsoft.StreamProcessing
             IStreamable<TKey, TRight> right,
             Expression<Func<TLeft, TRight, TResult>> resultSelector)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             return new EquiJoinStreamable<TKey, TLeft, TRight, TResult>(left, right, resultSelector);
         }
@@ -512,10 +512,10 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TLeft, TJoinKey>> leftKeySelector,
             Expression<Func<TRight, TJoinKey>> rightKeySelector)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
-            Invariant.IsNotNull(leftKeySelector, nameof(leftKeySelector));
-            Invariant.IsNotNull(rightKeySelector, nameof(rightKeySelector));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
+            ArgumentNullException.ThrowIfNull(leftKeySelector);
+            ArgumentNullException.ThrowIfNull(rightKeySelector);
 
             var map1 = left.Map(leftKeySelector);
             var map2 = right.Map(rightKeySelector);
@@ -534,8 +534,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TLeft> left,
             IStreamable<TKey, TRight> right)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             return new LeftAntiSemiJoinStreamable<TKey, TLeft, TRight>(left, right);
         }
@@ -548,8 +548,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             IStreamable<TKey, TClip> clip)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(clip, nameof(clip));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(clip);
 
             return new ClipJoinStreamable<TKey, TPayload, TClip>(source, clip);
         }
@@ -565,10 +565,10 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TLeft, TJoinKey>> leftKeySelector,
             Expression<Func<TRight, TJoinKey>> rightKeySelector)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
-            Invariant.IsNotNull(leftKeySelector, nameof(leftKeySelector));
-            Invariant.IsNotNull(rightKeySelector, nameof(rightKeySelector));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
+            ArgumentNullException.ThrowIfNull(leftKeySelector);
+            ArgumentNullException.ThrowIfNull(rightKeySelector);
 
             var map1 = left.Map(leftKeySelector);
             var map2 = right.Map(rightKeySelector);
@@ -590,8 +590,8 @@ namespace Microsoft.StreamProcessing
             Func<IStreamable<CompoundGroupKey<TOuterKey, TInnerKey>, TPayload>, IStreamable<CompoundGroupKey<TOuterKey, TInnerKey>, TBind>> applyFunc,
             Expression<Func<GroupSelectorInput<TInnerKey>, TBind, TResult>> resultSelector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
 
             return source.Map(keySelector).Reduce(applyFunc, resultSelector);
         }
@@ -612,8 +612,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TOuterKey, TPayload> source,
             Expression<Func<TPayload, TInnerKey>> keySelector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(keySelector, nameof(keySelector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(keySelector);
 
             return new MapDefinition<TOuterKey, TPayload, TPayload, TInnerKey, TPayload>(source, null, (a, b) => a, keySelector);
         }
@@ -626,9 +626,9 @@ namespace Microsoft.StreamProcessing
             Func<IStreamable<CompoundGroupKey<TOuterKey, TInnerKey>, TResult>, IStreamable<CompoundGroupKey<TOuterKey, TInnerKey>, TBind>> apply,
             Expression<Func<GroupSelectorInput<TInnerKey>, TBind, TOutput>> resultSelector)
         {
-            Invariant.IsNotNull(groupDefinition, nameof(groupDefinition));
-            Invariant.IsNotNull(apply, nameof(apply));
-            Invariant.IsNotNull(resultSelector, nameof(resultSelector));
+            ArgumentNullException.ThrowIfNull(groupDefinition);
+            ArgumentNullException.ThrowIfNull(apply);
+            ArgumentNullException.ThrowIfNull(resultSelector);
 
             return ((MapDefinition<TOuterKey, TPayload, TPayload, TInnerKey, TResult>)groupDefinition).CreateStreamable(apply, resultSelector);
         }
@@ -720,8 +720,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<TPayload, TValue>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.CountNotNull(selector));
         }
 
@@ -739,8 +739,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<TPayload, T>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Min(selector));
         }
 
@@ -751,8 +751,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Comparison<TPayload>> comparer)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(comparer, nameof(comparer));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(comparer);
             return source.Aggregate(w => w.Min(v => v, new ComparerExpression<TPayload>(comparer)));
         }
 
@@ -764,9 +764,9 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TPayload, T>> selector,
             Expression<Comparison<T>> comparer)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsNotNull(comparer, nameof(comparer));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentNullException.ThrowIfNull(comparer);
             return source.Aggregate(w => w.Min(selector, new ComparerExpression<T>(comparer)));
         }
 
@@ -784,8 +784,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Func<TPayload, T>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.Aggregate(w => w.Max(selector));
         }
 
@@ -796,8 +796,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             Expression<Comparison<TPayload>> comparer)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(comparer, nameof(comparer));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(comparer);
             return source.Aggregate(w => w.Max(v => v, new ComparerExpression<TPayload>(comparer)));
         }
 
@@ -809,9 +809,9 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TPayload, T>> selector,
             Expression<Comparison<T>> comparer)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsNotNull(comparer, nameof(comparer));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentNullException.ThrowIfNull(comparer);
             return source.Aggregate(w => w.Max(selector, new ComparerExpression<T>(comparer)));
         }
 
@@ -822,8 +822,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TPayload> source,
             int k)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsPositive(k, nameof(k));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(k);
             return source.Aggregate(w => w.TopK(v => v, k));
         }
 
@@ -835,9 +835,9 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TPayload, T>> selector,
             int k)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsPositive(k, nameof(k));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(k);
             return source.Aggregate(w => w.TopK(selector, k));
         }
 
@@ -849,9 +849,9 @@ namespace Microsoft.StreamProcessing
             Expression<Comparison<TPayload>> comparer,
             int k)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(comparer, nameof(comparer));
-            Invariant.IsPositive(k, nameof(k));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(comparer);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(k);
             return source.Aggregate(w => w.TopK(v => v, new ComparerExpression<TPayload>(comparer), k));
         }
 
@@ -864,10 +864,10 @@ namespace Microsoft.StreamProcessing
             Expression<Comparison<T>> comparer,
             int k)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
-            Invariant.IsNotNull(comparer, nameof(comparer));
-            Invariant.IsPositive(k, nameof(k));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentNullException.ThrowIfNull(comparer);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(k);
             return source.Aggregate(w => w.TopK(selector, new ComparerExpression<T>(comparer), k));
         }
         #endregion
@@ -881,8 +881,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TInput> source,
             Func<Window<TKey, TInput>, IAggregate<TInput, TState, TOutput>> aggregate)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate, nameof(aggregate));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate);
             return new SnapshotWindowStreamable<TKey, TInput, TState, TOutput>(source, aggregate(new Window<TKey, TInput>(source.Properties)));
         }
 
@@ -894,9 +894,9 @@ namespace Microsoft.StreamProcessing
             IStreamable<TKey, TRight> right,
             Func<Window<TKey, TLeft>, Window<TKey, TRight>, IBinaryAggregate<TLeft, TRight, TState, TOutput>> aggregate)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
-            Invariant.IsNotNull(aggregate, nameof(aggregate));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
+            ArgumentNullException.ThrowIfNull(aggregate);
 
             var source = left.Select(o => new DiscriminatedUnion<TLeft, TRight> { Left = o, isLeft = true })
                 .Union(right.Select(o => new DiscriminatedUnion<TLeft, TRight> { Right = o, isLeft = false }));
@@ -911,8 +911,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TInput> source,
             IAggregate<TInput, TState, TOutput> aggregate)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(aggregate, nameof(aggregate));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(aggregate);
             return new SnapshotWindowStreamable<TKey, TInput, TState, TOutput>(source, aggregate);
         }
 
@@ -924,9 +924,9 @@ namespace Microsoft.StreamProcessing
             IStreamable<TKey, TRight> right,
             IBinaryAggregate<TLeft, TRight, TState, TOutput> aggregate)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
-            Invariant.IsNotNull(aggregate, nameof(aggregate));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
+            ArgumentNullException.ThrowIfNull(aggregate);
 
             var source = left.Select(o => new DiscriminatedUnion<TLeft, TRight> { Left = o, isLeft = true })
                 .Union(right.Select(o => new DiscriminatedUnion<TLeft, TRight> { Right = o, isLeft = false }));
@@ -958,8 +958,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TLeft, TResult>> outerResultSelector,
             Expression<Func<TLeft, TRight, TResult>> innerResultSelector)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             return left.Multicast(right, (l_mc, r_mc) =>
             {
@@ -994,8 +994,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TRight, TResult>> rightResultSelector,
             Expression<Func<TLeft, TRight, TResult>> innerResultSelector)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             return left.Multicast(right, (l_mc, r_mc) =>
             {
@@ -1026,14 +1026,14 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TRight, TJoinKey>> rightKeySelector,
             Expression<Func<TLeft, TRight, bool>> postPredicate)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             var e1 = Expression.Parameter(typeof(StructTuple<TLeft, TRight>), "e1");
             var postPredicateTransformed = Expression.Lambda<Func<StructTuple<TLeft, TRight>, bool>>
                 (
                     Expression.Invoke(postPredicate, Expression.Field(e1, "Item1"), Expression.Field(e1, "Item2")),
-                    new ParameterExpression[] { e1 });
+                    [e1]);
 
             var leftMC = left.Multicast(2);
 
@@ -1071,8 +1071,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TLeft, TResult>> outerResultSelector,
             Expression<Func<TLeft, TRight, TResult>> innerResultSelector)
         {
-            Invariant.IsNotNull(left, nameof(left));
-            Invariant.IsNotNull(right, nameof(right));
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
 
             Expression<Func<StructTuple<TLeft, TRight>, bool>> postPredicateTemplate =
                 st => CallInliner.Call(postPredicate, st.Item1, st.Item2);
@@ -1111,7 +1111,7 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TPayload, TSessionKey>> sessionKey,
             Expression<Func<TPayload, TPayload, TResult>> sessionResultSelector)
         {
-            Invariant.IsNotNull(sessionStream, nameof(sessionStream));
+            ArgumentNullException.ThrowIfNull(sessionStream);
             return
                 sessionStream.GroupApply(
                     sessionKey,
@@ -1135,7 +1135,7 @@ namespace Microsoft.StreamProcessing
         public static IStreamable<TKey, TPayload> Distinct<TKey, TPayload>(
             this IStreamable<TKey, TPayload> source)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
             return source.GroupApply(e => e, apply => apply.Count(), (g, c) => g.Key);
         }
 
@@ -1154,8 +1154,8 @@ namespace Microsoft.StreamProcessing
             this IStreamable<TKey, TInput> source,
             Expression<Func<TInput, TResult>> selector)
         {
-            Invariant.IsNotNull(source, nameof(source));
-            Invariant.IsNotNull(selector, nameof(selector));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
             return source.GroupApply(selector, apply => apply.Aggregate(w => w.Count()), (g, c) => g.Key);
         }
 
@@ -1171,7 +1171,7 @@ namespace Microsoft.StreamProcessing
         public static IStreamable<TKey, TPayload> Validate<TKey, TPayload>(
             this IStreamable<TKey, TPayload> source)
         {
-            Invariant.IsNotNull(source, nameof(source));
+            ArgumentNullException.ThrowIfNull(source);
             return new VerifyPropertiesStreamable<TKey, TPayload>(source);
         }
 #endif

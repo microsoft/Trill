@@ -41,11 +41,11 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         /// <param name="value">The value.</param>
         /// <returns>Expression, serializing an enumerable.</returns>
         protected override Expression BuildSerializerSafe(Expression encoder, Expression value)
-            => typeof(IList<TItem>).GetTypeInfo().IsAssignableFrom(typeof(TCollection).GetTypeInfo())
-                ? BuildSerializerForList(encoder, value)
-                : typeof(ICollection<TItem>).GetTypeInfo().IsAssignableFrom(typeof(TCollection).GetTypeInfo())
-                    ? BuildSerializerForCollection(encoder, value)
-                    : BuildSerializerForEnumerable(encoder, value);
+            => typeof(IList<TItem>).IsAssignableFrom(typeof(TCollection))
+                ? this.BuildSerializerForList(encoder, value)
+                : typeof(ICollection<TItem>).IsAssignableFrom(typeof(TCollection))
+                    ? this.BuildSerializerForCollection(encoder, value)
+                    : this.BuildSerializerForEnumerable(encoder, value);
 
         private Expression BuildSerializerForEnumerable(Expression encoder, Expression value)
         {
@@ -151,13 +151,13 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         }
 
         protected override Expression BuildDeserializerSafe(Expression decoder)
-            => typeof(ICollection<TItem>).GetTypeInfo().IsAssignableFrom(typeof(TCollection).GetTypeInfo())
-                ? BuildDeserializerForCollection(decoder)
-                : BuildDeserializerForEnumerable(decoder);
+            => typeof(ICollection<TItem>).IsAssignableFrom(typeof(TCollection))
+                ? this.BuildDeserializerForCollection(decoder)
+                : this.BuildDeserializerForEnumerable(decoder);
 
         private Expression BuildDeserializerForEnumerable(Expression decoder)
         {
-            var addElement = GetAddMethod();
+            var addElement = this.GetAddMethod();
 
             var result = Expression.Variable(typeof(TCollection), "result");
             var index = Expression.Variable(typeof(int), "index");
@@ -180,7 +180,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                             Expression.Block(
                                 Expression.IfThen(
                                     Expression.GreaterThanOrEqual(counter, chunkSize), Expression.Break(chunkLoop)),
-                                Expression.Call(result, addElement, new[] { this.itemSchema.BuildDeserializer(decoder) }),
+                                Expression.Call(result, addElement, [this.itemSchema.BuildDeserializer(decoder)]),
                                 Expression.PreIncrementAssign(index),
                                 Expression.PreIncrementAssign(counter)),
                             chunkLoop)),

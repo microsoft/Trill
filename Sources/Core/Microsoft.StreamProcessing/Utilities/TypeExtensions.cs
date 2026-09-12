@@ -32,20 +32,20 @@ namespace Microsoft.StreamProcessing
             foreach (var pair in OperatorNameLookup)
             {
                 KnownSupportedOperators.TryAdd(
-                    pair.Key, new HashSet<Type> { typeof(long), typeof(ulong), typeof(int), typeof(uint), typeof(short), typeof(ushort), typeof(double), typeof(float), typeof(decimal), typeof(byte), typeof(sbyte) });
+                    pair.Key, [typeof(long), typeof(ulong), typeof(int), typeof(uint), typeof(short), typeof(ushort), typeof(double), typeof(float), typeof(decimal), typeof(byte), typeof(sbyte)]);
             }
         }
 
         public static PropertyInfo GetPropertyByName(this Type type, string name)
-            => type.GetTypeInfo().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+            => type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
 
         public static MethodInfo GetMethodByName(this Type type, string shortName, params Type[] arguments)
         {
-            var result = type.GetTypeInfo()
+            var result = type
                 .GetMethods(BindingFlags.Instance | BindingFlags.Public)
                 .SingleOrDefault(m => m.Name == shortName && m.GetParameters().Select(p => p.ParameterType).SequenceEqual(arguments));
 
-            return result ?? type.GetTypeInfo()
+            return result ?? type
                                  .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                                  .FirstOrDefault(m => (m.Name.EndsWith(shortName, StringComparison.Ordinal) ||
                                       m.Name.EndsWith("." + shortName, StringComparison.Ordinal))
@@ -53,44 +53,41 @@ namespace Microsoft.StreamProcessing
         }
 
         public static bool CanContainNull(this Type type)
-            => !type.GetTypeInfo().IsValueType || Nullable.GetUnderlyingType(type) != null;
+            => !type.IsValueType || Nullable.GetUnderlyingType(type) != null;
 
         public static bool CanBeKnownTypeOf(this Type type, Type baseType)
         {
-            var typeInfo = type.GetTypeInfo();
-            var baseTypeInfo = baseType.GetTypeInfo();
-
-            return !typeInfo.IsAbstract
+            return !type.IsAbstract
                 && !type.IsUnsupported()
-                && (typeInfo.IsSubclassOf(baseType)
+                && (type.IsSubclassOf(baseType)
                     || type == baseType
-                    || (baseTypeInfo.IsInterface && baseTypeInfo.IsAssignableFrom(type))
-                    || (baseTypeInfo.IsGenericType && baseTypeInfo.IsInterface && baseType.GenericIsAssignable(type)
-                        && typeInfo.GetGenericArguments()
-                                   .Zip(baseTypeInfo.GetGenericArguments(), (type1, type2) => new Tuple<Type, Type>(type1, type2))
+                    || (baseType.IsInterface && baseType.IsAssignableFrom(type))
+                    || (baseType.IsGenericType && baseType.IsInterface && baseType.GenericIsAssignable(type)
+                        && type.GetGenericArguments()
+                                   .Zip(baseType.GetGenericArguments(), (type1, type2) => new Tuple<Type, Type>(type1, type2))
                                    .ToList()
                                    .TrueForAll(tuple => CanBeKnownTypeOf(tuple.Item1, tuple.Item2))));
         }
 
         private static bool GenericIsAssignable(this Type type, Type instanceType)
         {
-            if (!type.GetTypeInfo().IsGenericType || !instanceType.GetTypeInfo().IsGenericType) return false;
+            if (!type.IsGenericType || !instanceType.IsGenericType) return false;
 
-            var args = type.GetTypeInfo().GetGenericArguments();
+            var args = type.GetGenericArguments();
             var typeDefinition = instanceType.GetGenericTypeDefinition();
-            var args2 = typeDefinition.GetTypeInfo().GetGenericArguments();
-            return args.Any() && args.Length == args2.Length && type.GetTypeInfo().IsAssignableFrom(typeDefinition.MakeGenericType(args));
+            var args2 = typeDefinition.GetGenericArguments();
+            return args.Length != 0 && args.Length == args2.Length && type.IsAssignableFrom(typeDefinition.MakeGenericType(args));
         }
 
         public static IEnumerable<Type> GetAllKnownTypes(this Type t)
         {
-            var types = t.GetTypeInfo().GetCustomAttributes(true)
+            var types = t.GetCustomAttributes(true)
                 .OfType<KnownTypeAttribute>()
                 .SelectMany(a =>
                     a.Type != null
                     ? new Type[] { a.Type }
-                    : (IEnumerable<Type>)t.GetTypeInfo().GetMethod(a.MethodName, BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, Array.Empty<object>()));
-            if (t.GetTypeInfo().BaseType != null) types = types.Concat(GetAllKnownTypes(t.GetTypeInfo().BaseType));
+                    : (IEnumerable<Type>)t.GetMethod(a.MethodName, BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, []));
+            if (t.BaseType != null) types = types.Concat(GetAllKnownTypes(t.BaseType));
             return types;
         }
 
@@ -98,17 +95,24 @@ namespace Microsoft.StreamProcessing
 
         public static int ReadAllRequiredBytes(this Stream stream, byte[] buffer, int offset, int count)
         {
-            int toRead = count;
-            int currentOffset = offset;
-            int currentRead;
-            do
+            return ReadAllRequiredBytes(stream, buffer.AsSpan(offset, count));
+        }
+
+        /// <summary>
+        /// Reads up to <paramref name="buffer"/>.Length bytes into <paramref name="buffer"/>; returns total bytes read.
+        /// </summary>
+        public static int ReadAllRequiredBytes(this Stream stream, Span<byte> buffer)
+        {
+            int totalRead = 0;
+            while (totalRead < buffer.Length)
             {
-                currentRead = stream.Read(buffer, currentOffset, toRead);
-                currentOffset += currentRead;
-                toRead -= currentRead;
+                int n = stream.Read(buffer[totalRead..]);
+                if (n == 0)
+                    break;
+                totalRead += n;
             }
-            while (toRead > 0 && currentRead != 0);
-            return currentOffset - offset;
+
+            return totalRead;
         }
 
         public static Tuple<IEnumerable<MyFieldInfo>, bool> GetAnnotatedFields(this Type t)
@@ -119,9 +123,9 @@ namespace Microsoft.StreamProcessing
                 : Tuple.Create(new MyFieldInfo(t).Yield(), true);
         }
 
-        private static readonly ConcurrentDictionary<string, string> OperatorNameLookup = new ConcurrentDictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> OperatorNameLookup = new();
 
-        private static readonly ConcurrentDictionary<string, HashSet<Type>> KnownSupportedOperators = new ConcurrentDictionary<string, HashSet<Type>>();
+        private static readonly ConcurrentDictionary<string, HashSet<Type>> KnownSupportedOperators = new();
 
         public static bool SupportsOperator(this Type t, string @operator)
         {
@@ -130,8 +134,8 @@ namespace Microsoft.StreamProcessing
                 if (KnownSupportedOperators[@operator].Contains(t)) return true;
 
                 // Get all operator methods that have the correct name for the given operator and have the given type as the first parameter and return type.
-                var secondParameter = @operator.EndsWith("d", StringComparison.Ordinal) ? typeof(double) : t;
-                var operatorMethods = t.GetTypeInfo().GetMethods(BindingFlags.Static | BindingFlags.Public)
+                var secondParameter = @operator.EndsWith('d') ? typeof(double) : t;
+                var operatorMethods = t.GetMethods(BindingFlags.Static | BindingFlags.Public)
                     .Where(o => o.CallingConvention == CallingConventions.Standard
                         && o.IsSpecialName
                         && o.Name == methodName
@@ -153,13 +157,13 @@ namespace Microsoft.StreamProcessing
 
         public static Type InstantiateAsNecessary(this Type type, params Type[] types)
         {
-            Contract.Requires(type != null);
-            Contract.Requires(types != null);
+            ArgumentNullException.ThrowIfNull(type);
+            ArgumentNullException.ThrowIfNull(types);
 
             if (type == null) throw new NullReferenceException(nameof(type));
             var genericArgs = types
                 .Distinct()
-                .Where(g => IsAnonymousType(g));
+                .Where(IsAnonymousType);
             return !genericArgs.Any()
                 ? type
                 : type.MakeGenericType(genericArgs.ToArray());
@@ -167,13 +171,13 @@ namespace Microsoft.StreamProcessing
 
         public static bool IsAnonymousTypeName(this Type type)
         {
-            Contract.Requires(type != null);
+            ArgumentNullException.ThrowIfNull(type);
 
-            return type.GetTypeInfo().IsClass
-                && type.GetTypeInfo().IsDefined(typeof(CompilerGeneratedAttribute))
+            return type.IsClass
+                && type.IsDefined(typeof(CompilerGeneratedAttribute))
                 && !type.IsNested
                 && type.Name.StartsWith("<>", StringComparison.Ordinal)
-                && type.Name.Contains("__Anonymous");
+                && type.Name.Contains("__Anonymous", StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -184,11 +188,11 @@ namespace Microsoft.StreamProcessing
         [Pure]
         public static bool IsAnonymousType(this Type type)
         {
-            Contract.Requires(type != null);
+            ArgumentNullException.ThrowIfNull(type);
 
             return type.IsAnonymousTypeName()
-                || type.GetTypeInfo().Assembly.IsDynamic
-                || (type.GetTypeInfo().IsGenericType && type.GenericTypeArguments.Any(t => t.IsAnonymousType()));
+                || type.Assembly.IsDynamic
+                || (type.IsGenericType && type.GenericTypeArguments.Any(IsAnonymousType));
         }
 
         public static bool HasSupportedParameterizedConstructor(this Type type)
@@ -201,11 +205,11 @@ namespace Microsoft.StreamProcessing
             if (type.IsAnonymousTypeName()) return true;
 
             // Case 2: Key-Value pairs
-            if (type.GetTypeInfo().IsGenericType
+            if (type.IsGenericType
                 && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)) return true;
 
             // Case 3: Tuples
-            if (type.GetTypeInfo().IsGenericType)
+            if (type.IsGenericType)
             {
                 var baseType = type.GetGenericTypeDefinition();
                 if (
@@ -219,6 +223,14 @@ namespace Microsoft.StreamProcessing
                     baseType == typeof(Tuple<,,,,,,,>)) return true;
             }
 
+            // Case 4: StreamEvent and PartitionedStreamEvent — readonly structs deserialized via constructor
+            if (type.IsGenericType)
+            {
+                var baseType = type.GetGenericTypeDefinition();
+                if (baseType == typeof(StreamEvent<>) ||
+                    baseType == typeof(PartitionedStreamEvent<,>)) return true;
+            }
+
             return false;
         }
 
@@ -229,7 +241,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>Collection of fields.</returns>
         public static IEnumerable<FieldInfo> GetAllFields(this Type t)
         {
-            if (t == null) return Enumerable.Empty<FieldInfo>();
+            if (t == null) return [];
 
             const BindingFlags Flags =
                 BindingFlags.Public |
@@ -237,10 +249,10 @@ namespace Microsoft.StreamProcessing
                 BindingFlags.Instance |
                 BindingFlags.DeclaredOnly;
             var returnValue = t
-                .GetTypeInfo()
+                
                 .GetFields(Flags)
                 .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                .Concat(GetAllFields(t.GetTypeInfo().BaseType));
+                .Concat(GetAllFields(t.BaseType));
             if (!t.HasSupportedParameterizedConstructor()) returnValue = returnValue.OrderBy(o => o.Name);
             return returnValue;
         }
@@ -252,7 +264,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>Collection of properties.</returns>
         public static IEnumerable<PropertyInfo> GetAllProperties(this Type t)
         {
-            if (t == null) return Enumerable.Empty<PropertyInfo>();
+            if (t == null) return [];
 
             const BindingFlags Flags =
                 BindingFlags.Public |
@@ -260,13 +272,13 @@ namespace Microsoft.StreamProcessing
                 BindingFlags.Instance |
                 BindingFlags.DeclaredOnly;
             var returnValue = t
-                .GetTypeInfo()
+                
                 .GetProperties(Flags)
                 .Where(p => !p.IsDefined(typeof(CompilerGeneratedAttribute), false)
                             && p.GetIndexParameters().Length == 0
                             && !p.IsSpecialName
                             && p.CanRead && p.CanWrite)
-                .Concat(GetAllProperties(t.GetTypeInfo().BaseType));
+                .Concat(GetAllProperties(t.BaseType));
             if (!t.HasSupportedParameterizedConstructor()) returnValue = returnValue.OrderBy(o => o.Name);
             return returnValue;
         }
@@ -274,7 +286,7 @@ namespace Microsoft.StreamProcessing
         private static void GetAnonymousTypes(Type t, List<Type> partialList)
         {
             if (t.IsAnonymousTypeName()) partialList.Add(t);
-            else if (t.GetTypeInfo().IsGenericType)
+            else if (t.IsGenericType)
             {
                 foreach (var genericArgument in t.GenericTypeArguments)
                 {
@@ -285,7 +297,7 @@ namespace Microsoft.StreamProcessing
 
         public static List<Type> GetAnonymousTypes(this Type t)
         {
-            Contract.Requires(t != null);
+            ArgumentNullException.ThrowIfNull(t);
 
             var list = new List<Type>();
             GetAnonymousTypes(t, list);
@@ -306,13 +318,13 @@ namespace Microsoft.StreamProcessing
         public static bool KeyTypeNeedsGeneratedMemoryPool(this Type keyType)
         {
             if (keyType == typeof(Empty)) return false;
-            if (keyType.GetTypeInfo().IsGenericType)
+            if (keyType.IsGenericType)
             {
                 if (keyType.GetGenericTypeDefinition() != typeof(CompoundGroupKey<,>)) return true;
                 else
                 {
-                    var outerKeyType = keyType.GetTypeInfo().GetField("outerGroup").FieldType;
-                    var innerKeyType = keyType.GetTypeInfo().GetField("innerGroup").FieldType;
+                    var outerKeyType = keyType.GetField("outerGroup").FieldType;
+                    var innerKeyType = keyType.GetField("innerGroup").FieldType;
                     return outerKeyType.KeyTypeNeedsGeneratedMemoryPool() || innerKeyType.KeyTypeNeedsGeneratedMemoryPool();
                 }
             }
@@ -329,13 +341,13 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         private static bool NeedGeneratedMemoryPool(this Type type)
         {
-            Contract.Requires(type != null);
+            ArgumentNullException.ThrowIfNull(type);
 
             if (type.MemoryPoolHasGetMethodFor()) return false;
 
             if (type.HasSupportedParameterizedConstructor())
             {
-                foreach (var p in type.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                foreach (var p in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 {
                     var t = p.PropertyType;
                     if (t != typeof(int) && t != typeof(long) && t != typeof(string))
@@ -344,7 +356,7 @@ namespace Microsoft.StreamProcessing
             }
             else
             {
-                foreach (var f in type.GetTypeInfo().GetFields(BindingFlags.Public | BindingFlags.Instance))
+                foreach (var f in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
                 {
                     var t = f.FieldType;
                     if (t != typeof(int) && t != typeof(long) && t != typeof(string))
@@ -361,19 +373,18 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public static bool CanRepresentAsColumnar(this Type type)
         {
-            Contract.Requires(type != null);
+            ArgumentNullException.ThrowIfNull(type);
 
             // If any public instance fields are anonymous types, then they
             // cannot be represented as columns.
-            var typeInfo = type.GetTypeInfo();
-            var fields = typeInfo.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
             if (fields.Any(f => f.FieldType.IsAnonymousTypeName())) return false;
 
             // However, an anonymous type can be decomposed into its "fields" (NOTE: anonymous types
             // have public properties, not fields) as long as they themselves are not anonymous types.
             if (type.IsAnonymousTypeName())
             {
-                var props = typeInfo.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 return props.All(p => !p.PropertyType.IsAnonymousTypeName());
             }
 
@@ -390,9 +401,14 @@ namespace Microsoft.StreamProcessing
             {
                 var allFields = type
                     .GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Where(f => !(f.Name.StartsWith("<", StringComparison.Ordinal) && f.Name.EndsWith(">k__BackingField", StringComparison.Ordinal))) // ignore backing fields for autoprops
+                    .Where(f => !(f.Name.StartsWith('<') && f.Name.EndsWith(">k__BackingField", StringComparison.Ordinal))) // ignore backing fields for autoprops
                     ;
                 if (allFields.Any()) return false;
+
+                // A public instance field only works if columnar reconstitution can assign it
+                // directly; a readonly field (as in a "readonly struct" or a hand-written
+                // immutable type) can only be set from a constructor, which we do not generate.
+                if (fields.Any(f => f.IsInitOnly)) return false;
 
                 // Check only the autoprops: any non-autoprop will not be able to depend on non-public fields
                 // due to the check for non-public fields.
@@ -403,11 +419,31 @@ namespace Microsoft.StreamProcessing
                     if (getMethod == null) continue;
                     if (!getMethod.IsDefined(typeof(CompilerGeneratedAttribute))) continue;
                     var setMethod = p.SetMethod;
-                    if (setMethod == null) continue;
+                    if (setMethod == null)
+                    {
+                        // A get-only autoprop (no setter at all) cannot be assigned during
+                        // columnar reconstitution, which sets each property via a plain
+                        // assignment - UNLESS its getter is non-public, in which case this isn't
+                        // user-facing row state at all: every `record` (but not `record struct`)
+                        // synthesizes a `protected virtual Type EqualityContract => typeof(T);`
+                        // exactly like this (compiler-generated, get-only, non-public). It has no
+                        // independent storage - it is always re-derivable from the runtime type -
+                        // so there is nothing for columnar reconstitution to lose by not touching it.
+                        if (!getMethod.IsPublic) continue;
+                        return false;
+                    }
                     if (!setMethod.IsDefined(typeof(CompilerGeneratedAttribute))) continue;
 
                     // p is definitely an autoprop. Cannot columnarize if the property is not visible.
                     if (!(getMethod.IsPublic && setMethod.IsPublic)) return false;
+
+                    // An init-only setter (`{ get; init; }`) has IsExternalInit among its return
+                    // parameter's required custom modifiers. It is public and compiler-generated
+                    // like a normal autoprop setter, but callable only from a constructor or an
+                    // object initializer - not from the plain assignment columnar reconstitution
+                    // generates - so it must be excluded explicitly.
+                    if (setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit)))
+                        return false;
                 }
             }
 
@@ -439,8 +475,8 @@ namespace Microsoft.StreamProcessing
 
         private static string TurnTypeIntoCSharpSource(Type t, ref List<string> introducedGenericTypeParameters)
         {
-            Contract.Requires(t != null);
-            Contract.Requires(introducedGenericTypeParameters != null);
+            ArgumentNullException.ThrowIfNull(t);
+            ArgumentNullException.ThrowIfNull(introducedGenericTypeParameters);
 
             var typeName = t.FullName.Replace('#', '_').Replace('+', '.');
             if (t.IsAnonymousTypeName())
@@ -449,14 +485,14 @@ namespace Microsoft.StreamProcessing
                 introducedGenericTypeParameters.Add(newGenericTypeParameter);
                 return newGenericTypeParameter;
             }
-            if (!t.GetTypeInfo().IsGenericType) // need to test after anonymous because deserialized anonymous types are *not* generic (but unserialized anonymous types *are* generic)
+            if (!t.IsGenericType) // need to test after anonymous because deserialized anonymous types are *not* generic (but unserialized anonymous types *are* generic)
                 return typeName;
-            var isDynamic = t.GetTypeInfo().Assembly.IsDynamic;
+            var isDynamic = t.Assembly.IsDynamic;
             var sb = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(t.Namespace))
             {
                 sb.Append(t.Namespace);
-                sb.Append(".");
+                sb.Append('.');
             }
             var genericArgs = new List<string>();
             foreach (var genericArgument in t.GenericTypeArguments)
@@ -483,14 +519,14 @@ namespace Microsoft.StreamProcessing
                 var currentName = currentType.Name;
                 var indexOfBackTick = currentType.Name.IndexOf('`');
 
-                if (typeIndex > 0) sb.Append(".");
-                sb.Append(indexOfBackTick > 0 ? currentName.Substring(0, indexOfBackTick) : currentName);
+                if (typeIndex > 0) sb.Append('.');
+                sb.Append(indexOfBackTick > 0 ? currentName[..indexOfBackTick] : currentName);
                 if (indexOfBackTick > 0)
                 {
                     var j = indexOfBackTick + 1;
                     while (j < currentName.Length && char.IsDigit(currentName[j])) j++;
-                    var numberOfGenerics = int.Parse(currentName.Substring(indexOfBackTick + 1, j - (indexOfBackTick + 1)));
-                    sb.Append("<");
+                    var numberOfGenerics = int.Parse(currentName[(indexOfBackTick + 1)..j]);
+                    sb.Append('<');
                     if (!isDynamic)
                     {
                         for (int i = 0; i < numberOfGenerics; i++)
@@ -501,7 +537,7 @@ namespace Microsoft.StreamProcessing
                         }
                     }
                     else indexIntoGenericArguments += numberOfGenerics;
-                    sb.Append(">");
+                    sb.Append('>');
                 }
             }
 
@@ -518,7 +554,7 @@ namespace Microsoft.StreamProcessing
 
         public static string GetCSharpSourceSyntax(this Type t, ref List<string> introducedGenericTypeParameters)
         {
-            if (introducedGenericTypeParameters == null) introducedGenericTypeParameters = new List<string>();
+            if (introducedGenericTypeParameters == null) introducedGenericTypeParameters = [];
             string ret = TurnTypeIntoCSharpSource(t, ref introducedGenericTypeParameters);
             return ret;
         }
@@ -532,7 +568,7 @@ namespace Microsoft.StreamProcessing
             return b;
         }
 
-        public static bool IsCompoundGroupKey(this TypeInfo t, out Type outerType, out Type innerType)
+        public static bool IsCompoundGroupKey(this Type t, out Type outerType, out Type innerType)
         {
             if (t.IsGenericType && t.GenericTypeArguments.Length == 2 && t.GetGenericTypeDefinition() == typeof(CompoundGroupKey<,>))
             {
@@ -548,25 +584,35 @@ namespace Microsoft.StreamProcessing
             }
         }
 
-        public static bool ImplementsIEqualityComparerExpression(this TypeInfo t)
-            => t.GetInterfaces()
-                .Any(i => i.Namespace.Equals("Microsoft.StreamProcessing") && i.Name.Equals("IEqualityComparerExpression`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
+        public static bool ImplementsIEqualityComparerExpression(this Type t)
+            => t.ContainsGenericParameters
+                ? t.GetInterfaces()
+                    .Any(i => i.Namespace.Equals("Microsoft.StreamProcessing") && i.Name.Equals("IEqualityComparerExpression`1") && i.GetGenericArguments().Length == 1 && i.GetGenericArguments()[0] == t)
+                : typeof(IEqualityComparerExpression<>).MakeGenericType(t).IsAssignableFrom(t);
 
-        public static bool ImplementsIEqualityComparer(this TypeInfo t)
-            => t.GetInterfaces()
-                .Any(i => i.Namespace.Equals("System.Collections.Generic") && i.Name.Equals("IEqualityComparer`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
+        public static bool ImplementsIEqualityComparer(this Type t)
+            => t.ContainsGenericParameters
+                ? t.GetInterfaces()
+                    .Any(i => i.Namespace.Equals("System.Collections.Generic") && i.Name.Equals("IEqualityComparer`1") && i.GetGenericArguments().Length == 1 && i.GetGenericArguments()[0] == t)
+                : typeof(IEqualityComparer<>).MakeGenericType(t).IsAssignableFrom(t);
 
-        public static bool ImplementsIComparer(this TypeInfo t)
-            => t.GetInterfaces()
-                .Any(i => i.Namespace.Equals("System.Collections.Generic") && i.Name.Equals("IComparer`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
+        public static bool ImplementsIComparer(this Type t)
+            => t.ContainsGenericParameters
+                ? t.GetInterfaces()
+                    .Any(i => i.Namespace.Equals("System.Collections.Generic") && i.Name.Equals("IComparer`1") && i.GetGenericArguments().Length == 1 && i.GetGenericArguments()[0] == t)
+                : typeof(IComparer<>).MakeGenericType(t).IsAssignableFrom(t);
 
-        public static bool ImplementsIEquatable(this TypeInfo t)
-            => t.GetInterfaces()
-                .Any(i => i.Namespace.Equals("System") && i.Name.Equals("IEquatable`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
+        public static bool ImplementsIEquatable(this Type t)
+            => t.ContainsGenericParameters
+                ? t.GetInterfaces()
+                    .Any(i => i.Namespace.Equals("System") && i.Name.Equals("IEquatable`1") && i.GetGenericArguments().Length == 1 && i.GetGenericArguments()[0] == t)
+                : typeof(IEquatable<>).MakeGenericType(t).IsAssignableFrom(t);
 
-        public static bool ImplementsIComparable(this TypeInfo t)
-            => t.GetInterfaces()
-                .Any(i => i.Namespace.Equals("System") && i.Name.Equals("IComparable`1") && i.GetTypeInfo().GetGenericArguments().Length == 1 && i.GetTypeInfo().GetGenericArguments()[0] == t);
+        public static bool ImplementsIComparable(this Type t)
+            => t.ContainsGenericParameters
+                ? t.GetInterfaces()
+                    .Any(i => i.Namespace.Equals("System") && i.Name.Equals("IComparable`1") && i.GetGenericArguments().Length == 1 && i.GetGenericArguments()[0] == t)
+                : typeof(IComparable<>).MakeGenericType(t).IsAssignableFrom(t);
 
         #region Borrowed from Roslyn
 
@@ -602,13 +648,13 @@ namespace Microsoft.StreamProcessing
 
         private static bool DependsOnDefinitelyManagedType(Type type, HashSet<Type> partialClosure)
         {
-            Contract.Requires(type != null);
+            ArgumentNullException.ThrowIfNull(type);
 
             // NOTE: unlike in StructDependsClosure, we don't have to check for expanding cycles,
             // because as soon as we see something with non-zero arity we kick out (generic => managed).
             if (partialClosure.Add(type))
             {
-                foreach (var field in type.GetTypeInfo().GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
+                foreach (var field in type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
                 {
                     // Only instance fields (including field-like events) affect the outcome.
                     if (field.IsStatic) continue;
@@ -637,12 +683,12 @@ namespace Microsoft.StreamProcessing
         private static bool? IsManagedTypeHelper(Type type)
         {
             // To match dev10, we treat enums as their underlying types.
-            if (type.GetTypeInfo().IsEnum) type = Enum.GetUnderlyingType(type);
+            if (type.IsEnum) type = Enum.GetUnderlyingType(type);
 
-            if (type.GetTypeInfo().IsEnum) return false;
-            if (type.GetTypeInfo().IsPrimitive) return false;
-            if (type.GetTypeInfo().IsGenericType) return true;
-            if (type.GetTypeInfo().IsValueType) return null;
+            if (type.IsEnum) return false;
+            if (type.IsPrimitive) return false;
+            if (type.IsGenericType) return true;
+            if (type.IsValueType) return null;
 
             return true;
         }
@@ -654,7 +700,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="type">The type.</param>
         /// <returns>True if type t has a public parameter-less constructor, false otherwise.</returns>
         private static bool HasParameterlessConstructor(this Type type)
-            => type.GetTypeInfo().GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(c => c.GetParameters().Length == 0);
+            => type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(c => c.GetParameters().Length == 0);
 
         /// <summary>
         ///     Determines whether the type is definitely unsupported for schema generation.
@@ -667,22 +713,22 @@ namespace Microsoft.StreamProcessing
             => type == typeof(IntPtr)
             || type == typeof(UIntPtr)
             || type == typeof(object)
-            || type.GetTypeInfo().ContainsGenericParameters
+            || type.ContainsGenericParameters
             || (!type.IsArray
-                && !type.GetTypeInfo().IsValueType
+                && !type.IsValueType
                 && !type.HasSupportedParameterizedConstructor()
                 && !type.HasParameterlessConstructor()
                 && type != typeof(string)
                 && type != typeof(Uri)
-                && !type.GetTypeInfo().IsAbstract
-                && !type.GetTypeInfo().IsInterface
-                && !(type.GetTypeInfo().IsGenericType && SupportedInterfaces.Contains(type.GetGenericTypeDefinition())));
+                && !type.IsAbstract
+                && !type.IsInterface
+                && !(type.IsGenericType && SupportedInterfaces.Contains(type.GetGenericTypeDefinition())));
 
-        private static readonly HashSet<Type> SupportedInterfaces = new HashSet<Type>
-        {
+        private static readonly HashSet<Type> SupportedInterfaces =
+        [
             typeof(IList<>),
             typeof(IDictionary<,>)
-        };
+        ];
 
         /// <summary>
         /// Validates that a type can be serialized.
@@ -693,7 +739,7 @@ namespace Microsoft.StreamProcessing
         /// </returns>
         public static Type ValidateTypeForSerializer(this Type type)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            ArgumentNullException.ThrowIfNull(type);
             Contract.EndContractBlock();
 
             if (type.IsUnsupported())
@@ -711,20 +757,23 @@ namespace Microsoft.StreamProcessing
         /// </returns>
         public static IEnumerable<MyFieldInfo> ResolveMembers(this Type type)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            ArgumentNullException.ThrowIfNull(type);
             Contract.EndContractBlock();
 
-            if (type.GetTypeInfo().IsPrimitive) return Enumerable.Empty<MyFieldInfo>();
-            else if (type.HasSupportedParameterizedConstructor())
+            if (type.IsPrimitive) return [];
+            else if (type.IsDefined(typeof(DataContractAttribute)))
             {
-                return type.GetTypeInfo().GetProperties().Where(p => p.GetIndexParameters().Length == 0).Select(o => new MyFieldInfo(o));
-            }
-            else if (type.GetTypeInfo().IsDefined(typeof(DataContractAttribute)))
-            {
-                // In DataContract context, return all fields and properties marked with DataMember
+                // In DataContract context, return all fields and properties marked with DataMember.
+                // This takes priority over HasSupportedParameterizedConstructor so that types like
+                // StreamEvent<T> (readonly struct with [DataContract]) use their [DataMember] fields
+                // as constructor arguments rather than their unrelated public getter properties.
                 var fields = type.GetAllFields().Where(m => m.IsDefined(typeof(DataMemberAttribute))).Select(o => new MyFieldInfo(o));
                 var properties = type.GetAllProperties().Where(m => m.IsDefined(typeof(DataMemberAttribute))).Select(o => new MyFieldInfo(o));
                 return fields.Concat(properties);
+            }
+            else if (type.HasSupportedParameterizedConstructor())
+            {
+                return type.GetProperties().Where(p => p.GetIndexParameters().Length == 0).Select(o => new MyFieldInfo(o));
             }
             else
             {

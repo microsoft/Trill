@@ -114,7 +114,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public int Insert(long time, int value)
         {
             // Get index for this insert, growing if necesarry.
-            int index = Allocate();
+            int index = this.Allocate();
 
             // Find location for new element in heap, default to end.
             int heapPos = this.count;
@@ -122,7 +122,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
             // Heapify-up for end of heap.
             var element = new Element { Time = time, Value = value, Index = index };
-            HeapifyUp(ref element, heapPos);
+            this.HeapifyUp(ref element, heapPos);
 
             return index;
         }
@@ -174,7 +174,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             var top = this.heap[0];
             time = top.Time;
             value = top.Value;
-            RemoveTop();
+            this.RemoveTop();
             return true;
         }
 
@@ -207,7 +207,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             // Return top element and remove top.
             time = top.Time;
             value = top.Value;
-            RemoveTop();
+            this.RemoveTop();
             return true;
         }
 
@@ -240,7 +240,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             // Return top element and remove top.
             time = top.Time;
             value = top.Value;
-            RemoveTop();
+            this.RemoveTop();
             return true;
         }
 
@@ -253,11 +253,11 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         {
             Contract.Requires(this.Count > 0);
             int index = this.heap[0].Index;
-            Free(index);
+            this.Free(index);
             this.count--;
             if (this.count > 0)
             {
-                HeapifyDown(ref this.heap[this.count], 0);
+                this.HeapifyDown(ref this.heap[this.count], 0);
             }
         }
 
@@ -271,11 +271,11 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         {
             Contract.Assume(index >= 0 && index < this.initialized);
             int heapPos = this.locations[index];
-            Free(index);
+            this.Free(index);
             this.count--;
             if (heapPos < this.count)
             {
-                Heapify(ref this.heap[this.count], heapPos);
+                this.Heapify(ref this.heap[this.count], heapPos);
             }
         }
 
@@ -301,13 +301,13 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             }
             if (heapPos == 0)
             {
-                HeapifyDown(ref element, 0);
+                this.HeapifyDown(ref element, 0);
             }
             else
             {
-                if (!HeapifyUp(ref element, heapPos))
+                if (!this.HeapifyUp(ref element, heapPos))
                 {
-                    HeapifyDown(ref element, heapPos);
+                    this.HeapifyDown(ref element, heapPos);
                 }
             }
         }
@@ -415,7 +415,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             if (this.initialized == this.heap.Length)
             {
                 // Out of capacity, so grow.
-                Grow();
+                this.Grow();
             }
 
             // Take next element from initialized.

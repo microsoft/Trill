@@ -14,7 +14,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 {
     internal abstract class ClassSerializer : ObjectSerializerBase
     {
-        protected readonly List<RecordFieldSerializer> fields = new List<RecordFieldSerializer>();
+        protected readonly List<RecordFieldSerializer> fields = [];
 
         protected ClassSerializer(Type runtimeType) : base(runtimeType) { }
 
@@ -49,11 +49,11 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
                 // For handling potential recursive types.
                 this.cachedSerializer = (o, e) => { };
-                this.cachedSerializer = GenerateCachedSerializer();
+                this.cachedSerializer = this.GenerateCachedSerializer();
 
                 // For performance reasons we do not use a cached serializer
                 // for the first encounter of the type in the schema tree.
-                return SerializeFields(encoder, value);
+                return this.SerializeFields(encoder, value);
             }
 
             protected override Expression BuildDeserializerSafe(Expression decoder)
@@ -62,7 +62,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
 
                 // For handling potential recursive types.
                 this.cachedDeserializer = d => default;
-                var deserializeLambda = GenerateCachedDeserializer();
+                var deserializeLambda = this.GenerateCachedDeserializer();
                 this.cachedDeserializer = deserializeLambda.Compile();
 
                 return Expression.Invoke(deserializeLambda, decoder);
@@ -78,7 +78,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                 {
                     // Cannot create an object beforehand. Have to call a constructor with parameters.
                     var properties = this.fields.Select(f => f.Schema.BuildDeserializer(decoderParam));
-                    var ctor = this.RuntimeType.GetTypeInfo()
+                    var ctor = this.RuntimeType
                         .GetConstructors()
                         .Single(c => c.GetParameters().Select(p => p.ParameterType).SequenceEqual(this.fields.Select(f => f.Schema.RuntimeType)));
                     body.Add(Expression.Assign(instance, Expression.New(ctor, properties)));
@@ -100,7 +100,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
             {
                 var instanceParam = Expression.Parameter(this.RuntimeType, "instance");
                 var encoderParam = Expression.Parameter(typeof(BinaryEncoder), "encoder");
-                var block = SerializeFields(encoderParam, instanceParam);
+                var block = this.SerializeFields(encoderParam, instanceParam);
                 var lambda = Expression.Lambda<Action<T, BinaryEncoder>>(block, instanceParam, encoderParam);
                 return lambda.Compile();
             }
@@ -116,7 +116,7 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
                 }
 
                 // Check for null.
-                if (!this.RuntimeType.GetTypeInfo().IsValueType)
+                if (!this.RuntimeType.IsValueType)
                 {
                     body.Add(Expression.IfThen(
                         Expression.Equal(value, Expression.Constant(null)),

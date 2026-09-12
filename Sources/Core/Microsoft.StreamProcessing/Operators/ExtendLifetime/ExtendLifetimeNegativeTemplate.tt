@@ -243,7 +243,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
 
     public override int CurrentlyBufferedInputCount => syncTimeMap.Count + contractedToZero.Values.Select(o => o.Count).Sum();
 
-<# if (!noFields && !this.payloadType.GetTypeInfo().IsValueType) { #>
+<# if (!noFields && !this.payloadType.IsValueType) { #>
     [DataContract]
     private struct <#= ActiveEventType #>
     {

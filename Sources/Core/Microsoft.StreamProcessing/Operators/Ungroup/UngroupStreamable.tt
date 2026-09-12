@@ -37,8 +37,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelector)
             : base(source.Properties.Ungroup(resultSelector))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(resultSelector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(resultSelector);
 
             this.Source = source;
             this.ResultSelector = resultSelector;

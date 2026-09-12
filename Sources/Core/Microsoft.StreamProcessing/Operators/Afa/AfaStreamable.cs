@@ -11,7 +11,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class AfaStreamable<TKey, TPayload, TRegister, TAccumulator> : UnaryStreamable<TKey, TPayload, TRegister>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         internal CompiledAfa<TPayload, TRegister, TAccumulator> afa;
         internal long MaxDuration;
@@ -19,13 +19,13 @@ namespace Microsoft.StreamProcessing
         public AfaStreamable(IStreamable<TKey, TPayload> source, Afa<TPayload, TRegister, TAccumulator> afa, long maxDuration)
             : base(source, source.Properties.Afa<TKey, TPayload, TRegister>())
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             afa.Seal();
             this.afa = afa.Compile();
             this.MaxDuration = maxDuration;
 
-            Initialize();
+            this.Initialize();
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TRegister> observer)
@@ -33,7 +33,7 @@ namespace Microsoft.StreamProcessing
             if ((this.afa.eventListStateMap != null) && (this.afa.multiEventStateMap == null))
             {
                 if (this.Source.Properties.IsColumnar)
-                    return GetGroupedAFAEventListPipe(observer);
+                    return this.GetGroupedAFAEventListPipe(observer);
                 else if (typeof(TKey) == typeof(Empty))
                 {
                     var downcast = this as AfaStreamable<Empty, TPayload, TRegister, TAccumulator>;
@@ -61,7 +61,7 @@ namespace Microsoft.StreamProcessing
             if ((this.afa.eventListStateMap == null) && (this.afa.multiEventStateMap != null) && (this.afa.singleEventStateMap == null))
             {
                 if (this.Source.Properties.IsColumnar)
-                    return GetGroupedAFAMultiEventPipe(observer);
+                    return this.GetGroupedAFAMultiEventPipe(observer);
                 else
                 {
                     var partitionType = typeof(TKey).GetPartitionType();
@@ -89,20 +89,20 @@ namespace Microsoft.StreamProcessing
                     if (this.afa.uncompiledAfa.IsDeterministic)
                     {
                         return this.Source.Properties.IsColumnar
-                            ? GetUngroupedDAfaPipe(emptyObserver) as IStreamObserver<TKey, TPayload>
+                            ? this.GetUngroupedDAfaPipe(emptyObserver) as IStreamObserver<TKey, TPayload>
                             : new CompiledUngroupedDAfaPipe<TPayload, TRegister, TAccumulator>(downcast, observer as IStreamObserver<Empty, TRegister>, this.afa, this.MaxDuration) as IStreamObserver<TKey, TPayload>;
                     }
                     else
                     {
                         return this.Source.Properties.IsColumnar
-                            ? GetUngroupedAFAPipe(emptyObserver) as IStreamObserver<TKey, TPayload>
+                            ? this.GetUngroupedAFAPipe(emptyObserver) as IStreamObserver<TKey, TPayload>
                             : new CompiledUngroupedAfaPipe<TPayload, TRegister, TAccumulator>(downcast, observer as IStreamObserver<Empty, TRegister>, this.afa, this.MaxDuration) as IStreamObserver<TKey, TPayload>;
                     }
                 }
                 else
                 {
                     if (this.Source.Properties.IsColumnar)
-                        return GetGroupedAFAPipe(observer);
+                        return this.GetGroupedAFAPipe(observer);
                     else
                     {
                         var partitionType = typeof(TKey).GetPartitionType();
@@ -123,7 +123,7 @@ namespace Microsoft.StreamProcessing
             }
 
             if (this.Source.Properties.IsColumnar)
-                return GetAFAMultiEventListPipe(observer);
+                return this.GetAFAMultiEventListPipe(observer);
             else if (typeof(TKey) == typeof(Empty))
             {
                 var downcast = this as AfaStreamable<Empty, TPayload, TRegister, TAccumulator>;
@@ -151,21 +151,21 @@ namespace Microsoft.StreamProcessing
         protected override bool CanGenerateColumnar()
         {
             if ((this.afa.eventListStateMap != null) && (this.afa.multiEventStateMap == null))
-                return Config.CodegenOptions.CodeGenAfa && CanGenerateGroupedAFAEventListPipe();
+                return Config.CodegenOptions.CodeGenAfa && this.CanGenerateGroupedAFAEventListPipe();
             else if ((this.afa.eventListStateMap == null) && (this.afa.multiEventStateMap != null) && (this.afa.singleEventStateMap == null))
-                return Config.CodegenOptions.CodeGenAfa && CanGenerateGroupedAFAMultiEventPipe();
+                return Config.CodegenOptions.CodeGenAfa && this.CanGenerateGroupedAFAMultiEventPipe();
             else if ((this.afa.eventListStateMap == null) && (this.afa.multiEventStateMap == null) && (this.afa.singleEventStateMap != null))
             {
                 if (typeof(TKey) == typeof(Empty))
                 {
                     return this.afa.uncompiledAfa.IsDeterministic
-                        ? Config.CodegenOptions.CodeGenAfa && CanGenerateUngroupedDAfaPipe()
-                        : Config.CodegenOptions.CodeGenAfa && CanGenerateUngroupedAFAPipe();
+                        ? Config.CodegenOptions.CodeGenAfa && this.CanGenerateUngroupedDAfaPipe()
+                        : Config.CodegenOptions.CodeGenAfa && this.CanGenerateUngroupedAFAPipe();
                 }
                 else
-                    return Config.CodegenOptions.CodeGenAfa && CanGenerateGroupedAFAPipe();
+                    return Config.CodegenOptions.CodeGenAfa && this.CanGenerateGroupedAFAPipe();
             }
-            else return Config.CodegenOptions.CodeGenAfa && CanGenerateAFAMultiEventListPipe();
+            else return Config.CodegenOptions.CodeGenAfa && this.CanGenerateAFAMultiEventListPipe();
         }
 
         private bool CanGenerateUngroupedAFAPipe()

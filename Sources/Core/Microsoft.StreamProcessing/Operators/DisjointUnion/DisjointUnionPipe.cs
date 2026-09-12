@@ -35,13 +35,13 @@ namespace Microsoft.StreamProcessing
             rightBatchDone = true;
             rightBatchFree = false;
 
-            var newLeftGlobalPunctuation = Math.Max(this.leftGlobalPunctuation, ExtractGlobalPunctuations(leftBatch));
-            var newRightGlobalPunctuation = Math.Max(this.rightGlobalPunctuation, ExtractGlobalPunctuations(rightBatch));
+            var newLeftGlobalPunctuation = Math.Max(this.leftGlobalPunctuation, this.ExtractGlobalPunctuations(leftBatch));
+            var newRightGlobalPunctuation = Math.Max(this.rightGlobalPunctuation, this.ExtractGlobalPunctuations(rightBatch));
             this.Observer.OnNext(leftBatch);
             this.Observer.OnNext(rightBatch);
 
             var newGlobalPunctuation = Math.Min(newLeftGlobalPunctuation, newRightGlobalPunctuation);
-            EmitGlobalPunctuationIfNecessary(newGlobalPunctuation);
+            this.EmitGlobalPunctuationIfNecessary(newGlobalPunctuation);
 
             this.leftGlobalPunctuation = newLeftGlobalPunctuation;
             this.rightGlobalPunctuation = newRightGlobalPunctuation;
@@ -52,11 +52,11 @@ namespace Microsoft.StreamProcessing
             leftBatchDone = true;
             leftBatchFree = false;
 
-            var newLeftGlobalPunctuation = Math.Max(this.leftGlobalPunctuation, ExtractGlobalPunctuations(leftBatch));
+            var newLeftGlobalPunctuation = Math.Max(this.leftGlobalPunctuation, this.ExtractGlobalPunctuations(leftBatch));
             this.Observer.OnNext(leftBatch);
 
             var newGlobalPunctuation = Math.Min(newLeftGlobalPunctuation, this.rightGlobalPunctuation);
-            EmitGlobalPunctuationIfNecessary(newGlobalPunctuation);
+            this.EmitGlobalPunctuationIfNecessary(newGlobalPunctuation);
 
             this.leftGlobalPunctuation = newLeftGlobalPunctuation;
         }
@@ -66,11 +66,11 @@ namespace Microsoft.StreamProcessing
             rightBatchDone = true;
             rightBatchFree = false;
 
-            var newRightGlobalPunctuation = Math.Max(this.rightGlobalPunctuation, ExtractGlobalPunctuations(rightBatch));
+            var newRightGlobalPunctuation = Math.Max(this.rightGlobalPunctuation, this.ExtractGlobalPunctuations(rightBatch));
             this.Observer.OnNext(rightBatch);
 
             var newGlobalPunctuation = Math.Min(this.leftGlobalPunctuation, newRightGlobalPunctuation);
-            EmitGlobalPunctuationIfNecessary(newGlobalPunctuation);
+            this.EmitGlobalPunctuationIfNecessary(newGlobalPunctuation);
 
             this.rightGlobalPunctuation = newRightGlobalPunctuation;
         }

@@ -22,37 +22,37 @@ namespace Microsoft.StreamProcessing
     {
         public static Expression<Comparison<TComparison>> InlineCalls<TComparison>(this Expression<Comparison<TComparison>> function)
         {
-            Contract.Requires(function != null);
+            ArgumentNullException.ThrowIfNull(function);
             return CallInlinerCallRewriter.Inline<Comparison<TComparison>>(function);
         }
 
         public static Expression<Func<TOutput>> InlineCalls<TOutput>(this Expression<Func<TOutput>> function)
         {
-            Contract.Requires(function != null);
+            ArgumentNullException.ThrowIfNull(function);
             return CallInlinerCallRewriter.Inline<Func<TOutput>>(function);
         }
 
         public static Expression<Func<T1, TOutput>> InlineCalls<T1, TOutput>(this Expression<Func<T1, TOutput>> function)
         {
-            Contract.Requires(function != null);
+            ArgumentNullException.ThrowIfNull(function);
             return CallInlinerCallRewriter.Inline<Func<T1, TOutput>>(function);
         }
 
         public static Expression<Func<T1, T2, TOutput>> InlineCalls<T1, T2, TOutput>(this Expression<Func<T1, T2, TOutput>> function)
         {
-            Contract.Requires(function != null);
+            ArgumentNullException.ThrowIfNull(function);
             return CallInlinerCallRewriter.Inline<Func<T1, T2, TOutput>>(function);
         }
 
         public static Expression<Func<T1, T2, T3, TOutput>> InlineCalls<T1, T2, T3, TOutput>(this Expression<Func<T1, T2, T3, TOutput>> function)
         {
-            Contract.Requires(function != null);
+            ArgumentNullException.ThrowIfNull(function);
             return CallInlinerCallRewriter.Inline<Func<T1, T2, T3, TOutput>>(function);
         }
 
         public static Expression<Func<T1, T2, T3, T4, TOutput>> InlineCalls<T1, T2, T3, T4, TOutput>(this Expression<Func<T1, T2, T3, T4, TOutput>> function)
         {
-            Contract.Requires(function != null);
+            ArgumentNullException.ThrowIfNull(function);
             return CallInlinerCallRewriter.Inline<Func<T1, T2, T3, T4, TOutput>>(function);
         }
 
@@ -63,11 +63,10 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public static string ExpressionToCSharp(this Expression e)
         {
-            var stringBuilder = new StringBuilder();
-            var visitor = new ConvertToCSharp(new StringWriter(stringBuilder, CultureInfo.InvariantCulture));
+            using StringWriter writer = new(CultureInfo.InvariantCulture);
+            ConvertToCSharp visitor = new(writer);
             visitor.Visit(e);
-            var s = stringBuilder.ToString();
-            return s;
+            return writer.ToString();
         }
 
         /// <summary>
@@ -81,7 +80,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public static string Inline(this LambdaExpression function, params string[] arguments)
         {
-            Contract.Requires(function != null);
+            ArgumentNullException.ThrowIfNull(function);
 
             var map = new Dictionary<ParameterExpression, string>(arguments.Length);
             for (int i = 0; i < arguments.Length; i++)
@@ -106,18 +105,22 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public static string ExpressionToCSharpStringWithParameterSubstitution(this Expression e, Dictionary<ParameterExpression, string> map)
         {
-            var stringBuilder = new StringBuilder();
-            var visitor = new ConvertToCSharpButWithStringParameters(new StringWriter(stringBuilder, CultureInfo.InvariantCulture), map);
+            using StringWriter writer = new(CultureInfo.InvariantCulture);
+            ConvertToCSharpButWithStringParameters visitor = new(writer,map);
             visitor.Visit(e);
-            return stringBuilder.ToString();
+            return writer.ToString();
         }
 
-        public static LambdaExpression RemoveCastToObject(this LambdaExpression lambda)
-            => lambda.Body is UnaryExpression body
-            && (body.NodeType == ExpressionType.Convert || body.NodeType == ExpressionType.TypeAs)
-            && (body.Type == typeof(object))
-                ? Expression.Lambda(body.Operand, lambda.Parameters)
-                : lambda;
+        public static LambdaExpression RemoveCastToObject(this LambdaExpression lambda) => lambda.Body switch
+        {
+            UnaryExpression
+            {
+                NodeType: ExpressionType.Convert or ExpressionType.TypeAs,
+                Type: { } type,
+                Operand: { } operand
+            } when type == typeof(object) => Expression.Lambda(operand, lambda.Parameters),
+            _ => lambda
+        };
 
         public static Expression ReplaceParametersInBody(this LambdaExpression lambda, params Expression[] expressions)
             => ParameterSubstituter.Replace(lambda.Parameters, lambda.Body, expressions);
@@ -132,7 +135,7 @@ namespace Microsoft.StreamProcessing
 
         public static bool IsClosedExpression(LambdaExpression function)
         {
-            Contract.Requires(function != null);
+            ArgumentNullException.ThrowIfNull(function);
 
             var hashSet = new HashSet<ParameterExpression>(function.Parameters);
             var me = new ConstantExpressionFinder(hashSet);
@@ -143,15 +146,19 @@ namespace Microsoft.StreamProcessing
         protected override Expression VisitConstant(ConstantExpression node)
         {
             var t = node.Type;
-            if (!t.GetTypeInfo().IsPrimitive) this.isConstant = false;
+            if (!t.IsPrimitive) this.isConstant = false;
             return base.VisitConstant(node);
         }
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            if (!(node.Expression is MemberExpression)) // if it is a member expression, then let visitor recurse down to the left-most branch
+            if (node.Expression is MemberExpression) // if it is a member expression, then let visitor recurse down to the left-most branch
             {
-                if (!(node.Expression is ParameterExpression p) || !this.parameters.Contains(p)) this.isConstant = false;
+                return base.VisitMember(node);
+            }
+            if (node.Expression is not ParameterExpression p || !this.parameters.Contains(p))
+            {
+                this.isConstant = false;
             }
             return base.VisitMember(node);
         }
@@ -176,7 +183,7 @@ namespace Microsoft.StreamProcessing
                 var realArguments = new Expression[callArguments.Count - 1];
                 for (int i = 1; i < callArguments.Count; i++)
                 {
-                    realArguments[i - 1] = Visit(callArguments[i]);
+                    realArguments[i - 1] = this.Visit(callArguments[i]);
                 }
 
                 return realFunction.ReplaceParametersInBody(realArguments);
@@ -188,7 +195,7 @@ namespace Microsoft.StreamProcessing
 
     internal sealed class EqualityComparer : ExpressionVisitor
     {
-        private readonly Dictionary<ParameterExpression, int> parameterMap = new Dictionary<ParameterExpression, int>();
+        private readonly Dictionary<ParameterExpression, int> parameterMap = [];
         private int uniqueParameterNumber;
 
         private EqualityComparer() => this.uniqueParameterNumber = 0;
@@ -204,108 +211,128 @@ namespace Microsoft.StreamProcessing
             if (e1 == e2) return true;
             if (e1 == null || e2 == null) return false;
             if (e1.NodeType != e2.NodeType) return false;
-            if (e1 is BinaryExpression b1)
+            switch (e1)
             {
-                var b2 = e2 as BinaryExpression;
-                return Equals(b1.Left, b2.Left) && Equals(b1.Right, b2.Right);
+                case BinaryExpression b1:
+                    {
+                        var b2 = e2 as BinaryExpression;
+                        return this.Equals(b1.Left, b2.Left) && this.Equals(b1.Right, b2.Right);
+                    }
+
+                case UnaryExpression u1:
+                    {
+                        var u2 = e2 as UnaryExpression;
+                        return this.Equals(u1.Operand, u2.Operand);
+                    }
+
+                case ConditionalExpression conditional1:
+                    {
+                        var conditional2 = e2 as ConditionalExpression;
+                        return this.Equals(conditional1.Test, conditional2.Test) && this.Equals(conditional1.IfTrue, conditional2.IfTrue) && this.Equals(conditional1.IfFalse, conditional2.IfFalse);
+                    }
+
+                case ConstantExpression constant1:
+                    {
+                        var constant2 = e2 as ConstantExpression;
+                        return constant1.Value == null ? constant2.Value == null : constant1.Value.Equals(constant2.Value);
+                    }
+
+                case ParameterExpression param1:
+                    {
+                        var param2 = e2 as ParameterExpression;
+                        return this.parameterMap[param1] == this.parameterMap[param2];
+                    }
+
+                case IndexExpression index1:
+                    {
+                        var index2 = e2 as IndexExpression;
+                        return this.Equals(index1.Object, index2.Object) && this.Equals(index1.Arguments, index2.Arguments);
+                    }
+
+                case InvocationExpression invoke1:
+                    {
+                        var invoke2 = e2 as InvocationExpression;
+                        return this.Equals(invoke1.Expression, invoke2.Expression) && this.Equals(invoke1.Arguments, invoke2.Arguments);
+                    }
+
+                case LambdaExpression lambda1:
+                    {
+                        var lambda2 = e2 as LambdaExpression;
+                        if (!lambda1.ReturnType.Equals(lambda2.ReturnType)) return false;
+                        if (lambda1.Parameters.Count != lambda2.Parameters.Count) return false;
+                        for (int i = 0; i < lambda1.Parameters.Count; i++)
+                        {
+                            var v1 = lambda1.Parameters[i];
+                            var v2 = lambda2.Parameters[i];
+                            this.parameterMap.Add(v1, this.uniqueParameterNumber);
+                            if (v1 != v2) this.parameterMap.Add(v2, this.uniqueParameterNumber);
+                            this.uniqueParameterNumber++;
+                        }
+                        var result = this.Equals(lambda1.Body, lambda2.Body);
+                        for (int i = 0; i < lambda1.Parameters.Count; i++)
+                        {
+                            this.parameterMap.Remove(lambda1.Parameters[i]);
+                            this.parameterMap.Remove(lambda2.Parameters[i]);
+                        }
+                        return result;
+                    }
+
+                case MemberExpression member1:
+                    {
+                        var member2 = e2 as MemberExpression;
+                        return member1.Member.Equals(member2.Member) && this.Equals(member1.Expression, member2.Expression);
+                    }
+
+                case MethodCallExpression mc1:
+                    {
+                        var mc2 = e2 as MethodCallExpression;
+                        return mc1.Method.Equals(mc2.Method) && this.Equals(mc1.Arguments, mc2.Arguments);
+                    }
+
+                case NewExpression new1:
+                    {
+                        var new2 = e2 as NewExpression;
+                        return new1.Constructor == null
+                            ? new2.Constructor == null
+                            : new1.Constructor.Equals(new2.Constructor) && this.Equals(new1.Arguments, new2.Arguments);
+                    }
+
+                case NewArrayExpression newarr1:
+                    {
+                        var newarr2 = e2 as NewArrayExpression;
+                        return newarr1.Type.Equals(newarr2.Type) && this.Equals(newarr1.Expressions, newarr2.Expressions);
+                    }
+
+                case MemberInitExpression memInit1:
+                    {
+                        var memInit2 = e2 as MemberInitExpression;
+                        return this.Equals(memInit1.NewExpression, memInit2.NewExpression) && memInit1.Bindings.Count == memInit2.Bindings.Count
+                            && memInit1.Bindings.Zip(memInit2.Bindings, (a, b) => Tuple.Create(a, b)).All(r => this.Equals(r.Item1, r.Item2));
+                    }
+
+                case BlockExpression block1:
+                    {
+                        var block2 = e2 as BlockExpression;
+                        return this.Equals(block1.Expressions, block2.Expressions);
+                    }
+
+                case LoopExpression loop1:
+                    {
+                        var loop2 = e2 as LoopExpression;
+                        return this.Equals(loop1.Body, loop2.Body)
+                            && loop1.BreakLabel.Name == loop2.BreakLabel.Name
+                            && loop1.ContinueLabel.Name == loop2.ContinueLabel.Name;
+                    }
+
+                case LabelExpression label1:
+                    {
+                        var label2 = e2 as LabelExpression;
+                        return this.Equals(label1.DefaultValue, label2.DefaultValue) && label1.Target.Name == label2.Target.Name;
+                    }
+
+                default:
+                    return false;
             }
-            if (e1 is UnaryExpression u1)
-            {
-                var u2 = e2 as UnaryExpression;
-                return Equals(u1.Operand, u2.Operand);
-            }
-            if (e1 is ConditionalExpression conditional1)
-            {
-                var conditional2 = e2 as ConditionalExpression;
-                return Equals(conditional1.Test, conditional2.Test) && Equals(conditional1.IfTrue, conditional2.IfTrue) && Equals(conditional1.IfFalse, conditional2.IfFalse);
-            }
-            if (e1 is ConstantExpression constant1)
-            {
-                var constant2 = e2 as ConstantExpression;
-                return constant1.Value == null ? constant2.Value == null : constant1.Value.Equals(constant2.Value);
-            }
-            if (e1 is ParameterExpression param1)
-            {
-                var param2 = e2 as ParameterExpression;
-                return this.parameterMap[param1] == this.parameterMap[param2];
-            }
-            if (e1 is IndexExpression index1)
-            {
-                var index2 = e2 as IndexExpression;
-                return Equals(index1.Object, index2.Object) && Equals(index1.Arguments, index2.Arguments);
-            }
-            if (e1 is InvocationExpression invoke1)
-            {
-                var invoke2 = e2 as InvocationExpression;
-                return Equals(invoke1.Expression, invoke2.Expression) && Equals(invoke1.Arguments, invoke2.Arguments);
-            }
-            if (e1 is LambdaExpression lambda1)
-            {
-                var lambda2 = e2 as LambdaExpression;
-                if (!lambda1.ReturnType.Equals(lambda2.ReturnType)) return false;
-                if (lambda1.Parameters.Count != lambda2.Parameters.Count) return false;
-                for (int i = 0; i < lambda1.Parameters.Count; i++)
-                {
-                    var v1 = lambda1.Parameters[i];
-                    var v2 = lambda2.Parameters[i];
-                    this.parameterMap.Add(v1, this.uniqueParameterNumber);
-                    if (v1 != v2) this.parameterMap.Add(v2, this.uniqueParameterNumber);
-                    this.uniqueParameterNumber++;
-                }
-                var result = Equals(lambda1.Body, lambda2.Body);
-                for (int i = 0; i < lambda1.Parameters.Count; i++)
-                {
-                    this.parameterMap.Remove(lambda1.Parameters[i]);
-                    this.parameterMap.Remove(lambda2.Parameters[i]);
-                }
-                return result;
-            }
-            if (e1 is MemberExpression member1)
-            {
-                var member2 = e2 as MemberExpression;
-                return member1.Member.Equals(member2.Member) && Equals(member1.Expression, member2.Expression);
-            }
-            if (e1 is MethodCallExpression mc1)
-            {
-                var mc2 = e2 as MethodCallExpression;
-                return mc1.Method.Equals(mc2.Method) && Equals(mc1.Arguments, mc2.Arguments);
-            }
-            if (e1 is NewExpression new1)
-            {
-                var new2 = e2 as NewExpression;
-                return new1.Constructor == null
-                    ? new2.Constructor == null
-                    : new1.Constructor.Equals(new2.Constructor) && Equals(new1.Arguments, new2.Arguments);
-            }
-            if (e1 is NewArrayExpression newarr1)
-            {
-                var newarr2 = e2 as NewArrayExpression;
-                return newarr1.Type.Equals(newarr2.Type) && Equals(newarr1.Expressions, newarr2.Expressions);
-            }
-            if (e1 is MemberInitExpression memInit1)
-            {
-                var memInit2 = e2 as MemberInitExpression;
-                return Equals(memInit1.NewExpression, memInit2.NewExpression) && memInit1.Bindings.Count == memInit2.Bindings.Count
-                    && memInit1.Bindings.Zip(memInit2.Bindings, (a, b) => Tuple.Create(a, b)).All(r => Equals(r.Item1, r.Item2));
-            }
-            if (e1 is BlockExpression block1)
-            {
-                var block2 = e2 as BlockExpression;
-                return Equals(block1.Expressions, block2.Expressions);
-            }
-            if (e1 is LoopExpression loop1)
-            {
-                var loop2 = e2 as LoopExpression;
-                return Equals(loop1.Body, loop2.Body)
-                    && loop1.BreakLabel.Name == loop2.BreakLabel.Name
-                    && loop1.ContinueLabel.Name == loop2.ContinueLabel.Name;
-            }
-            if (e1 is LabelExpression label1)
-            {
-                var label2 = e2 as LabelExpression;
-                return Equals(label1.DefaultValue, label2.DefaultValue) && label1.Target.Name == label2.Target.Name;
-            }
-            return false;
         }
 
         private bool Equals(ReadOnlyCollection<Expression> list1, ReadOnlyCollection<Expression> list2)
@@ -313,7 +340,7 @@ namespace Microsoft.StreamProcessing
             if (list1.Count != list2.Count) return false;
             for (int i = 0; i < list1.Count; i++)
             {
-                if (!Equals(list1[i], list2[i])) return false;
+                if (!this.Equals(list1[i], list2[i])) return false;
             }
             return true;
         }
@@ -328,7 +355,7 @@ namespace Microsoft.StreamProcessing
                         if (mb2.BindingType != MemberBindingType.Assignment) return false;
                         var a1 = mb1 as MemberAssignment;
                         var a2 = mb2 as MemberAssignment;
-                        return Equals(a1.Expression, a2.Expression);
+                        return this.Equals(a1.Expression, a2.Expression);
                     }
                 case MemberBindingType.ListBinding:
                     {
@@ -336,7 +363,7 @@ namespace Microsoft.StreamProcessing
                         var l1 = mb1 as MemberListBinding;
                         var l2 = mb2 as MemberListBinding;
                         return l1.Initializers.Count == l2.Initializers.Count
-                            && Enumerable.Range(0, l1.Initializers.Count).All(o => l1.Initializers[o].AddMethod == l2.Initializers[o].AddMethod && Equals(l1.Initializers[o].Arguments, l2.Initializers[o].Arguments));
+                            && Enumerable.Range(0, l1.Initializers.Count).All(o => l1.Initializers[o].AddMethod == l2.Initializers[o].AddMethod && this.Equals(l1.Initializers[o].Arguments, l2.Initializers[o].Arguments));
                     }
                 case MemberBindingType.MemberBinding:
                     {
@@ -344,7 +371,7 @@ namespace Microsoft.StreamProcessing
                         var v1 = mb1 as MemberMemberBinding;
                         var v2 = mb2 as MemberMemberBinding;
                         return v1.Bindings.Count == v2.Bindings.Count
-                            && Enumerable.Range(0, v1.Bindings.Count).All(o => Equals(v1.Bindings[o], v2.Bindings[o]));
+                            && Enumerable.Range(0, v1.Bindings.Count).All(o => this.Equals(v1.Bindings[o], v2.Bindings[o]));
                     }
                 default: throw new InvalidOperationException("Switch statement meant to be exhaustive.");
             }
@@ -353,7 +380,7 @@ namespace Microsoft.StreamProcessing
 
     internal sealed class VariableFinder : ExpressionVisitor
     {
-        private readonly List<object> foundVariables = new List<object>();
+        private readonly List<object> foundVariables = [];
 
         public static List<object> Find(Expression exp)
         {
@@ -367,11 +394,11 @@ namespace Microsoft.StreamProcessing
             // Looking for pattern Constant.Member, where Constant is not a primitive
             if (node.Expression != null
                 && node.Expression.NodeType == ExpressionType.Constant
-                && node.Member is FieldInfo
-                && !node.Expression.Type.GetTypeInfo().IsPrimitive)
+                && node.Member is FieldInfo info
+                && !node.Expression.Type.IsPrimitive)
             {
                 var c = (ConstantExpression)node.Expression;
-                var f = (FieldInfo)node.Member;
+                var f = info;
                 this.foundVariables.Add(f.GetValue(c.Value));
             }
             return node;
@@ -384,7 +411,7 @@ namespace Microsoft.StreamProcessing
 
         public static Expression InlineInvocation(InvocationExpression invokeExpression)
         {
-            if (!(invokeExpression.Expression is LambdaExpression lambda)) return invokeExpression;
+            if (invokeExpression.Expression is not LambdaExpression lambda) return invokeExpression;
             var map = new Dictionary<ParameterExpression, Expression>(invokeExpression.Arguments.Count);
             for (int i = 0; i < invokeExpression.Arguments.Count; i++)
             {
@@ -428,11 +455,11 @@ namespace Microsoft.StreamProcessing
     internal class ConvertToCSharp : ExpressionVisitor
     {
         public readonly TextWriter writer;
-        private readonly HashSet<ExpressionType> nonExpressionFeatures = new HashSet<ExpressionType>
-        {
+        private readonly HashSet<ExpressionType> nonExpressionFeatures =
+        [
             ExpressionType.Loop,
             ExpressionType.Block
-        };
+        ];
 
         public ConvertToCSharp(TextWriter writer) => this.writer = writer ?? throw new ArgumentNullException(nameof(writer));
 
@@ -444,7 +471,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (!first) this.writer.Write(", ");
                 first = false;
-                Visit(e);
+                this.Visit(e);
             }
 
             this.writer.Write(")");
@@ -470,9 +497,9 @@ namespace Microsoft.StreamProcessing
             {
                 this.writer.Write("(");
             }
-            Visit(node.Left);
-            Visit(node.NodeType);
-            Visit(node.Right);
+            this.Visit(node.Left);
+            this.Visit(node.NodeType);
+            this.Visit(node.Right);
             if (!node.NodeType.ToString().Contains("Assign"))
             {
                 this.writer.Write(")");
@@ -483,10 +510,10 @@ namespace Microsoft.StreamProcessing
         protected override Expression VisitBlock(BlockExpression node)
         {
             this.writer.WriteLine("{");
-            Visit(node.Variables);
+            this.Visit(node.Variables);
             foreach (var e in node.Expressions)
             {
-                Visit(e);
+                this.Visit(e);
                 this.writer.WriteLine(";");
             }
 
@@ -546,16 +573,15 @@ namespace Microsoft.StreamProcessing
                 this.writer.Write(string.Format(CultureInfo.InvariantCulture, "'{0}'", v));
                 return null;
             }
-            var typeInfo = t.GetTypeInfo();
-            if (typeof(Type).GetTypeInfo().IsAssignableFrom(typeInfo))
+            if (typeof(Type).IsAssignableFrom(t))
             {
                 this.writer.Write("typeof({0})", GetTypeName((Type)v));
                 return null;
             }
-            if (node.Type.GetTypeInfo().IsEnum)
+            if (node.Type.IsEnum)
             {
                 var remainingFlags = (Enum)v;
-                WriteDelimitedList(
+                this.WriteDelimitedList(
                     from name in Enum.GetNames(t)
                     let y = (Enum)Enum.Parse(t, name, false)
                     where remainingFlags.HasFlag(y)
@@ -564,7 +590,7 @@ namespace Microsoft.StreamProcessing
 
                 return null;
             }
-            if (!typeInfo.IsPrimitive && typeInfo.IsValueType && Nullable.GetUnderlyingType(t) == null && v.Equals(Activator.CreateInstance(t)))
+            if (!t.IsPrimitive && t.IsValueType && Nullable.GetUnderlyingType(t) == null && v.Equals(Activator.CreateInstance(t)))
             {
                 // A constant of a non-primitive struct type must be a default value for that type
                 // At least, that is what is assumed here.
@@ -632,14 +658,14 @@ namespace Microsoft.StreamProcessing
 
         protected override Expression VisitIndex(IndexExpression node)
         {
-            Visit(node.Object);
+            this.Visit(node.Object);
             this.writer.Write("[");
             var first = true;
             foreach (var arg in node.Arguments)
             {
                 if (!first) this.writer.Write(", ");
                 first = false;
-                Visit(arg);
+                this.Visit(arg);
             }
 
             this.writer.Write("]");
@@ -649,16 +675,16 @@ namespace Microsoft.StreamProcessing
         protected override Expression VisitInvocation(InvocationExpression node)
         {
             var inlinedLambda = ParameterSubstituter.InlineInvocation(node);
-            if (!(inlinedLambda is InvocationExpression))
+            if (inlinedLambda is not InvocationExpression)
             {
-                Visit(inlinedLambda);
+                this.Visit(inlinedLambda);
                 return null;
             }
 
             this.writer.Write("Invoke(");
             base.Visit(node.Expression);
             this.writer.Write(",");
-            Visit(node.Arguments);
+            this.Visit(node.Arguments);
             this.writer.Write(")");
             return null;
         }
@@ -701,7 +727,7 @@ namespace Microsoft.StreamProcessing
 
         protected override Expression VisitListInit(ListInitExpression node)
         {
-            Visit(node.NewExpression);
+            this.Visit(node.NewExpression);
             this.writer.Write("{");
             int j = 0;
             foreach (var i in node.Initializers)
@@ -709,7 +735,7 @@ namespace Microsoft.StreamProcessing
                 if (j++ > 0) this.writer.Write(", ");
                 if (i.Arguments.Count > 1) this.writer.Write(" {");
                 this.writer.Write(" ");
-                VisitCommaDelimitedList(i.Arguments);
+                this.VisitCommaDelimitedList(i.Arguments);
                 if (i.Arguments.Count > 1) this.writer.Write(" }");
             }
 
@@ -732,7 +758,7 @@ namespace Microsoft.StreamProcessing
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            if (node.Expression != null) Visit(node.Expression);
+            if (node.Expression != null) this.Visit(node.Expression);
             else
                 this.writer.Write(GetTypeName(node.Member.DeclaringType));
             this.writer.Write(".");
@@ -744,7 +770,7 @@ namespace Microsoft.StreamProcessing
         {
             this.writer.Write(node.Member.Name);
             this.writer.Write(" = ");
-            Visit(node.Expression);
+            this.Visit(node.Expression);
             return null;
         }
 
@@ -753,13 +779,13 @@ namespace Microsoft.StreamProcessing
 
         protected override Expression VisitMemberInit(MemberInitExpression node)
         {
-            Visit(node.NewExpression);
+            this.Visit(node.NewExpression);
             var first = true;
             this.writer.Write("{");
             foreach (var b in node.Bindings)
             {
                 if (!first) this.writer.Write(", ");
-                VisitMemberBinding(b);
+                this.VisitMemberBinding(b);
                 first = false;
             }
 
@@ -784,7 +810,7 @@ namespace Microsoft.StreamProcessing
             var isIndexer = node.Method.IsSpecialName && node.Method.Name.Equals("get_Item");
             if (node.Object != null)
             {
-                Visit(node.Object);
+                this.Visit(node.Object);
                 if (!isIndexer) this.writer.Write(".");
             }
             else
@@ -815,7 +841,7 @@ namespace Microsoft.StreamProcessing
                 first = false;
                 if (byRef[iter]) this.writer.Write("ref ");
                 iter++;
-                Visit(arg);
+                this.Visit(arg);
             }
 
             if (isIndexer)
@@ -846,7 +872,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (i > 0) this.writer.Write(", ");
                 if (isAnon) this.writer.Write("{0} = ", anonymousTypePropertyNames[i]);
-                Visit(arg);
+                this.Visit(arg);
                 i++;
             }
 
@@ -860,7 +886,7 @@ namespace Microsoft.StreamProcessing
         protected override Expression VisitNewArray(NewArrayExpression node)
         {
             this.writer.Write("new {0} {{ ", GetTypeName(node.Type));
-            VisitCommaDelimitedList(node.Expressions);
+            this.VisitCommaDelimitedList(node.Expressions);
 
             if (node.Expressions.Count > 0) this.writer.Write(" ");
 
@@ -913,12 +939,12 @@ namespace Microsoft.StreamProcessing
                 this.writer.Write("(");
                 this.writer.Write(GetTypeName(node.Type));
                 this.writer.Write(")");
-                Visit(node.Operand);
+                this.Visit(node.Operand);
             }
             else
             {
-                Visit(node.NodeType);
-                Visit(node.Operand);
+                this.Visit(node.NodeType);
+                this.Visit(node.Operand);
             }
 
             this.writer.Write(")");
@@ -1180,7 +1206,7 @@ namespace Microsoft.StreamProcessing
             this.writer.Write(" ");
         }
 
-        private void VisitCommaDelimitedList(IEnumerable<Expression> es) => VisitDelimitedList(es, ", ");
+        private void VisitCommaDelimitedList(IEnumerable<Expression> es) => this.VisitDelimitedList(es, ", ");
 
         private void VisitDelimitedList(IEnumerable<Expression> es, string delimiter)
         {
@@ -1189,7 +1215,7 @@ namespace Microsoft.StreamProcessing
             {
                 if (!first) this.writer.Write(delimiter);
                 first = false;
-                Visit(e);
+                this.Visit(e);
             }
         }
 
@@ -1260,14 +1286,14 @@ namespace Microsoft.StreamProcessing
         /// <returns>Null if the body could not be transformed</returns>
         public static LambdaExpression/*?*/ Transform(LambdaExpression rowOrientedLambda, IDictionary<ParameterExpression, SubstitutionInformation> substitutionInformation)
         {
-            Contract.Requires(rowOrientedLambda != null);
-            Contract.Requires(substitutionInformation != null);
+            ArgumentNullException.ThrowIfNull(rowOrientedLambda);
+            ArgumentNullException.ThrowIfNull(substitutionInformation);
             Contract.Requires(Contract.ForAll(substitutionInformation.Keys, k => rowOrientedLambda.Parameters.Contains(k)));
 
             var me = new ColumnOriented
             {
-                parameterTableForDecomposableTypes = new Dictionary<Tuple<ParameterExpression, string>, ParameterInformation>(),
-                parameterTableForAtomicTypes = new Dictionary<ParameterExpression, ParameterInformation>()
+                parameterTableForDecomposableTypes = [],
+                parameterTableForAtomicTypes = []
             };
             var parameterMapping = new Dictionary<ParameterExpression, ParameterExpression>();
             var i = 0;
@@ -1292,9 +1318,9 @@ namespace Microsoft.StreamProcessing
                 if (cr.noFields)
                 {
                     var columnarField = cr.PseudoField;
-                    var batchField = batchType.GetTypeInfo().GetField(columnarField.Name);
+                    var batchField = batchType.GetField(columnarField.Name);
                     var columnBatch = Expression.MakeMemberAccess(batchVariable, batchField);
-                    var colArrayOfColumnBatch = Expression.MakeMemberAccess(columnBatch, batchField.FieldType.GetTypeInfo().GetField("col"));
+                    var colArrayOfColumnBatch = Expression.MakeMemberAccess(columnBatch, batchField.FieldType.GetField("col"));
                     me.parameterTableForAtomicTypes.Add(
                         parameter,
                         new ParameterInformation { ArrayVariable = colArrayOfColumnBatch, IndexVariable = indexExpression, });
@@ -1304,13 +1330,13 @@ namespace Microsoft.StreamProcessing
                     foreach (var f in cr.Fields.Values)
                     {
                         Expression arrayToUse;
-                        var batchField = batchType.GetTypeInfo().GetField(f.Name);
+                        var batchField = batchType.GetField(f.Name);
                         var batchFieldType = batchField.FieldType;
-                        if (batchFieldType.GetTypeInfo().IsGenericType && batchFieldType.GetGenericTypeDefinition().Equals(typeof(ColumnBatch<>)))
+                        if (batchFieldType.IsGenericType && batchFieldType.GetGenericTypeDefinition().Equals(typeof(ColumnBatch<>)))
                         {
                             // ColumBatch<T> for some T
                             var columnBatch = Expression.MakeMemberAccess(batchVariable, batchField);
-                            var colArrayOfColumnBatch = Expression.MakeMemberAccess(columnBatch, batchField.FieldType.GetTypeInfo().GetField("col"));
+                            var colArrayOfColumnBatch = Expression.MakeMemberAccess(columnBatch, batchField.FieldType.GetField("col"));
                             arrayToUse = colArrayOfColumnBatch;
                         }
                         else if (batchFieldType.Equals(typeof(MultiString)))
@@ -1346,7 +1372,7 @@ namespace Microsoft.StreamProcessing
                 // decomposed into a columnar representation.
                 // So its value must be reconstructed from its columnar representation.
                 // Flag that this is happening so clients can decide what to do about it.
-                return ReconstructValue(node);
+                return this.ReconstructValue(node);
             }
             return base.VisitParameter(node);
         }
@@ -1369,8 +1395,7 @@ namespace Microsoft.StreamProcessing
                     fieldsDictionary
                     .Select(kv =>
                     {
-                        var memberInfo = t.GetTypeInfo().GetField(kv.Key.Item2) as MemberInfo;
-                        if (memberInfo == null) memberInfo = t.GetTypeInfo().GetProperty(kv.Key.Item2) as MemberInfo;
+                        var memberInfo = t.GetField(kv.Key.Item2) as MemberInfo ?? t.GetProperty(kv.Key.Item2);
                         return Expression.Bind(memberInfo, MakeIndexedAccessExpression(kv.Value));
                     }));
                 return memberInitExpression;
@@ -1459,7 +1484,7 @@ namespace Microsoft.StreamProcessing
         /// <returns></returns>
         public static LambdaExpression Transform(LambdaExpression inputLambda, IDictionary<ParameterExpression, string> parameterSubstitutionNames = null)
         {
-            Contract.Requires(inputLambda != null);
+            ArgumentNullException.ThrowIfNull(inputLambda);
             Contract.Requires(parameterSubstitutionNames == null || Contract.ForAll(parameterSubstitutionNames.Keys, p => inputLambda.Parameters.Contains(p)));
 
             var me = new IntroduceArrayVariables
@@ -1479,7 +1504,7 @@ namespace Microsoft.StreamProcessing
 
         protected override Expression VisitIndex(IndexExpression node)
         {
-            if (!(node.Object is MemberExpression colFieldAccess)) goto JustVisit;
+            if (node.Object is not MemberExpression colFieldAccess) goto JustVisit;
             var colMember = colFieldAccess.Member as FieldInfo;
             if (colMember == null) goto JustVisit;
             ParameterExpression batchVariable;
@@ -1488,7 +1513,7 @@ namespace Microsoft.StreamProcessing
             {
                 // then the colMember should be "col" in the expression "b.f.col"
                 if (!colMember.Name.Equals("col")) goto JustVisit;
-                if (!(colFieldAccess.Expression is MemberExpression FAccess)) goto JustVisit;
+                if (colFieldAccess.Expression is not MemberExpression FAccess) goto JustVisit;
                 fieldInfo = FAccess.Member as FieldInfo;
                 if (fieldInfo == null) goto JustVisit;
                 batchVariable = FAccess.Expression as ParameterExpression;
@@ -1596,7 +1621,7 @@ namespace Microsoft.StreamProcessing
 
         public static bool FoundInstance(LambdaExpression function)
         {
-            Contract.Requires(function != null);
+            ArgumentNullException.ThrowIfNull(function);
 
             var hashSet = new HashSet<ParameterExpression>(function.Parameters);
             var me = new ParameterInstanceFinder(hashSet);
@@ -1609,12 +1634,12 @@ namespace Microsoft.StreamProcessing
             if (node.Object != null)
             {
                 if (node.Object is ParameterExpression p && this.parameters.Contains(p)) this.foundInstance = true;
-                Visit(node.Object);
+                this.Visit(node.Object);
             }
             foreach (var arg in node.Arguments)
             {
                 if (arg is ParameterExpression p && this.parameters.Contains(p)) this.foundInstance = true;
-                Visit(arg);
+                this.Visit(arg);
             }
             return node;
         }
@@ -1622,11 +1647,11 @@ namespace Microsoft.StreamProcessing
         protected override Expression VisitBinary(BinaryExpression node)
         {
             if (node.Left is ParameterExpression p && this.parameters.Contains(p)) this.foundInstance = true;
-            Visit(node.Left);
+            this.Visit(node.Left);
 
             p = node.Right as ParameterExpression;
             if (p != null && this.parameters.Contains(p)) this.foundInstance = true;
-            Visit(node.Right);
+            this.Visit(node.Right);
 
             return node;
         }
@@ -1634,7 +1659,7 @@ namespace Microsoft.StreamProcessing
         protected override Expression VisitUnary(UnaryExpression node)
         {
             if (node.Operand is ParameterExpression p && this.parameters.Contains(p)) this.foundInstance = true;
-            Visit(node.Operand);
+            this.Visit(node.Operand);
 
             return node;
         }
@@ -1642,15 +1667,15 @@ namespace Microsoft.StreamProcessing
         protected override Expression VisitConditional(ConditionalExpression node)
         {
             if (node.Test is ParameterExpression p && this.parameters.Contains(p)) this.foundInstance = true;
-            Visit(node.Test);
+            this.Visit(node.Test);
 
             p = node.IfTrue as ParameterExpression;
             if (p != null && this.parameters.Contains(p)) this.foundInstance = true;
-            Visit(node.IfTrue);
+            this.Visit(node.IfTrue);
 
             p = node.IfFalse as ParameterExpression;
             if (p != null && this.parameters.Contains(p)) this.foundInstance = true;
-            Visit(node.IfFalse);
+            this.Visit(node.IfFalse);
 
             return node;
         }

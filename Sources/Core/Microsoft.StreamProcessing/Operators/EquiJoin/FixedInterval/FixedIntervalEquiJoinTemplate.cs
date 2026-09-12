@@ -531,7 +531,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
     }
 
 ");
- if (!this.leftType.GetTypeInfo().IsValueType) { 
+ if (!this.leftType.IsValueType) { 
             this.Write("    [DataContract]\r\n    private struct ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ActiveEventTypeLeft));
             this.Write("\r\n    {\r\n        ");
@@ -544,7 +544,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
  } 
             this.Write("    }\r\n");
  } 
- if (!this.rightType.GetTypeInfo().IsValueType) { 
+ if (!this.rightType.IsValueType) { 
             this.Write("    [DataContract]\r\n    private struct ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ActiveEventTypeRight));
             this.Write("\r\n    {\r\n        ");

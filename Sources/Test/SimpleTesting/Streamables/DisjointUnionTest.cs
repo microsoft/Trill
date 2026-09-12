@@ -22,7 +22,7 @@ namespace SimpleTesting
 
             var actualOutput = new List<StreamEvent<int>>();
             var union = new MultiUnionStreamable<Empty, int>(new IStreamable<Empty, int>[] { leftInput, rightInput }, guaranteedDisjoint: true);
-            var egress = qc.RegisterOutput(union).ForEachAsync(o => actualOutput.Add(o));
+            var egress = qc.RegisterOutput(union).ForEachAsync(actualOutput.Add);
             var process = qc.Restore();
 
             left.OnNext(StreamEvent.CreatePoint(100, 1));
@@ -70,7 +70,7 @@ namespace SimpleTesting
             var actualOutput = new List<PartitionedStreamEvent<int, int>>();
             var inputs = new IStreamable<PartitionKey<int>, int>[] { leftInput, rightInput };
             var union = new MultiUnionStreamable<PartitionKey<int>, int>(inputs, guaranteedDisjoint: true);
-            var egress = qc.RegisterOutput(union).ForEachAsync(o => actualOutput.Add(o));
+            var egress = qc.RegisterOutput(union).ForEachAsync(actualOutput.Add);
             var process = qc.Restore();
 
             left.OnNext(PartitionedStreamEvent.CreatePoint(leftKey, 100, 1));
@@ -118,7 +118,7 @@ namespace SimpleTesting
             var actualOutput = new List<PartitionedStreamEvent<int, int>>();
             var inputs = new IStreamable<PartitionKey<int>, int>[] { leftInput, rightInput };
             var union = new MultiUnionStreamable<PartitionKey<int>, int>(inputs, guaranteedDisjoint: true);
-            var egress = qc.RegisterOutput(union).ForEachAsync(o => actualOutput.Add(o));
+            var egress = qc.RegisterOutput(union).ForEachAsync(actualOutput.Add);
             var process = qc.Restore();
 
             left.OnNext(PartitionedStreamEvent.CreatePoint(leftKey, 100, 1));

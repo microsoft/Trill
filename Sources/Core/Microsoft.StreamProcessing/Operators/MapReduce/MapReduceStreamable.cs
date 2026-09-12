@@ -33,7 +33,7 @@ namespace Microsoft.StreamProcessing
             sourceLeft.Properties.MapReduce
             (sourceRight?.Properties, mapper, keySelector, reducer, resultSelector))
         {
-            Contract.Requires(sourceLeft != null);
+            ArgumentNullException.ThrowIfNull(sourceLeft);
 
             this.sourceLeft = sourceLeft;
             this.sourceRight = sourceRight;
@@ -225,7 +225,7 @@ namespace Microsoft.StreamProcessing
             sourceLeft.Properties.MapReduce
             (sourceRight?.Properties, mapper, keySelector, reducer, resultSelector))
         {
-            Contract.Requires(sourceLeft != null);
+            ArgumentNullException.ThrowIfNull(sourceLeft);
 
             this.sourceLeft = sourceLeft;
             this.sourceRight = sourceRight;

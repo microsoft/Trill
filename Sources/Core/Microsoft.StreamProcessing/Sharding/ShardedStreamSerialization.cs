@@ -53,7 +53,7 @@ namespace Microsoft.StreamProcessing.Sharding
         private readonly StateSerializer<QueuedMessage<StreamMessage<TKey, TPayload>>> serializer;
 
         private readonly Stream destination;
-        private readonly AutoResetEvent done = new AutoResetEvent(false);
+        private readonly AutoResetEvent done = new(false);
 
         // TODO: This appears to be copied code from Binary egress - can we unify?
         public ShardedSerializerObserver(Stream destination, StreamProperties<TKey, TPayload> sourceProps, bool writePropertiesToStream = false)

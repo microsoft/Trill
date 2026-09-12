@@ -35,8 +35,8 @@ namespace Microsoft.StreamProcessing.Aggregates
 <#= IterateCommaLine("            IAggregate<TInput, TState$, TResult$> aggregate$", count) #>,
             Expression<Func<<#= IterateComma("TResult$", count) #>, TResult>> merger)
         {
-<#= IterateLine("            Contract.Requires(aggregate$ != null);", count) #>
-            Contract.Requires(merger != null);
+<#= IterateLine("            ArgumentNullException.ThrowIfNull(aggregate$);", count) #>
+            ArgumentNullException.ThrowIfNull(merger);
 
             var duplicate = new bool[<#= count #>];
 <# for (int i = 1; i <= count; i++) { #>

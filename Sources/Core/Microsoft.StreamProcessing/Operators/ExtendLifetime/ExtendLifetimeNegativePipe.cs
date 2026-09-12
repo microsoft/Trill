@@ -25,11 +25,11 @@ namespace Microsoft.StreamProcessing
         private StreamMessage<TKey, TPayload> output;
 
         [DataMember]
-        private FastMap<ActiveEvent> syncTimeMap = new FastMap<ActiveEvent>();
+        private FastMap<ActiveEvent> syncTimeMap = new();
         [DataMember]
-        private EndPointHeap endPointHeap = new EndPointHeap();
+        private EndPointHeap endPointHeap = new();
         [DataMember]
-        private Dictionary<long, List<ActiveEvent>> contractedToZero = new Dictionary<long, List<ActiveEvent>>();
+        private Dictionary<long, List<ActiveEvent>> contractedToZero = [];
 
         [SchemaSerialization]
         private readonly Expression<Func<TKey, TKey, bool>> keyComparerExpr;
@@ -99,7 +99,7 @@ namespace Microsoft.StreamProcessing
                     this.output.hash.col[ind] = activeEvent.Hash;
                 }
 
-                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
 
                 this.syncTimeMap.Remove(index);
             }
@@ -115,7 +115,7 @@ namespace Microsoft.StreamProcessing
                 {
                     if ((bv[i >> 6] & (1L << (i & 0x3f))) == 0)
                     {
-                        if (batch.vsync.col[i] >= StreamEvent.MinSyncTime + this.duration) ReachTime(batch.vsync.col[i] - this.duration);
+                        if (batch.vsync.col[i] >= StreamEvent.MinSyncTime + this.duration) this.ReachTime(batch.vsync.col[i] - this.duration);
 
                         if (batch.vother.col[i] == StreamEvent.InfinitySyncTime)
                         {
@@ -164,14 +164,14 @@ namespace Microsoft.StreamProcessing
                                 this.output[ind] = batch[i];
                                 this.output.hash.col[ind] = batch.hash.col[i];
 
-                                if (this.output.Count == Config.DataBatchSize) FlushContents();
+                                if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                             }
                         }
                     }
                     else if (batch.vother.col[i] == long.MinValue)
                     {
                         long syncTime = (batch.vsync.col[i] == StreamEvent.InfinitySyncTime ? StreamEvent.InfinitySyncTime : batch.vsync.col[i] - this.duration);
-                        ReachTime(syncTime);
+                        this.ReachTime(syncTime);
 
                         int ind = this.output.Count++;
                         this.output.vsync.col[ind] = syncTime;
@@ -181,7 +181,7 @@ namespace Microsoft.StreamProcessing
                         this.output.hash.col[ind] = batch.hash.col[i];
                         this.output.bitvector.col[ind >> 6] |= 1L << (ind & 0x3f);
 
-                        if (this.output.Count == Config.DataBatchSize) FlushContents();
+                        if (this.output.Count == Config.DataBatchSize) this.FlushContents();
                     }
                 }
             }
@@ -226,7 +226,7 @@ namespace Microsoft.StreamProcessing
                 this.Hash = hash;
             }
 
-            public override string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
+            public override readonly string ToString() => "Key='" + this.Key + "', Payload='" + this.Payload;
         }
     }
 }

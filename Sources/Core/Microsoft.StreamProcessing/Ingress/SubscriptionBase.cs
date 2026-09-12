@@ -67,7 +67,7 @@ namespace Microsoft.StreamProcessing.Internal
                 onCompletedPolicy,
                 diagnosticOutput)
         {
-            Contract.Requires(observable != null);
+            ArgumentNullException.ThrowIfNull(observable);
 
             this.primaryAction = () => observable.Subscribe(this);
         }
@@ -176,7 +176,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<Tuple<long, TResult>, ElasticCircularBuffer<AdjustInfo>> startEventInformation = new Dictionary<Tuple<long, TResult>, ElasticCircularBuffer<AdjustInfo>>(1);
+        protected Dictionary<Tuple<long, TResult>, ElasticCircularBuffer<AdjustInfo>> startEventInformation = new(1);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -246,8 +246,8 @@ namespace Microsoft.StreamProcessing.Internal
             IObserver<OutOfOrderStreamEvent<TPayload>> diagnosticOutput)
             : base(streamable, observer)
         {
-            Contract.Requires(observer != null);
-            Contract.Requires(punctuationPolicy != null);
+            ArgumentNullException.ThrowIfNull(observer);
+            ArgumentNullException.ThrowIfNull(punctuationPolicy);
 
             this.IngressSiteIdentifier = identifier;
             this.disorderString = disorderPolicy.ToString();
@@ -271,7 +271,7 @@ namespace Microsoft.StreamProcessing.Internal
             this.currentBatch.Allocate();
             this.errorMessages = streamable.ErrorMessages;
 
-            this.subscription = new DelayedSubscription(PrimaryAction);
+            this.subscription = new DelayedSubscription(this.PrimaryAction);
         }
 
         /// <summary>
@@ -312,11 +312,11 @@ namespace Microsoft.StreamProcessing.Internal
             if (this.flushPolicy == FlushPolicy.FlushOnPunctuation ||
                 (this.flushPolicy == FlushPolicy.FlushOnBatchBoundary && this.currentBatch.Count == Config.DataBatchSize))
             {
-                OnFlush();
+                this.OnFlush();
             }
             else if (this.currentBatch.Count == Config.DataBatchSize)
             {
-                FlushContents();
+                this.FlushContents();
             }
         }
 
@@ -340,7 +340,7 @@ namespace Microsoft.StreamProcessing.Internal
         {
             if (this.onCompletedPolicy != OnCompletedPolicy.None)
             {
-                OnCompleted(this.onCompletedPolicy == OnCompletedPolicy.Flush ? this.currentTime : StreamEvent.InfinitySyncTime);
+                this.OnCompleted(this.onCompletedPolicy == OnCompletedPolicy.Flush ? this.currentTime : StreamEvent.InfinitySyncTime);
             }
 
             base.OnCompleted();
@@ -394,7 +394,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="managed"></param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public virtual void Dispose(bool managed) => Dispose();
+        public virtual void Dispose(bool managed) => this.Dispose();
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -510,7 +510,7 @@ namespace Microsoft.StreamProcessing.Internal
             public void Enable()
             {
                 this.inner = this.func();
-                if (this.disposed) DisposeInternal();
+                if (this.disposed) this.DisposeInternal();
             }
 
             /// <summary>
@@ -519,7 +519,7 @@ namespace Microsoft.StreamProcessing.Internal
             [EditorBrowsable(EditorBrowsableState.Never)]
             public void Dispose()
             {
-                if (this.inner != null) DisposeInternal();
+                if (this.inner != null) this.DisposeInternal();
                 this.disposed = true;
             }
 
@@ -580,7 +580,7 @@ namespace Microsoft.StreamProcessing.Internal
                 onCompletedPolicy,
                 diagnosticOutput)
         {
-            Contract.Requires(observable != null);
+            ArgumentNullException.ThrowIfNull(observable);
 
             this.primaryAction = () => observable.Subscribe(this);
         }
@@ -689,7 +689,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<Tuple<long, TPayload>, ElasticCircularBuffer<AdjustInfo>> startEventInformation = new Dictionary<Tuple<long, TPayload>, ElasticCircularBuffer<AdjustInfo>>(1);
+        protected Dictionary<Tuple<long, TPayload>, ElasticCircularBuffer<AdjustInfo>> startEventInformation = new(1);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -759,8 +759,8 @@ namespace Microsoft.StreamProcessing.Internal
             IObserver<OutOfOrderStreamEvent<TPayload>> diagnosticOutput)
             : base(streamable, observer)
         {
-            Contract.Requires(observer != null);
-            Contract.Requires(punctuationPolicy != null);
+            ArgumentNullException.ThrowIfNull(observer);
+            ArgumentNullException.ThrowIfNull(punctuationPolicy);
 
             this.IngressSiteIdentifier = identifier;
             this.disorderString = disorderPolicy.ToString();
@@ -784,7 +784,7 @@ namespace Microsoft.StreamProcessing.Internal
             this.currentBatch.Allocate();
             this.errorMessages = streamable.ErrorMessages;
 
-            this.subscription = new DelayedSubscription(PrimaryAction);
+            this.subscription = new DelayedSubscription(this.PrimaryAction);
         }
 
         /// <summary>
@@ -825,11 +825,11 @@ namespace Microsoft.StreamProcessing.Internal
             if (this.flushPolicy == FlushPolicy.FlushOnPunctuation ||
                 (this.flushPolicy == FlushPolicy.FlushOnBatchBoundary && this.currentBatch.Count == Config.DataBatchSize))
             {
-                OnFlush();
+                this.OnFlush();
             }
             else if (this.currentBatch.Count == Config.DataBatchSize)
             {
-                FlushContents();
+                this.FlushContents();
             }
         }
 
@@ -853,7 +853,7 @@ namespace Microsoft.StreamProcessing.Internal
         {
             if (this.onCompletedPolicy != OnCompletedPolicy.None)
             {
-                OnCompleted(this.onCompletedPolicy == OnCompletedPolicy.Flush ? this.currentTime : StreamEvent.InfinitySyncTime);
+                this.OnCompleted(this.onCompletedPolicy == OnCompletedPolicy.Flush ? this.currentTime : StreamEvent.InfinitySyncTime);
             }
 
             base.OnCompleted();
@@ -907,7 +907,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="managed"></param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public virtual void Dispose(bool managed) => Dispose();
+        public virtual void Dispose(bool managed) => this.Dispose();
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1023,7 +1023,7 @@ namespace Microsoft.StreamProcessing.Internal
             public void Enable()
             {
                 this.inner = this.func();
-                if (this.disposed) DisposeInternal();
+                if (this.disposed) this.DisposeInternal();
             }
 
             /// <summary>
@@ -1032,7 +1032,7 @@ namespace Microsoft.StreamProcessing.Internal
             [EditorBrowsable(EditorBrowsableState.Never)]
             public void Dispose()
             {
-                if (this.inner != null) DisposeInternal();
+                if (this.inner != null) this.DisposeInternal();
                 this.disposed = true;
             }
 
@@ -1097,7 +1097,7 @@ namespace Microsoft.StreamProcessing.Internal
                 onCompletedPolicy,
                 diagnosticOutput)
         {
-            Contract.Requires(observable != null);
+            ArgumentNullException.ThrowIfNull(observable);
 
             this.primaryAction = () => observable.Subscribe(this);
         }
@@ -1130,8 +1130,6 @@ namespace Microsoft.StreamProcessing.Internal
     /// <typeparam name="TPayload"></typeparam>
     /// <typeparam name="TResult"></typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1008:OpeningParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
     public abstract class DisorderedPartitionedSubscriptionBase<TKey, TIngressStructure, TPayload, TResult> : Pipe<PartitionKey<TKey>, TResult>, IIngressStreamObserver
     {
         private readonly string errorMessages;
@@ -1212,7 +1210,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<TKey, long> currentTime = new Dictionary<TKey, long>();
+        protected Dictionary<TKey, long> currentTime = [];
 
 #if DEBUG
         /// <summary>
@@ -1221,7 +1219,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<TKey, long> lastEventTime = new Dictionary<TKey, long>();
+        protected Dictionary<TKey, long> lastEventTime = [];
 #endif
 
         /// <summary>
@@ -1229,13 +1227,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<Tuple<long, TResult>, ElasticCircularBuffer<AdjustInfo>> startEventInformation = new Dictionary<Tuple<long, TResult>, ElasticCircularBuffer<AdjustInfo>>(1);
+        protected Dictionary<Tuple<long, TResult>, ElasticCircularBuffer<AdjustInfo>> startEventInformation = new(1);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
-        protected Dictionary<TKey, (long lastPunctuation, long lastPunctuationQuantized)> lastPunctuationTime = new Dictionary<TKey, (long, long)>();
+        protected Dictionary<TKey, (long lastPunctuation, long lastPunctuationQuantized)> lastPunctuationTime = [];
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1251,7 +1249,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<TKey, long> partitionHighWatermarks = new Dictionary<TKey, long>();
+        protected Dictionary<TKey, long> partitionHighWatermarks = [];
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1260,7 +1258,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// NB: Do not mark as DataMember or as state managed: this is an inversion of existing data in field partitionHighWatermarks.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected SortedDictionary<long, HashSet<TKey>> highWatermarkToPartitionsMap = new SortedDictionary<long, HashSet<TKey>>();
+        protected SortedDictionary<long, HashSet<TKey>> highWatermarkToPartitionsMap = [];
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1339,9 +1337,9 @@ namespace Microsoft.StreamProcessing.Internal
             IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>> diagnosticOutput)
             : base(streamable, observer)
         {
-            Contract.Requires(observer != null);
-            Contract.Requires(punctuationPolicy != null);
-            Contract.Requires(lowWatermarkPolicy != null);
+            ArgumentNullException.ThrowIfNull(observer);
+            ArgumentNullException.ThrowIfNull(punctuationPolicy);
+            ArgumentNullException.ThrowIfNull(lowWatermarkPolicy);
 
             this.IngressSiteIdentifier = identifier;
             this.disorderString = disorderPolicy.ToString();
@@ -1369,7 +1367,7 @@ namespace Microsoft.StreamProcessing.Internal
             this.currentBatch.Allocate();
             this.errorMessages = streamable.ErrorMessages;
 
-            this.subscription = new DelayedSubscription(PrimaryAction);
+            this.subscription = new DelayedSubscription(this.PrimaryAction);
         }
 
         /// <summary>
@@ -1396,7 +1394,7 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                UpdatePunctuation(value.PartitionKey, value.SyncTime);
+                this.UpdatePunctuation(value.PartitionKey, value.SyncTime);
             }
 
             var count = this.currentBatch.Count;
@@ -1404,8 +1402,8 @@ namespace Microsoft.StreamProcessing.Internal
             this.currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
             if (this.currentBatch.Count == Config.DataBatchSize)
             {
-                if (this.flushPolicy == PartitionedFlushPolicy.FlushOnBatchBoundary) OnFlush();
-                else FlushContents();
+                if (this.flushPolicy == PartitionedFlushPolicy.FlushOnBatchBoundary) this.OnFlush();
+                else this.FlushContents();
             }
         }
 
@@ -1474,7 +1472,7 @@ namespace Microsoft.StreamProcessing.Internal
         {
             if (this.onCompletedPolicy != OnCompletedPolicy.None)
             {
-                OnCompleted(this.onCompletedPolicy == OnCompletedPolicy.Flush ? this.currentTime.Values.Max() : StreamEvent.InfinitySyncTime);
+                this.OnCompleted(this.onCompletedPolicy == OnCompletedPolicy.Flush ? this.currentTime.Values.Max() : StreamEvent.InfinitySyncTime);
             }
 
             base.OnCompleted();
@@ -1528,7 +1526,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="managed"></param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public virtual void Dispose(bool managed) => Dispose();
+        public virtual void Dispose(bool managed) => this.Dispose();
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1644,7 +1642,7 @@ namespace Microsoft.StreamProcessing.Internal
             public void Enable()
             {
                 this.inner = this.func();
-                if (this.disposed) DisposeInternal();
+                if (this.disposed) this.DisposeInternal();
             }
 
             /// <summary>
@@ -1653,7 +1651,7 @@ namespace Microsoft.StreamProcessing.Internal
             [EditorBrowsable(EditorBrowsableState.Never)]
             public void Dispose()
             {
-                if (this.inner != null) DisposeInternal();
+                if (this.inner != null) this.DisposeInternal();
                 this.disposed = true;
             }
 
@@ -1718,7 +1716,7 @@ namespace Microsoft.StreamProcessing.Internal
                 onCompletedPolicy,
                 diagnosticOutput)
         {
-            Contract.Requires(observable != null);
+            ArgumentNullException.ThrowIfNull(observable);
 
             this.primaryAction = () => observable.Subscribe(this);
         }
@@ -1751,8 +1749,6 @@ namespace Microsoft.StreamProcessing.Internal
     /// <typeparam name="TPayload"></typeparam>
     /// <typeparam name="TResult"></typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1008:OpeningParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1009:ClosingParenthesisMustBeSpacedCorrectly", Justification = "ValueTuples")]
     public abstract class PartitionedSubscriptionBase<TKey, TIngressStructure, TPayload, TResult> : Pipe<PartitionKey<TKey>, TResult>, IIngressStreamObserver
     {
         private readonly string errorMessages;
@@ -1833,7 +1829,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<TKey, long> currentTime = new Dictionary<TKey, long>();
+        protected Dictionary<TKey, long> currentTime = [];
 
 #if DEBUG
         /// <summary>
@@ -1842,7 +1838,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<TKey, long> lastEventTime = new Dictionary<TKey, long>();
+        protected Dictionary<TKey, long> lastEventTime = [];
 #endif
 
         /// <summary>
@@ -1850,13 +1846,13 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<Tuple<long, TPayload>, ElasticCircularBuffer<AdjustInfo>> startEventInformation = new Dictionary<Tuple<long, TPayload>, ElasticCircularBuffer<AdjustInfo>>(1);
+        protected Dictionary<Tuple<long, TPayload>, ElasticCircularBuffer<AdjustInfo>> startEventInformation = new(1);
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [DataMember]
-        protected Dictionary<TKey, (long lastPunctuation, long lastPunctuationQuantized)> lastPunctuationTime = new Dictionary<TKey, (long, long)>();
+        protected Dictionary<TKey, (long lastPunctuation, long lastPunctuationQuantized)> lastPunctuationTime = [];
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1872,7 +1868,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         [DataMember]
-        protected Dictionary<TKey, long> partitionHighWatermarks = new Dictionary<TKey, long>();
+        protected Dictionary<TKey, long> partitionHighWatermarks = [];
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1881,7 +1877,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// NB: Do not mark as DataMember or as state managed: this is an inversion of existing data in field partitionHighWatermarks.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected SortedDictionary<long, HashSet<TKey>> highWatermarkToPartitionsMap = new SortedDictionary<long, HashSet<TKey>>();
+        protected SortedDictionary<long, HashSet<TKey>> highWatermarkToPartitionsMap = [];
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -1960,9 +1956,9 @@ namespace Microsoft.StreamProcessing.Internal
             IObserver<OutOfOrderPartitionedStreamEvent<TKey, TPayload>> diagnosticOutput)
             : base(streamable, observer)
         {
-            Contract.Requires(observer != null);
-            Contract.Requires(punctuationPolicy != null);
-            Contract.Requires(lowWatermarkPolicy != null);
+            ArgumentNullException.ThrowIfNull(observer);
+            ArgumentNullException.ThrowIfNull(punctuationPolicy);
+            ArgumentNullException.ThrowIfNull(lowWatermarkPolicy);
 
             this.IngressSiteIdentifier = identifier;
             this.disorderString = disorderPolicy.ToString();
@@ -1990,7 +1986,7 @@ namespace Microsoft.StreamProcessing.Internal
             this.currentBatch.Allocate();
             this.errorMessages = streamable.ErrorMessages;
 
-            this.subscription = new DelayedSubscription(PrimaryAction);
+            this.subscription = new DelayedSubscription(this.PrimaryAction);
         }
 
         /// <summary>
@@ -2017,7 +2013,7 @@ namespace Microsoft.StreamProcessing.Internal
 
             if (this.punctuationPolicyType == PeriodicPunctuationPolicyType.Time)
             {
-                UpdatePunctuation(value.PartitionKey, value.SyncTime);
+                this.UpdatePunctuation(value.PartitionKey, value.SyncTime);
             }
 
             var count = this.currentBatch.Count;
@@ -2025,8 +2021,8 @@ namespace Microsoft.StreamProcessing.Internal
             this.currentBatch.bitvector.col[count >> 6] |= (1L << (count & 0x3f));
             if (this.currentBatch.Count == Config.DataBatchSize)
             {
-                if (this.flushPolicy == PartitionedFlushPolicy.FlushOnBatchBoundary) OnFlush();
-                else FlushContents();
+                if (this.flushPolicy == PartitionedFlushPolicy.FlushOnBatchBoundary) this.OnFlush();
+                else this.FlushContents();
             }
         }
 
@@ -2095,7 +2091,7 @@ namespace Microsoft.StreamProcessing.Internal
         {
             if (this.onCompletedPolicy != OnCompletedPolicy.None)
             {
-                OnCompleted(this.onCompletedPolicy == OnCompletedPolicy.Flush ? this.currentTime.Values.Max() : StreamEvent.InfinitySyncTime);
+                this.OnCompleted(this.onCompletedPolicy == OnCompletedPolicy.Flush ? this.currentTime.Values.Max() : StreamEvent.InfinitySyncTime);
             }
 
             base.OnCompleted();
@@ -2149,7 +2145,7 @@ namespace Microsoft.StreamProcessing.Internal
         /// <param name="managed"></param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public virtual void Dispose(bool managed) => Dispose();
+        public virtual void Dispose(bool managed) => this.Dispose();
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
@@ -2265,7 +2261,7 @@ namespace Microsoft.StreamProcessing.Internal
             public void Enable()
             {
                 this.inner = this.func();
-                if (this.disposed) DisposeInternal();
+                if (this.disposed) this.DisposeInternal();
             }
 
             /// <summary>
@@ -2274,7 +2270,7 @@ namespace Microsoft.StreamProcessing.Internal
             [EditorBrowsable(EditorBrowsableState.Never)]
             public void Dispose()
             {
-                if (this.inner != null) DisposeInternal();
+                if (this.inner != null) this.DisposeInternal();
                 this.disposed = true;
             }
 

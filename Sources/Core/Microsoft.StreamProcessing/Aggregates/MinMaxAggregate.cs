@@ -16,7 +16,7 @@ namespace Microsoft.StreamProcessing.Aggregates
 
         protected MinMaxAggregateBase(IComparerExpression<T> comparer, QueryContainer container)
         {
-            Contract.Requires(comparer != null);
+            ArgumentNullException.ThrowIfNull(comparer);
 
             var generator = comparer.CreateSortedDictionaryGenerator<T, long>(container);
             Expression<Func<Func<SortedDictionary<T, long>>, MinMaxState<T>>> template
@@ -26,7 +26,7 @@ namespace Microsoft.StreamProcessing.Aggregates
         }
 
         private readonly Expression<Func<MinMaxState<T>>> initialState;
-        public Expression<Func<MinMaxState<T>>> InitialState() => initialState;
+        public Expression<Func<MinMaxState<T>>> InitialState() => this.initialState;
 
         private static readonly Expression<Func<MinMaxState<T>, long, T, MinMaxState<T>>> acc
             = (set, timestamp, input) => new MinMaxState<T> { savedValues = set.savedValues.Add(input) };

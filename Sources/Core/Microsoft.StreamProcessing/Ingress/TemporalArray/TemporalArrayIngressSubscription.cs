@@ -164,20 +164,20 @@ namespace Microsoft.StreamProcessing
                     var current = value.Array[offset];
                     if (current.SyncTime < this.currentTime) current = StreamEvent.CreatePunctuation<TPayload>(this.currentTime);
                     Array.Clear(this.currentBatch.hash.col, 0, this.currentBatch.hash.col.Length);
-                    OnPunctuation(current);
+                    this.OnPunctuation(current);
                     offset++;
                 }
                 else if (full)
                 {
                     Array.Clear(this.currentBatch.hash.col, 0, this.currentBatch.hash.col.Length);
-                    FlushContents();
+                    this.FlushContents();
                 }
             }
         }
 
         protected override void OnCompleted(long punctuationTime)
         {
-            OnNext(new ArraySegment<StreamEvent<TPayload>>(new[] { StreamEvent.CreatePunctuation<TPayload>(punctuationTime) }));
+            this.OnNext(new ArraySegment<StreamEvent<TPayload>>([StreamEvent.CreatePunctuation<TPayload>(punctuationTime)]));
         }
     }
 
@@ -251,7 +251,7 @@ namespace Microsoft.StreamProcessing
                 if (full)
                 {
                     Array.Clear(this.currentBatch.hash.col, 0, this.currentBatch.hash.col.Length);
-                    FlushContents();
+                    this.FlushContents();
                 }
             }
         }
@@ -259,7 +259,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             this.currentBatch.AddPunctuation(punctuationTime);
-            OnFlush();
+            this.OnFlush();
         }
     }
 
@@ -320,14 +320,14 @@ namespace Microsoft.StreamProcessing
                 if (full)
                 {
                     Array.Clear(this.currentBatch.hash.col, 0, this.currentBatch.hash.col.Length);
-                    FlushContents();
+                    this.FlushContents();
                 }
             }
         }
 
         protected override void OnCompleted(long punctuationTime)
         {
-            OnNext(new ArraySegment<PartitionedStreamEvent<TKey, TPayload>>(new[] { PartitionedStreamEvent.CreateLowWatermark<TKey, TPayload>(punctuationTime) }));
+            this.OnNext(new ArraySegment<PartitionedStreamEvent<TKey, TPayload>>([PartitionedStreamEvent.CreateLowWatermark<TKey, TPayload>(punctuationTime)]));
         }
     }
 
@@ -409,7 +409,7 @@ namespace Microsoft.StreamProcessing
                 if (full)
                 {
                     Array.Clear(this.currentBatch.hash.col, 0, this.currentBatch.hash.col.Length);
-                    FlushContents();
+                    this.FlushContents();
                 }
             }
         }
@@ -417,7 +417,7 @@ namespace Microsoft.StreamProcessing
         protected override void OnCompleted(long punctuationTime)
         {
             this.currentBatch.AddLowWatermark(punctuationTime);
-            OnFlush();
+            this.OnFlush();
         }
     }
 

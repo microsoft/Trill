@@ -11,7 +11,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class SessionWindowStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private readonly long sessionTimeout;
         private readonly long maximumDuration;
@@ -24,7 +24,7 @@ namespace Microsoft.StreamProcessing
             this.sessionTimeout = sessionTimeout;
             this.maximumDuration = maximumDuration;
 
-            Initialize();
+            this.Initialize();
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
@@ -32,7 +32,7 @@ namespace Microsoft.StreamProcessing
             var t = typeof(TKey).GetPartitionType();
             if (t == null)
             {
-                if (this.Source.Properties.IsColumnar) return GetPipe(observer);
+                if (this.Source.Properties.IsColumnar) return this.GetPipe(observer);
                 if (typeof(TKey) == typeof(Empty))
                     return new SessionWindowPipeStateless<TKey, TPayload>(this, observer, this.sessionTimeout, this.maximumDuration);
                 else

@@ -25,7 +25,7 @@ namespace Microsoft.StreamProcessing
         private long lastSyncTime;
 
         // Field instead of local variable to avoid re-initializing it
-        private readonly Stack<int> stack = new Stack<int>();
+        private readonly Stack<int> stack = new();
 
         [Obsolete("Used only by serialization. Do not call directly.")]
         public CompiledUngroupedAfaPipe_EventList() { }
@@ -36,7 +36,7 @@ namespace Microsoft.StreamProcessing
             this.activeStates = new FastLinkedList<GroupedActiveState<Empty, TRegister>>();
             this.activeStatesTraverser = new FastLinkedList<GroupedActiveState<Empty, TRegister>>.ListTraverser(this.activeStates);
 
-            this.currentList = new List<TPayload>();
+            this.currentList = [];
             this.lastSyncTime = -1;
         }
 
@@ -89,7 +89,7 @@ namespace Microsoft.StreamProcessing
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
 
-                                                if (this.iter == Config.DataBatchSize) FlushContents();
+                                                if (this.iter == Config.DataBatchSize) this.FlushContents();
                                             }
 
                                             if (this.hasOutgoingArcs[ns])
@@ -147,7 +147,7 @@ namespace Microsoft.StreamProcessing
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
 
-                                                if (this.iter == Config.DataBatchSize) FlushContents();
+                                                if (this.iter == Config.DataBatchSize) this.FlushContents();
                                             }
 
                                             if (this.hasOutgoingArcs[ns])
@@ -218,7 +218,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize) this.FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -271,7 +271,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize) this.FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -318,9 +318,9 @@ namespace Microsoft.StreamProcessing
 
                         if (synctime > this.lastSyncTime) // move time forward
                         {
-                            ProcessCurrentTimestamp();
+                            this.ProcessCurrentTimestamp();
                             this.lastSyncTime = synctime;
-                            this.currentList = new List<TPayload>();
+                            this.currentList = [];
                         }
 
                         this.currentList.Add(batch.payload.col[i]);
@@ -330,11 +330,11 @@ namespace Microsoft.StreamProcessing
                         long synctime = src_vsync[i];
                         if (synctime > this.lastSyncTime) // move time forward
                         {
-                            ProcessCurrentTimestamp();
+                            this.ProcessCurrentTimestamp();
                             this.lastSyncTime = synctime;
                         }
 
-                        OnPunctuation(synctime);
+                        this.OnPunctuation(synctime);
                     }
                 }
             }

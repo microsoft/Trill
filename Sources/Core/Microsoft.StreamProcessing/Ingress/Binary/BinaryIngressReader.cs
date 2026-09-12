@@ -48,9 +48,9 @@ namespace Microsoft.StreamProcessing
         protected override IDisposable Action(IStreamObserver<TKey, TPayload> observer)
         {
             if (this.scheduler == null)
-                Ingress(observer); // ingress data on current thread
+                this.Ingress(observer); // ingress data on current thread
             else
-                this.scheduler.Schedule(() => Ingress(observer)); // ingress data on user-specified scheduler
+                this.scheduler.Schedule(() => this.Ingress(observer)); // ingress data on user-specified scheduler
 
             return Utility.EmptyDisposable;
         }

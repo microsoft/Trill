@@ -49,7 +49,7 @@ namespace Microsoft.StreamProcessing
 
         internal override void PrintConciseSummary(StringBuilder builder, int indentLevel)
         {
-            PrintConciseGeneralState(builder, indentLevel);
+            this.PrintConciseGeneralState(builder, indentLevel);
             builder.AppendLine(new string('\t', indentLevel + 1) + "Previous: ");
             this.PreviousPlanNode.PrintConciseSummary(builder, indentLevel + 2);
         }

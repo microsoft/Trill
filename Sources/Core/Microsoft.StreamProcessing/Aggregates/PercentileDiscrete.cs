@@ -18,12 +18,12 @@ namespace Microsoft.StreamProcessing.Aggregates
         public PercentileDiscreteDoubleAggregate(double percentile, IComparerExpression<double> rankComparer, QueryContainer container)
             : base(rankComparer, container)
         {
-            Contract.Requires(rankComparer != null);
+            ArgumentNullException.ThrowIfNull(rankComparer);
             Contract.Requires(percentile >= 0.0 && percentile <= 1.0);
             this.percentile = percentile;
         }
 
-        public override Expression<Func<SortedMultiSet<double>, double>> ComputeResult() => set => CalculatePercentile(set);
+        public override Expression<Func<SortedMultiSet<double>, double>> ComputeResult() => set => this.CalculatePercentile(set);
 
         public double CalculatePercentile(SortedMultiSet<double> set)
         {

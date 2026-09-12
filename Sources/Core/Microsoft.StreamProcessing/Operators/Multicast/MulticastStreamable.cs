@@ -15,8 +15,8 @@ namespace Microsoft.StreamProcessing
         public MulticastStreamable(IStreamable<TKey, TSource> source, Func<IStreamable<TKey, TSource>, IStreamable<TKey, TResult>> selector)
             : base(source.Properties.Derive(selector))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(selector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(selector);
 
             this.source = source;
             this.selector = selector;

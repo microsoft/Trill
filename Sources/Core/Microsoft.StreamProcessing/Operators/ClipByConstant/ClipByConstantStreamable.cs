@@ -11,7 +11,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class ClipByConstantStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         private readonly long limit;
 
@@ -28,7 +28,7 @@ namespace Microsoft.StreamProcessing
             if (t == null)
             {
                 return this.Source.Properties.IsColumnar
-                    ? GetPipe(observer)
+                    ? this.GetPipe(observer)
                     : new ClipByConstantPipe<TKey, TPayload>(this, observer, this.limit);
             }
             var outputType = typeof(PartitionedClipByConstantPipe<,,>).MakeGenericType(

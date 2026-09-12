@@ -11,12 +11,12 @@ namespace Microsoft.StreamProcessing
     internal sealed class ColumnToRowStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         public ColumnToRowStreamable(IStreamable<TKey, TPayload> source)
             : base(source, source.Properties.ToRowBased())
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)

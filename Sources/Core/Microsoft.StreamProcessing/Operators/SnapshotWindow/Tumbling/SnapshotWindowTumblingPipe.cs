@@ -18,7 +18,7 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class SnapshotWindowTumblingPipe<TKey, TInput, TState, TOutput> : UnaryPipe<TKey, TInput, TOutput>
     {
-        private static readonly bool hasDisposableState = typeof(IDisposable).GetTypeInfo().IsAssignableFrom(typeof(TState));
+        private static readonly bool hasDisposableState = typeof(IDisposable).IsAssignableFrom(typeof(TState));
         private readonly MemoryPool<TKey, TOutput> pool;
         private readonly string errorMessages;
         private readonly IAggregate<TInput, TState, TOutput> aggregate;
@@ -103,7 +103,7 @@ namespace Microsoft.StreamProcessing
                         if (col_vother[i] == StreamEvent.PunctuationOtherTime)
                         {
                             // We have found a row that corresponds to punctuation
-                            OnPunctuation(col_vsync[i]);
+                            this.OnPunctuation(col_vsync[i]);
 
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
@@ -112,7 +112,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.hash.col[c] = 0;
                             this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         continue;
                     }
@@ -132,10 +132,10 @@ namespace Microsoft.StreamProcessing
                             this.batch.key.col[c] = iter1entry.key;
                             this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
 
-                        if (hasDisposableState) DisposeStateLocal();
+                        if (hasDisposableState) this.DisposeStateLocal();
                         this.heldAggregates.Clear();
 
                         // Since sync time changed, set lastSyncTime
@@ -171,11 +171,11 @@ namespace Microsoft.StreamProcessing
                     this.batch.key.col[c] = iter1entry.key;
                     this.batch.hash.col[c] = this.keyComparerGetHashCode(iter1entry.key);
                     this.batch.Count++;
-                    if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                    if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                 }
 
                 // Time has moved forward, clear the held aggregates
-                if (hasDisposableState) DisposeStateLocal();
+                if (hasDisposableState) this.DisposeStateLocal();
                 this.heldAggregates.Clear();
 
                 // Since sync time changed, set lastSyncTime
@@ -198,15 +198,16 @@ namespace Microsoft.StreamProcessing
 
         private void DisposeStateLocal()
         {
-            int index = FastDictionary2<TKey, TState>.IteratorStart;
+            int index = FastDictionary<TKey, TState>.IteratorStart;
             while (this.heldAggregates.Iterate(ref index))
                 (this.heldAggregates.entries[index].value as IDisposable).Dispose();
         }
 
         protected override void DisposeState()
         {
+            if (hasDisposableState) this.DisposeStateLocal();
+            this.heldAggregates.Dispose();
             this.batch.Free();
-            if (hasDisposableState) DisposeStateLocal();
         }
     }
 }

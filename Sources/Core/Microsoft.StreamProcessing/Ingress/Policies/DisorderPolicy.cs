@@ -47,7 +47,7 @@ namespace Microsoft.StreamProcessing
         /// events are well-ordered.
         /// </summary>
         /// <returns>An instance of the disorder policy</returns>
-        public static DisorderPolicy Throw() => new DisorderPolicy(DisorderPolicyType.Throw);
+        public static DisorderPolicy Throw() => new(DisorderPolicyType.Throw);
 
         /// <summary>
         /// Throw if you see disordered events. Use this when you know that your input
@@ -55,14 +55,14 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="reorderLatency">Tolerable latency bound (in application time) for reordering data at ingress</param>
         /// <returns>An instance of the disorder policy</returns>
-        public static DisorderPolicy Throw(long reorderLatency) => new DisorderPolicy(DisorderPolicyType.Throw, reorderLatency);
+        public static DisorderPolicy Throw(long reorderLatency) => new(DisorderPolicyType.Throw, reorderLatency);
 
         /// <summary>
         /// When an out-of-order event appears in the stream, adjust its
         /// start time to be the start time of immediately previous event.
         /// </summary>
         /// <returns>An instance of the disorder policy</returns>
-        public static DisorderPolicy Adjust() => new DisorderPolicy(DisorderPolicyType.Adjust);
+        public static DisorderPolicy Adjust() => new(DisorderPolicyType.Adjust);
 
         /// <summary>
         /// When an out-of-order event appears in the stream, adjust its
@@ -70,14 +70,14 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="reorderLatency">Tolerable latency bound (in application time) for reordering data at ingress</param>
         /// <returns>An instance of the disorder policy</returns>
-        public static DisorderPolicy Adjust(long reorderLatency) => new DisorderPolicy(DisorderPolicyType.Adjust, reorderLatency);
+        public static DisorderPolicy Adjust(long reorderLatency) => new(DisorderPolicyType.Adjust, reorderLatency);
 
         /// <summary>
         /// When an out-of-order event appears in the stream,
         /// drop it and don't include it in the output.
         /// </summary>
         /// <returns>An instance of the disorder policy</returns>
-        public static DisorderPolicy Drop() => new DisorderPolicy(DisorderPolicyType.Drop);
+        public static DisorderPolicy Drop() => new(DisorderPolicyType.Drop);
 
         /// <summary>
         /// When an out-of-order event appears in the stream,
@@ -85,7 +85,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <param name="reorderLatency">Tolerable latency bound (in application time) for reordering data at ingress</param>
         /// <returns>An instance of the disorder policy</returns>
-        public static DisorderPolicy Drop(long reorderLatency) => new DisorderPolicy(DisorderPolicyType.Drop, reorderLatency);
+        public static DisorderPolicy Drop(long reorderLatency) => new(DisorderPolicyType.Drop, reorderLatency);
 
         /// <summary>
         /// Determines whether two Disorder Policies have the same constituent parts.

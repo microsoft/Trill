@@ -44,7 +44,7 @@ namespace Microsoft.StreamProcessing
         public override void Restore(Stream stream)
         {
             if (stream != null) base.Restore(stream);
-            Enable();
+            this.Enable();
         }
 
         public void Enable() => this.subscription.Enable();
@@ -67,12 +67,12 @@ namespace Microsoft.StreamProcessing
             public void Enable()
             {
                 this.inner = this.current.Action(this.observer);
-                if (this.disposed) DisposeInternal();
+                if (this.disposed) this.DisposeInternal();
             }
 
             public void Dispose()
             {
-                if (this.inner != null) DisposeInternal();
+                if (this.inner != null) this.DisposeInternal();
                 this.disposed = true;
             }
 

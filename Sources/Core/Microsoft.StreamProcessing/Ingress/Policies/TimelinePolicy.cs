@@ -50,7 +50,7 @@ namespace Microsoft.StreamProcessing
         /// <param name="punctuationInterval">Describes how much time should progress before creating a punctuation event and flushing contents.</param>
         /// <returns>A policy object to be used in ingress methods.</returns>
         public static TimelinePolicy WallClock(TimeSpan punctuationInterval = default)
-            => new TimelinePolicy(TimelineEnum.WallClock) { punctuationInterval = punctuationInterval };
+            => new(TimelineEnum.WallClock) { punctuationInterval = punctuationInterval };
 
         /// <summary>
         /// Create a new Timeline Policy based on assigning temporal values to events based on a monotonically increasing counter.

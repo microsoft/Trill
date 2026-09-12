@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
     [DataContract]
     internal sealed class SnapshotWindowTumblingPipeSimple<TInput, TState, TOutput> : UnaryPipe<Empty, TInput, TOutput>
     {
-        private static readonly bool hasDisposableState = typeof(IDisposable).GetTypeInfo().IsAssignableFrom(typeof(TState));
+        private static readonly bool hasDisposableState = typeof(IDisposable).IsAssignableFrom(typeof(TState));
         private readonly MemoryPool<Empty, TOutput> pool;
         private readonly string errorMessages;
         private readonly IAggregate<TInput, TState, TOutput> aggregate;
@@ -90,7 +90,7 @@ namespace Microsoft.StreamProcessing
                         if (col_vother[i] == StreamEvent.PunctuationOtherTime)
                         {
                             // We have found a row that corresponds to punctuation
-                            OnPunctuation(col_vsync[i]);
+                            this.OnPunctuation(col_vsync[i]);
 
                             int c = this.batch.Count;
                             this.batch.vsync.col[c] = col_vsync[i];
@@ -99,7 +99,7 @@ namespace Microsoft.StreamProcessing
                             this.batch.hash.col[c] = 0;
                             this.batch.bitvector.col[c >> 6] |= 1L << (c & 0x3f);
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
                         }
                         continue;
                     }
@@ -117,9 +117,9 @@ namespace Microsoft.StreamProcessing
                             this.batch.key.col[c] = Empty.Default;
                             this.batch.hash.col[c] = 0;
                             this.batch.Count++;
-                            if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                            if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
 
-                            if (hasDisposableState) DisposeStateLocal();
+                            if (hasDisposableState) this.DisposeStateLocal();
                             this.currentState = null;
                         }
 
@@ -134,7 +134,7 @@ namespace Microsoft.StreamProcessing
                         if (syncTime > this.currentState.timestamp)
                         {
                             // Reset currentState
-                            if (hasDisposableState) DisposeStateLocal();
+                            if (hasDisposableState) this.DisposeStateLocal();
                             this.currentState.state = this.initialState();
                             this.currentState.timestamp = syncTime;
                         }
@@ -162,9 +162,9 @@ namespace Microsoft.StreamProcessing
                     this.batch.key.col[c] = Empty.Default;
                     this.batch.hash.col[c] = 0;
                     this.batch.Count++;
-                    if (this.batch.Count == Config.DataBatchSize) FlushContents();
+                    if (this.batch.Count == Config.DataBatchSize) this.FlushContents();
 
-                    if (hasDisposableState) DisposeStateLocal();
+                    if (hasDisposableState) this.DisposeStateLocal();
                     this.currentState = null;
                 }
 
@@ -198,7 +198,7 @@ namespace Microsoft.StreamProcessing
         protected override void DisposeState()
         {
             this.batch.Free();
-            if (hasDisposableState) DisposeStateLocal();
+            if (hasDisposableState) this.DisposeStateLocal();
         }
     }
 }

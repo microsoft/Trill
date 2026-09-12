@@ -43,20 +43,20 @@ namespace Microsoft.StreamProcessing
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public TInnerKey InnerGroup => this.innerGroup;
+        public readonly TInnerKey InnerGroup => this.innerGroup;
 
         /// <summary>
         /// Currently for internal use only - do not use directly.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public TOuterKey OuterGroup => this.outerGroup;
+        public readonly TOuterKey OuterGroup => this.outerGroup;
 
         /// <summary>
         /// Provides a string representation of the compound grouping key.
         /// </summary>
         /// <returns>A string representation of the compound grouping key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => new { this.OuterGroup, this.InnerGroup }.ToString();
+        public override readonly string ToString() => new { this.OuterGroup, this.InnerGroup }.ToString();
 
         /// <summary>
         /// Provides a hashcode of the compound grouping key.
@@ -64,7 +64,7 @@ namespace Microsoft.StreamProcessing
         /// <returns>A hashcode of the compound grouping key.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => this.hashCode;
+        public override readonly int GetHashCode() => this.hashCode;
     }
 
     /// <summary>
@@ -115,7 +115,7 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns>A hash code for the given partition key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode() => this.Key.GetHashCode();
+        public override readonly int GetHashCode() => this.Key.GetHashCode();
     }
 
     /// <summary>
@@ -134,12 +134,12 @@ namespace Microsoft.StreamProcessing
         /// <summary>
         /// The rank of the event within the current grouping
         /// </summary>
-        public int Rank => this.rank;
+        public readonly int Rank => this.rank;
 
         /// <summary>
         /// The actual event associated with the ranking
         /// </summary>
-        public T Payload => this.payload;
+        public readonly T Payload => this.payload;
 
         internal RankedEvent(int rank, T payload)
         {
@@ -152,6 +152,6 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         /// <returns>A string representation of the ranked event.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string ToString() => $"[Rank={this.rank}, Payload={this.payload}]";
+        public override readonly string ToString() => $"[Rank={this.rank}, Payload={this.payload}]";
     }
 }

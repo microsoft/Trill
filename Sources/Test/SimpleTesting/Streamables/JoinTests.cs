@@ -50,7 +50,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == 2 * i)
                 .All(b => b));
@@ -88,7 +88,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 .ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == i)
                 .All(b => b));
@@ -118,12 +118,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e, (l, r) => new GameData() { EventType = l.field1, GameId = r, });
 
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -132,7 +132,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.Select(gd => gd.EventType == gd.GameId).All(b => b));
         }
 
@@ -161,12 +161,12 @@ namespace SimpleTesting
 
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -175,7 +175,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select(gd => gd.EventType * 2 == gd.GameId)
                 .All(b => b));
@@ -200,7 +200,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new { EventType = (l.field1 * 2).ToString(), GameId = ((int)r.field2).ToString(), });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
 
@@ -230,12 +230,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -273,12 +273,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -316,12 +316,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -359,12 +359,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -413,7 +413,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == 2 * i)
                 .All(b => b));
@@ -451,7 +451,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 .ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == i)
                 .All(b => b));
@@ -481,12 +481,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e, (l, r) => new GameData() { EventType = l.field1, GameId = r, });
 
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -495,7 +495,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.Select(gd => gd.EventType == gd.GameId).All(b => b));
         }
 
@@ -524,12 +524,12 @@ namespace SimpleTesting
 
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -538,7 +538,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select(gd => gd.EventType * 2 == gd.GameId)
                 .All(b => b));
@@ -563,7 +563,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new { EventType = (l.field1 * 2).ToString(), GameId = ((int)r.field2).ToString(), });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
 
@@ -593,12 +593,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -636,12 +636,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -679,12 +679,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -722,12 +722,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -777,7 +777,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == 2 * i)
                 .All(b => b));
@@ -815,7 +815,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 .ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == i)
                 .All(b => b));
@@ -845,12 +845,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e, (l, r) => new GameData() { EventType = l.field1, GameId = r, });
 
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -859,7 +859,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.Select(gd => gd.EventType == gd.GameId).All(b => b));
         }
 
@@ -888,12 +888,12 @@ namespace SimpleTesting
 
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -902,7 +902,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select(gd => gd.EventType * 2 == gd.GameId)
                 .All(b => b));
@@ -927,7 +927,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new { EventType = (l.field1 * 2).ToString(), GameId = ((int)r.field2).ToString(), });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
 
@@ -957,12 +957,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1000,12 +1000,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1043,12 +1043,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1086,12 +1086,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1141,7 +1141,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == 2 * i)
                 .All(b => b));
@@ -1179,7 +1179,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 .ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == i)
                 .All(b => b));
@@ -1209,12 +1209,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e, (l, r) => new GameData() { EventType = l.field1, GameId = r, });
 
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1223,7 +1223,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.Select(gd => gd.EventType == gd.GameId).All(b => b));
         }
 
@@ -1252,12 +1252,12 @@ namespace SimpleTesting
 
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1266,7 +1266,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select(gd => gd.EventType * 2 == gd.GameId)
                 .All(b => b));
@@ -1291,7 +1291,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new { EventType = (l.field1 * 2).ToString(), GameId = ((int)r.field2).ToString(), });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
 
@@ -1321,12 +1321,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1364,12 +1364,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1407,12 +1407,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1450,12 +1450,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1504,7 +1504,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == 2 * i)
                 .All(b => b));
@@ -1542,7 +1542,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 .ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == i)
                 .All(b => b));
@@ -1572,12 +1572,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e, (l, r) => new GameData() { EventType = l.field1, GameId = r, });
 
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1586,7 +1586,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.Select(gd => gd.EventType == gd.GameId).All(b => b));
         }
 
@@ -1615,12 +1615,12 @@ namespace SimpleTesting
 
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1629,7 +1629,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select(gd => gd.EventType * 2 == gd.GameId)
                 .All(b => b));
@@ -1654,7 +1654,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new { EventType = (l.field1 * 2).ToString(), GameId = ((int)r.field2).ToString(), });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
 
@@ -1684,12 +1684,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1727,12 +1727,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1770,12 +1770,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1813,12 +1813,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1867,7 +1867,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == 2 * i)
                 .All(b => b));
@@ -1905,7 +1905,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 .ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == i)
                 .All(b => b));
@@ -1935,12 +1935,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e, (l, r) => new GameData() { EventType = l.field1, GameId = r, });
 
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1949,7 +1949,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.Select(gd => gd.EventType == gd.GameId).All(b => b));
         }
 
@@ -1978,12 +1978,12 @@ namespace SimpleTesting
 
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -1992,7 +1992,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select(gd => gd.EventType * 2 == gd.GameId)
                 .All(b => b));
@@ -2017,7 +2017,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new { EventType = (l.field1 * 2).ToString(), GameId = ((int)r.field2).ToString(), });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
 
@@ -2047,12 +2047,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2090,12 +2090,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2133,12 +2133,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2176,12 +2176,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2231,7 +2231,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == 2 * i)
                 .All(b => b));
@@ -2269,7 +2269,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 .ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == i)
                 .All(b => b));
@@ -2299,12 +2299,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e, (l, r) => new GameData() { EventType = l.field1, GameId = r, });
 
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2313,7 +2313,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.Select(gd => gd.EventType == gd.GameId).All(b => b));
         }
 
@@ -2342,12 +2342,12 @@ namespace SimpleTesting
 
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2356,7 +2356,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select(gd => gd.EventType * 2 == gd.GameId)
                 .All(b => b));
@@ -2381,7 +2381,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new { EventType = (l.field1 * 2).ToString(), GameId = ((int)r.field2).ToString(), });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
 
@@ -2411,12 +2411,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2454,12 +2454,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2497,12 +2497,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2540,12 +2540,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2595,7 +2595,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == 2 * i)
                 .All(b => b));
@@ -2633,7 +2633,7 @@ namespace SimpleTesting
                 .ToPayloadEnumerable()
                 .ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select((gd, i) => gd.EventType == i && gd.GameId == i)
                 .All(b => b));
@@ -2663,12 +2663,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e, (l, r) => new GameData() { EventType = l.field1, GameId = r, });
 
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2677,7 +2677,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.Select(gd => gd.EventType == gd.GameId).All(b => b));
         }
 
@@ -2706,12 +2706,12 @@ namespace SimpleTesting
 
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new GameData() { EventType = l.field1, GameId = (int)r.field2, });
             var output = container.RegisterAtemporalOutput(query);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2720,7 +2720,7 @@ namespace SimpleTesting
 
             resultAsync.Wait(); // wait for results.
 
-            Assert.IsTrue(result.Count == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result
                 .Select(gd => gd.EventType * 2 == gd.GameId)
                 .All(b => b));
@@ -2745,7 +2745,7 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e.field1, e => e.field1, (l, r) => new { EventType = (l.field1 * 2).ToString(), GameId = ((int)r.field2).ToString(), });
             var result = query.ToPayloadEnumerable().ToArray();
 
-            Assert.IsTrue(result.Length == 200);
+            Assert.HasCount(200, result);
             Assert.IsTrue(result.All(gd => gd.EventType == gd.GameId));
         }
 
@@ -2775,12 +2775,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2818,12 +2818,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2861,12 +2861,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 
@@ -2904,12 +2904,12 @@ namespace SimpleTesting
             var query = input1.Join(input2, e => e, e => e, (l, r) => l);
 
             var output = container.RegisterOutput(query, ReshapingPolicy.CoalesceEndEdges);
-            var resultAsync = output.ForEachAsync(o => result.Add(o));
+            var resultAsync = output.ForEachAsync(result.Add);
 
             container.Restore(null); // start the query
 
-            var i1async = data1.ForEachAsync(e => d1Subject.OnNext(e)); // send data
-            var i2async = data2.ForEachAsync(e => d2Subject.OnNext(e)); // send data
+            var i1async = data1.ForEachAsync(d1Subject.OnNext); // send data
+            var i2async = data2.ForEachAsync(d2Subject.OnNext); // send data
 
             Task.WaitAll(i1async, i2async); // wait for data to be processed.
 

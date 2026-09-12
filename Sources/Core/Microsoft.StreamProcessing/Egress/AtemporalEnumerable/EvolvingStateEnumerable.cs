@@ -20,9 +20,9 @@ namespace Microsoft.StreamProcessing
         private readonly IStreamable<Empty, TPayload> source;
         private readonly QueryContainer container;
         private readonly string identifier;
-        private readonly ConcurrentDictionary<TPayload, int> data = new ConcurrentDictionary<TPayload, int>();
+        private readonly ConcurrentDictionary<TPayload, int> data = new();
         private volatile bool isComplete;
-        private readonly object sentinel = new object();
+        private readonly Lock sentinel = new();
         private readonly IDisposable disposable;
 
         /// <summary>
@@ -36,15 +36,15 @@ namespace Microsoft.StreamProcessing
             QueryContainer container,
             string identifier)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
 
             this.source = source;
             this.container = container;
             this.identifier = identifier;
-            if (this.container != null) this.container.RegisterEgressSite(this.identifier);
+            this.container?.RegisterEgressSite(this.identifier);
 
             var pipe = new AtemporalEnumerableEgressPipe<TPayload>(this, this.container);
-            if (this.container != null) this.container.RegisterEgressPipe(this.identifier, pipe);
+            this.container?.RegisterEgressPipe(this.identifier, pipe);
             this.disposable = this.source.Subscribe(pipe);
         }
 
@@ -55,18 +55,18 @@ namespace Microsoft.StreamProcessing
 
         IEnumerator<TPayload> IEnumerable<TPayload>.GetEnumerator()
         {
-            Monitor.Enter(this.sentinel);
+            this.sentinel.Enter();
             return new InnerEnumerator(
                 this.data.SelectMany(o => Enumerable.Range(0, o.Value).Select(i => o.Key)).GetEnumerator(),
-                ExitMonitor);
+                this.sentinel.Exit);
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            Monitor.Enter(this.sentinel);
+            this.sentinel.Enter();
             return new InnerEnumerator(
                 this.data.SelectMany(o => Enumerable.Range(0, o.Value).Select(i => o.Key)).GetEnumerator(),
-                ExitMonitor);
+                this.sentinel.Exit);
         }
 
         void IObserver<IEnumerable<ChangeListEvent<TPayload>>>.OnCompleted() => this.isComplete = true;
@@ -75,35 +75,28 @@ namespace Microsoft.StreamProcessing
 
         void IObserver<IEnumerable<ChangeListEvent<TPayload>>>.OnNext(IEnumerable<ChangeListEvent<TPayload>> batch)
         {
-            Monitor.Enter(this.sentinel);
-            try
+            using Lock.Scope _ = this.sentinel.EnterScope();
+            int count;
+            foreach (var value in batch)
             {
-                int count;
-                foreach (var value in batch)
+                switch (value.EventKind)
                 {
-                    switch (value.EventKind)
-                    {
-                        case ChangeListEventKind.Insert:
-                            if (this.data.TryGetValue(value.Payload, out count))
-                                this.data.TryUpdate(value.Payload, count + 1, count);
-                            else
-                                this.data.AddOrUpdate(value.Payload, 1, (p, c) => c + 1);
-                            break;
+                    case ChangeListEventKind.Insert:
+                        if (this.data.TryGetValue(value.Payload, out count))
+                            this.data.TryUpdate(value.Payload, count + 1, count);
+                        else
+                            this.data.AddOrUpdate(value.Payload, 1, (p, c) => c + 1);
+                        break;
 
-                        case ChangeListEventKind.Delete:
-                            if (!this.data.TryGetValue(value.Payload, out count)) throw new InvalidOperationException("Should not be able to delete a value that does not exist");
-                            else
-                                this.data.TryUpdate(value.Payload, count - 1, count);
-                            break;
+                    case ChangeListEventKind.Delete:
+                        if (!this.data.TryGetValue(value.Payload, out count)) throw new InvalidOperationException("Should not be able to delete a value that does not exist");
+                        else
+                            this.data.TryUpdate(value.Payload, count - 1, count);
+                        break;
 
-                        default:
-                            throw new InvalidOperationException("Switch statement should be exhaustive");
-                    }
+                    default:
+                        throw new InvalidOperationException("Switch statement should be exhaustive");
                 }
-            }
-            finally
-            {
-                Monitor.Exit(this.sentinel);
             }
         }
 
@@ -112,31 +105,19 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public void Dispose() => this.disposable.Dispose();
 
-        private void ExitMonitor() => Monitor.Exit(this.sentinel);
-
-        private sealed class InnerEnumerator : IEnumerator<TPayload>
+        private sealed class InnerEnumerator(IEnumerator<TPayload> baseEnumerator, Action exitLock)
+            : IEnumerator<TPayload>
         {
-            private readonly Action monitorExit;
-            private readonly IEnumerator<TPayload> baseEnumerator;
-
-            public InnerEnumerator(
-                IEnumerator<TPayload> baseEnumerator,
-                Action monitorExit)
-            {
-                this.baseEnumerator = baseEnumerator;
-                this.monitorExit = monitorExit;
-            }
-
             void IDisposable.Dispose()
             {
-                this.baseEnumerator.Dispose();
-                this.monitorExit();
+                baseEnumerator.Dispose();
+                exitLock();
             }
 
-            TPayload IEnumerator<TPayload>.Current => this.baseEnumerator.Current;
-            object System.Collections.IEnumerator.Current => this.baseEnumerator.Current;
-            bool System.Collections.IEnumerator.MoveNext() => this.baseEnumerator.MoveNext();
-            void System.Collections.IEnumerator.Reset() => this.baseEnumerator.Reset();
+            TPayload IEnumerator<TPayload>.Current => baseEnumerator.Current;
+            object System.Collections.IEnumerator.Current => baseEnumerator.Current;
+            bool System.Collections.IEnumerator.MoveNext() => baseEnumerator.MoveNext();
+            void System.Collections.IEnumerator.Reset() => baseEnumerator.Reset();
         }
     }
 }

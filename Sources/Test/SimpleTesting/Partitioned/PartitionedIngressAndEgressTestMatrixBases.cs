@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SimpleTesting.PartitionedIngressAndEgress
 {
-    public class TriPartitionedOrderedTestsBase : TestWithConfigSettingsAndMemoryLeakDetection
+    public abstract class TriPartitionedOrderedTestsBase : TestWithConfigSettingsAndMemoryLeakDetection
     {
         internal TriPartitionedOrderedTestsBase(
             ConfigModifier config,
@@ -86,8 +86,8 @@ namespace SimpleTesting.PartitionedIngressAndEgress
             }
             else
             {
-                Assert.IsTrue(lowWatermarks.Count() == 1);
-                Assert.IsTrue(lowWatermarks.First().StartTime == StreamEvent.InfinitySyncTime);
+                Assert.AreEqual(1, lowWatermarks.Count());
+                Assert.AreEqual(StreamEvent.InfinitySyncTime, lowWatermarks.First().StartTime);
             }
 
             if (this.punctuationPolicy.type == PeriodicPunctuationPolicyType.Time)
@@ -387,10 +387,10 @@ namespace SimpleTesting.PartitionedIngressAndEgress
                 PartitionedFlushPolicy.None, PeriodicPunctuationPolicy.None(), this.lowWatermarkPolicy);
 
             var outOfOrderEvents = new List<OutOfOrderPartitionedStreamEvent<int, int>>();
-            ingress.GetDroppedAdjustedEventsDiagnostic().Subscribe(o => outOfOrderEvents.Add(o));
+            ingress.GetDroppedAdjustedEventsDiagnostic().Subscribe(outOfOrderEvents.Add);
 
             var output = new List<PartitionedStreamEvent<int, int>>();
-            var egress = qc.RegisterOutput(ingress).ForEachAsync(o => output.Add(o));
+            var egress = qc.RegisterOutput(ingress).ForEachAsync(output.Add);
             var process = qc.Restore();
             process.Flush();
             egress.Wait();
@@ -495,19 +495,19 @@ namespace SimpleTesting.PartitionedIngressAndEgress
         private long highWatermark = 100;
         private long lowWatermark = 0;
 
-        private readonly List<PartitionedStreamEvent<int, int>> input = new List<PartitionedStreamEvent<int, int>>();
+        private readonly List<PartitionedStreamEvent<int, int>> input = new();
         private readonly List<PartitionedStreamEvent<int, int>>[] expected = new List<PartitionedStreamEvent<int, int>>[]
         {
-            new List<PartitionedStreamEvent<int, int>>(),
-            new List<PartitionedStreamEvent<int, int>>(),
-            new List<PartitionedStreamEvent<int, int>>(),
+            new(),
+            new(),
+            new(),
         };
         private readonly List<OutOfOrderPartitionedStreamEvent<int, int>>[] diagnostic = new List<OutOfOrderPartitionedStreamEvent<int, int>>[]
         {
-            new List<OutOfOrderPartitionedStreamEvent<int, int>>(),
-            new List<OutOfOrderPartitionedStreamEvent<int, int>>(),
-            new List<OutOfOrderPartitionedStreamEvent<int, int>>(),
+            new(),
+            new(),
+            new(),
         };
-        private readonly List<PartitionedStreamEvent<int, int>> expectedLowWatermarks = new List<PartitionedStreamEvent<int, int>>();
+        private readonly List<PartitionedStreamEvent<int, int>> expectedLowWatermarks = new();
     }
 }

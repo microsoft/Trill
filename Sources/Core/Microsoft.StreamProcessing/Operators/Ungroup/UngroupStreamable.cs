@@ -13,7 +13,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class UngroupStreamable<TOuterKey, TInnerKey, TInnerResult, TResult> : Streamable<TOuterKey, TResult>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification="Used to avoid creating redundant readonly property.")]
         public readonly Expression<Func<TInnerKey, TInnerResult, TResult>> ResultSelector;
@@ -25,8 +25,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelector)
             : base(source.Properties.Ungroup(resultSelector))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(resultSelector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(resultSelector);
 
             this.Source = source;
             this.ResultSelector = resultSelector;
@@ -34,10 +34,10 @@ namespace Microsoft.StreamProcessing
 
         public override IDisposable Subscribe(IStreamObserver<TOuterKey, TResult> observer)
         {
-            if (this.Properties.IsColumnar && CanGenerateColumnar())
-                return this.Source.Subscribe(GetPipe(observer));
+            if (this.Properties.IsColumnar && this.CanGenerateColumnar())
+                return this.Source.Subscribe(this.GetPipe(observer));
             else
-                return this.Source.Subscribe(CreatePipe(observer));
+                return this.Source.Subscribe(this.CreatePipe(observer));
         }
 
         internal IStreamObserver<CompoundGroupKey<TOuterKey, TInnerKey>, TInnerResult> CreatePipe(
@@ -94,7 +94,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class UngroupStreamable<TInnerKey, TInnerResult, TResult> : Streamable<Empty, TResult>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification="Used to avoid creating redundant readonly property.")]
         public readonly Expression<Func<TInnerKey, TInnerResult, TResult>> ResultSelector;
@@ -105,8 +105,8 @@ namespace Microsoft.StreamProcessing
             Expression<Func<TInnerKey, TInnerResult, TResult>> resultSelector)
             : base(source.Properties.Ungroup(resultSelector))
         {
-            Contract.Requires(source != null);
-            Contract.Requires(resultSelector != null);
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(resultSelector);
 
             this.Source = source;
             this.ResultSelector = resultSelector;
@@ -114,10 +114,10 @@ namespace Microsoft.StreamProcessing
 
         public override IDisposable Subscribe(IStreamObserver<Empty, TResult> observer)
         {
-            if (this.Properties.IsColumnar && CanGenerateColumnar())
-                return this.Source.Subscribe(GetPipe(observer));
+            if (this.Properties.IsColumnar && this.CanGenerateColumnar())
+                return this.Source.Subscribe(this.GetPipe(observer));
             else
-                return this.Source.Subscribe(CreatePipe(observer));
+                return this.Source.Subscribe(this.CreatePipe(observer));
         }
 
         internal IStreamObserver<TInnerKey, TInnerResult> CreatePipe(

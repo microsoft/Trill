@@ -18,12 +18,12 @@ namespace Microsoft.StreamProcessing.Serializer.Serializers
         protected ObjectSerializerBase(Type baseType) : base() => this.RuntimeType = baseType;
 
         public Expression BuildSerializer(Expression encoder, Expression value)
-            => BuildSerializerSafe(
+            => this.BuildSerializerSafe(
                 encoder ?? throw new ArgumentNullException(nameof(encoder)),
                 value ?? throw new ArgumentNullException(nameof(value)));
 
         public Expression BuildDeserializer(Expression decoder)
-            => BuildDeserializerSafe(decoder ?? throw new ArgumentNullException(nameof(decoder)));
+            => this.BuildDeserializerSafe(decoder ?? throw new ArgumentNullException(nameof(decoder)));
 
         protected abstract Expression BuildSerializerSafe(Expression encoder, Expression value);
         protected abstract Expression BuildDeserializerSafe(Expression decoder);

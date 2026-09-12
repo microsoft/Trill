@@ -17,13 +17,13 @@ namespace Microsoft.StreamProcessing
         private FastLinkedList<GroupedActiveState<Empty, TRegister>> activeStates;
 
         [DataMember]
-        private List<TPayload> currentTimestampEventList = new List<TPayload>();
+        private List<TPayload> currentTimestampEventList = [];
 
         [DataMember]
         private long lastSyncTime;
 
         // Field instead of local variable to avoid re-initializing it
-        private readonly Stack<int> stack = new Stack<int>();
+        private readonly Stack<int> stack = new();
 
         private FastLinkedList<GroupedActiveState<Empty, TRegister>>.ListTraverser activeStatesTraverser;
 
@@ -98,7 +98,7 @@ namespace Microsoft.StreamProcessing
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
 
-                                                if (this.iter == Config.DataBatchSize) FlushContents();
+                                                if (this.iter == Config.DataBatchSize) this.FlushContents();
                                             }
 
                                             if (this.hasOutgoingArcs[ns])
@@ -158,7 +158,7 @@ namespace Microsoft.StreamProcessing
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
 
-                                                if (this.iter == Config.DataBatchSize) FlushContents();
+                                                if (this.iter == Config.DataBatchSize) this.FlushContents();
                                             }
 
                                             if (this.hasOutgoingArcs[ns])
@@ -226,7 +226,7 @@ namespace Microsoft.StreamProcessing
                                                 this.batch.hash.col[this.iter] = 0;
                                                 this.iter++;
 
-                                                if (this.iter == Config.DataBatchSize) FlushContents();
+                                                if (this.iter == Config.DataBatchSize) this.FlushContents();
                                             }
 
                                             if (this.hasOutgoingArcs[ns])
@@ -305,7 +305,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize) this.FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -361,7 +361,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize) this.FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -424,7 +424,7 @@ namespace Microsoft.StreamProcessing
                                             this.batch.hash.col[this.iter] = 0;
                                             this.iter++;
 
-                                            if (this.iter == Config.DataBatchSize) FlushContents();
+                                            if (this.iter == Config.DataBatchSize) this.FlushContents();
                                         }
                                         if (this.hasOutgoingArcs[ns])
                                         {
@@ -473,11 +473,11 @@ namespace Microsoft.StreamProcessing
 
                         if (synctime > this.lastSyncTime) // move time forward
                         {
-                            ProcessCurrentTimestamp();
+                            this.ProcessCurrentTimestamp();
                             this.lastSyncTime = synctime;
                         }
 
-                        if (batch.vother.col[i] < 0) OnPunctuation(synctime);
+                        if (batch.vother.col[i] < 0) this.OnPunctuation(synctime);
                         else
                             this.currentTimestampEventList.Add(batch.payload.col[i]);
                     }

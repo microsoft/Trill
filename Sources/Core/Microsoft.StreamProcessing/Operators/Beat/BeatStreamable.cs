@@ -11,7 +11,7 @@ namespace Microsoft.StreamProcessing
     internal sealed class BeatStreamable<TKey, TPayload> : UnaryStreamable<TKey, TPayload, TPayload>
     {
         private static readonly SafeConcurrentDictionary<Tuple<Type, string>> cachedPipes
-                          = new SafeConcurrentDictionary<Tuple<Type, string>>();
+                          = new();
 
         public readonly long Offset;
         public readonly long Period;
@@ -19,7 +19,7 @@ namespace Microsoft.StreamProcessing
         public BeatStreamable(IStreamable<TKey, TPayload> source, long offset, long period)
             : base(source, source.Properties)
         {
-            Contract.Requires(source != null);
+            ArgumentNullException.ThrowIfNull(source);
             Contract.Requires(period > 0);
 
             // This operator uses the equality method on payloads
@@ -31,7 +31,7 @@ namespace Microsoft.StreamProcessing
             this.Offset = offset;
             this.Period = period;
 
-            Initialize();
+            this.Initialize();
         }
 
         internal override IStreamObserver<TKey, TPayload> CreatePipe(IStreamObserver<TKey, TPayload> observer)
@@ -40,7 +40,7 @@ namespace Microsoft.StreamProcessing
             if (p == null)
             {
                 return this.Source.Properties.IsColumnar
-                    ? GetPipe(observer)
+                    ? this.GetPipe(observer)
                     : new BeatPipe<TKey, TPayload>(this, observer);
             }
 

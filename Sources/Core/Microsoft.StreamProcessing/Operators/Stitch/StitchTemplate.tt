@@ -113,7 +113,7 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
         Observer.ProduceQueryPlan(queryPlanGenerator(previous, this));
     }
 
-<# if (!noFields && !this.payloadType.GetTypeInfo().IsValueType) { #>
+<# if (!noFields && !this.payloadType.IsValueType) { #>
     [DataContract]
     private struct <#= ActiveEventType #>
     {
@@ -444,17 +444,30 @@ internal sealed class <#= className #><#= TKeyTPayloadGenericParameters #> : Una
             CurrentTimeOpenEventBuffer.Initialize();
         }
 
-        foreach (var closed in ClosedEvents.Where(k => k.Key < time).ToArray())
+        while (ClosedEvents.Count > 0)
         {
-            var iterator = FastDictionary2<<#= TPayload #>, ActiveEvent>.IteratorStart;
-            while (closed.Value.Iterate(ref iterator))
-                foreach (var v in closed.Value.entries[iterator].value)
+            long firstKey;
+            using (var en = ClosedEvents.GetEnumerator())
+            {
+                if (!en.MoveNext())
+                    break;
+                firstKey = en.Current.Key;
+            }
+
+            if (firstKey >= time)
+                break;
+
+            var closedDict = ClosedEvents[firstKey];
+            var iterator = FastDictionary2<KHP, List<ActiveEvent>>.IteratorStart;
+            while (closedDict.Iterate(ref iterator))
+            {
+                foreach (var v in closedDict.entries[iterator].value)
                     Emit(v);
+            }
 
-            closed.Value.Initialize();
-            ClosedEvents.Remove(closed.Key);
-
-            dictPool.Return(closed.Value);
+            closedDict.Initialize();
+            ClosedEvents.Remove(firstKey);
+            dictPool.Return(closedDict);
         }
     }
 

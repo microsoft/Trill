@@ -26,13 +26,13 @@ using <#= this.payloadType.Namespace #>;
 <# } #>
 
 <#
-  var typeInfos = types.Select(t =>
+  var poolColumnTypeEntries = types.Select(t =>
      Tuple.Create(String.Format("_{0}_Pool", Transformer.GetValidIdentifier(t)), t.GetCSharpSourceSyntax()));
 #>
 
 public sealed class <#= className #><_Key, _Payload> : MemoryPool<_Key, _Payload>
 {
-<# foreach (var t in typeInfos) { #>
+<# foreach (var t in poolColumnTypeEntries) { #>
 
     public ColumnPool<<#= t.Item2 #>> <#= t.Item1 #>;
 
@@ -45,7 +45,7 @@ public sealed class <#= className #><_Key, _Payload> : MemoryPool<_Key, _Payload
 
     public <#= className #>() : base(true)
     {
-<# foreach (var t in typeInfos) { #>
+<# foreach (var t in poolColumnTypeEntries) { #>
 
         <#= t.Item1 #> = MemoryManager.GetColumnPool<<#= t.Item2 #>>();
 <# } #>

@@ -706,7 +706,7 @@ using Microsoft.StreamProcessing.Internal.Collections;
             this.Write(".Initialize();\r\n");
  } 
             this.Write("    }\r\n\r\n");
- if (!noLeftFields && !this.leftType.GetTypeInfo().IsValueType) { 
+ if (!noLeftFields && !this.leftType.IsValueType) { 
             this.Write("    [DataContract]\r\n    private struct ");
             this.Write(this.ToStringHelper.ToStringWithCulture(ActiveEventType));
             this.Write("\r\n    {\r\n        ");

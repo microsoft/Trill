@@ -116,7 +116,7 @@ namespace SimpleTesting
 
         private class TestKeyFactory
         {
-            public readonly List<TestKey> KeysCreated = new List<TestKey>();
+            public readonly List<TestKey> KeysCreated = new();
 
             public static void MarkDirty(IEnumerable<TestKey> keys)
             {

@@ -20,7 +20,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
     /// </summary>
     [DataContract]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public sealed class MultiString : IDisposable
+    public sealed partial class MultiString : IDisposable
     {
         [DataMember]
         internal CharArrayWrapper col;
@@ -223,8 +223,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static unsafe ColumnBatch<long> InvertLeftThenOrWithRight(ColumnBatch<long> left, ColumnBatch<long> right, ColumnPool<long> pool)
         {
-            Contract.Requires(left != null);
-            Contract.Requires(right != null);
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
             Contract.Requires(left.UsedLength == right.UsedLength);
 
             pool.Get(out var result);
@@ -250,8 +250,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static unsafe void AndEquals(ColumnBatch<long> left, ColumnBatch<long> right)
         {
-            Contract.Requires(left != null);
-            Contract.Requires(right != null);
+            ArgumentNullException.ThrowIfNull(left);
+            ArgumentNullException.ThrowIfNull(right);
             Contract.Requires(left.UsedLength == right.UsedLength);
 
             fixed (long* leftCol = left.col)
@@ -343,8 +343,8 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(this.State == MultiStringState.Unsealed);
             Contract.Ensures(this.State == MultiStringState.Unsealed);
 
-            if (str == null) str = string.Empty;
-            Initialize(-1);
+            str ??= string.Empty;
+            this.Initialize(-1);
 
             this.msb.Append(str);
             this.starts.col[this.Count] = this.EndOffset;
@@ -367,12 +367,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
             if (this.lengths == null) this.shortPool.Get(out this.lengths);
 
-            if (this.msb == null)
-            {
-                this.msb = size < 1
-                    ? new MyStringBuilder(this.charArrayPool)
-                    : new MyStringBuilder(size, this.charArrayPool);
-            }
+            this.msb ??= (size < 1 ? new(this.charArrayPool) : new(size, this.charArrayPool));
         }
 
         /// <summary>
@@ -385,7 +380,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         public unsafe void AddString(MultiString other, int index)
         {
             Contract.Requires(this.State == MultiStringState.Unsealed);
-            Contract.Requires(other != null);
+            ArgumentNullException.ThrowIfNull(other);
             Contract.Requires(other.State == MultiStringState.Sealed);
             Contract.Requires(index >= 0 && index < other.Count);
 
@@ -411,11 +406,11 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static unsafe MultiString FromColumnBatch(ColumnBatch<string> columnOfStrings, ColumnBatch<long> livenessBitVector, CharArrayPool caPool, ColumnPool<int> intPool, ColumnPool<short> shortPool, ColumnPool<long> bitvectorPool)
         {
-            Contract.Requires(columnOfStrings != null);
-            Contract.Requires(livenessBitVector != null);
-            Contract.Requires(caPool != null);
-            Contract.Requires(intPool != null);
-            Contract.Requires(bitvectorPool != null);
+            ArgumentNullException.ThrowIfNull(columnOfStrings);
+            ArgumentNullException.ThrowIfNull(livenessBitVector);
+            ArgumentNullException.ThrowIfNull(caPool);
+            ArgumentNullException.ThrowIfNull(intPool);
+            ArgumentNullException.ThrowIfNull(bitvectorPool);
             Contract.Ensures(Contract.Result<MultiString>().State == MultiStringState.Sealed);
 
             var multiString = new MultiString(caPool, intPool, shortPool, bitvectorPool);
@@ -452,7 +447,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         [EditorBrowsable(EditorBrowsableState.Never)]
         public unsafe ColumnBatch<string> ToColumnBatch(ColumnPool<string> stringPool, ColumnBatch<long> livenessBitVector)
         {
-            Contract.Requires(stringPool != null);
+            ArgumentNullException.ThrowIfNull(stringPool);
             Contract.Requires(this.State == MultiStringState.Sealed);
 
             stringPool.Get(out var stringColumn);
@@ -480,7 +475,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
             if (this.col == null) // null check so method is idempotent
             {
-                Initialize(-1); // degenerate case: no string was ever added
+                this.Initialize(-1); // degenerate case: no string was ever added
 
                 this.col = this.msb.ToCharArrayWrapperAndDispose();
                 this.msb = null;
@@ -634,7 +629,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(this.State == MultiStringState.Sealed);
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
-            MultiString result = CloneShell();
+            MultiString result = this.CloneShell();
             var func = expression.Compile();
             var bv = inBV.col;
             var startscol = this.starts.col;
@@ -680,7 +675,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
             var reg = new Regex(Regex.Escape(str));
-            return IsMatch(reg, 0, inBV, inPlace);
+            return this.IsMatch(reg, 0, inBV, inPlace);
         }
 
         /// <summary>
@@ -927,11 +922,11 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             pattern = pattern.Replace("\\}", "A");
             pattern = pattern.Replace("\\{", "A");
 
-            var isGreedy = new Regex(@"([\*\+\}](?!\?))|([^\*\+\}\?]\?(?!\?))");
+            var isGreedy = GreedyRegex();
 
             return !isGreedy.IsMatch(pattern)
-                && !pattern.StartsWith("^", StringComparison.Ordinal)
-                && !pattern.EndsWith("$", StringComparison.Ordinal)
+                && !pattern.StartsWith('^')
+                && !pattern.EndsWith('$')
                 && !pattern.Contains("\\A")
                 && !pattern.Contains("\\Z")
                 && !pattern.Contains("\\z");
@@ -941,7 +936,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
         {
             if ((regex.Options & RegexOptions.RightToLeft) == RegexOptions.RightToLeft)
             {
-                return ApplyBoolean(e => regex.IsMatch(e), inBV, inPlace);
+                return this.ApplyBoolean(e => regex.IsMatch(e), inBV, inPlace);
             }
 
             ColumnBatch<long> result;
@@ -991,7 +986,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
             var reg = new Regex(regex);
-            return IsMatch(reg, 0, inBV, inPlace);
+            return this.IsMatch(reg, 0, inBV, inPlace);
         }
 
         /// <summary>
@@ -1010,12 +1005,12 @@ namespace Microsoft.StreamProcessing.Internal.Collections
 
             if ((regex.Options & RegexOptions.RightToLeft) == RegexOptions.RightToLeft)
             {
-                return ApplyBoolean(e => regex.IsMatch(e), inBV, false);
+                return this.ApplyBoolean(e => regex.IsMatch(e), inBV, false);
             }
 
             if (!IsSimpleRegex(regex.ToString()))
             {
-                return IsMatchBackoff(regex, startat, inBV, false);
+                return this.IsMatchBackoff(regex, startat, inBV, false);
             }
 
             ColumnBatch<long> result;
@@ -1118,7 +1113,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                     {
                         if (*p < '\x0080') // ascii
                         {
-                            if ((*p <= 'Z') && (*p >= 'A'))
+                            if (*p is <= 'Z' and >= 'A')
                             {
                                 *p = (char)(*p | ' ');
                             }
@@ -1134,7 +1129,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             }
             else
             {
-                MultiString result = Clone();
+                MultiString result = this.Clone();
                 result.col.MakeWritable(result.charArrayPool, false);
 
                 fixed (char* src = this.col.charArray.content)
@@ -1146,7 +1141,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                         char* end = src + this.EndOffset;
                         while (p < end)
                         {
-                            *q = *p < '\x0080' ? (*p <= 'Z') && (*p >= 'A') ? (char)(*p | ' ') : *p : textInfo.ToLower(*p);
+                            *q = *p < '\x0080' ? *p is <= 'Z' and >= 'A' ? (char)(*p | ' ') : *p : textInfo.ToLower(*p);
                             p++;
                             q++;
                         }
@@ -1178,7 +1173,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                     {
                         if (*p < '\x0080') // ascii
                         {
-                            if ((*p >= 'a') && (*p <= 'z'))
+                            if (*p is >= 'a' and <= 'z')
                             {
                                 *p = (char)(*p & '￟');
                             }
@@ -1194,7 +1189,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             }
             else
             {
-                MultiString result = Clone();
+                MultiString result = this.Clone();
                 result.col.MakeWritable(result.charArrayPool, false);
 
                 fixed (char* src = this.col.charArray.content)
@@ -1207,7 +1202,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                         while (p < end)
                         {
                             *q = *p < '\x0080'
-                                ? (*p >= 'a') && (*p <= 'z') ? (char)(*p & '￟') : *p
+                                ? *p is >= 'a' and <= 'z' ? (char)(*p & '￟') : *p
                                 : textInfo.ToUpper(*p);
                             p++;
                             q++;
@@ -1243,7 +1238,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             var resultList = new List<MultiString>();
             this.intPool.Get(out multiplicity);
 
-            var current = Clone();
+            var current = this.Clone();
             current.Count = 0;
             current.starts = current.starts.MakeWritable(this.intPool);
             current.lengths = current.lengths.MakeWritable(this.shortPool);
@@ -1282,7 +1277,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                     if (current.Count == rstartscol.Length)
                     {
                         resultList.Add(current);
-                        current = Clone();
+                        current = this.Clone();
                         current.Count = 0;
                         current.starts = current.starts.MakeWritable(this.intPool);
                         current.lengths = current.lengths.MakeWritable(this.shortPool);
@@ -1302,7 +1297,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                     if (current.Count == rstartscol.Length)
                     {
                         resultList.Add(current);
-                        current = Clone();
+                        current = this.Clone();
                         current.Count = 0;
                         current.starts = current.starts.MakeWritable(this.intPool);
                         current.lengths = current.lengths.MakeWritable(this.shortPool);
@@ -1335,7 +1330,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                             if (current.Count == rstartscol.Length)
                             {
                                 resultList.Add(current);
-                                current = Clone();
+                                current = this.Clone();
                                 current.Count = 0;
                                 current.starts = current.starts.MakeWritable(this.intPool);
                                 current.lengths = current.lengths.MakeWritable(this.shortPool);
@@ -1395,7 +1390,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             var resultList = new List<MultiString>();
             this.intPool.Get(out multiplicity);
 
-            var current = Clone();
+            var current = this.Clone();
             current.Count = 0;
             current.starts = current.starts.MakeWritable(this.intPool);
             current.lengths = current.lengths.MakeWritable(this.shortPool);
@@ -1433,7 +1428,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                                 {
                                     current.Count = count;
                                     resultList.Add(current);
-                                    current = Clone();
+                                    current = this.Clone();
                                     current.Count = 0;
                                     count = 0;
                                     current.starts = current.starts.MakeWritable(this.intPool);
@@ -1455,7 +1450,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                         {
                             current.Count = count;
                             resultList.Add(current);
-                            current = Clone();
+                            current = this.Clone();
                             current.Count = 0;
                             count = 0;
                             current.starts = current.starts.MakeWritable(this.intPool);
@@ -1499,7 +1494,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             }
             var reg = new Regex(pattern);
 
-            return Split(reg, inBV, out multiplicity);
+            return this.Split(reg, inBV, out multiplicity);
         }
 
         #endregion
@@ -1519,7 +1514,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             Contract.Requires(this.State == MultiStringState.Sealed);
             Contract.Ensures(this.State == MultiStringState.Sealed);
 
-            MultiString result = Clone();
+            MultiString result = this.Clone();
             result.Count = 0;
             result.EndOffset = 0;
             var bv = inBV.col;
@@ -1736,14 +1731,14 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 this.theActualMultiString = m;
                 this.rowIndex = 0;
             }
-            private int StartIndex => this.theActualMultiString.starts.col[this.rowIndex] + 2;
+            private readonly int StartIndex => this.theActualMultiString.starts.col[this.rowIndex] + 2;
 
             /// <summary>
             /// Used internally, but also is the wrapper implementation for String.Length
             /// </summary>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int Length => this.theActualMultiString.lengths.col[this.rowIndex];
-            private string String => this.theActualMultiString.col.charArray.contentString;
+            public readonly int Length => this.theActualMultiString.lengths.col[this.rowIndex];
+            private readonly string String => this.theActualMultiString.col.charArray.contentString;
 
             #region IndexOf
 
@@ -1753,7 +1748,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="value"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int IndexOf(char value)
+            public readonly int IndexOf(char value)
             {
                 var realResult = this.String.IndexOf(value, this.StartIndex, this.Length);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1768,7 +1763,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 MessageId = "System.String.IndexOf(System.String,System.Int32,System.Int32)",
                 Justification = "This is CLR API substitution, additional intent should not be added on behalf of the user of the API.")]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int IndexOf(string value)
+            public readonly int IndexOf(string value)
             {
                 var realResult = this.String.IndexOf(value, this.StartIndex, this.Length);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1781,7 +1776,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="startIndex"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int IndexOf(char value, int startIndex)
+            public readonly int IndexOf(char value, int startIndex)
             {
                 var realResult = this.String.IndexOf(value, this.StartIndex + startIndex, this.Length - startIndex);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1797,7 +1792,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 MessageId = "System.String.IndexOf(System.String,System.Int32,System.Int32)",
                 Justification = "This is CLR API substitution, additional intent should not be added on behalf of the user of the API.")]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int IndexOf(string value, int startIndex)
+            public readonly int IndexOf(string value, int startIndex)
             {
                 var realResult = this.String.IndexOf(value, this.StartIndex + startIndex, this.Length - startIndex);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1810,7 +1805,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="comparisonType"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int IndexOf(string value, StringComparison comparisonType)
+            public readonly int IndexOf(string value, StringComparison comparisonType)
             {
                 var realResult = this.String.IndexOf(value, this.StartIndex, this.Length, comparisonType);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1824,7 +1819,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="count"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int IndexOf(char value, int startIndex, int count)
+            public readonly int IndexOf(char value, int startIndex, int count)
             {
                 var realResult = this.String.IndexOf(value, this.StartIndex + startIndex, count);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1841,7 +1836,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 MessageId = "System.String.IndexOf(System.String,System.Int32,System.Int32)",
                 Justification = "This is CLR API substitution, additional intent should not be added on behalf of the user of the API.")]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int IndexOf(string value, int startIndex, int count)
+            public readonly int IndexOf(string value, int startIndex, int count)
             {
                 var realResult = this.String.IndexOf(value, this.StartIndex + startIndex, count);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1855,7 +1850,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="comparisonType"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int IndexOf(string value, int startIndex, StringComparison comparisonType)
+            public readonly int IndexOf(string value, int startIndex, StringComparison comparisonType)
             {
                 var realResult = this.String.IndexOf(value, this.StartIndex + startIndex, this.Length - startIndex, comparisonType);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1870,7 +1865,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="comparisonType"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int IndexOf(string value, int startIndex, int count, StringComparison comparisonType)
+            public readonly int IndexOf(string value, int startIndex, int count, StringComparison comparisonType)
             {
                 var realResult = this.String.IndexOf(value, this.StartIndex + startIndex, count, comparisonType);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1885,7 +1880,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="value"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int LastIndexOf(char value)
+            public readonly int LastIndexOf(char value)
             {
                 var realResult = this.String.LastIndexOf(value, this.StartIndex + this.Length - 1, this.Length);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1900,7 +1895,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 MessageId = "System.String.LastIndexOf(System.String,System.Int32,System.Int32)",
                 Justification = "This is CLR API substitution, additional intent should not be added on behalf of the user of the API.")]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int LastIndexOf(string value)
+            public readonly int LastIndexOf(string value)
             {
                 var realResult = this.String.LastIndexOf(value, this.StartIndex + this.Length - 1, this.Length);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1913,7 +1908,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="startIndex"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int LastIndexOf(char value, int startIndex)
+            public readonly int LastIndexOf(char value, int startIndex)
             {
                 var realResult = this.String.LastIndexOf(value, this.StartIndex + startIndex, this.Length - startIndex);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1929,7 +1924,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 MessageId = "System.String.LastIndexOf(System.String,System.Int32,System.Int32)",
                 Justification = "This is CLR API substitution, additional intent should not be added on behalf of the user of the API.")]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int LastIndexOf(string value, int startIndex)
+            public readonly int LastIndexOf(string value, int startIndex)
             {
                 var realResult = this.String.LastIndexOf(value, this.StartIndex + startIndex, this.Length - startIndex);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1942,7 +1937,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="comparisonType"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int LastIndexOf(string value, StringComparison comparisonType)
+            public readonly int LastIndexOf(string value, StringComparison comparisonType)
             {
                 var realResult = this.String.LastIndexOf(value, this.StartIndex + this.Length - 1, this.Length, comparisonType);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1956,7 +1951,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="count"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int LastIndexOf(char value, int startIndex, int count)
+            public readonly int LastIndexOf(char value, int startIndex, int count)
             {
                 var realResult = this.String.LastIndexOf(value, this.StartIndex + startIndex, count);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1973,7 +1968,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
                 MessageId = "System.String.LastIndexOf(System.String,System.Int32,System.Int32)",
                 Justification = "This is CLR API substitution, additional intent should not be added on behalf of the user of the API.")]
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int LastIndexOf(string value, int startIndex, int count)
+            public readonly int LastIndexOf(string value, int startIndex, int count)
             {
                 var realResult = this.String.LastIndexOf(value, this.StartIndex + startIndex, count);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -1987,7 +1982,7 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="comparisonType"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int LastIndexOf(string value, int startIndex, StringComparison comparisonType)
+            public readonly int LastIndexOf(string value, int startIndex, StringComparison comparisonType)
             {
                 var realResult = this.String.LastIndexOf(value, this.StartIndex + startIndex, this.Length - startIndex, comparisonType);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
@@ -2002,12 +1997,15 @@ namespace Microsoft.StreamProcessing.Internal.Collections
             /// <param name="comparisonType"></param>
             /// <returns></returns>
             [EditorBrowsable(EditorBrowsableState.Never)]
-            public int LastIndexOf(string value, int startIndex, int count, StringComparison comparisonType)
+            public readonly int LastIndexOf(string value, int startIndex, int count, StringComparison comparisonType)
             {
                 var realResult = this.String.LastIndexOf(value, this.StartIndex + startIndex, count, comparisonType);
                 return realResult == -1 ? -1 : realResult - this.StartIndex;
             }
             #endregion
         }
+
+        [GeneratedRegex(@"([\*\+\}](?!\?))|([^\*\+\}\?]\?(?!\?))")]
+        private static partial Regex GreedyRegex();
     }
 }
