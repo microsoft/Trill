@@ -81,7 +81,7 @@ namespace Microsoft.StreamProcessing
             var difference = Expression.Lambda<Func<TState[], TState[], TState[]>>(
                 Expression.NewArrayInit(
                     typeof(TState),
-                    aggArray.Select((a, i) => a.Difference().ReplaceParametersInBody(Expression.ArrayIndex(state1, Expression.Constant(i)), Expression.ArrayIndex(state1, Expression.Constant(i))))), state1, state2);
+                    aggArray.Select((a, i) => a.Difference().ReplaceParametersInBody(Expression.ArrayIndex(state1, Expression.Constant(i)), Expression.ArrayIndex(state2, Expression.Constant(i))))), state1, state2);
 
             var resultSelector = Expression.Lambda<Func<TState[], TAggValue[]>>(
                 Expression.NewArrayInit(
