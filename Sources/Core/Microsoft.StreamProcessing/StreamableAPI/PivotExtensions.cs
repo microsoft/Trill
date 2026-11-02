@@ -310,7 +310,7 @@ namespace Microsoft.StreamProcessing
                         if (!typeof(TValue).GetTypeInfo().IsAssignableFrom(field.PropertyType.GetTypeInfo().GetGenericArguments()[0])) continue;
                         this.isNull.Add(
                             field.Name, Expression.Lambda<Func<TInput, bool>>(
-                                Expression.IsTrue(Expression.PropertyOrField(Expression.PropertyOrField(input, field.Name), "HasValue")),
+                                Expression.IsFalse(Expression.PropertyOrField(Expression.PropertyOrField(input, field.Name), "HasValue")),
                                 new[] { input }).Compile());
                     }
                     else if (valueField.Type.GetTypeInfo().IsClass)
@@ -324,7 +324,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         if (!typeof(TValue).GetTypeInfo().IsAssignableFrom(field.PropertyType)) continue;
-                        this.isNull.Add(field.Name, (TInput o) => true);
+                        this.isNull.Add(field.Name, IsNullTest(input, field.Name, field.PropertyType));
                     }
 
                     var fieldAssignment = new[]
@@ -360,7 +360,7 @@ namespace Microsoft.StreamProcessing
                     else
                     {
                         if (!typeof(TValue).GetTypeInfo().IsAssignableFrom(field.FieldType)) continue;
-                        this.isNull.Add(field.Name, (TInput o) => true);
+                        this.isNull.Add(field.Name, IsNullTest(input, field.Name, field.FieldType));
                     }
 
                     var fieldAssignment = new[]
@@ -380,6 +380,17 @@ namespace Microsoft.StreamProcessing
             public IEnumerable<TResult> GetEnumerable(TInput obj)
             {
                 foreach (var att in this.fields) if (!this.isNull[att.Key](obj)) yield return att.Value(obj, att.Key);
+            }
+
+            // The null test for a member that is not Nullable<T>, used when the value field's type is not a class.
+            // A value-type member is never null. A reference-type member can reach here when the value field's type
+            // is an interface; it is compared by reference, so a user-defined == operator cannot hide a value.
+            private static Func<TInput, bool> IsNullTest(ParameterExpression input, string memberName, Type memberType)
+            {
+                if (memberType.GetTypeInfo().IsValueType) return o => false;
+                return Expression.Lambda<Func<TInput, bool>>(
+                    Expression.ReferenceEqual(Expression.PropertyOrField(input, memberName), Expression.Constant(null)),
+                    new[] { input }).Compile();
             }
         }
 
