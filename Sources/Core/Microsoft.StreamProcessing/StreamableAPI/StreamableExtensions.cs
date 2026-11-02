@@ -677,7 +677,14 @@ namespace Microsoft.StreamProcessing
         /// </summary>
         public static IStreamable<TOuterKey, TReduceInput> Reduce<TOuterKey, TMapInputLeft, TMapInputRight, TInnerKey, TReduceInput>(
             this IMapDefinition<TOuterKey, TMapInputLeft, TMapInputRight, TInnerKey, TReduceInput> mapDefinition)
-            => ((MapDefinition<TOuterKey, TMapInputLeft, TMapInputRight, TInnerKey, TReduceInput>)mapDefinition).CreateStreamable<TReduceInput, TReduceInput>();
+        {
+            var definition = (MapDefinition<TOuterKey, TMapInputLeft, TMapInputRight, TInnerKey, TReduceInput>)mapDefinition;
+
+            // A map with a key selector groups its output, so each group is passed through and ungrouped.
+            return definition.keySelector == null
+                ? definition.CreateStreamable<TReduceInput, TReduceInput>()
+                : definition.CreateStreamable<TReduceInput, TReduceInput>(s => s, (g, x) => x);
+        }
 
         /// <summary>
         /// Single-input reducer. Takes a mapped stream and applies a stream valued function (reducer) to each of the partitions. The result selector allows the
